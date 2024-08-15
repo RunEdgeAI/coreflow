@@ -1,0 +1,56 @@
+/*
+ * Copyright (c) 2012-2017 The Khronos Group Inc. *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef VX_PARAMETER_H
+#define VX_PARAMETER_H
+
+#include <VX/vx.h>
+
+/*!
+ * \file
+ * \brief The internal parameter implementation
+ * \author Erik Rainey <erik.rainey@gmail.com>
+ *
+ * \defgroup group_int_parameter Internal Parameter API
+ * \ingroup group_internal
+ * \brief The Internal Parameter API
+ */
+
+/*! \brief The internal representation of a parameter.
+ * \ingroup group_int_parameter
+ */
+class Parameter : public Reference
+{
+public:
+    Parameter(vx_context context, vx_reference ref);
+    ~Parameter() = default;
+
+    static vx_bool isValidDirection(vx_enum dir);
+
+    static vx_bool isValidTypeMatch(vx_enum expected, vx_enum supplied);
+
+    static vx_bool isValidState(vx_enum state);
+
+    /*! \brief Index at which this parameter is tracked in both the node references and kernel signatures */
+    vx_uint32      index;
+    /*! \brief Pointer to the node which this parameter is associated with */
+    vx_node        node;
+    /*! \brief Pointer to the kernel which this parameter is associated with, if retreived from
+     * \ref vxGetKernelParameterByIndex.
+     */
+    vx_kernel      kernel;
+};
+
+#endif // VX_PARAMETER_H
