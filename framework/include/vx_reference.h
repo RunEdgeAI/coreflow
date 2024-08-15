@@ -1,0 +1,126 @@
+/*
+ * Copyright (c) 2012-2017 The Khronos Group Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef VX_REFERENCE_H
+#define VX_REFERENCE_H
+
+#include <VX/vx.h>
+
+#include "vx_internal.h"
+
+#define VX_BAD_MAGIC (42)
+
+/*! \brief The most basic type in the OpenVX system. Any type that inherits
+ *  from vx_reference must have a vx_reference as its first memeber
+ *  to allow casting to this type.
+ * \ingroup group_int_refererence
+ */
+class Reference {
+public:
+    /**
+     * @brief Construct a new vx reference object
+     *
+     */
+    Reference() = default;
+
+    Reference(vx_context context, vx_enum type, vx_reference scope);
+
+    /**
+     * @brief Destroy the vx reference object
+     *
+     */
+    ~Reference() = default;
+
+    static void printReference(vx_reference ref);
+
+    static vx_bool isValidReference(vx_reference ref);
+
+    static vx_bool isValidReference(vx_reference ref, vx_enum type);
+
+    static vx_size sizeOfType(vx_enum type);
+
+    vx_uint32 incrementReference(vx_reftype_e refType);
+
+    vx_uint32 decrementReference(vx_reftype_e refType);
+
+    vx_uint32 totalReferenceCount();
+
+    vx_status releaseReference(vx_enum type,
+                               vx_reftype_e reftype,
+                               vx_destructor_f special_destructor);
+
+    /*! \brief The most basic type in the OpenVX system. Any type that inherits
+    *  from vx_reference_t must have a vx_reference_t as its first memeber
+    *  to allow casting to this type.
+    * \ingroup group_int_refererence
+    */
+
+#if !DISABLE_ICD_COMPATIBILITY
+    /*! \brief Platform for ICD compatibility. */
+    struct _vx_platform * platform;
+#endif
+    /*! \brief Used to validate references, must be set to VX_MAGIC. */
+    vx_uint32 magic;
+    /*! \brief Set to an enum value in \ref vx_type_e. */
+    vx_enum type;
+    /*! \brief Pointer to the top level context.
+     * If this reference is the context, this will be NULL.
+     */
+    vx_context context;
+    /*! \brief The pointer to the object's scope parent. When virtual objects
+     * are scoped within a graph, this will point to that parent graph. This is
+     * left generic to allow future scoping variations. By default scope should
+     * be the same as context.
+     */
+    vx_reference scope;
+    /*! \brief The count of the number of users with this reference. When
+     * greater than 0, this can not be freed. When zero, the value can be
+     * considered inaccessible.
+     */
+    vx_uint32 external_count;
+    /*! \brief The count of the number of framework references. When
+     * greater than 0, this can not be freed.
+     */
+    vx_uint32 internal_count;
+    /*! \brief The number of times the object has been read (in some portion) */
+    vx_uint32 read_count;
+    /*! \brief The number of times the object has been written to (in some portion) */
+    vx_uint32 write_count;
+    /*! \brief The reference lock which is used to protect access to "in-fly" data. */
+    vx_sem_t lock;
+    /*! \brief A reserved field which can be used to store anonymous data */
+    void *reserved;
+    /*! \brief A field which can be used to store a temporary, per-graph index. */
+    vx_uint32 index;
+    /*! \brief This indicates if the object was extracted from another object */
+    vx_bool extracted;
+    /*! \brief This indicates if the object is virtual or not */
+    vx_bool is_virtual;
+    /* \brief This indicates if the object belongs to a delay */
+    vx_delay delay;
+    /* \brief This indicates the original delay slot index when the object belongs to a delay */
+    vx_int32 delay_slot_index;
+    /*! \brief This indicates that if the object is virtual whether it is accessible at the moment or not */
+    vx_bool is_accessible;
+#if defined(EXPERIMENTAL_USE_OPENCL)
+    /*! \brief An OpenCL event that the framework can block upon for this object */
+    cl_event event;
+#endif
+    /*! \brief The reference name */
+    char name[VX_MAX_REFERENCE_NAME];
+};
+
+#endif /* VX_REFERENCE_H */
