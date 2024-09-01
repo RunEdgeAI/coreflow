@@ -58,7 +58,7 @@ vx_node vxFWriteImageNode(vx_graph graph, vx_image image, vx_char name[VX_MAX_FI
     vx_context context = vxGetContext((vx_reference)graph);
     vx_array filepath = vxCreateArray(context, VX_TYPE_CHAR, VX_MAX_FILE_NAME);
     if (vxGetStatus((vx_reference)filepath) == VX_SUCCESS) {
-        status = vxAddArrayItems(filepath, VX_MAX_FILE_NAME, &name[0], sizeof(name[0]));
+        // status = vxAddArrayItems(filepath, VX_MAX_FILE_NAME, &name[0], sizeof(name[0]));
         if (status == VX_SUCCESS)
         {
             vx_reference params[] = {
@@ -102,7 +102,7 @@ vx_node vxFReadImageNode(vx_graph graph, vx_char name[VX_MAX_FILE_NAME], vx_imag
     vx_context context = vxGetContext((vx_reference)graph);
     vx_array filepath = vxCreateArray(context, VX_TYPE_CHAR, VX_MAX_FILE_NAME);
     if (vxGetStatus((vx_reference)filepath) == VX_SUCCESS) {
-        status = vxAddArrayItems(filepath, VX_MAX_FILE_NAME, &name[0], sizeof(name[0]));
+        // status = vxAddArrayItems(filepath, VX_MAX_FILE_NAME, &name[0], sizeof(name[0]));
         if (status == VX_SUCCESS)
         {
             vx_reference params[] = {

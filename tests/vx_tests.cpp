@@ -1469,7 +1469,7 @@ vx_status vx_test_graph_channels_rgb(int argc, char *argv[])
                     vxChannelCombineNode(graph, images[1], images[2], images[3], 0, images[4]),
                     vxFWriteImageNode(graph, images[4], "ocolorbars2_640x480_I444.rgb"),
                 };
-                //CHECK_ALL_ITEMS(nodes, i, status, exit);
+                CHECK_ALL_ITEMS(nodes, i, status, exit);
                 if (status == VX_SUCCESS)
                 {
                     status = vxVerifyGraph(graph);
@@ -1498,6 +1498,7 @@ vx_status vx_test_graph_channels_rgb(int argc, char *argv[])
         }
         vxReleaseContext(&context);
     }
+exit:
     return status;
 }
 
@@ -2966,20 +2967,20 @@ vx_unittest unittests[] = {
     {VX_FAILURE, "Framework: Heads",            &vx_test_framework_heads},
     {VX_FAILURE, "Framework: Unvisited",        &vx_test_framework_unvisited},
     {VX_FAILURE, "Framework: Virtual Image",    &vx_test_framework_virtualimage},
-//     {VX_FAILURE, "Framework: Delay",            &vx_test_framework_delay_graph},
+    {VX_FAILURE, "Framework: Delay",            &vx_test_framework_delay_graph},
     {VX_FAILURE, "Framework: Kernels",          &vx_test_framework_kernels},
     {VX_FAILURE, "Direct: Copy Image",          &vx_test_direct_copy_image},
     {VX_FAILURE, "Direct: Copy External Image", &vx_test_direct_copy_external_image},
-//     // graphs
-    // {VX_FAILURE, "Graph: ColorBars YUV",        &vx_test_graph_channels_yuv},
-//     {VX_FAILURE, "Graph: ColorBars RGB",        &vx_test_graph_channels_rgb},
-//     {VX_FAILURE, "Graph: bikegray",             &vx_test_graph_bikegray},
-//     {VX_FAILURE, "Graph: Lena",                 &vx_test_graph_lena},
-//     {VX_FAILURE, "Graph: Accumulates",          &vx_test_graph_accum},
-//     {VX_FAILURE, "Graph: Bitwise",              &vx_test_graph_bitwise},
-//     {VX_FAILURE, "Graph: Arithmetic",           &vx_test_graph_arit},
-//     {VX_FAILURE, "Graph: Corners",              &vx_test_graph_corners},
-//     {VX_FAILURE, "Graph: Tracker",              &vx_test_graph_tracker},
+    // graphs
+    {VX_FAILURE, "Graph: ColorBars YUV",        &vx_test_graph_channels_yuv},
+    {VX_FAILURE, "Graph: ColorBars RGB",        &vx_test_graph_channels_rgb},
+    // {VX_FAILURE, "Graph: bikegray",             &vx_test_graph_bikegray},
+    // {VX_FAILURE, "Graph: Lena",                 &vx_test_graph_lena},
+    {VX_FAILURE, "Graph: Accumulates",          &vx_test_graph_accum},
+    // {VX_FAILURE, "Graph: Bitwise",              &vx_test_graph_bitwise},
+    // {VX_FAILURE, "Graph: Arithmetic",           &vx_test_graph_arit},
+    // {VX_FAILURE, "Graph: Corners",              &vx_test_graph_corners},
+    // {VX_FAILURE, "Graph: Tracker",              &vx_test_graph_tracker},
     // exports
 #if defined(EXPERIMENTAL_USE_DOT)
     {VX_FAILURE, "Export: DOT",                 &vx_test_graph_dot_export},

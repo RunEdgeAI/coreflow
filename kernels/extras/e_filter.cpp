@@ -106,7 +106,7 @@ vx_status ownLaplacian3x3(vx_image src, vx_image dst, vx_border_t* bordermode)
             for (x = 1; x < (src_addr.dim_x - 1); x++)
             {
                 vx_int32 value = own_convolve8with16(src_base, x, y, &src_addr, laplacian);
-                vx_uint8* dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_uint8* dst = (vx_uint8*)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                 *dst = vx_clamp8_i32(value);
             }
         }

@@ -298,7 +298,7 @@ static vx_status VX_CALLBACK vxAccumulateSquaredInputValidator(vx_node node, vx_
     return status;
 }
 
-static vx_status VX_CALLBACK vxAccumulateOutputValidator(vx_node node, vx_uint32 index, vx_meta_format_t *ptr)
+static vx_status VX_CALLBACK vxAccumulateOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     (void)node;
     (void)index;

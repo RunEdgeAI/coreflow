@@ -84,11 +84,11 @@ vx_bool ownAllocateMemory(vx_context context, vx_memory_t *memory)
                 }
             }
             /* don't presume that memory should be zeroed */
-            memory->ptrs[p] = malloc(size);
+            memory->ptrs[p] = (vx_uint8*)malloc(size);
             if (memory->ptrs[p] == NULL)
             {
                 vx_uint32 pi;
-                VX_PRINT(VX_ZONE_ERROR, "Failed to allocated "VX_FMT_SIZE" bytes\n", size);
+                VX_PRINT(VX_ZONE_ERROR, "Failed to allocated " VX_FMT_SIZE " bytes\n", size);
                 /* unroll */
                 memory->allocated = vx_false_e;
                 for (pi = 0; pi < p; pi++)
@@ -102,7 +102,7 @@ vx_bool ownAllocateMemory(vx_context context, vx_memory_t *memory)
             else
             {
                 ownCreateSem(&memory->locks[p], 1);
-                VX_PRINT(VX_ZONE_INFO, "Allocated %p for "VX_FMT_SIZE" bytes\n", memory->ptrs[p], size);
+                VX_PRINT(VX_ZONE_INFO, "Allocated %p for " VX_FMT_SIZE " bytes\n", memory->ptrs[p], size);
             }
         }
         ownPrintMemory(memory);

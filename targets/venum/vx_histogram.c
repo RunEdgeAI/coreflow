@@ -80,7 +80,7 @@ static vx_status VX_CALLBACK vxHistogramInputValidator(vx_node node, vx_uint32 i
     return status;
 }
 
-static vx_status VX_CALLBACK vxHistogramOutputValidator(vx_node node, vx_uint32 index, vx_meta_format_t *ptr)
+static vx_status VX_CALLBACK vxHistogramOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     if (index == 1)
@@ -137,7 +137,7 @@ static vx_status VX_CALLBACK vxEqualizeHistInputValidator(vx_node node, vx_uint3
     return status;
 }
 
-static vx_status VX_CALLBACK vxEqualizeHistOutputValidator(vx_node node, vx_uint32 index, vx_meta_format_t *ptr)
+static vx_status VX_CALLBACK vxEqualizeHistOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     if (index == 1)

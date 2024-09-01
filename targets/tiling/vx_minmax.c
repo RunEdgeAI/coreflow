@@ -65,7 +65,7 @@ static vx_status VX_CALLBACK vxMinMaxInputValidator(vx_node node, vx_uint32 inde
     return status;
 }
 
-static vx_status VX_CALLBACK vxMinMaxOutputValidator(vx_node node, vx_uint32 index, vx_meta_format_t *ptr)
+static vx_status VX_CALLBACK vxMinMaxOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     if (index == 2)
@@ -116,7 +116,7 @@ static vx_status VX_CALLBACK vxMinMaxOutputValidator(vx_node node, vx_uint32 ind
     }
     return status;
 }
-vx_tiling_kernel_t Max_kernel = 
+vx_tiling_kernel_t Max_kernel =
 {
     "org.khronos.openvx.tiling_max",
     VX_KERNEL_MAX,
@@ -136,7 +136,7 @@ vx_tiling_kernel_t Max_kernel =
     { -1, 1, -1, 1 },
     { VX_BORDER_MODE_UNDEFINED, 0 },
 };
-vx_tiling_kernel_t Min_kernel = 
+vx_tiling_kernel_t Min_kernel =
 {
     "org.khronos.openvx.tiling_min",
     VX_KERNEL_MIN,

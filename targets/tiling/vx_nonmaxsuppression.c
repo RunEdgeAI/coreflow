@@ -118,7 +118,7 @@ static vx_status VX_CALLBACK vxNonMaxSuppressionInputValidator(vx_node node, vx_
     return status;
 }
 
-static vx_status VX_CALLBACK vxNonMaxSuppressionOutputValidator(vx_node node, vx_uint32 index, vx_meta_format_t *ptr)
+static vx_status VX_CALLBACK vxNonMaxSuppressionOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     if (index == 3)
@@ -136,7 +136,7 @@ static vx_status VX_CALLBACK vxNonMaxSuppressionOutputValidator(vx_node node, vx
                 vxQueryImage(img, VX_IMAGE_WIDTH, &width, sizeof(width));
                 vxQueryImage(img, VX_IMAGE_HEIGHT, &height, sizeof(height));
                 vxQueryImage(img, VX_IMAGE_FORMAT, &format, sizeof(format));
-                
+
                 /* fill in the meta data with the attributes so that the checker will pass */
                 ptr->type = VX_TYPE_IMAGE;
                 ptr->dim.image.format = format;
@@ -152,7 +152,7 @@ static vx_status VX_CALLBACK vxNonMaxSuppressionOutputValidator(vx_node node, vx
     return status;
 }
 
-vx_tiling_kernel_t nonmaxsuppression_kernel = 
+vx_tiling_kernel_t nonmaxsuppression_kernel =
 {
     "org.khronos.openvx.tiling_nonmaxsuppression",
     VX_KERNEL_NON_MAX_SUPPRESSION,

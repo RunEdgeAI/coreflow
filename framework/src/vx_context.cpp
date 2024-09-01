@@ -135,7 +135,7 @@ vx_status Context::loadTarget(const vx_char* targetName)
         snprintf(module, VX_INT_MAX_PATH, VX_MODULE_NAME("%s"), (targetName?targetName:"openvx-target"));
 #endif
 
-        targets[index] = reinterpret_cast<vx_target>(createReference<Target>(this, this));
+        targets[index] = reinterpret_cast<vx_target>(Reference::createReference(this, VX_TYPE_TARGET, VX_INTERNAL, this));
         targets[index]->module.handle = ownLoadModule(module);
         if (targets[index]->module.handle)
         {
@@ -229,57 +229,6 @@ VX_INT_API void Context::removeAccessor(vx_uint32 index)
     }
 }
 
-
-template <typename T>
-vx_reference Context::createReference(vx_context context, vx_reference scope)
-{
-    try
-    {
-        const auto& spT = std::make_shared<T>(context, scope);
-        (void)addReference(spT);
-        // Ensure the shared pointer can be cast or converted to vx_reference
-
-        return static_cast<vx_reference>(spT.get());
-    }
-    catch (const std::exception& e)
-    {
-        // Handle error (e.g., log it) and return a null or invalid reference
-        VX_PRINT(VX_ZONE_ERROR, "Error creating reference: %s\n", e.what());
-        return nullptr;  // or a specific error code
-    }
-}
-
-vx_reference Context::createReference(vx_context context, vx_enum type, vx_reference scope)
-{
-    vx_reference ref = nullptr;
-
-    try
-    {
-        switch(type)
-        {
-            case VX_TYPE_KERNEL:
-            {
-                const auto& spT = std::make_shared<Kernel>(context, scope);
-                (void)addReference(spT);
-                // Ensure the shared pointer can be cast or converted to vx_reference
-                ref = static_cast<vx_reference>(spT.get());
-                break;
-            }
-            default:
-            {
-                VX_PRINT(VX_ZONE_ERROR, "Unsupported type passed %d", type);
-            }
-        }
-    }
-    catch (const std::exception& e)
-    {
-        // Handle error (e.g., log it) and return a null or invalid reference
-        VX_PRINT(VX_ZONE_ERROR, "Error creating reference: %s\n", e.what());
-    }
-
-    return ref;
-}
-
 vx_bool Context::addReference(const std::shared_ptr<Reference>& ref)
 {
     vx_uint32 r;
@@ -299,6 +248,14 @@ vx_bool Context::addReference(const std::shared_ptr<Reference>& ref)
         }
     }
     ownSemPost(&lock);
+    return ret;
+}
+
+vx_bool Context::removeReference(vx_reference ref)
+{
+    vx_bool ret = vx_false_e;
+
+
     return ret;
 }
 
@@ -327,9 +284,11 @@ static vx_bool vxWorkerNode(vx_threadpool_worker_t *worker)
     vx_uint32 p = 0;
 
     /* turn on access to virtual memory */
-    for (p = 0u; p < node->kernel->signature.num_parameters; p++) {
+    for (p = 0u; p < node->kernel->signature.num_parameters; p++)
+    {
         if (node->parameters[p] == NULL) continue;
-        if (node->parameters[p]->is_virtual == vx_true_e) {
+        if (node->parameters[p]->is_virtual == vx_true_e)
+        {
             node->parameters[p]->is_accessible = vx_true_e;
         }
     }
@@ -339,9 +298,11 @@ static vx_bool vxWorkerNode(vx_threadpool_worker_t *worker)
     VX_PRINT(VX_ZONE_GRAPH, "Executed %s on target %s with action %d returned\n", node->kernel->name, target->name, action);
 
     /* turn on access to virtual memory */
-    for (p = 0u; p < node->kernel->signature.num_parameters; p++) {
+    for (p = 0u; p < node->kernel->signature.num_parameters; p++)
+    {
         if (node->parameters[p] == NULL) continue;
-        if (node->parameters[p]->is_virtual == vx_true_e) {
+        if (node->parameters[p]->is_virtual == vx_true_e)
+        {
             // determine who is the last thread to release...
             // if this is an input, then there should be "zero" rectangles, which
             // should allow commits to work, even if the flag is lowered.
@@ -555,11 +516,13 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
         if (context->decrementReference(VX_EXTERNAL) == 0)
         {
 #ifdef OPENVX_USE_OPENCL_INTEROP
-            if(context->opencl_command_queue) {
+            if(context->opencl_command_queue)
+            {
                 clReleaseCommandQueue(context->opencl_command_queue);
                 context->opencl_command_queue = nullptr;
             }
-            if(context->opencl_context) {
+            if(context->opencl_context)
+            {
                 clReleaseContext(context->opencl_context);
                 context->opencl_context = nullptr;
             }
@@ -589,24 +552,27 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
                 vx_reference ref = context->reftable[r].get();
 
                 /* Warnings should only come when users have not released all external references */
-                if (ref && ref->external_count > 0) {
+                if (ref && ref->external_count > 0)
+                {
                     VX_PRINT(VX_ZONE_WARNING,"Stale reference " VX_FMT_REF " of type %s at external count %u, internal count %u\n",
                              ref, ownGetObjectTypeName(ref->type), ref->external_count, ref->internal_count);
                 }
 
                 /* These were internally opened during creation, so should internally close ERRORs */
-                if(ref && ref->type == VX_TYPE_ERROR) {
-                    // ownReleaseReferenceInt(&ref, ref->type, VX_INTERNAL, nullptr);
+                if(ref && ref->type == VX_TYPE_ERROR)
+                {
+                    ref->releaseReference(ref->type, VX_INTERNAL, nullptr);
                 }
 
                 /* Warning above so user can fix release external objects, but close here anyway */
-                while (ref && ref->external_count > 1) {
+                while (ref && ref->external_count > 1)
+                {
                     ref->decrementReference(VX_EXTERNAL);
                 }
-                if (ref && ref->external_count > 0) {
-//                     ownReleaseReferenceInt(&ref, ref->type, VX_EXTERNAL, nullptr);
+                if (ref && ref->external_count > 0)
+                {
+                    ref->releaseReference(ref->type, VX_EXTERNAL, nullptr);
                 }
-
             }
 
             for (m = 0; m < VX_INT_MAX_MODULES; m++)
@@ -614,7 +580,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
                 ownSemWait(&context->modules[m].lock);
                 if (context->modules[m].handle)
                 {
-                    // ownUnloadModule(context->modules[m].handle);
+                    ownUnloadModule(context->modules[m].handle);
                     memset(context->modules[m].name, 0, sizeof(context->modules[m].name));
                     context->modules[m].handle = VX_MODULE_INIT;
                 }
@@ -719,7 +685,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetContextAttribute(vx_context context, vx_
     }
     else
     {
-        switch (attribute) {
+        switch (attribute)
+        {
             case VX_CONTEXT_IMMEDIATE_BORDER:
                 if (VX_CHECK_PARAM(ptr, size, vx_border_t, 0x3))
                 {
@@ -993,7 +960,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxHint(vx_reference reference, vx_enum hint, 
     return status;
 }
 
-VX_API_ENTRY vx_status VX_API_CALL vxDirective(vx_reference reference, vx_enum directive) {
+VX_API_ENTRY vx_status VX_API_CALL vxDirective(vx_reference reference, vx_enum directive)
+{
     vx_status status = VX_SUCCESS;
     vx_context context;
     vx_enum ref_type;
@@ -1307,7 +1275,8 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContextFromCL(cl_context opencl_cont
     {
         cl_int err1 = clRetainContext(opencl_context);
         cl_int err2 = clRetainCommandQueue(opencl_command_queue);
-        if((err1 != CL_SUCCESS) || (err2 != CL_SUCCESS)) {
+        if((err1 != CL_SUCCESS) || (err2 != CL_SUCCESS))
+        {
             vxReleaseContext(&context);
             return nullptr;
         }

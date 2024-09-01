@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2011-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -69,10 +68,8 @@ static vx_status ownInitObjectArrayInt(vx_object_array arr, vx_reference exempla
     vx_size tensor_num_dims, tensor_dims[VX_MAX_TENSOR_DIMENSIONS];
     vx_enum tensor_type;
     vx_int8 tensor_fpp;
-#if defined(OPENVX_USE_USER_DATA_OBJECT)
     vx_size udo_size;
     vx_char udo_name[VX_MAX_REFERENCE_NAME];
-#endif
 
     if (is_virtual)
     {
@@ -92,11 +89,11 @@ static vx_status ownInitObjectArrayInt(vx_object_array arr, vx_reference exempla
                     status = VX_ERROR_INVALID_REFERENCE;
                 break;
             case VX_TYPE_PYRAMID:
-                if (vxQueryPyramid((vx_pyramid)exemplar, VX_PYRAMID_WIDTH, &pyramid_width, sizeof(pyramid_width)) != VX_SUCCESS ||
-                    vxQueryPyramid((vx_pyramid)exemplar, VX_PYRAMID_HEIGHT, &pyramid_height, sizeof(pyramid_height)) != VX_SUCCESS ||
-                    vxQueryPyramid((vx_pyramid)exemplar, VX_PYRAMID_FORMAT, &pyramid_format, sizeof(pyramid_format)) != VX_SUCCESS ||
-                    vxQueryPyramid((vx_pyramid)exemplar, VX_PYRAMID_LEVELS, &pyramid_levels, sizeof(pyramid_levels)) != VX_SUCCESS ||
-                    vxQueryPyramid((vx_pyramid)exemplar, VX_PYRAMID_SCALE, &pyramid_scale, sizeof(pyramid_scale)) != VX_SUCCESS)
+                // if (vxQueryPyramid((vx_pyramid)exemplar, VX_PYRAMID_WIDTH, &pyramid_width, sizeof(pyramid_width)) != VX_SUCCESS ||
+                //     vxQueryPyramid((vx_pyramid)exemplar, VX_PYRAMID_HEIGHT, &pyramid_height, sizeof(pyramid_height)) != VX_SUCCESS ||
+                //     vxQueryPyramid((vx_pyramid)exemplar, VX_PYRAMID_FORMAT, &pyramid_format, sizeof(pyramid_format)) != VX_SUCCESS ||
+                //     vxQueryPyramid((vx_pyramid)exemplar, VX_PYRAMID_LEVELS, &pyramid_levels, sizeof(pyramid_levels)) != VX_SUCCESS ||
+                //     vxQueryPyramid((vx_pyramid)exemplar, VX_PYRAMID_SCALE, &pyramid_scale, sizeof(pyramid_scale)) != VX_SUCCESS)
                     status = VX_ERROR_INVALID_REFERENCE;
                 break;
             default:
@@ -120,7 +117,7 @@ static vx_status ownInitObjectArrayInt(vx_object_array arr, vx_reference exempla
                     ref = (vx_reference)vxCreateVirtualArray(graph, array_itemtype, array_capacity);
                     break;
                 case VX_TYPE_PYRAMID:
-                    ref = (vx_reference)vxCreateVirtualPyramid(graph, pyramid_levels, pyramid_scale, pyramid_width, pyramid_height, pyramid_format);
+                    // ref = (vx_reference)vxCreateVirtualPyramid(graph, pyramid_levels, pyramid_scale, pyramid_width, pyramid_height, pyramid_format);
                     break;
                 default:
                     ref = nullptr;
@@ -138,7 +135,7 @@ static vx_status ownInitObjectArrayInt(vx_object_array arr, vx_reference exempla
                 /* free all allocated references */
                 for (vx_uint32 j = 0u; j < i; j++)
                 {
-                    // ownReleaseReferenceInt(&(arr->items[j]), item_type, VX_EXTERNAL, nullptr);
+                    arr->items[j]->releaseReference(item_type, VX_EXTERNAL, nullptr);
                 }
 
                 return VX_ERROR_NO_RESOURCES;
@@ -163,11 +160,11 @@ static vx_status ownInitObjectArrayInt(vx_object_array arr, vx_reference exempla
                     status = VX_ERROR_INVALID_REFERENCE;
                 break;
             case VX_TYPE_PYRAMID:
-                if (vxQueryPyramid((vx_pyramid)exemplar, VX_PYRAMID_WIDTH, &pyramid_width, sizeof(pyramid_width)) != VX_SUCCESS ||
-                    vxQueryPyramid((vx_pyramid)exemplar, VX_PYRAMID_HEIGHT, &pyramid_height, sizeof(pyramid_height)) != VX_SUCCESS ||
-                    vxQueryPyramid((vx_pyramid)exemplar, VX_PYRAMID_FORMAT, &pyramid_format, sizeof(pyramid_format)) != VX_SUCCESS ||
-                    vxQueryPyramid((vx_pyramid)exemplar, VX_PYRAMID_LEVELS, &pyramid_levels, sizeof(pyramid_levels)) != VX_SUCCESS ||
-                    vxQueryPyramid((vx_pyramid)exemplar, VX_PYRAMID_SCALE, &pyramid_scale, sizeof(pyramid_scale)) != VX_SUCCESS)
+                // if (vxQueryPyramid((vx_pyramid)exemplar, VX_PYRAMID_WIDTH, &pyramid_width, sizeof(pyramid_width)) != VX_SUCCESS ||
+                //     vxQueryPyramid((vx_pyramid)exemplar, VX_PYRAMID_HEIGHT, &pyramid_height, sizeof(pyramid_height)) != VX_SUCCESS ||
+                //     vxQueryPyramid((vx_pyramid)exemplar, VX_PYRAMID_FORMAT, &pyramid_format, sizeof(pyramid_format)) != VX_SUCCESS ||
+                //     vxQueryPyramid((vx_pyramid)exemplar, VX_PYRAMID_LEVELS, &pyramid_levels, sizeof(pyramid_levels)) != VX_SUCCESS ||
+                //     vxQueryPyramid((vx_pyramid)exemplar, VX_PYRAMID_SCALE, &pyramid_scale, sizeof(pyramid_scale)) != VX_SUCCESS)
                     status = VX_ERROR_INVALID_REFERENCE;
                 break;
             case VX_TYPE_SCALAR:
@@ -175,32 +172,32 @@ static vx_status ownInitObjectArrayInt(vx_object_array arr, vx_reference exempla
                     status = VX_ERROR_INVALID_REFERENCE;
                 break;
             case VX_TYPE_MATRIX:
-                if (vxQueryMatrix((vx_matrix)exemplar, VX_MATRIX_TYPE, &matrix_type, sizeof(matrix_type)) != VX_SUCCESS ||
-                    vxQueryMatrix((vx_matrix)exemplar, VX_MATRIX_ROWS, &matrix_rows, sizeof(matrix_rows)) != VX_SUCCESS ||
-                    vxQueryMatrix((vx_matrix)exemplar, VX_MATRIX_COLUMNS, &matrix_cols, sizeof(matrix_cols)) != VX_SUCCESS)
+                // if (vxQueryMatrix((vx_matrix)exemplar, VX_MATRIX_TYPE, &matrix_type, sizeof(matrix_type)) != VX_SUCCESS ||
+                //     vxQueryMatrix((vx_matrix)exemplar, VX_MATRIX_ROWS, &matrix_rows, sizeof(matrix_rows)) != VX_SUCCESS ||
+                //     vxQueryMatrix((vx_matrix)exemplar, VX_MATRIX_COLUMNS, &matrix_cols, sizeof(matrix_cols)) != VX_SUCCESS)
                     status = VX_ERROR_INVALID_REFERENCE;
                 break;
             case VX_TYPE_DISTRIBUTION:
-                if (vxQueryDistribution((vx_distribution)exemplar, VX_DISTRIBUTION_BINS, &distribution_bins, sizeof(distribution_bins)) != VX_SUCCESS ||
-                    vxQueryDistribution((vx_distribution)exemplar, VX_DISTRIBUTION_OFFSET, &distribution_offset, sizeof(distribution_offset)) != VX_SUCCESS ||
-                    vxQueryDistribution((vx_distribution)exemplar, VX_DISTRIBUTION_RANGE, &distribution_range, sizeof(distribution_range)) != VX_SUCCESS)
+                // if (vxQueryDistribution((vx_distribution)exemplar, VX_DISTRIBUTION_BINS, &distribution_bins, sizeof(distribution_bins)) != VX_SUCCESS ||
+                //     vxQueryDistribution((vx_distribution)exemplar, VX_DISTRIBUTION_OFFSET, &distribution_offset, sizeof(distribution_offset)) != VX_SUCCESS ||
+                //     vxQueryDistribution((vx_distribution)exemplar, VX_DISTRIBUTION_RANGE, &distribution_range, sizeof(distribution_range)) != VX_SUCCESS)
                     status = VX_ERROR_INVALID_REFERENCE;
                 break;
             case VX_TYPE_REMAP:
-                if (vxQueryRemap((vx_remap)exemplar, VX_REMAP_SOURCE_WIDTH, &remap_srcwidth, sizeof(remap_srcwidth)) != VX_SUCCESS ||
-                    vxQueryRemap((vx_remap)exemplar, VX_REMAP_SOURCE_HEIGHT, &remap_srcheight, sizeof(remap_srcheight)) != VX_SUCCESS ||
-                    vxQueryRemap((vx_remap)exemplar, VX_REMAP_DESTINATION_WIDTH, &remap_dstwidth, sizeof(remap_dstwidth)) != VX_SUCCESS ||
-                    vxQueryRemap((vx_remap)exemplar, VX_REMAP_DESTINATION_HEIGHT, &remap_dstheight, sizeof(remap_dstheight)) != VX_SUCCESS)
+                // if (vxQueryRemap((vx_remap)exemplar, VX_REMAP_SOURCE_WIDTH, &remap_srcwidth, sizeof(remap_srcwidth)) != VX_SUCCESS ||
+                //     vxQueryRemap((vx_remap)exemplar, VX_REMAP_SOURCE_HEIGHT, &remap_srcheight, sizeof(remap_srcheight)) != VX_SUCCESS ||
+                //     vxQueryRemap((vx_remap)exemplar, VX_REMAP_DESTINATION_WIDTH, &remap_dstwidth, sizeof(remap_dstwidth)) != VX_SUCCESS ||
+                //     vxQueryRemap((vx_remap)exemplar, VX_REMAP_DESTINATION_HEIGHT, &remap_dstheight, sizeof(remap_dstheight)) != VX_SUCCESS)
                     status = VX_ERROR_INVALID_REFERENCE;
                 break;
             case VX_TYPE_LUT:
-                if (vxQueryLUT((vx_lut)exemplar, VX_LUT_TYPE, &lut_type, sizeof(lut_type)) != VX_SUCCESS ||
-                    vxQueryLUT((vx_lut)exemplar, VX_LUT_COUNT, &lut_count, sizeof(lut_count)) != VX_SUCCESS)
+                // if (vxQueryLUT((vx_lut)exemplar, VX_LUT_TYPE, &lut_type, sizeof(lut_type)) != VX_SUCCESS ||
+                //     vxQueryLUT((vx_lut)exemplar, VX_LUT_COUNT, &lut_count, sizeof(lut_count)) != VX_SUCCESS)
                     status = VX_ERROR_INVALID_REFERENCE;
                 break;
             case VX_TYPE_THRESHOLD:
-                if (vxQueryThreshold((vx_threshold)exemplar, VX_THRESHOLD_TYPE, &threshold_type, sizeof(threshold_type)) != VX_SUCCESS ||
-                    vxQueryThreshold((vx_threshold)exemplar, VX_THRESHOLD_DATA_TYPE, &threshold_data_type, sizeof(threshold_data_type)) != VX_SUCCESS)
+                // if (vxQueryThreshold((vx_threshold)exemplar, VX_THRESHOLD_TYPE, &threshold_type, sizeof(threshold_type)) != VX_SUCCESS ||
+                //     vxQueryThreshold((vx_threshold)exemplar, VX_THRESHOLD_DATA_TYPE, &threshold_data_type, sizeof(threshold_data_type)) != VX_SUCCESS)
                     status = VX_ERROR_INVALID_REFERENCE;
                 break;
             case VX_TYPE_TENSOR:
@@ -211,13 +208,11 @@ static vx_status ownInitObjectArrayInt(vx_object_array arr, vx_reference exempla
                     vxQueryTensor((vx_tensor)exemplar, VX_TENSOR_FIXED_POINT_POSITION, &tensor_fpp, sizeof(tensor_fpp)) != VX_SUCCESS)
                     status = VX_ERROR_INVALID_REFERENCE;
                 break;
-#if defined(OPENVX_USE_USER_DATA_OBJECT)
             case VX_TYPE_USER_DATA_OBJECT:
                 if (vxQueryUserDataObject((vx_user_data_object)exemplar, VX_USER_DATA_OBJECT_SIZE, &udo_size, sizeof(udo_size)) != VX_SUCCESS ||
                     vxQueryUserDataObject((vx_user_data_object)exemplar, VX_USER_DATA_OBJECT_NAME, &udo_name[0], sizeof(vx_char) * VX_MAX_REFERENCE_NAME) != VX_SUCCESS)
                     status = VX_ERROR_INVALID_REFERENCE;
                 break;
-#endif
             default:
                 status =  VX_ERROR_INVALID_TYPE;
                 break;
@@ -283,7 +278,7 @@ static vx_status ownInitObjectArrayInt(vx_object_array arr, vx_reference exempla
                 /* free all allocated references */
                 for (vx_uint32 j = 0u; j < i; j++)
                 {
-                    // ownReleaseReferenceInt(&(arr->items[j]), item_type, VX_EXTERNAL, nullptr);
+                    arr->items[j]->releaseReference(item_type, VX_EXTERNAL, nullptr);
                 }
 
                 return VX_ERROR_NO_RESOURCES;
@@ -306,7 +301,7 @@ vx_object_array ownCreateObjectArrayInt(vx_reference scope, vx_reference exempla
     vx_context context = scope->context ? scope->context : (vx_context)scope;
     vx_object_array arr = nullptr;
 
-    // arr = (vx_object_array)ownCreateReference(context, VX_TYPE_OBJECT_ARRAY, VX_EXTERNAL, scope);
+    arr = (vx_object_array)Reference::createReference(context, VX_TYPE_OBJECT_ARRAY, VX_EXTERNAL, scope);
     if (vxGetStatus((vx_reference)arr) == VX_SUCCESS && arr->type == VX_TYPE_OBJECT_ARRAY)
     {
         arr->scope = scope;
@@ -314,7 +309,7 @@ vx_object_array ownCreateObjectArrayInt(vx_reference scope, vx_reference exempla
 
         if (ownInitObjectArrayInt(arr, exemplar, count) != VX_SUCCESS)
         {
-            // ownReleaseReferenceInt((vx_reference *)&arr, VX_TYPE_OBJECT_ARRAY, VX_EXTERNAL, nullptr);
+            arr->releaseReference(VX_TYPE_OBJECT_ARRAY, VX_EXTERNAL, nullptr);
             // arr = (vx_object_array)ownGetErrorObject(context, VX_ERROR_NO_MEMORY);
         }
     }
@@ -330,7 +325,7 @@ void ownDestructObjectArray(vx_reference ref)
     for (vx_uint32 i = 0u; i < arr->num_items; i++)
     {
         /* nullptr means standard destructor */
-        // status = ownReleaseReferenceInt(&(arr->items[i]), arr->item_type, VX_EXTERNAL, nullptr);
+        status = arr->items[i]->releaseReference(arr->item_type, VX_EXTERNAL, nullptr);
 
         if (status != VX_SUCCESS)
         {

@@ -21,13 +21,15 @@
 
 #include "vx_reference.h"
 
+vx_bool ownValidateArray(vx_array arr, vx_enum item_type, vx_size capacity);
+
 /*! \brief The internal representation of a \ref vx_array
  * \ingroup group_int_array
  */
 class Array : public Reference
 {
 public:
-    Array(/* args */) = default;
+    Array(vx_context context, vx_reference scope);
     ~Array() = default;
 
     /*! \brief The memory layout definition */
@@ -57,7 +59,7 @@ vx_bool ownIsValidImage(vx_image img);
  * \retval vx_false_e The code is not supported.
  * \ingroup group_int_image
  */
-vx_bool ownIsSupportedFourcc(vx_df_image code);
+vx_bool vxIsSupportedFourcc(vx_df_image code);
 
 /*! \brief Used to initialize a single plane in an image object.
  * \param [in] image The image object.
@@ -101,7 +103,7 @@ vx_bool ownAllocateImage(vx_image image);
 /*! \brief Prints the values of the images.
  * \ingroup group_int_image
  */
-void ownPrintImage(vx_image image);
+extern "C" void ownPrintImage(vx_image image);
 
 /*! \brief Destroys an image
  * \param [in] ref The image to destroy.

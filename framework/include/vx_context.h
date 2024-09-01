@@ -40,7 +40,7 @@ extern const vx_char implementation[];
 class Context : public Reference
 {
 public:
-    Context(/* args */);
+    Context();
     ~Context() = default;
 
     static vx_bool isValidContext(vx_context context);
@@ -61,6 +61,8 @@ public:
     vx_reference createReference(vx_context context, vx_reference scope);
 
     vx_bool addReference(const std::shared_ptr<Reference>& ref);
+
+    vx_bool removeReference(vx_reference ref);
 
     /*! \brief The pointer to process global lock */
     vx_sem_t*           p_global_lock;

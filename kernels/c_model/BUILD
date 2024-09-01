@@ -13,7 +13,7 @@ cc_library(
     ],
     deps = [
         "//:corevx",
-        "//kernels/c_model/debug:debug_kernels",
+        "//kernels/debug:debug_kernels",
         "//kernels/utils"
     ],
     visibility = ["//visibility:public"]

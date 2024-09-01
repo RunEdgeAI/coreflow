@@ -88,7 +88,7 @@ static vx_status VX_CALLBACK vxHogCellsInputValidator(vx_node node, vx_uint32 in
     return status;
 }
 
-static vx_status VX_CALLBACK vxHogCellsOutputValidator(vx_node node, vx_uint32 index, vx_meta_format_t *ptr)
+static vx_status VX_CALLBACK vxHogCellsOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     vx_enum format;
@@ -160,8 +160,8 @@ static vx_status VX_CALLBACK vxHogFeaturesInputValidator(vx_node node, vx_uint32
                 vxQueryTensor(mag, VX_TENSOR_DATA_TYPE, &format, sizeof(format));
                 if (format == VX_TYPE_INT16)
                 {
-                    
-                    status = VX_SUCCESS; 
+
+                    status = VX_SUCCESS;
                 }
                 else
                 {
@@ -244,7 +244,7 @@ static vx_status VX_CALLBACK vxHogFeaturesInputValidator(vx_node node, vx_uint32
     return status;
 }
 
-static vx_status VX_CALLBACK vxHogFeaturesOutputValidator(vx_node node, vx_uint32 index, vx_meta_format_t *ptr)
+static vx_status VX_CALLBACK vxHogFeaturesOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     vx_enum format;
@@ -269,7 +269,7 @@ static vx_status VX_CALLBACK vxHogFeaturesOutputValidator(vx_node node, vx_uint3
     return status;
 }
 
-vx_tiling_kernel_t hogcells_kernel = 
+vx_tiling_kernel_t hogcells_kernel =
 {
     "org.khronos.openvx.tiling_hogcells",
     VX_KERNEL_HOG_CELLS,
@@ -293,7 +293,7 @@ vx_tiling_kernel_t hogcells_kernel =
     { VX_BORDER_MODE_UNDEFINED, 0 },
 };
 
-vx_tiling_kernel_t hogfeatures_kernel = 
+vx_tiling_kernel_t hogfeatures_kernel =
 {
     "org.khronos.openvx.tiling_hogfeatures",
     VX_KERNEL_HOG_FEATURES,

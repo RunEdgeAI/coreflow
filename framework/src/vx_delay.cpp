@@ -21,6 +21,11 @@
 #define vxIsValidDelay(d) ((d) && Reference::isValidReference((vx_reference)(d), VX_TYPE_DELAY))
 #define vxIsValidGraph(g) ((g) && Reference::isValidReference((vx_reference)(g), VX_TYPE_GRAPH))
 
+Delay::Delay(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_DELAY, scope)
+{
+    this->type = VX_TYPE_DELAY;
+}
+
 vx_bool ownAddAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i)
 {
 
@@ -29,7 +34,7 @@ vx_bool ownAddAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i)
 
     vx_int32 index = (delay->index + delay->count - abs(delay_index)) % (vx_int32)delay->count;
 
-    if (delay->set[index].node == 0) // head is empty
+    if (delay->set[index].node == 0) /* head is empty */
     {
         delay->set[index].node = n;
         delay->set[index].index = i;
@@ -57,7 +62,7 @@ vx_bool ownAddAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i)
         } while (1);
     }
 
-    // Increment a reference to the delay
+    /* Increment a reference to the delay */
     delay->incrementReference(VX_INTERNAL);
 
     return vx_true_e;
@@ -74,7 +79,7 @@ vx_bool ownRemoveAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i)
         return vx_false_e;
     }
 
-    if (delay->set[index].node == n && delay->set[index].index == i) // head is a match
+    if (delay->set[index].node == n && delay->set[index].index == i) /* head is a match */
     {
         delay->set[index].node = 0;
         delay->set[index].index = 0;
@@ -105,16 +110,13 @@ vx_bool ownRemoveAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i)
         } while (1);
     }
 
-    // Release the delay
+    /* Release the delay */
     {
         vx_reference ref=(vx_reference)delay;
-        // ownReleaseReferenceInt(&ref, VX_TYPE_DELAY, VX_INTERNAL, nullptr);
+        ref->releaseReference(VX_TYPE_DELAY, VX_INTERNAL, nullptr);
     }
     return vx_true_e;
 }
-
-
-
 
 /******************************************************************************/
 /* PUBLIC INTERFACE */
@@ -122,7 +124,8 @@ vx_bool ownRemoveAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i)
 
 VX_API_ENTRY vx_reference VX_API_CALL vxGetReferenceFromDelay(vx_delay delay, vx_int32 index)
 {
-    vx_reference ref = 0;
+    vx_reference ref = nullptr;
+
     if (vxIsValidDelay(delay) == vx_true_e)
     {
         if ((vx_uint32)abs(index) < delay->count)
@@ -172,7 +175,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryDelay(vx_delay delay, vx_enum attribut
     return status;
 }
 
-void ownDestructDelay(vx_reference ref) {
+void ownDestructDelay(vx_reference ref)
+{
     vx_uint32 i = 0;
     vx_delay delay = (vx_delay)ref;
 
@@ -182,21 +186,21 @@ void ownDestructDelay(vx_reference ref) {
         /* release pyramid delays */
         for (i = 0; i < numLevels; ++i)
         {
-            // ownReleaseReferenceInt((vx_reference *)&(delay->pyr[i]), VX_TYPE_DELAY, VX_INTERNAL, &ownDestructDelay);
+            delay->pyr[i]->releaseReference(VX_TYPE_DELAY, VX_INTERNAL, &ownDestructDelay);
         }
         free(delay->pyr);
     }
 
     for (i = 0; i < delay->count; i++)
     {
-        // ownReleaseReferenceInt(&delay->refs[i], delay->type, VX_INTERNAL, nullptr);
+        delay->refs[i]->releaseReference(delay->type, VX_INTERNAL, nullptr);
     }
 
     if (delay->set)
     {
         for (i = 0; i < delay->count; i++)
         {
-            vx_delay_param_t *cur = delay->set[i].next;
+            vx_delay_param_t* cur = delay->set[i].next;
             while (cur != nullptr)
             {
                 vx_delay_param_t *next = cur->next;
@@ -207,14 +211,15 @@ void ownDestructDelay(vx_reference ref) {
         free(delay->set);
     }
 
-    if (delay->refs) {
+    if (delay->refs)
+    {
         free(delay->refs);
     }
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseDelay(vx_delay *d)
 {
-    // return ownReleaseReferenceInt((vx_reference *)d, VX_TYPE_DELAY, VX_EXTERNAL, &ownDestructDelay);
+    return (*(d))->releaseReference(VX_TYPE_DELAY, VX_EXTERNAL, &ownDestructDelay);
 }
 
 VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
@@ -222,6 +227,7 @@ VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
                               vx_size count)
 {
     vx_delay delay = nullptr;
+    vx_uint32 t = 0u;
     vx_enum invalid_types[] = {
         VX_TYPE_CONTEXT,
         VX_TYPE_GRAPH,
@@ -230,18 +236,22 @@ VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
         VX_TYPE_TARGET,
         VX_TYPE_PARAMETER,
         VX_TYPE_REFERENCE,
-        VX_TYPE_DELAY, // no delays of delays
+        VX_TYPE_DELAY, /* no delays of delays */
 #ifdef OPENVX_KHR_XML
         VX_TYPE_IMPORT,
 #endif
     };
-    vx_uint32 t = 0u;
 
     if (Context::isValidContext(context) == vx_false_e)
+    {
         return 0;
+    }
 
     if (Reference::isValidReference(exemplar) == vx_false_e)
+    {
+        return 0;
         // return (vx_delay)ownGetErrorObject(context, VX_ERROR_INVALID_REFERENCE);
+    }
 
     for (t = 0u; t < dimof(invalid_types); t++)
     {
@@ -253,8 +263,9 @@ VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
         }
     }
 
-    // delay = (vx_delay)ownCreateReference(context, VX_TYPE_DELAY, VX_EXTERNAL, &context);
-    if (vxGetStatus((vx_reference)delay) == VX_SUCCESS && delay->type == VX_TYPE_DELAY)
+    delay = (vx_delay)Reference::createReference(context, VX_TYPE_DELAY, VX_EXTERNAL, context);
+    if (vxGetStatus((vx_reference)delay) == VX_SUCCESS &&
+        delay->type == VX_TYPE_DELAY)
     {
         vx_size i = 0;
         delay->pyr = nullptr;
@@ -272,6 +283,7 @@ VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
                 {
                     vx_image image = (vx_image )exemplar;
                     delay->refs[i] = (vx_reference)vxCreateImage(context, image->width, image->height, image->format);
+                    VX_PRINT(VX_ZONE_DELAY, "Creating image with width %d height %d format %d", image->width, image->height, image->format);
                     break;
                 }
                 case VX_TYPE_ARRAY:
@@ -344,7 +356,7 @@ VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
             if (ref_bool)
             {
                 /* set the object as a delay element */
-                // ownInitReferenceForDelay(delay->refs[i], delay, (vx_int32)i);
+                delay->refs[i]->initReferenceForDelay(delay, (vx_int32)i);
                 /* change the counting from external to internal */
                 delay->refs[i]->incrementReference(VX_INTERNAL);
                 delay->refs[i]->decrementReference(VX_EXTERNAL);
@@ -362,7 +374,7 @@ VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
             vx_delay pyrdelay = nullptr;
             for (j = 0; j < numLevels; ++j)
             {
-                // pyrdelay = (vx_delay)ownCreateReference(context, VX_TYPE_DELAY, VX_INTERNAL, (vx_reference)delay);
+                pyrdelay = (vx_delay)Reference::createReference(context, VX_TYPE_DELAY, VX_INTERNAL, (vx_reference)delay);
                 delay->pyr[j] = pyrdelay;
                 if (vxGetStatus((vx_reference)pyrdelay) == VX_SUCCESS && pyrdelay->type == VX_TYPE_DELAY)
                 {
@@ -374,7 +386,7 @@ VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
                     {
                         // pyrdelay->refs[i] = (vx_reference)vxGetPyramidLevel((vx_pyramid)delay->refs[i], (vx_uint32)j);
                         /* set the object as a delay element */
-                        // ownInitReferenceForDelay(pyrdelay->refs[i], pyrdelay, (vx_int32)i);
+                        pyrdelay->refs[i]->initReferenceForDelay(pyrdelay, (vx_int32)i);
                         /* change the counting from external to internal */
                         pyrdelay->refs[i]->incrementReference(VX_INTERNAL);
                         pyrdelay->refs[i]->decrementReference(VX_EXTERNAL);
@@ -390,11 +402,11 @@ VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
             {
                 for (i = 0; i < count; i++)
                 {
-                    // delay->refs[i] = (vx_reference)vxCreateObjectArray(context,
-                    //                                                    objarray->items[0],
-                    //                                                    objarray->num_items);
+                    delay->refs[i] = (vx_reference)vxCreateObjectArray(context,
+                                                                       objarray->items[0],
+                                                                       objarray->num_items);
                     /* set the object as a delay element */
-                    // ownInitReferenceForDelay(delay->refs[i], delay, (vx_int32)i);
+                    delay->refs[i]->initReferenceForDelay(delay, (vx_int32)i);
                     /* change the counting from external to internal */
                     delay->refs[i]->incrementReference(VX_INTERNAL);
                     delay->refs[i]->decrementReference(VX_EXTERNAL);
@@ -408,6 +420,10 @@ VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
             }
         }
     }
+    else
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Delay created is invalid!\n");
+    }
 
     return (vx_delay)delay;
 }
@@ -419,12 +435,12 @@ VX_API_ENTRY vx_status VX_API_CALL vxAgeDelay(vx_delay delay)
     {
         vx_int32 i,j;
 
-        // increment the index
+        /* increment the index */
         delay->index = (delay->index + (vx_uint32)delay->count - 1) % (vx_uint32)delay->count;
 
         VX_PRINT(VX_ZONE_DELAY, "Delay has shifted by 1, base index is now %d\n", delay->index);
 
-        // then reassign the parameters
+        /* then reassign the parameters */
         for (i = 0; i < (vx_int32)delay->count; i++)
         {
             vx_delay_param_t *param = nullptr;
@@ -443,7 +459,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxAgeDelay(vx_delay delay)
 
         if (delay->type == VX_TYPE_PYRAMID && delay->pyr != nullptr)
         {
-            // age pyramid levels
+            /* age pyramid levels */
             vx_int32 numLevels = (vx_int32)(((vx_pyramid)delay->refs[0])->numLevels);
             for (i = 0; i < numLevels; ++i)
                 vxAgeDelay(delay->pyr[i]);

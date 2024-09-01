@@ -19,18 +19,27 @@
 * Copyright (c) 2018 Texas Instruments Incorporated
 *
 */
-
-#if 1 //def OPENVX_USE_USER_DATA_OBJECT
-
 #include <cstring>
-#include <VX/vx_khr_user_data_object.h>
 
 #include "vx_internal.h"
 
 /*==============================================================================
 User Data Object HELPER FUNCTIONS
 =============================================================================*/
+UserDataObject::UserDataObject(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_USER_DATA_OBJECT, scope)
+{
 
+}
+
+vx_bool UserDataObject::allocateUserDataObject()
+{
+    vx_bool res = vx_false_e;
+    if (size > 0)
+    {
+        // res = ownAllocateMemory(context, &memory);
+    }
+    return res;
+}
 
 /*==============================================================================
    User Data Object API FUNCTIONS
@@ -54,7 +63,7 @@ VX_API_ENTRY vx_user_data_object VX_API_CALL vxCreateUserDataObject(
 
         if( nullptr == user_data_object )
         {
-    //         user_data_object = (vx_user_data_object)ownCreateReference(context, VX_TYPE_USER_DATA_OBJECT, (vx_enum)VX_EXTERNAL, &context->base);
+            user_data_object = (vx_user_data_object)Reference::createReference(context, VX_TYPE_USER_DATA_OBJECT, VX_EXTERNAL, context);
 
             if ((vxGetStatus((vx_reference)user_data_object) == (vx_status)VX_SUCCESS) &&
                 (user_data_object->type == VX_TYPE_USER_DATA_OBJECT))
@@ -71,7 +80,6 @@ VX_API_ENTRY vx_user_data_object VX_API_CALL vxCreateUserDataObject(
 
                 user_data_object->memory.nptrs = 1;
                 user_data_object->memory.ndims = 1;
-
                 user_data_object->memory.dims[0][0] = (vx_uint32)size;
 
                 if (nullptr != ptr)
@@ -80,12 +88,11 @@ VX_API_ENTRY vx_user_data_object VX_API_CALL vxCreateUserDataObject(
                 }
                 else
                 {
-    //                 ownAllocateUserDataObject(user_data_object);
+                    status = VX_BOOL_TO_STATUS(user_data_object->allocateUserDataObject());
 
                     if (status == (vx_status)VX_SUCCESS)
                     {
                         vx_uint8 *start_ptr = (vx_uint8 *)&user_data_object->memory.ptrs[0][0];
-
                         memset(start_ptr, 0, size);
                     }
                 }
@@ -104,9 +111,8 @@ VX_API_ENTRY vx_user_data_object VX_API_CALL vxCreateUserDataObject(
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseUserDataObject(vx_user_data_object *user_data_object)
 {
-    // return (ownReleaseReferenceInt(
-    //     (vx_reference*)user_data_object, VX_TYPE_USER_DATA_OBJECT, (vx_enum)VX_EXTERNAL, nullptr));
-    return VX_ERROR_NOT_IMPLEMENTED;
+    return (*(vx_reference*)user_data_object)->releaseReference(
+        VX_TYPE_USER_DATA_OBJECT, VX_EXTERNAL, nullptr);
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxQueryUserDataObject (
@@ -198,7 +204,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyUserDataObject(vx_user_data_object user
 
     if ((vx_status)VX_SUCCESS == status)
     {
-    //     if (ownAllocateUserDataObject(user_data_object) == vx_false_e)
+        if (user_data_object->allocateUserDataObject() == vx_false_e)
         {
             return VX_ERROR_NO_MEMORY;
         }
@@ -266,9 +272,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapUserDataObject(
 
     if ((vx_status)VX_SUCCESS == status)
     {
-    //     if (ownAllocateUserDataObject(user_data_object) == vx_false_e)
+        if (user_data_object->allocateUserDataObject() == vx_false_e)
         {
-            return VX_ERROR_NO_MEMORY;
+            status = VX_ERROR_NO_MEMORY;
         }
     }
 
@@ -370,5 +376,3 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapUserDataObject(vx_user_data_object use
 
     return status;
 }
-
-#endif /* OPENVX_USE_USER_DATA_OBJECT */

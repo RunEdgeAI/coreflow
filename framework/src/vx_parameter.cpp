@@ -74,8 +74,7 @@ VX_API_ENTRY vx_parameter VX_API_CALL vxGetKernelParameterByIndex(vx_kernel kern
     {
         if (index < VX_INT_MAX_PARAMS && index < kernel->signature.num_parameters)
         {
-            // parameter = (vx_parameter)ownCreateReference(kernel->base.context, VX_TYPE_PARAMETER, VX_EXTERNAL, &kernel->base.context->base);
-            parameter = std::make_shared<Parameter>(kernel->context, kernel->context).get();
+            parameter = (vx_parameter)Reference::createReference(kernel->context, VX_TYPE_PARAMETER, VX_EXTERNAL, kernel->context);
             if (vxGetStatus((vx_reference)parameter) == VX_SUCCESS && parameter->type == VX_TYPE_PARAMETER)
             {
                 parameter->index = index;
@@ -112,7 +111,7 @@ VX_API_ENTRY vx_parameter VX_API_CALL vxGetParameterByIndex(vx_node node, vx_uin
     {
         if (/*0 <= index &&*/ index < VX_INT_MAX_PARAMS && index < node->kernel->signature.num_parameters)
         {
-            // param = (vx_parameter)ownCreateReference(node->base.context, VX_TYPE_PARAMETER, VX_EXTERNAL, &node->base);
+            param = (vx_parameter)Reference::createReference(node->context, VX_TYPE_PARAMETER, VX_EXTERNAL, node);
             if (vxGetStatus((vx_reference)param) == VX_SUCCESS && param->type == VX_TYPE_PARAMETER)
             {
                 param->index = index;
@@ -142,22 +141,21 @@ void ownDestructParameter(vx_reference ref)
         if (Reference::isValidReference(reinterpret_cast<vx_reference>(param->node), VX_TYPE_NODE) == vx_true_e)
         {
             vx_node node = (vx_node)param->node;
-            // ownReleaseReferenceInt((vx_reference *)&node, VX_TYPE_NODE, VX_INTERNAL, nullptr);
+            node->releaseReference(VX_TYPE_NODE, VX_INTERNAL, nullptr);
         }
     }
     if (param->kernel) {
         if (Reference::isValidReference(reinterpret_cast<vx_reference>(param->kernel), VX_TYPE_KERNEL) == vx_true_e)
         {
             vx_kernel kernel = (vx_kernel)param->kernel;
-            // ownReleaseReferenceInt((vx_reference *)&kernel, VX_TYPE_KERNEL, VX_INTERNAL, nullptr);
+            kernel->releaseReference(VX_TYPE_KERNEL, VX_INTERNAL, nullptr);
         }
     }
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseParameter(vx_parameter *param)
 {
-    // return ownReleaseReferenceInt((vx_reference *)param, VX_TYPE_PARAMETER, VX_EXTERNAL, nullptr);
-    return VX_ERROR_NOT_IMPLEMENTED;
+    return (*(vx_reference *)param)->releaseReference(VX_TYPE_PARAMETER, VX_EXTERNAL, nullptr);
 }
 
 
@@ -196,6 +194,12 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetParameterByIndex(vx_node node, vx_uint32
     }
 
     /* if it's required, it's got to exist */
+    if (value == nullptr)
+    {
+        value = Reference::createReference(node->context, node->kernel->signature.types[index], VX_INTERNAL, node->context);
+    }
+
+    /* validate reference */
     if (Reference::isValidReference((vx_reference)value) == vx_false_e)
     {
         VX_PRINT(VX_ZONE_ERROR, "Supplied value was not actually a reference\n");
@@ -207,7 +211,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetParameterByIndex(vx_node node, vx_uint32
     vxQueryReference(value, VX_REFERENCE_TYPE, &type, sizeof(type));
     VX_PRINT(VX_ZONE_PARAMETER, "Query returned type %08x for ref " VX_FMT_REF "\n", type, value);
 
-    /* Check that signature type matches reference type*/
+    /* Check that signature type matches reference type */
     if (node->kernel->signature.types[index] != type)
     {
         /* Check special case where signature is a specific scalar type.
@@ -250,7 +254,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetParameterByIndex(vx_node node, vx_uint32
     {
         if (node->parameters[index]->delay!=nullptr) {
             // we already have a delay element here */
-            vx_bool res = vx_true_e; // ownRemoveAssociationToDelay(node->parameters[index], node, index);
+            vx_bool res = ownRemoveAssociationToDelay(node->parameters[index], node, index);
             if (res == vx_false_e)
             {
                 VX_PRINT(VX_ZONE_ERROR, "Internal error removing delay association\n");
@@ -262,7 +266,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetParameterByIndex(vx_node node, vx_uint32
 
     if (value->delay!=nullptr) {
         /* the new parameter is a delay element */
-        vx_bool res = vx_true_e; // ownAddAssociationToDelay(value, node, index);
+        vx_bool res = ownAddAssociationToDelay(value, node, index);
         if (res == vx_false_e)
         {
             VX_PRINT(VX_ZONE_ERROR, "Internal error adding delay association\n");
@@ -390,5 +394,3 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryParameter(vx_parameter parameter, vx_e
     }
     return status;
 }
-
-

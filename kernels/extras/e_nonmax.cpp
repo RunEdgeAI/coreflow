@@ -118,22 +118,22 @@ vx_status ownEuclideanNonMaxSuppressionHarris(vx_image src, vx_scalar thr, vx_sc
                 for (x = 0; x < (vx_int32)src_addr.dim_x; x++)
                 {
                     // Init to 0
-                    vx_int32 *out = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_int32 *out = (vx_int32*)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *out = 0;
 
                     // Fast non max suppression & keypoint list building
                     if ((x > 0) && (x < (vx_int32)src_addr.dim_x - 1) &&
                         (y > 0) && (y < (vx_int32)src_addr.dim_y - 1))
                     {
-                        vx_float32* ptr = vxFormatImagePatchAddress2d(src_base, x, y, &src_addr);
-                        vx_float32* ptr99 = vxFormatImagePatchAddress2d(src_base, x - 1, y - 1, &src_addr);
-                        vx_float32* ptr90 = vxFormatImagePatchAddress2d(src_base, x, y - 1, &src_addr);
-                        vx_float32* ptr91 = vxFormatImagePatchAddress2d(src_base, x + 1, y - 1, &src_addr);
-                        vx_float32* ptr09 = vxFormatImagePatchAddress2d(src_base, x - 1, y, &src_addr);
-                        vx_float32* ptr01 = vxFormatImagePatchAddress2d(src_base, x + 1, y, &src_addr);
-                        vx_float32* ptr19 = vxFormatImagePatchAddress2d(src_base, x - 1, y + 1, &src_addr);
-                        vx_float32* ptr10 = vxFormatImagePatchAddress2d(src_base, x, y + 1, &src_addr);
-                        vx_float32* ptr11 = vxFormatImagePatchAddress2d(src_base, x + 1, y + 1, &src_addr);
+                        vx_float32* ptr = (vx_float32*)vxFormatImagePatchAddress2d(src_base, x, y, &src_addr);
+                        vx_float32* ptr99 = (vx_float32*)vxFormatImagePatchAddress2d(src_base, x - 1, y - 1, &src_addr);
+                        vx_float32* ptr90 = (vx_float32*)vxFormatImagePatchAddress2d(src_base, x, y - 1, &src_addr);
+                        vx_float32* ptr91 = (vx_float32*)vxFormatImagePatchAddress2d(src_base, x + 1, y - 1, &src_addr);
+                        vx_float32* ptr09 = (vx_float32*)vxFormatImagePatchAddress2d(src_base, x - 1, y, &src_addr);
+                        vx_float32* ptr01 = (vx_float32*)vxFormatImagePatchAddress2d(src_base, x + 1, y, &src_addr);
+                        vx_float32* ptr19 = (vx_float32*)vxFormatImagePatchAddress2d(src_base, x - 1, y + 1, &src_addr);
+                        vx_float32* ptr10 = (vx_float32*)vxFormatImagePatchAddress2d(src_base, x, y + 1, &src_addr);
+                        vx_float32* ptr11 = (vx_float32*)vxFormatImagePatchAddress2d(src_base, x + 1, y + 1, &src_addr);
 
                         if ((*ptr >= thresh) &&
                             ((*ptr >= *ptr99) &&
@@ -180,7 +180,7 @@ vx_status ownEuclideanNonMaxSuppressionHarris(vx_image src, vx_scalar thr, vx_sc
 
                                 if (d < radius)
                                 {
-                                    vx_float32* non = vxFormatImagePatchAddress2d(dst_base, x + i, y + j, &dst_addr);
+                                    vx_float32* non = (vx_float32*)vxFormatImagePatchAddress2d(dst_base, x + i, y + j, &dst_addr);
                                     if (*non)
                                     {
                                         found = 1;
@@ -194,7 +194,7 @@ vx_status ownEuclideanNonMaxSuppressionHarris(vx_image src, vx_scalar thr, vx_sc
 
                 if (found == 0)
                 {
-                    vx_float32* out = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_float32* out = (vx_float32*)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *out = kp_list[n].resp;
                 }
             }
@@ -273,7 +273,7 @@ vx_status ownNonMaxSuppression(vx_image i_mag, vx_image i_ang, vx_image i_edge, 
     {
         for (x = low_x; x < high_x; x++)
         {
-            vx_uint8* ang  = vxFormatImagePatchAddress2d(ang_base, x, y, &ang_addr);
+            vx_uint8* ang  = (vx_uint8*)vxFormatImagePatchAddress2d(ang_base, x, y, &ang_addr);
             vx_uint8 angle = (vx_uint8)(127 - ang[0]); // shift range back after vxPhase
             vx_uint32 idx  = (angle + 16) / 32;
             const int* ni  = neighbor_indexes[idx];
@@ -281,28 +281,28 @@ vx_status ownNonMaxSuppression(vx_image i_mag, vx_image i_ang, vx_image i_edge, 
             if (format == VX_DF_IMAGE_U8)
             {
                 vx_uint8 mag[9];
-                vx_uint8* edge = vxFormatImagePatchAddress2d(edge_base, x, y, &edge_addr);
+                vx_uint8* edge = (vx_uint8*)vxFormatImagePatchAddress2d(edge_base, x, y, &edge_addr);
                 vxReadRectangle(mag_base, &mag_addr, borders, format, x, y, 1, 1, mag, 0);
                 *edge = mag[4] > mag[ni[0]] && mag[4] > mag[ni[1]] ? mag[4] : 0;
             }
             else if (format == VX_DF_IMAGE_S16)
             {
                 vx_int16 mag[9];
-                vx_int16* edge = vxFormatImagePatchAddress2d(edge_base, x, y, &edge_addr);
+                vx_int16* edge = (vx_int16*)vxFormatImagePatchAddress2d(edge_base, x, y, &edge_addr);
                 vxReadRectangle(mag_base, &mag_addr, borders, format, x, y, 1, 1, mag, 0);
                 *edge = mag[4] > mag[ni[0]] && mag[4] > mag[ni[1]] ? mag[4] : 0;
             }
             else if (format == VX_DF_IMAGE_U16)
             {
                 vx_uint16 mag[9];
-                vx_uint16* edge = vxFormatImagePatchAddress2d(edge_base, x, y, &edge_addr);
+                vx_uint16* edge = (vx_uint16*)vxFormatImagePatchAddress2d(edge_base, x, y, &edge_addr);
                 vxReadRectangle(mag_base, &mag_addr, borders, format, x, y, 1, 1, mag, 0);
                 *edge = mag[4] > mag[ni[0]] && mag[4] > mag[ni[1]] ? mag[4] : 0;
             }
             else if (format == VX_DF_IMAGE_F32)
             {
                 vx_float32 mag[9];
-                vx_float32* edge = vxFormatImagePatchAddress2d(edge_base, x, y, &edge_addr);
+                vx_float32* edge = (vx_float32*)vxFormatImagePatchAddress2d(edge_base, x, y, &edge_addr);
                 vxReadRectangle(mag_base, &mag_addr, borders, format, x, y, 1, 1, mag, 0);
                 *edge = mag[4] > mag[ni[0]] && mag[4] > mag[ni[1]] ? mag[4] : 0;
             }

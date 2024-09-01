@@ -30,7 +30,7 @@ Kernel::Kernel(vx_context context,
             vx_uint32 numParams,
             vx_reference scope) : Reference(context, VX_TYPE_KERNEL, context)
 {
-    // vx_kernel kernel = (vx_kernel)ownCreateReference(context, VX_TYPE_KERNEL, VX_INTERNAL, &context->base);
+    vx_kernel kernel = (vx_kernel)Reference::createReference(context, VX_TYPE_KERNEL, VX_INTERNAL, context);
     {
         /* setup the kernel meta-data */
         strncpy(this->name, name, VX_MAX_KERNEL_NAME - 1);
@@ -74,18 +74,22 @@ vx_bool Kernel::isKernelUnique(vx_kernel kernel)
     vx_bool unique = vx_true_e;
 
 
-    for (t = 0u; t < context->num_targets; t++) {
-        for (k = 0u; k < VX_INT_MAX_KERNELS; k++) {
+    for (t = 0u; t < context->num_targets; t++)
+    {
+        for (k = 0u; k < VX_INT_MAX_KERNELS; k++)
+        {
             if (context->targets[t]->kernels[k] &&
                 context->targets[t]->kernels[k]->enabled &&
-                context->targets[t]->kernels[k]->enumeration == kernel->enumeration) {
+                context->targets[t]->kernels[k]->enumeration == kernel->enumeration)
+                {
                 unique = vx_false_e;
                 break;
             }
         }
     }
 
-    if (unique == vx_true_e) {
+    if (unique == vx_true_e)
+    {
         VX_PRINT(VX_ZONE_KERNEL, "Kernel %s (%x) is unique!\n", kernel->name, kernel->enumeration);
     }
 
@@ -138,10 +142,14 @@ vx_status Kernel::initializeKernel(vx_enum kenum,
                     signature.meta_formats[p] = nullptr;
                 }
                 return VX_SUCCESS;
-            } else {
+            }
+            else
+            {
                 return VX_FAILURE;
             }
-        } else {
+        }
+        else
+        {
             return VX_FAILURE;
         }
     }
@@ -152,7 +160,7 @@ vx_status Kernel::deinitializeKernel()
     vx_status status = VX_SUCCESS;
 
     VX_PRINT(VX_ZONE_KERNEL, "Releasing kernel " VX_FMT_REF "\n", (void *)this);
-    // status = ownReleaseReferenceInt((vx_reference *)kernel, VX_TYPE_KERNEL, VX_INTERNAL, nullptr);
+    status = releaseReference(VX_TYPE_KERNEL, VX_INTERNAL, nullptr);
 
     return status;
 }
@@ -416,7 +424,8 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxGetKernelByEnum(vx_context context, vx_enum
         for (t = 0; t < context->num_targets; t++)
         {
             vx_target target = context->targets[context->priority_targets[t]];
-            if (target == nullptr || target->enabled == vx_false_e) {
+            if (target == nullptr || target->enabled == vx_false_e)
+            {
                 VX_PRINT(VX_ZONE_KERNEL, "Target[%u] is not valid!\n", t);
                 continue;
             }
@@ -437,7 +446,8 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxGetKernelByEnum(vx_context context, vx_enum
                 break;
         }
 
-        if (kernel == nullptr) {
+        if (kernel == nullptr)
+        {
             VX_PRINT(VX_ZONE_KERNEL, "Kernel enum %x not found.\n", kernelenum);
             vxAddLogEntry(reinterpret_cast<vx_reference>(context), VX_ERROR_INVALID_PARAMETERS, "Kernel enum %x not found.\n", kernelenum);
             // kernel = (vx_kernel_t *)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
@@ -464,7 +474,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseKernel(vx_kernel *kernel)
             (*kernel)->kernel_object_deinitialize(*kernel);
         }
 
-        // ownReleaseReferenceInt((vx_reference *)kernel, VX_TYPE_KERNEL, VX_EXTERNAL, nullptr);
+        (*(kernel))->releaseReference(VX_TYPE_KERNEL, VX_EXTERNAL, nullptr);
     }
     else
     {
@@ -775,14 +785,14 @@ VX_API_ENTRY vx_status VX_API_CALL vxRemoveKernel(vx_kernel kernel)
         vx_uint32 kernelIdx = 0u;
         vx_context context = kernel->context;
 
-        /* Remoe the reference from the context */
+        /* Remove the reference from the context */
         // ownRemoveReference(context, &kernel->base);
 
         /* find back references to kernel's target and kernel in target->kernels array */
         vx_uint32 index = (vx_uint32)(strnindex(kernel->name, ':', VX_MAX_TARGET_NAME));
         if (index == VX_MAX_TARGET_NAME)
         {
-            strcpy(targetName,"khronos.any");
+            strcpy(targetName, "khronos.any");
         }
         else
         {

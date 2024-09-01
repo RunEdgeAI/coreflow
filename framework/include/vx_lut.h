@@ -1,5 +1,7 @@
-/*
- * Copyright (c) 2012-2017 The Khronos Group Inc. *
+/* 
+
+ * Copyright (c) 2012-2017 The Khronos Group Inc.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,33 +15,26 @@
  * limitations under the License.
  */
 
-#ifndef _OPENVX_INT_MEMORY_H_
-#define _OPENVX_INT_MEMORY_H_
+#ifndef _OPENVX_INT_LUT_H_
+#define _OPENVX_INT_LUT_H_
 
 #include <VX/vx.h>
 #include "vx_internal.h"
 
-/*! \file
- * \brief Defines an API for memory operations.
+/*!
+ * \file
+ * \brief The internal LUT implementation
+ * \author Erik Rainey <erik.rainey@gmail.com>
  *
- * \defgroup group_int_memory Internal Memory API.
+ * \defgroup group_int_lut Internal LUT API
  * \ingroup group_internal
- * \brief The Internal Memory API.
+ * \brief The Internal LUT API.
  */
 
-/*! \brief Frees a memory block.
- * \ingroup group_int_memory
+/*! \brief Releases a lut with internal references.
+ * \param [in] lut The lut to release.
+ * \ingroup group_int_lut
  */
-vx_bool ownFreeMemory(vx_context_t *context, vx_memory_t *memory);
-
-/*! \brief Allocates a memory block.
- * \ingroup group_int_memory
- */
-vx_bool ownAllocateMemory(vx_context_t *context, vx_memory_t *memory);
-
-void ownPrintMemory(vx_memory_t *mem);
-
-vx_size ownComputeMemorySize(vx_memory_t *memory, vx_uint32 p);
+void ownReleaseLUTInt(vx_lut_t *lut);
 
 #endif
-

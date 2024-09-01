@@ -37,19 +37,14 @@ static const vx_char name[VX_MAX_TARGET_NAME] = "khronos.any";
 static vx_kernel_description_t *target_kernels[] =
 {
     &colorconvert_kernel,
-#ifdef ENABLED
     &channelextract_kernel,
     &channelcombine_kernel,
     &sobel3x3_kernel,
     &magnitude_kernel,
     &phase_kernel,
-    &scale_image_kernel,
     &lut_kernel,
-    &histogram_kernel,
-    &equalize_hist_kernel,
     &absdiff_kernel,
     &mean_stddev_kernel,
-    &threshold_kernel,
     &integral_image_kernel,
     &erode3x3_kernel,
     &dilate3x3_kernel,
@@ -57,15 +52,12 @@ static vx_kernel_description_t *target_kernels[] =
     &box3x3_kernel,
     &box3x3_kernel_2,
     &gaussian3x3_kernel,
-    &convolution_kernel,
-    &gaussian_pyramid_kernel,
     &accumulate_kernel,
     &accumulate_weighted_kernel,
     &accumulate_square_kernel,
     &minmaxloc_kernel,
     &weightedaverage_kernel,
     &convertdepth_kernel,
-    &canny_kernel,
     &and_kernel,
     &or_kernel,
     &xor_kernel,
@@ -73,17 +65,8 @@ static vx_kernel_description_t *target_kernels[] =
     &multiply_kernel,
     &add_kernel,
     &subtract_kernel,
-    &warp_affine_kernel,
-    &warp_perspective_kernel,
-    &harris_kernel,
     &fast9_kernel,
     &nonmaxsuppression_kernel,
-    &optpyrlk_kernel,
-    &remap_kernel,
-    &halfscale_gaussian_kernel,
-    &laplacian_pyramid_kernel,
-    &laplacian_reconstruct_kernel,
-    &nonlinearfilter_kernel,
     &tensor_add_kernel,
 	&tensor_multiply_kernel,
     &tensor_subtract_kernel,
@@ -97,14 +80,31 @@ static vx_kernel_description_t *target_kernels[] =
     &lbp_kernel,
     &bilateral_filter_kernel,
     &match_template_kernel,
-    &houghlinesp_kernel,
-    &copy_kernel,
+#ifdef ENABLED
+    &scale_image_kernel,
+    &equalize_hist_kernel,
     &scalar_operation_kernel,
+    &houghlinesp_kernel,
+    &histogram_kernel,
+    &harris_kernel,
+    &nonlinearfilter_kernel,
     &select_kernel,
+    &threshold_kernel,
+    &convolution_kernel,
+    &gaussian_pyramid_kernel,
+    &canny_kernel,
+    &warp_affine_kernel,
+    &warp_perspective_kernel,
+    &optpyrlk_kernel,
+    &remap_kernel,
+    &halfscale_gaussian_kernel,
+    &laplacian_pyramid_kernel,
+    &laplacian_reconstruct_kernel,
+    &copy_kernel,
     &hogcells_kernel,
     &hogfeatures_kernel,
-#endif // ENABLED
-    #ifdef OPENVX_USE_NN
+#endif /* ENABLED */
+#ifdef OPENVX_USE_NN
     &nn_convolution_kernel,
     &nn_deconvolution_kernel,
     &nn_pooling_kernel,
@@ -113,8 +113,7 @@ static vx_kernel_description_t *target_kernels[] =
     &nn_norm_kernel,
     &nn_activation_kernel,
     &nn_roipooling_kernel,
-    #endif
-
+#endif /* OPENVX_USE_NN */
 };
 
 /*! \brief Declares the number of base supported kernels.
@@ -156,7 +155,7 @@ extern "C" vx_status vxTargetSupports(vx_target target,
         for (k = 0u; k < VX_INT_MAX_KERNELS; k++)
         {
             vx_char targetKernelName[VX_MAX_KERNEL_NAME];
-            vx_char *kernel;
+            vx_char* kernel;
             vx_char def[8] = "default";
 
             if (target->kernels[k])
@@ -168,7 +167,6 @@ extern "C" vx_status vxTargetSupports(vx_target target,
                     kernel = def;
                 }
 
-                VX_PRINT(VX_ZONE_API, "name %s target %s\n", kernel, kernelName);
                 if (strncmp(kernelName, kernel, VX_MAX_KERNEL_NAME) == 0)
                 {
                     status = VX_SUCCESS;
@@ -332,7 +330,7 @@ extern "C" vx_kernel vxTargetAddKernel(vx_target target,
     {
         if (target->kernels[k] == nullptr || target->kernels[k]->enabled == vx_false_e)
         {
-            target->kernels[k] = reinterpret_cast<vx_kernel>(target->context->createReference(target->context, VX_TYPE_KERNEL, target->context));
+            target->kernels[k] = reinterpret_cast<vx_kernel>(Reference::createReference(target->context, VX_TYPE_KERNEL, VX_INTERNAL, target->context));
             target->kernels[k]->initializeKernel(enumeration, func_ptr, name,
                                nullptr, numParams,
                                validate, initialize, deinitialize);

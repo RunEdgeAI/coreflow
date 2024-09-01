@@ -158,7 +158,7 @@ static vx_status VX_CALLBACK vxCannyEdgeInputValidator(vx_node node, vx_uint32 i
 }
 
 
-static vx_status VX_CALLBACK vxCannyEdgeOutputValidator(vx_node node, vx_uint32 index, vx_meta_format_t *ptr)
+static vx_status VX_CALLBACK vxCannyEdgeOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     if (index == 4)

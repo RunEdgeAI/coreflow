@@ -126,8 +126,7 @@ VX_API_ENTRY vx_scalar VX_API_CALL vxCreateScalar(vx_context context, vx_enum da
     }
     else
     {
-        // scalar = (vx_scalar)ownCreateReference(context, VX_TYPE_SCALAR, VX_EXTERNAL, &context->base);
-        scalar = std::make_shared<Scalar>(context, context).get();
+        scalar = (vx_scalar)Reference::createReference(context, VX_TYPE_SCALAR, VX_EXTERNAL, context);
         if (vxGetStatus((vx_reference)scalar) == VX_SUCCESS && scalar->type == VX_TYPE_SCALAR)
         {
             scalar->data_type = data_type;
@@ -153,9 +152,7 @@ VX_API_ENTRY vx_scalar VX_API_CALL vxCreateScalarWithSize(vx_context context, vx
     }
     else
     {
-        // scalar = (vx_scalar)ownCreateReference(context, VX_TYPE_SCALAR, VX_EXTERNAL, &context->base);
-        scalar = std::make_shared<Scalar>(context, context).get();
-
+        scalar = (vx_scalar)Reference::createReference(context, VX_TYPE_SCALAR, VX_EXTERNAL, context);
         if (vxGetStatus((vx_reference)scalar) == VX_SUCCESS && scalar->type == VX_TYPE_SCALAR)
         {
             scalar->data_type = data_type;
@@ -182,9 +179,7 @@ VX_API_ENTRY vx_scalar VX_API_CALL vxCreateVirtualScalar(vx_graph graph, vx_enum
     }
     else
     {
-        // scalar = (vx_scalar)ownCreateReference(ref->context, VX_TYPE_SCALAR, VX_EXTERNAL, &(ref->context->base));
-        scalar = std::make_shared<Scalar>(ref->context, ref->context).get();
-
+        scalar = (vx_scalar)Reference::createReference(ref->context, VX_TYPE_SCALAR, VX_EXTERNAL, ref->context);
         if (vxGetStatus((vx_reference)scalar) == VX_SUCCESS && scalar->type == VX_TYPE_SCALAR)
         {
             scalar->is_virtual = vx_true_e;
@@ -198,8 +193,7 @@ VX_API_ENTRY vx_scalar VX_API_CALL vxCreateVirtualScalar(vx_graph graph, vx_enum
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseScalar(vx_scalar *s)
 {
-    // return ownReleaseReferenceInt((vx_reference *)s, VX_TYPE_SCALAR, VX_EXTERNAL, nullptr);
-    return VX_ERROR_NOT_IMPLEMENTED;
+    return (*(vx_reference *)s)->releaseReference(VX_TYPE_SCALAR, VX_EXTERNAL, nullptr);
 } /* vxReleaseScalar() */
 
 VX_API_ENTRY vx_status VX_API_CALL vxQueryScalar(vx_scalar scalar, vx_enum attribute, void* ptr, vx_size size)

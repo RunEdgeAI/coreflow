@@ -2,10 +2,22 @@
 cc_library(
     name = "c_model",
     srcs = glob([
-        "vx_color*.cpp",
-        "vx_inter*.cpp",
-        "vx_utility*.cpp",
-        "*.h"
+        "*.cpp",
+        "*.h",
+    ],
+    exclude = [
+        "vx_canny.cpp",
+        "vx_convolution.cpp",
+        "vx_controlflow.cpp",
+        "vx_copy.cpp",
+        "vx_h*.cpp",
+        "vx_nonlinear*.cpp",
+        "vx_o*.cpp",
+        "vx_py*.cpp",
+        "vx_remap.cpp",
+        "vx_s*.cpp",
+        "vx_th*.cpp",
+        "vx_warp.cpp",
     ]),
     includes = [
         ".",
@@ -16,7 +28,6 @@ cc_library(
     deps = [
         "//:corevx",
         "//kernels/c_model:c_model_kernels",
-        "//targets/c_model/debug:openvx-debug"
     ],
     visibility = ["//visibility:public"]
 )

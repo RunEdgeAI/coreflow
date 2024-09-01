@@ -21,6 +21,527 @@
 static vx_value_set_t graph_queue[10];
 static vx_size numGraphsQueued = 0ul;
 
+Graph::Graph(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_GRAPH, scope)
+{
+
+}
+
+
+static vx_uint32 vxNextNode(vx_graph graph, vx_uint32 index)
+{
+    return ((index + 1) % graph->numNodes);
+}
+
+static vx_reference vxLocateBaseLocation(vx_reference ref, vx_size* start, vx_size* end)
+{
+    if (ref->type == VX_TYPE_IMAGE)
+    {
+        start[0] = start[1] = 0;
+        end[0] = ((vx_image)ref)->width;
+        end[1] = ((vx_image)ref)->height;
+    }
+    else
+    {
+        for (vx_uint32 i = 0; i < VX_MAX_TENSOR_DIMENSIONS; i++)
+        {
+            start[i] = 0;
+            end[i] = ((vx_tensor)ref)->dimensions[i];
+        }
+    }
+    while ((ref->type == VX_TYPE_IMAGE && ((vx_image)ref)->parent && ((vx_image)ref)->parent != ((vx_image)ref))
+        ||
+        (ref->type == VX_TYPE_TENSOR && ((vx_tensor)ref)->parent && ((vx_tensor)ref)->parent != ((vx_tensor)ref))
+        )
+    {
+        if (ref->type == VX_TYPE_IMAGE)
+        {
+            vx_image img = (vx_image)ref;
+            vx_size plane_offset = img->memory.ptrs[0] - img->parent->memory.ptrs[0];
+            vx_uint32 dy = (vx_uint32)(plane_offset * img->scale[0][VX_DIM_Y] / img->memory.strides[0][VX_DIM_Y]);
+            vx_uint32 dx = (vx_uint32)((plane_offset - (dy * img->memory.strides[0][VX_DIM_Y] / img->scale[0][VX_DIM_Y])) * img->scale[0][VX_DIM_X] / img->memory.strides[0][VX_DIM_X]);
+            start[0] += dx;
+            end[0] += dx;
+            start[1] += dy;
+            end[1] += dy;
+            ref = (vx_reference)img->parent;
+        }
+        else
+        {
+            vx_tensor tensor = (vx_tensor)ref;
+            vx_uint32 offset = 0;
+            for (vx_int32 i = tensor->number_of_dimensions - 1; i >= 0; i--)
+            {
+                start[i] = ((vx_uint8*)tensor->addr - (vx_uint8*)tensor->parent->addr - offset) / tensor->stride[i];
+                end[i] = start[i] + tensor->dimensions[i];
+                offset += (vx_uint32)(start[i] * tensor->stride[i]);
+            }
+            ref = (vx_reference)tensor->parent;
+        }
+    }
+    return ref;
+}
+static vx_tensor vxLocateView(vx_tensor mddata, vx_size* start, vx_size* end)
+{
+    for (vx_uint32 i = 0; i < VX_MAX_TENSOR_DIMENSIONS; i++)
+    {
+        start[i] = 0;
+        end[i] = mddata->dimensions[i];
+    }
+    while (mddata->parent && mddata->parent != mddata)
+    {
+        size_t offset = 0;
+        for (vx_int32 i = mddata->number_of_dimensions-1; i >= 0; i--)
+        {
+            start[i] = ((vx_uint8*)mddata->addr - (vx_uint8*)mddata->parent->addr - offset) / mddata->stride[i];
+            end[i] = start[i] + mddata->dimensions[i];
+            offset += start[i] * mddata->stride[i];
+        }
+        mddata = mddata->parent;
+    }
+    return mddata;
+}
+
+static vx_bool vxCheckWriteDependency(vx_reference ref1, vx_reference ref2)
+{
+    if (!ref1 || !ref2) // garbage input
+        return vx_false_e;
+
+    if (ref1 == ref2)
+        return vx_true_e;
+
+    // write to layer then read pyramid
+    if (ref1->type == VX_TYPE_PYRAMID && ref2->type == VX_TYPE_IMAGE)
+    {
+        vx_image img = (vx_image)ref2;
+        while (img->parent && img->parent != img) img = img->parent;
+        if (img->scope == ref1)
+            return vx_true_e;
+    }
+
+    // write to pyramid then read a layer
+    if (ref2->type == VX_TYPE_PYRAMID && ref1->type == VX_TYPE_IMAGE)
+    {
+        vx_image img = (vx_image)ref1;
+        while (img->parent && img->parent != img) img = img->parent;
+        if (img->scope == ref2)
+            return vx_true_e;
+    }
+
+    // two images or ROIs
+    if (ref1->type == VX_TYPE_IMAGE && ref2->type == VX_TYPE_IMAGE)
+    {
+        vx_size rr_start[VX_MAX_TENSOR_DIMENSIONS], rw_start[VX_MAX_TENSOR_DIMENSIONS], rr_end[VX_MAX_TENSOR_DIMENSIONS], rw_end[VX_MAX_TENSOR_DIMENSIONS];
+        vx_reference refr = vxLocateBaseLocation(ref1, rr_start, rr_end);
+        vx_reference refw = vxLocateBaseLocation(ref2, rw_start, rw_end);
+        if (refr == refw)
+        {
+            if (refr->type == VX_TYPE_IMAGE)
+            {
+            // check for ROI intersection
+                if (rr_start[0] < rw_end[0] && rr_end[0] > rw_start[0] && rr_start[1] < rw_end[1] && rr_end[1] > rw_start[1])
+                return vx_true_e;
+        }
+            else
+            {
+                if (refr->type == VX_TYPE_TENSOR)
+                {
+                    for (vx_uint32 i = 0; i < ((vx_tensor)refr)->number_of_dimensions; i++)
+                    {
+                        if ((rr_start[i] >= rw_end[i]) ||
+                            (rw_start[i] >= rr_end[i]))
+                        {
+                            return vx_false_e;
+                        }
+                    }
+                    return vx_true_e;
+    }
+            }
+        }
+    }
+    if (ref1->type == VX_TYPE_TENSOR && ref2->type == VX_TYPE_TENSOR)
+    {
+        vx_size rr_start[VX_MAX_TENSOR_DIMENSIONS], rw_start[VX_MAX_TENSOR_DIMENSIONS], rr_end[VX_MAX_TENSOR_DIMENSIONS], rw_end[VX_MAX_TENSOR_DIMENSIONS];
+        vx_tensor datar = vxLocateView((vx_tensor)ref1, rr_start, rr_end);
+        vx_tensor dataw = vxLocateView((vx_tensor)ref2, rw_start, rw_end);
+        if (datar == dataw)
+        {
+            for (vx_uint32 i = 0; i < datar->number_of_dimensions; i++)
+            {
+                if ((rr_start[i] >= rw_end[i]) ||
+                    (rw_start[i] >= rr_end[i]))
+                {
+                    return vx_false_e;
+                }
+            }
+                return vx_true_e;
+        }
+    }
+
+    return vx_false_e;
+}
+
+/*! \brief This function starts on the next node in the list and loops until we
+ * hit the original node again. Parse over the nodes in circular fashion.
+ */
+vx_status ownFindNodesWithReference(vx_graph graph,
+                                   vx_reference ref,
+                                   vx_uint32 refnodes[],
+                                   vx_uint32 *count,
+                                   vx_enum reftype)
+{
+    vx_uint32 n, p, nc = 0, max;
+    vx_status status = VX_ERROR_INVALID_LINK;
+
+    /* save the maximum number of nodes to find */
+    max = *count;
+
+    /* reset the current count to zero */
+    *count = 0;
+
+    VX_PRINT(VX_ZONE_GRAPH,"Find nodes with reference " VX_FMT_REF " type %d over %u nodes upto %u finds\n", ref, reftype, graph->numNodes, max);
+    for (n = 0; n < graph->numNodes; n++)
+    {
+        for (p = 0; p < graph->nodes[n]->kernel->signature.num_parameters; p++)
+        {
+            vx_enum dir = graph->nodes[n]->kernel->signature.directions[p];
+            vx_reference thisref = graph->nodes[n]->parameters[p];
+
+            /* VX_PRINT(VX_ZONE_GRAPH,"\tchecking node[%u].parameter[%u] dir = %d ref = "VX_FMT_REF" (=?%d:"VX_FMT_REF")\n", n, p, dir, thisref, reftype, ref); */
+            if ((dir == reftype) && vxCheckWriteDependency(thisref, ref))
+            {
+                if (nc < max)
+                {
+                    VX_PRINT(VX_ZONE_GRAPH, "match at node[%u].parameter[%u]\n", n, p);
+                    if (refnodes)
+                        refnodes[nc] = n;
+                    nc++;
+                    status = VX_SUCCESS;
+                }
+                else
+                {
+                    VX_PRINT(VX_ZONE_ERROR, "ERROR: Overflow in refnodes[]\n");
+                }
+            }
+        }
+    }
+    *count = nc;
+    VX_PRINT(VX_ZONE_GRAPH, "Found %u nodes with reference " VX_FMT_REF " status = %d\n", nc, ref, status);
+    return status;
+}
+
+
+void ownClearVisitation(vx_graph graph)
+{
+    vx_uint32 n = 0;
+    for (n = 0; n < graph->numNodes; n++)
+        graph->nodes[n]->visited = vx_false_e;
+}
+
+void ownClearExecution(vx_graph graph)
+{
+    vx_uint32 n = 0;
+    for (n = 0; n < graph->numNodes; n++)
+        graph->nodes[n]->executed = vx_false_e;
+}
+
+vx_status ownTraverseGraph(vx_graph graph,
+                          vx_uint32 parentIndex,
+                          vx_uint32 childIndex)
+{
+    /* this is expensive, but needed in order to know who references a parameter */
+    static vx_uint32 refNodes[VX_INT_MAX_REF];
+    /* this keeps track of the available starting point in the static buffer */
+    static vx_uint32 refStart = 0;
+    /* this makes sure we don't have any odd conditions about infinite depth */
+    static vx_uint32 depth = 0;
+
+    vx_uint32 refCount = 0;
+    vx_uint32 refIndex = 0;
+    vx_uint32 thisIndex = 0;
+    vx_status status = VX_SUCCESS;
+    vx_uint32 p = 0;
+
+    VX_PRINT(VX_ZONE_GRAPH, "refStart = %u\n", refStart);
+
+    if (parentIndex == childIndex && parentIndex != VX_INT_MAX_NODES)
+    {
+        VX_PRINT(VX_ZONE_ERROR, "################################\n");
+        VX_PRINT(VX_ZONE_ERROR, "ERROR: CYCLE DETECTED! node[%u]\n", parentIndex);
+        VX_PRINT(VX_ZONE_ERROR, "################################\n");
+        /* there's a cycle in the graph */
+        status = VX_ERROR_INVALID_GRAPH;
+    }
+    else if (depth > graph->numNodes) /* should be impossible under normal circumstances */
+    {
+        /* there's a cycle in the graph */
+        status = VX_ERROR_INVALID_GRAPH;
+    }
+    else
+    {
+        /* if the parent is an invalid index, then we assume we're processing a
+         * head of a graph which has no parent index.
+         */
+        if (parentIndex == VX_INT_MAX_NODES)
+        {
+            parentIndex = childIndex;
+            thisIndex = parentIndex;
+            VX_PRINT(VX_ZONE_GRAPH, "Starting head-first traverse of graph from node[%u]\n", thisIndex);
+        }
+        else
+        {
+            thisIndex = childIndex;
+            VX_PRINT(VX_ZONE_GRAPH, "continuing traverse of graph from node[%u] on node[%u] start=%u\n", parentIndex, thisIndex, refStart);
+        }
+
+        for (p = 0; p < graph->nodes[thisIndex]->kernel->signature.num_parameters; p++)
+        {
+            vx_enum dir = graph->nodes[thisIndex]->kernel->signature.directions[p];
+            vx_reference ref = graph->nodes[thisIndex]->parameters[p];
+
+            if (dir != VX_INPUT && ref != NULL)
+            {
+                VX_PRINT(VX_ZONE_GRAPH, "[traverse] node[%u].parameter[%u] = " VX_FMT_REF "\n", thisIndex, p, ref);
+                /* send the maximum number of possible nodes to find */
+                refCount = dimof(refNodes) - refStart;
+                status = ownFindNodesWithReference(graph, ref, &refNodes[refStart], &refCount, VX_INPUT);
+                VX_PRINT(VX_ZONE_GRAPH, "status = %d at node[%u] start=%u count=%u\n", status, thisIndex, refStart, refCount);
+                if (status == VX_SUCCESS)
+                {
+                    vx_uint32 refStop = refStart + refCount;
+                    VX_PRINT(VX_ZONE_GRAPH, "Looping from %u to %u\n", refStart, refStop);
+                    for (refIndex = refStart; refIndex < refStop; refIndex++)
+                    {
+                        vx_status child_status = VX_SUCCESS;
+                        VX_PRINT(VX_ZONE_GRAPH, "node[%u] => node[%u]\n", thisIndex, refNodes[refIndex]);
+                        refStart += refCount;
+                        depth++; /* go one more level in */
+                        child_status = ownTraverseGraph(graph, thisIndex, refNodes[refIndex]);
+                        if (child_status != VX_SUCCESS)
+                            status = child_status;
+                        depth--; /* pull out one level */
+                        refStart -= refCount;
+                        VX_PRINT(VX_ZONE_GRAPH, "status = %d at node[%u]\n", status, thisIndex);
+                    }
+                }
+                if (status == VX_ERROR_INVALID_LINK) /* no links at all */
+                {
+                    VX_PRINT(VX_ZONE_GRAPH, "[Ok] No link found for node[%u].parameter[%u]\n", thisIndex, p);
+                    status = VX_SUCCESS;
+                }
+            }
+            else
+            {
+                VX_PRINT(VX_ZONE_GRAPH, "[ ignore ] node[%u].parameter[%u] = " VX_FMT_REF " type %d\n", childIndex, p, ref, dir);
+            }
+            if (status == VX_ERROR_INVALID_GRAPH)
+                break;
+        }
+
+        if (status == VX_SUCCESS)
+        {
+            /* mark it visited for the next check to pass */
+            graph->nodes[thisIndex]->visited = vx_true_e;
+        }
+    }
+    VX_PRINT(VX_ZONE_GRAPH, "returning status %d\n", status);
+    return status;
+}
+
+void ownFindNextNodes(vx_graph graph,
+                     vx_uint32 last_nodes[VX_INT_MAX_REF], vx_uint32 numLast,
+                     vx_uint32 next_nodes[VX_INT_MAX_REF], vx_uint32 *numNext,
+                     vx_uint32 left_nodes[VX_INT_MAX_REF], vx_uint32 *numLeft)
+{
+    vx_uint32 poss_next[VX_INT_MAX_REF];
+    vx_uint32 i,n,p,n1,numPoss = 0;
+
+    VX_PRINT(VX_ZONE_GRAPH, "Entering with %u left nodes\n", *numLeft);
+    for (n = 0; n < *numLeft; n++)
+    {
+        VX_PRINT(VX_ZONE_GRAPH, "leftover: node[%u] = %s\n", left_nodes[n], graph->nodes[left_nodes[n]]->kernel->name);
+    }
+
+    numPoss = 0;
+    *numNext = 0;
+
+    /* for each last node, add all output to input nodes to the list of possible. */
+    for (i = 0; i < numLast; i++)
+    {
+        n = last_nodes[i];
+        for (p = 0; p < graph->nodes[n]->kernel->signature.num_parameters; p++)
+        {
+            vx_enum dir = graph->nodes[n]->kernel->signature.directions[p];
+            vx_reference ref =  graph->nodes[n]->parameters[p];
+            if (((dir == VX_OUTPUT) || (dir == VX_BIDIRECTIONAL)) && (ref != NULL))
+            {
+                /* send the max possible nodes */
+                n1 = dimof(poss_next) - numPoss;
+                if (ownFindNodesWithReference(graph, ref, &poss_next[numPoss], &n1, VX_INPUT) == VX_SUCCESS)
+                {
+                    VX_PRINT(VX_ZONE_GRAPH, "Adding %u nodes to possible list\n", n1);
+                    numPoss += n1;
+                }
+            }
+        }
+    }
+
+    VX_PRINT(VX_ZONE_GRAPH, "There are %u possible nodes\n", numPoss);
+
+    /* add back all the left over nodes (making sure to not include duplicates) */
+    for (i = 0; i < *numLeft; i++)
+    {
+        vx_uint32 j;
+        vx_bool match = vx_false_e;
+        for (j = 0; j < numPoss; j++)
+        {
+            if (left_nodes[i] == poss_next[j])
+            {
+                match = vx_true_e;
+            }
+        }
+        if (match == vx_false_e)
+        {
+            VX_PRINT(VX_ZONE_GRAPH, "Adding back left over node[%u] %s\n", left_nodes[i], graph->nodes[left_nodes[i]]->kernel->name);
+            poss_next[numPoss++] = left_nodes[i];
+        }
+    }
+    *numLeft = 0;
+
+    /* now check all possible next nodes to see if the parent nodes are visited. */
+    for (i = 0; i < numPoss; i++)
+    {
+        vx_uint32 poss_params[VX_INT_MAX_PARAMS];
+        vx_uint32 pi, numPossParam = 0;
+        vx_bool ready = vx_true_e;
+
+        n = poss_next[i];
+        VX_PRINT(VX_ZONE_GRAPH, "possible: node[%u] = %s\n", n, graph->nodes[n]->kernel->name);
+        for (p = 0; p < graph->nodes[n]->kernel->signature.num_parameters; p++)
+        {
+            if (graph->nodes[n]->kernel->signature.directions[p] == VX_INPUT)
+            {
+                VX_PRINT(VX_ZONE_GRAPH,"nodes[%u].parameter[%u] predicate needs to be checked\n", n, p);
+                poss_params[numPossParam] = p;
+                numPossParam++;
+            }
+        }
+
+        /* now check to make sure all possible input parameters have their */
+        /* parent nodes executed. */
+        for (pi = 0; pi < numPossParam; pi++)
+        {
+            vx_uint32 predicate_nodes[VX_INT_MAX_REF];
+            vx_uint32 predicate_count = 0;
+            vx_uint32 predicate_index = 0;
+            vx_uint32 refIdx = 0;
+            vx_reference ref = 0;
+            vx_enum reftype[2] = {VX_OUTPUT, VX_BIDIRECTIONAL};
+
+            p = poss_params[pi];
+            ref = graph->nodes[n]->parameters[p];
+            VX_PRINT(VX_ZONE_GRAPH, "checking node[%u].parameter[%u] = " VX_FMT_REF "\n", n, p, ref);
+
+            for(refIdx = 0; refIdx < dimof(reftype); refIdx++)
+            {
+                /* set the size of predicate nodes going in */
+                predicate_count = dimof(predicate_nodes);
+                if (ownFindNodesWithReference(graph, ref, predicate_nodes, &predicate_count, reftype[refIdx]) == VX_SUCCESS)
+                {
+                    /* check to see of all of the predicate nodes are executed */
+                    for (predicate_index = 0;
+                         predicate_index < predicate_count;
+                         predicate_index++)
+                    {
+                        n1 = predicate_nodes[predicate_index];
+                        if (graph->nodes[n1]->executed == vx_false_e)
+                        {
+                            VX_PRINT(VX_ZONE_GRAPH, "predicated: node[%u] = %s\n", n1, graph->nodes[n1]->kernel->name);
+                            ready = vx_false_e;
+                            break;
+                        }
+                    }
+                }
+                if(ready == vx_false_e)
+                {
+                    break;
+                }
+            }
+        }
+        if (ready == vx_true_e)
+        {
+            /* make sure we don't schedule this node twice */
+            if (graph->nodes[n]->visited == vx_false_e)
+            {
+                next_nodes[(*numNext)++] = n;
+                graph->nodes[n]->visited = vx_true_e;
+            }
+        }
+        else
+        {
+            /* put the node back into the possible list for next time */
+            left_nodes[(*numLeft)++] = n;
+            VX_PRINT(VX_ZONE_GRAPH, "notready: node[%u] = %s\n", n, graph->nodes[n]->kernel->name);
+        }
+    }
+
+    VX_PRINT(VX_ZONE_GRAPH, "%u Next Nodes\n", *numNext);
+    for (i = 0; i < *numNext; i++)
+    {
+        n = next_nodes[i];
+        VX_PRINT(VX_ZONE_GRAPH, "next: node[%u] = %s\n", n, graph->nodes[n]->kernel->name);
+    }
+    VX_PRINT(VX_ZONE_GRAPH, "%u Left Nodes\n", *numLeft);
+    for (i = 0; i < *numLeft; i++)
+    {
+        n = left_nodes[i];
+        VX_PRINT(VX_ZONE_GRAPH, "left: node[%u] = %s\n", n, graph->nodes[n]->kernel->name);
+    }
+}
+
+void ownContaminateGraphs(vx_reference ref)
+{
+    if (Reference::isValidReference(ref) == vx_true_e)
+    {
+        vx_uint32 r;
+        vx_context context = ref->context;
+        /*! \internal Scan the entire context for graphs which may contain
+         * this reference and mark them as unverified.
+         */
+        ownSemWait(&context->lock);
+        for (r = 0u; r < context->num_references; r++)
+        {
+            if (context->reftable[r] == NULL)
+                continue;
+            if (context->reftable[r]->type == VX_TYPE_GRAPH)
+            {
+                vx_uint32 n;
+                vx_bool found = vx_false_e;
+                vx_graph graph = (vx_graph)context->reftable[r].get();
+                for (n = 0u; n < (graph->numNodes) && (found == vx_false_e); n++)
+                {
+                    vx_uint32 p;
+                    for (p = 0u; p < graph->nodes[n]->kernel->signature.num_parameters; p++)
+                    {
+                        if (graph->nodes[n]->kernel->signature.directions[p] == VX_OUTPUT)
+                        {
+                            continue;
+                        }
+                        if (graph->nodes[n]->parameters[p] == ref)
+                        {
+                            found = vx_true_e;
+                            graph->reverify = graph->verified;
+                            graph->verified = vx_false_e;
+                            graph->state = VX_GRAPH_STATE_UNVERIFIED;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        ownSemPost(&context->lock);
+    }
+}
+
 /******************************************************************************/
 /* PUBLIC FUNCTIONS */
 /******************************************************************************/
@@ -31,13 +552,13 @@ VX_API_ENTRY vx_graph VX_API_CALL vxCreateGraph(vx_context context)
 
     if (Context::isValidContext(context) == vx_true_e)
     {
-    //     graph = (vx_graph)ownCreateReference(context, VX_TYPE_GRAPH, VX_EXTERNAL, &context->base);
+        graph = (vx_graph)Reference::createReference(context, VX_TYPE_GRAPH, VX_EXTERNAL, context);
         if (vxGetStatus((vx_reference)graph) == VX_SUCCESS && graph->type == VX_TYPE_GRAPH)
         {
-    //         ownInitPerf(&graph->perf);
-    //         ownCreateSem(&graph->lock, 1);
+            ownInitPerf(&graph->perf);
+            ownCreateSem(&graph->lock, 1);
             VX_PRINT(VX_ZONE_GRAPH,"Created Graph %p\n", graph);
-    //         ownPrintReference((vx_reference_t *)graph);
+            Reference::printReference((vx_reference)graph);
             graph->reverify = graph->verified;
             graph->verified = vx_false_e;
             graph->state = VX_GRAPH_STATE_UNVERIFIED;
@@ -132,8 +653,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryGraph(vx_graph graph, vx_enum attribut
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseGraph(vx_graph *g)
 {
-    // return ownReleaseReferenceInt((vx_reference *)g, VX_TYPE_GRAPH, VX_EXTERNAL, nullptr);
-    return VX_ERROR_NOT_IMPLEMENTED;
+    return (*(vx_reference*)g)->releaseReference(VX_TYPE_GRAPH, VX_EXTERNAL, nullptr);
 }
 
 /* Do a topological in-place sort of the nodes in list, with current
@@ -359,7 +879,7 @@ static vx_bool setup_output(vx_graph graph, vx_uint32 n, vx_uint32 p, vx_referen
                             vx_status* status, vx_uint32* num_errors)
 {
     *vref = graph->nodes[n]->parameters[p];
-    // *meta = ownCreateMetaFormat(graph->base.context);
+    *meta = ownCreateMetaFormat(graph->context);
 
     /* check to see if the reference is virtual */
     if ((*vref)->is_virtual == vx_false_e)
@@ -388,7 +908,7 @@ static vx_bool setup_output(vx_graph graph, vx_uint32 n, vx_uint32 p, vx_referen
             *status = VX_ERROR_INVALID_SCOPE;
             vxAddLogEntry((vx_reference)(*vref), *status, "Virtual Reference is in the wrong scope, created from another graph!\n");
             (*num_errors)++;
-            return vx_false_e; //break;
+            return vx_false_e; // break;
         }
         /* ok if context, pyramid or this graph */
     }
@@ -400,16 +920,16 @@ static vx_bool setup_output(vx_graph graph, vx_uint32 n, vx_uint32 p, vx_referen
 }
 
 /*
-// Parameters:
-//   n    - index of node
-//   p    - index of parameter
-//   vref - reference of the parameter
-//   meta - parameter meta info
-*/
+ * Parameters:
+ *   n    - index of node
+ *   p    - index of parameter
+ *   vref - reference of the parameter
+ *   meta - parameter meta info
+ */
 static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint32 p, vx_reference* item, vx_reference* vref, vx_meta_format meta,
                                   vx_status* status, vx_uint32* num_errors)
 {
-    // if (ownIsValidType(meta->type) == vx_false_e)
+    if (Context::isValidType(meta->type) == vx_false_e)
     {
         *status = VX_ERROR_INVALID_TYPE;
         vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status,
@@ -421,9 +941,9 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
 
     if (meta->type == VX_TYPE_IMAGE)
     {
-        vx_image img = (vx_image)item;
+        vx_image img = (vx_image)*item;
         VX_PRINT(VX_ZONE_GRAPH, "meta: type 0x%08x, %ux%u\n", meta->type, meta->dim.image.width, meta->dim.image.height);
-        if (vref == (vx_reference*)&img)
+        if (vref == item || img->is_virtual == vx_true_e)
         {
             VX_PRINT(VX_ZONE_GRAPH, "Creating Image From Meta Data!\n");
             /*! \todo need to worry about images that have a format, but no dimensions too */
@@ -433,8 +953,8 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
                 img->width = meta->dim.image.width;
                 img->height = meta->dim.image.height;
                 /* we have to go set all the other dimensional information up. */
-                // ownInitImage(img, img->width, img->height, img->format);
-                // ownPrintImage(img); /* show that it's been created. */
+                ownInitImage(img, img->width, img->height, img->format);
+                ownPrintImage(img); /* show that it's been created. */
             }
             else
             {
@@ -460,6 +980,8 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
                     graph->nodes[n]->kernel->name, p, img->width, img->height);
                 VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] is an invalid dimension %ux%u!\n",
                     graph->nodes[n]->kernel->name, p, img->width, img->height);
+                VX_PRINT(VX_ZONE_ERROR, "Node: %s: expected dimension %ux%u!\n",
+                    graph->nodes[n]->kernel->name, meta->dim.image.width, meta->dim.image.height);
                 (*num_errors)++;
                 return vx_false_e; // exit on error
             }
@@ -623,7 +1145,7 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
         }
         else
         {
-            // if (ownValidateArray(arr, meta->dim.array.item_type, meta->dim.array.capacity) != vx_true_e)
+            if (ownValidateArray(arr, meta->dim.array.item_type, meta->dim.array.capacity) != vx_true_e)
             {
                 *status = VX_ERROR_INVALID_DIMENSION;
                 vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_DIMENSION,
@@ -1122,16 +1644,16 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
 } /* postprocess_output_data_type() */
 
 /*
-// Parameters:
-//   n    - index of node
-//   p    - index of parameter
-//   vref - reference of the parameter
-//   meta - parameter meta info
-*/
+ * Parameters:
+ *   n    - index of node
+ *   p    - index of parameter
+ *   vref - reference of the parameter
+ *   meta - parameter meta info
+ */
 static vx_bool postprocess_output(vx_graph graph, vx_uint32 n, vx_uint32 p, vx_reference* vref, vx_meta_format meta,
                                   vx_status* status, vx_uint32* num_errors)
 {
-    // if (ownIsValidType(meta->type) == vx_false_e)
+    if (Context::isValidType(meta->type) == vx_false_e)
     {
         *status = VX_ERROR_INVALID_TYPE;
         vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status,
@@ -1146,7 +1668,7 @@ static vx_bool postprocess_output(vx_graph graph, vx_uint32 n, vx_uint32 p, vx_r
         vx_object_array objarr = (vx_object_array)graph->nodes[n]->parameters[p];
         VX_PRINT(VX_ZONE_GRAPH, "meta: type 0x%08x, 0x%08x " VX_FMT_SIZE "\n", meta->type, meta->dim.object_array.item_type, meta->dim.object_array.num_items);
 
-        // if (ownValidateObjectArray(objarr, meta->dim.object_array.item_type, meta->dim.object_array.num_items) != vx_true_e)
+        if (ownValidateObjectArray(objarr, meta->dim.object_array.item_type, meta->dim.object_array.num_items) != vx_true_e)
         {
             *status = VX_ERROR_INVALID_DIMENSION;
             vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_DIMENSION,
@@ -1230,7 +1752,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
         vx_bool hasACycle = vx_false_e;
 
         /* lock the graph */
-//         ownSemWait(&graph->base.lock);
+        ownSemWait(&graph->lock);
 
         /* To properly deal with parameter dependence in the graph, the
           nodes have to be in topological order when their parameters
@@ -1336,6 +1858,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
             /* check if new style validators are provided (see bug14654) */
             if (graph->nodes[n]->kernel->validate != nullptr)
             {
+                VX_PRINT(VX_ZONE_GRAPH, "Using new style validators\n");
+
                 vx_status validation_status = VX_SUCCESS;
                 vx_reference vref[VX_INT_MAX_PARAMS];
                 vx_meta_format metas[VX_INT_MAX_PARAMS];
@@ -1352,7 +1876,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                         (graph->nodes[n]->kernel->signature.directions[p] == VX_OUTPUT))
                     {
                         if (setup_output(graph, n, p, &vref[p], &metas[p], &status, &num_errors) == vx_false_e)
+                        {
                             break;
+                        }
                     }
                 }
 
@@ -1375,13 +1901,17 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
 
                 if (status == VX_SUCCESS)
                 {
+                    VX_PRINT(VX_ZONE_GRAPH, "Using new style validators - postproc\n");
+
                     for (p = 0; p < graph->nodes[n]->kernel->signature.num_parameters; p++)
                     {
                         if ((graph->nodes[n]->parameters[p] != nullptr) &&
                             (graph->nodes[n]->kernel->signature.directions[p] == VX_OUTPUT))
                         {
                             if (postprocess_output(graph, n, p, &vref[p], metas[p], &status, &num_errors) == vx_false_e)
+                            {
                                 break;
+                            }
                         }
                     }
                 }
@@ -1390,12 +1920,13 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                 {
                     if (metas[p])
                     {
-//                         ownReleaseMetaFormat(&metas[p]);
+                        ownReleaseMetaFormat(&metas[p]);
                     }
                 }
             }
             else /* old style validators */
             {
+                VX_PRINT(VX_ZONE_GRAPH, "Using old style validators\n");
                 vx_meta_format meta = 0;
 
                 /* first pass for inputs */
@@ -1451,11 +1982,11 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                                      status);
                         }
                     }
-//                     if (meta)
-//                        ownReleaseMetaFormat(&meta);
+                    if (meta)
+                       ownReleaseMetaFormat(&meta);
                 }
-//                 if (meta)
-//                     ownReleaseMetaFormat(&meta);
+                if (meta)
+                    ownReleaseMetaFormat(&meta);
             }
         }
 
@@ -1473,14 +2004,14 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                 {
                     vx_uint32 n1, p1;
                     /* check for other output references to this parameter in the graph. */
-                    // for (n1 = vxNextNode(graph, n); n1 != n; n1=vxNextNode(graph, n1))
+                    for (n1 = vxNextNode(graph, n); n1 != n; n1=vxNextNode(graph, n1))
                     {
                         for (p1 = 0; p1 < graph->nodes[n]->kernel->signature.num_parameters; p1++)
                         {
                             if ((graph->nodes[n1]->kernel->signature.directions[p1] == VX_OUTPUT) ||
                                  (graph->nodes[n1]->kernel->signature.directions[p1] == VX_BIDIRECTIONAL))
                             {
-                                // if (vxCheckWriteDependency(graph->nodes[n]->parameters[p], graph->nodes[n1]->parameters[p1]))
+                                if (vxCheckWriteDependency(graph->nodes[n]->parameters[p], graph->nodes[n1]->parameters[p1]))
                                 {
                                     status = VX_ERROR_MULTIPLE_WRITERS;
                                     VX_PRINT(VX_ZONE_GRAPH, "Multiple Writer to a reference found, check log!\n");
@@ -1517,7 +2048,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
 //                         {
 //                             vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate image at node[%u] %s parameter[%u]\n",
 //                                 n, graph->nodes[n]->kernel->name, p);
-//                             VX_PRINT(VX_ZONE_ERROR, "See log\n");
+                            VX_PRINT(VX_ZONE_ERROR, "See log\n");
 //                         }
                     }
                     else if ((VX_TYPE_IS_SCALAR(graph->nodes[n]->parameters[p]->type)) ||
@@ -1529,7 +2060,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                     else if (graph->nodes[n]->parameters[p]->type == VX_TYPE_LUT)
                     {
                         // vx_lut_t *lut = (vx_lut_t *)graph->nodes[n]->parameters[p];
-//                         if (ownAllocateMemory(graph->base.context, &lut->memory) == vx_false_e)
+//                         if (ownAllocateMemory(graph->context, &lut->memory) == vx_false_e)
 //                         {
 //                             vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate lut at node[%u] %s parameter[%u]\n",
 //                                 n, graph->nodes[n]->kernel->name, p);
@@ -1539,7 +2070,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                     else if (graph->nodes[n]->parameters[p]->type == VX_TYPE_DISTRIBUTION)
                     {
 //                         vx_distribution_t *dist = (vx_distribution_t *)graph->nodes[n]->parameters[p];
-//                         if (ownAllocateMemory(graph->base.context, &dist->memory) == vx_false_e)
+//                         if (ownAllocateMemory(graph->context, &dist->memory) == vx_false_e)
 //                         {
 //                             vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate distribution at node[%u] %s parameter[%u]\n",
 //                                 n, graph->nodes[n]->kernel->name, p);
@@ -1564,7 +2095,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                               (graph->nodes[n]->parameters[p]->type == VX_TYPE_CONVOLUTION))
                     {
 //                         vx_matrix_t *mat = (vx_matrix_t *)graph->nodes[n]->parameters[p];
-//                         if (ownAllocateMemory(graph->base.context, &mat->memory) == vx_false_e)
+//                         if (ownAllocateMemory(graph->context, &mat->memory) == vx_false_e)
 //                         {
 //                             vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate matrix (or subtype) at node[%u] %s parameter[%u]\n",
 //                                 n, graph->nodes[n]->kernel->name, p);
@@ -1604,9 +2135,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                     (graph->nodes[n]->parameters[p] != nullptr))
                 {
                     /* ring loop over the node array, checking every node but this nth node. */
-                    // for (n1 = vxNextNode(graph, n);
-                         (n1 != n) && (isAHead == vx_true_e);
-                        //  n1 = vxNextNode(graph, n1))
+                    for (n1 = vxNextNode(graph, n);
+                        (n1 != n) && (isAHead == vx_true_e);
+                        n1 = vxNextNode(graph, n1))
                     {
                         for (p1 = 0; p1 < graph->nodes[n1]->kernel->signature.num_parameters && isAHead == vx_true_e; p1++)
                         {
@@ -1614,7 +2145,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                             {
                                 VX_PRINT(VX_ZONE_GRAPH,"Checking input nodes[%u].parameter[%u] to nodes[%u].parameters[%u]\n", n, p, n1, p1);
                                 /* if the parameter is referenced elsewhere */
-                                // if (vxCheckWriteDependency(graph->nodes[n]->parameters[p], graph->nodes[n1]->parameters[p1]))
+                                if (vxCheckWriteDependency(graph->nodes[n]->parameters[p], graph->nodes[n1]->parameters[p1]))
                                 {
                                     VX_PRINT(VX_ZONE_GRAPH,"\tnodes[%u].parameter[%u] referenced in nodes[%u].parameter[%u]\n", n,p,n1,p1);
                                     isAHead = vx_false_e; /* this will cause all the loops to break too. */
@@ -1644,13 +2175,13 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
         VX_PRINT(VX_ZONE_GRAPH,"Cycle Checking (%d)\n", status);
         VX_PRINT(VX_ZONE_GRAPH,"##############\n");
 
-//         ownClearVisitation(graph);
+        ownClearVisitation(graph);
 
         /* cycle checking by traversal of the graph from heads to tails */
         for (h = 0; h < graph->numHeads; h++)
         {
             vx_status cycle_status = VX_SUCCESS;
-            // status = ownTraverseGraph(graph, VX_INT_MAX_NODES, graph->heads[h]);
+            status = ownTraverseGraph(graph, VX_INT_MAX_NODES, graph->heads[h]);
             if (cycle_status != VX_SUCCESS)
             {
                 status = cycle_status;
@@ -1674,7 +2205,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
             }
         }
 
-//         ownClearVisitation(graph);
+        ownClearVisitation(graph);
 
         if (hasACycle == vx_true_e)
         {
@@ -1735,7 +2266,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
             {
                 node->attributes.localDataPtr = calloc(1, node->attributes.localDataSize);
                 if (node->kernel->user_kernel == vx_true_e)
+                {
                     node->local_data_set_by_implementation = vx_true_e;
+                }
                 VX_PRINT(VX_ZONE_GRAPH, "Local Data Allocated " VX_FMT_SIZE " bytes for node into %p\n!",
                         node->attributes.localDataSize,
                         node->attributes.localDataPtr);
@@ -1745,13 +2278,17 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
         VX_PRINT(VX_ZONE_GRAPH,"#######################\n");
         VX_PRINT(VX_ZONE_GRAPH,"COST CALCULATIONS (%d)\n", status);
         VX_PRINT(VX_ZONE_GRAPH,"#######################\n");
-        for (n = 0; (n < graph->numNodes) && (status == VX_SUCCESS); n++) {
+        for (n = 0; (n < graph->numNodes) && (status == VX_SUCCESS); n++)
+        {
             graph->nodes[n]->costs.bandwidth = 0ul;
-            for (p = 0; p < graph->nodes[n]->kernel->signature.num_parameters; p++) {
+            for (p = 0; p < graph->nodes[n]->kernel->signature.num_parameters; p++)
+            {
                 vx_reference ref = graph->nodes[n]->parameters[p];
-                if (ref) {
+                if (ref)
+                {
                     vx_uint32 i;
-                    switch (ref->type) {
+                    switch (ref->type)
+                    {
                         case VX_TYPE_IMAGE:
                         {
                             vx_image image = (vx_image)ref;
@@ -1769,7 +2306,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                         {
                             vx_pyramid pyr = (vx_pyramid)ref;
                             vx_uint32 j;
-                            for (j = 0; j < pyr->numLevels; j++) {
+                            for (j = 0; j < pyr->numLevels; j++)
+                            {
                                 vx_image image = pyr->levels[j];
                                 for (i = 0; i < image->memory.nptrs; i++)
                                 {
@@ -1779,7 +2317,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                             break;
                         }
                         default:
-                            //VX_PRINT(VX_ZONE_WARNING, "Node[%u].parameter[%u] Unknown bandwidth cost!\n", n, p);
+                            VX_PRINT(VX_ZONE_WARNING, "Node[%u].parameter[%u] Unknown bandwidth cost!\n", n, p);
                             break;
                     }
                 }
@@ -1801,7 +2339,7 @@ exit:
         }
 
         /* unlock the graph */
-        // ownSemPost(&graph->base.lock);
+        ownSemPost(&graph->lock);
     }
     else
     {
@@ -1843,11 +2381,11 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
     VX_PRINT(VX_ZONE_GRAPH,"************************\n");
 
     graph->state = VX_GRAPH_STATE_RUNNING;
-//     ownClearVisitation(graph);
-//     ownClearExecution(graph);
+    ownClearVisitation(graph);
+    ownClearExecution(graph);
     if (context->perf_enabled)
     {
-//         ownStartCapture(&graph->perf);
+        ownStartCapture(&graph->perf);
     }
     /* initialize the next_nodes as the graph heads */
     memcpy(next_nodes, graph->heads, graph->numHeads * sizeof(vx_uint32));
@@ -1856,7 +2394,7 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
     do {
         for (n = 0; n < numNext; n++)
         {
-//             ownPrintNode(graph->nodes[next_nodes[n]]);
+            // ownPrintNode(graph->nodes[next_nodes[n]]);
         }
 
         /* execute the next nodes */
@@ -1869,7 +2407,7 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
                 if (depth == 1 && graph->should_serialize == vx_false_e)
                 {
                     vx_value_set_t *work = &workitems[n];
-                    vx_target target = &graph->base.context->targets[t];
+                    vx_target target = &graph->context->targets[t];
                     vx_node node = graph->nodes[next_nodes[n]];
                     work->v1 = (vx_value_t)target;
                     work->v2 = (vx_value_t)node;
@@ -1883,9 +2421,11 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
                     vx_node node = graph->nodes[next_nodes[n]];
 
                     /* turn on access to virtual memory */
-                    for (p = 0u; p < node->kernel->signature.num_parameters; p++) {
+                    for (p = 0u; p < node->kernel->signature.num_parameters; p++)
+                    {
                         if (node->parameters[p] == nullptr) continue;
-                        if (node->parameters[p]->is_virtual == vx_true_e) {
+                        if (node->parameters[p]->is_virtual == vx_true_e)
+                        {
                             node->parameters[p]->is_accessible = vx_true_e;
                         }
                     }
@@ -1902,9 +2442,14 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
                              action);
 
                     /* turn off access to virtual memory */
-                    for (p = 0u; p < node->kernel->signature.num_parameters; p++) {
-                        if (node->parameters[p] == nullptr) continue;
-                        if (node->parameters[p]->is_virtual == vx_true_e) {
+                    for (p = 0u; p < node->kernel->signature.num_parameters; p++)
+                    {
+                        if (node->parameters[p] == nullptr)
+                        {
+                            continue;
+                        }
+                        if (node->parameters[p]->is_virtual == vx_true_e)
+                        {
                             node->parameters[p]->is_accessible = vx_false_e;
                         }
                     }
@@ -1925,11 +2470,11 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
 #if defined(OPENVX_USE_SMP)
         if (depth == 1 && graph->should_serialize == vx_false_e)
         {
-//             if (ownIssueThreadpool(graph->base.context->workers, workitems, numNext) == vx_true_e)
+            if (ownIssueThreadpool(graph->context->workers, workitems, numNext) == vx_true_e)
             {
                 /* do a blocking complete */
                 VX_PRINT(VX_ZONE_GRAPH, "Issued %u work items!\n", numNext);
-//                 if (ownCompleteThreadpool(graph->base.context->workers, vx_true_e) == vx_true_e)
+                if (ownCompleteThreadpool(graph->context->workers, vx_true_e) == vx_true_e)
                 {
                     VX_PRINT(VX_ZONE_GRAPH, "Processed %u items in threadpool!\n", numNext);
                 }
@@ -1958,7 +2503,7 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
         numLast = numNext;
 
         /* determine the next nodes */
-//         ownFindNextNodes(graph, last_nodes, numLast, next_nodes, &numNext, left_nodes, &numLeft);
+        ownFindNextNodes(graph, last_nodes, numLast, next_nodes, &numNext, left_nodes, &numLeft);
 
     } while (numNext > 0);
 
@@ -1968,15 +2513,15 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
     }
     if (context->perf_enabled)
     {
-//         ownStopCapture(&graph->perf);
+        ownStopCapture(&graph->perf);
     }
-//     ownClearVisitation(graph);
+    ownClearVisitation(graph);
 
     for (n = 0; n < VX_INT_MAX_REF; n++)
     {
         if (graph->delays[n] && Reference::isValidReference(reinterpret_cast<vx_reference>(graph->delays[n]), VX_TYPE_DELAY) == vx_true_e)
         {
-            // vxAgeDelay(graph->delays[n]);
+            vxAgeDelay(graph->delays[n]);
         }
     }
 
@@ -2022,37 +2567,39 @@ VX_API_ENTRY vx_status VX_API_CALL vxScheduleGraph(vx_graph graph)
         }
     }
 
-    if (1) //ownSemTryWait(&graph->lock) == vx_true_e)
+    if (ownSemTryWait(&graph->lock) == vx_true_e)
     {
         vx_sem_t* p_graph_queue_lock = graph->context->p_global_lock;
         vx_uint32 q = 0u;
         vx_value_set_t *pq = nullptr;
 
-    //     ownSemWait(p_graph_queue_lock);
+        ownSemWait(p_graph_queue_lock);
         /* acquire a position in the graph queue */
-        for (q = 0; q < dimof(graph_queue); q++) {
-            if (graph_queue[q].v1 == 0) {
+        for (q = 0; q < dimof(graph_queue); q++)
+        {
+            if (graph_queue[q].v1 == 0)
+            {
                 pq = &graph_queue[q];
                 numGraphsQueued++;
                 break;
             }
         }
-    //     ownSemPost(p_graph_queue_lock);
+        ownSemPost(p_graph_queue_lock);
         if (pq)
         {
             memset(pq, 0, sizeof(vx_value_set_t));
             pq->v1 = (vx_value_t)graph;
             /* now add the graph to the queue */
             VX_PRINT(VX_ZONE_GRAPH,"Writing graph=" VX_FMT_REF ", status=%d\n",graph, status);
-    //         if (ownWriteQueue(&graph->base.context->proc.input, pq) == vx_true_e)
+            if (ownWriteQueue(&graph->context->proc.input, pq) == vx_true_e)
             {
                 status = VX_SUCCESS;
             }
-    //         else
-    //         {
-    //             ownSemPost(&graph->lock);
-    //             status = VX_ERROR_NO_RESOURCES;
-    //         }
+            else
+            {
+                ownSemPost(&graph->lock);
+                status = VX_ERROR_NO_RESOURCES;
+            }
         }
         else
         {
@@ -2078,7 +2625,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxWaitGraph(vx_graph graph)
         return VX_ERROR_INVALID_REFERENCE;
     }
 
-    if (true) //ownSemTryWait(&graph->lock) == vx_false_e) // locked
+    if (ownSemTryWait(&graph->lock) == vx_false_e) // locked
     {
         vx_sem_t* p_graph_queue_lock = graph->context->p_global_lock;
         vx_graph g2;
@@ -2086,7 +2633,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxWaitGraph(vx_graph graph)
         vx_value_set_t *data = nullptr;
         do
         {
-    //         ret = ownReadQueue(&graph->base.context->proc.output, &data);
+            ret = ownReadQueue(&graph->context->proc.output, &data);
             if (ret == vx_false_e)
             {
                 /* graph was locked but the queue was empty... */
@@ -2100,7 +2647,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxWaitGraph(vx_graph graph)
                 if (g2 == graph) /* great, it's the graph we want. */
                 {
                     vx_uint32 q = 0u;
-    //                 ownSemWait(p_graph_queue_lock);
+                    ownSemWait(p_graph_queue_lock);
                     /* find graph in the graph queue */
                     for (q = 0; q < dimof(graph_queue); q++)
                     {
@@ -2111,22 +2658,22 @@ VX_API_ENTRY vx_status VX_API_CALL vxWaitGraph(vx_graph graph)
                             break;
                         }
                     }
-    //                 ownSemPost(p_graph_queue_lock);
+                    ownSemPost(p_graph_queue_lock);
                     break;
                 }
                 else
                 {
                     /* not the right graph, put it back. */
-    //                 ownWriteQueue(&graph->base.context->proc.output, data);
+                    ownWriteQueue(&graph->context->proc.output, data);
                 }
             }
         } while (ret == vx_true_e);
-    //     ownSemPost(&graph->lock); /* unlock the graph. */
+        ownSemPost(&graph->lock); /* unlock the graph. */
     }
     else
     {
         status = VX_FAILURE;
-    //     ownSemPost(&graph->lock); /* was free, release */
+        ownSemPost(&graph->lock); /* was free, release */
     }
 
     return status;
@@ -2134,25 +2681,30 @@ VX_API_ENTRY vx_status VX_API_CALL vxWaitGraph(vx_graph graph)
 
 VX_API_ENTRY vx_status VX_API_CALL vxProcessGraph(vx_graph graph)
 {
-    if (Reference::isValidReference(reinterpret_cast<vx_reference>(graph)) == vx_false_e)
-        return VX_ERROR_INVALID_REFERENCE;
+    vx_status status = VX_SUCCESS;
 
+    if (Reference::isValidReference(reinterpret_cast<vx_reference>(graph)) == vx_false_e)
+    {
+        status = VX_ERROR_INVALID_REFERENCE;
+    }
+
+    if (VX_SUCCESS == status)
     {
         /* create a counter for re-entrancy checking */
         static vx_uint32 count = 0;
         vx_sem_t* p_sem = graph->context->p_global_lock;
-        vx_status status = VX_SUCCESS;
 
-    //     ownSemWait(p_sem);
+        ownSemWait(p_sem);
         count++;
-    //     ownSemPost(p_sem);
+        ownSemPost(p_sem);
         status = vxExecuteGraph(graph, count);
-    //     ownSemWait(p_sem);
+        ownSemWait(p_sem);
         count--;
-    //     ownSemPost(p_sem);
-
-        return status;
+        ownSemPost(p_sem);
     }
+
+    VX_PRINT(VX_ZONE_GRAPH, "%s returned %d\n", __func__, status );
+    return status;
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxAddParameterToGraph(vx_graph graph, vx_parameter param)

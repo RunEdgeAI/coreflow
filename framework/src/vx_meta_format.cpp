@@ -18,6 +18,11 @@
 #include "vx_internal.h"
 #include "vx_meta_format.h"
 
+MetaFormat::MetaFormat(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_META_FORMAT, scope)
+{
+
+}
+
 void ownReleaseMetaFormat(vx_meta_format *pmeta)
 {
     // ownReleaseReferenceInt((vx_reference *)pmeta, VX_TYPE_META_FORMAT, VX_EXTERNAL, NULL);
@@ -25,14 +30,14 @@ void ownReleaseMetaFormat(vx_meta_format *pmeta)
 
 vx_meta_format ownCreateMetaFormat(vx_context context)
 {
-    vx_meta_format meta = NULL;
+    vx_meta_format meta = nullptr;
 
     if (Context::isValidContext(context) == vx_true_e)
     {
-        // meta = (vx_meta_format)ownCreateReference(context, VX_TYPE_META_FORMAT, VX_EXTERNAL, &context->base);
+        meta = (vx_meta_format)Reference::createReference(context, VX_TYPE_META_FORMAT, VX_EXTERNAL, context);
         if (vxGetStatus((vx_reference)meta) == VX_SUCCESS)
         {
-            meta->size = sizeof(vx_meta_format_t);
+            meta->size = sizeof(vx_meta_format);
             meta->type = VX_TYPE_INVALID;
         }
     }
@@ -305,11 +310,14 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetMetaFormatAttribute(vx_meta_format meta,
 {
     vx_status status = VX_SUCCESS;
     if (Reference::isValidReference(reinterpret_cast<vx_reference>(meta), VX_TYPE_META_FORMAT) == vx_false_e)
+    {
         return VX_ERROR_INVALID_REFERENCE;
+    }
 
     if (VX_TYPE(attribute) != (vx_uint32)meta->type &&
         attribute != VX_VALID_RECT_CALLBACK)
     {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid attribute provided in %s\n", __func__);
         return VX_ERROR_INVALID_TYPE;
     }
 
@@ -581,6 +589,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetMetaFormatAttribute(vx_meta_format meta,
             status = VX_ERROR_NOT_SUPPORTED;
             break;
     }
+
+    VX_PRINT(VX_ZONE_API, "%s returned %d\n", __func__, status);
     return status;
 }
 

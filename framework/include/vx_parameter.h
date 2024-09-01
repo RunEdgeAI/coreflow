@@ -28,6 +28,10 @@
  * \brief The Internal Parameter API
  */
 
+vx_bool ownRemoveAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i);
+
+vx_bool ownAddAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i);
+
 /*! \brief The internal representation of a parameter.
  * \ingroup group_int_parameter
  */

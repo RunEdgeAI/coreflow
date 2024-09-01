@@ -20,6 +20,17 @@
 
 #include <VX/vx.h>
 
+static vx_bool ownIsValidObjectArray(vx_object_array arr);
+
+static vx_status ownInitObjectArrayInt(vx_object_array arr, vx_reference exemplar, vx_size num_items);
+
+vx_object_array ownCreateObjectArrayInt(vx_reference scope, vx_reference exemplar, vx_size count, vx_bool is_virtual);
+
+void ownDestructObjectArray(vx_reference ref);
+
+vx_bool ownValidateObjectArray(vx_object_array objarr, vx_enum item_type, vx_size num_items);
+
+
 /*! \brief The internal representation of a \ref vx_object_array
  * \ingroup group_int_object_array
  */

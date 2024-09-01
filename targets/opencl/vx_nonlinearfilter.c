@@ -147,7 +147,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
     int border_mode = bordermode.mode;
     err = clSetKernelArg(kernel, argidx++, sizeof(vx_int32), &border_mode);
 
-    //Set const value for constant boder 
+    //Set const value for constant boder
     uint8_t const_vaule = bordermode.constant_value.U8;
     err = clSetKernelArg(kernel, argidx++, sizeof(uint8_t), &const_vaule);
 
@@ -496,7 +496,7 @@ static vx_status VX_CALLBACK vxNonLinearFilterInputValidator(vx_node node, vx_ui
     return status;
 }
 
-static vx_status VX_CALLBACK vxNonLinearFilterOutputValidator(vx_node node, vx_uint32 index, vx_meta_format_t *ptr)
+static vx_status VX_CALLBACK vxNonLinearFilterOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     if (index == 3)

@@ -35,7 +35,7 @@ vx_status Target::initializeTarget(vx_kernel_description_t* kernel_desc[],
     vx_status status = VX_FAILURE;
     for (k = 0u; k < numkernels; k++)
     {
-        kernels[k] = reinterpret_cast<vx_kernel>(context->createReference(context, VX_TYPE_KERNEL, context));
+        kernels[k] = reinterpret_cast<vx_kernel>(Reference::createReference(context, VX_TYPE_KERNEL, VX_INTERNAL, context));
         VX_PRINT(VX_ZONE_TARGET, "kernel is valid ? %d\n", Reference::isValidReference((vx_reference)kernels[k], VX_TYPE_KERNEL));
 
         status = kernels[k]->initializeKernel(kernel_desc[k]->enumeration,

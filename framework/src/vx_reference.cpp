@@ -56,7 +56,6 @@ vx_bool Reference::isValidReference(vx_reference ref)
 
     if (nullptr != ref)
     {
-        printReference(ref);
 
         if ( (ref->magic == VX_MAGIC) &&
              (Context::isValidType(ref->type) == vx_true_e) &&
@@ -71,8 +70,9 @@ vx_bool Reference::isValidReference(vx_reference ref)
         }
         else if (ref->type != VX_TYPE_CONTEXT)
         {
+            printReference(ref);
             VX_PRINT(VX_ZONE_ERROR, "%p is not a valid reference!\n", ref);
-            // DEBUG_BREAK();
+            DEBUG_BREAK();
             VX_BACKTRACE(VX_ZONE_ERROR);
         }
     }
@@ -91,7 +91,6 @@ vx_bool Reference::isValidReference(vx_reference ref, vx_enum type)
 
     if (nullptr != ref)
     {
-        Reference::printReference(ref); // For debugging
 
         if ((ref->magic == VX_MAGIC) &&
             (ref->type == type) &&
@@ -101,6 +100,7 @@ vx_bool Reference::isValidReference(vx_reference ref, vx_enum type)
         }
         else if (ref->type != VX_TYPE_CONTEXT)
         {
+            Reference::printReference(ref); // For debugging
             VX_PRINT(VX_ZONE_ERROR, "%p is not a valid reference!\n", ref);
             DEBUG_BREAK(); // this will catch any "invalid" objects, but is not useful otherwise.
             VX_BACKTRACE(VX_ZONE_WARNING);
@@ -193,6 +193,136 @@ vx_uint32 Reference::totalReferenceCount()
     return count;
 }
 
+vx_reference Reference::createReference(vx_context context, vx_enum type, vx_reftype_e refType, vx_reference scope)
+{
+    vx_reference ref = nullptr;
+
+    try
+    {
+        switch(type)
+        {
+            case VX_TYPE_GRAPH:
+            {
+                const auto& spT = std::make_shared<Graph>(context, scope);
+                (void)context->addReference(spT);
+                // Ensure the shared pointer can be cast or converted to vx_reference
+                ref = static_cast<vx_reference>(spT.get());
+                break;
+            }
+            case VX_TYPE_NODE:
+            {
+                const auto& spT = std::make_shared<Node>(context, scope);
+                (void)context->addReference(spT);
+                // Ensure the shared pointer can be cast or converted to vx_reference
+                ref = static_cast<vx_reference>(spT.get());
+                break;
+            }
+            case VX_TYPE_KERNEL:
+            {
+                const auto& spT = std::make_shared<Kernel>(context, scope);
+                (void)context->addReference(spT);
+                // Ensure the shared pointer can be cast or converted to vx_reference
+                ref = static_cast<vx_reference>(spT.get());
+                break;
+            }
+            case VX_TYPE_PARAMETER:
+            {
+                const auto& spT = std::make_shared<Parameter>(context, scope);
+                (void)context->addReference(spT);
+                // Ensure the shared pointer can be cast or converted to vx_reference
+                ref = static_cast<vx_reference>(spT.get());
+                break;
+            }
+            case VX_TYPE_IMAGE:
+            {
+                const auto& spT = std::make_shared<Image>(context, scope);
+                (void)context->addReference(spT);
+                // Ensure the shared pointer can be cast or converted to vx_reference
+                ref = static_cast<vx_reference>(spT.get());
+                break;
+            }
+            case VX_TYPE_SCALAR:
+            {
+                const auto& spT = std::make_shared<Scalar>(context, scope);
+                (void)context->addReference(spT);
+                // Ensure the shared pointer can be cast or converted to vx_reference
+                ref = static_cast<vx_reference>(spT.get());
+                break;
+            }
+            case VX_TYPE_TENSOR:
+            {
+                const auto& spT = std::make_shared<Tensor>(context, scope);
+                (void)context->addReference(spT);
+                // Ensure the shared pointer can be cast or converted to vx_reference
+                ref = static_cast<vx_reference>(spT.get());
+                break;
+            }
+            case VX_TYPE_ARRAY:
+            {
+                const auto& spT = std::make_shared<Array>(context, scope);
+                (void)context->addReference(spT);
+                // Ensure the shared pointer can be cast or converted to vx_reference
+                ref = static_cast<vx_reference>(spT.get());
+                break;
+            }
+            case VX_TYPE_OBJECT_ARRAY:
+            {
+                break;
+            }
+            case VX_TYPE_USER_DATA_OBJECT:
+            {
+                const auto& spT = std::make_shared<UserDataObject>(context, scope);
+                (void)context->addReference(spT);
+                // Ensure the shared pointer can be cast or converted to vx_reference
+                ref = static_cast<vx_reference>(spT.get());
+                break;
+            }
+            case VX_TYPE_DELAY:
+            {
+                const auto& spT = std::make_shared<Delay>(context, scope);
+                (void)context->addReference(spT);
+                // Ensure the shared pointer can be cast or converted to vx_reference
+                ref = static_cast<vx_reference>(spT.get());
+                break;
+            }
+            case VX_TYPE_META_FORMAT:
+            {
+                const auto& spT = std::make_shared<MetaFormat>(context, scope);
+                (void)context->addReference(spT);
+                // Ensure the shared pointer can be cast or converted to vx_reference
+                ref = static_cast<vx_reference>(spT.get());
+                break;
+            }
+            case VX_TYPE_TARGET:
+            {
+                const auto& spT = std::make_shared<Target>(context, scope);
+                (void)context->addReference(spT);
+                // Ensure the shared pointer can be cast or converted to vx_reference
+                ref = static_cast<vx_reference>(spT.get());
+                break;
+            }
+            default:
+            {
+                VX_PRINT(VX_ZONE_ERROR, "Unsupported type passed 0x%x\n", type);
+            }
+        }
+
+        if (ref)
+        {
+            ref->incrementReference(refType);
+        }
+    }
+    catch (const std::exception& e)
+    {
+        // Handle error (e.g., log it) and return a null or invalid reference
+        ref = nullptr;
+        VX_PRINT(VX_ZONE_ERROR, "Error creating reference: %s\n", e.what());
+        DEBUG_BREAK();
+    }
+
+    return ref;
+}
+
 void Reference::printReference(vx_reference ref)
 {
     if (ref)
@@ -215,11 +345,11 @@ vx_status Reference::releaseReference(vx_enum type,
             vx_uint32 d = 0u;
             vx_destructor_f destructor = special_destructor;
 
-            // if (ownRemoveReference(ref->context, ref) == vx_false_e)
-            // {
-            //     status = VX_ERROR_INVALID_REFERENCE;
-            //     return status;
-            // }
+            if (context->removeReference(this) == vx_false_e)
+            {
+                status = VX_ERROR_INVALID_REFERENCE;
+                return status;
+            }
 
             /* if there is a destructor, call it. */
             if (destructor)
@@ -248,6 +378,12 @@ vx_status Reference::releaseReference(vx_enum type,
     }
 
     return status;
+}
+
+void Reference::initReferenceForDelay(vx_delay d, vx_int32 index)
+{
+    delay = d;
+    delay_slot_index = index;
 }
 
 /*****************************************************************************/
@@ -344,11 +480,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseReference(vx_reference* ref_ptr)
         case VX_TYPE_KERNEL:       status = vxReleaseKernel((vx_kernel*)ref_ptr); break;
         case VX_TYPE_PARAMETER:    status = vxReleaseParameter((vx_parameter*)ref_ptr); break;
 //         case VX_TYPE_TENSOR:       status = vxReleaseTensor((vx_tensor*)ref_ptr); break;
+        case VX_TYPE_USER_DATA_OBJECT: status = vxReleaseUserDataObject((vx_user_data_object*)ref_ptr); break;
 #if defined(OPENVX_USE_IX) || defined(OPENVX_USE_XML)
         case VX_TYPE_IMPORT:       status = vxReleaseImport((vx_import*)ref_ptr); break;
-#endif
-#if defined(OPENVX_USE_USER_DATA_OBJECT)
-        case VX_TYPE_USER_DATA_OBJECT: status = vxReleaseUserDataObject((vx_user_data_object*)ref_ptr); break;
 #endif
         default:
             break;
