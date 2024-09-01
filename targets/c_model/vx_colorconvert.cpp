@@ -139,7 +139,7 @@ static vx_df_image color_combos[][2] = {
         {VX_DF_IMAGE_IYUV,VX_DF_IMAGE_YUV4},
 };
 
-static vx_status VX_CALLBACK vxColorConvertOutputValidator(vx_node node, vx_uint32 index, vx_meta_format_t *ptr)
+static vx_status VX_CALLBACK vxColorConvertOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     if (index == 1)

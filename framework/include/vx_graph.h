@@ -36,7 +36,7 @@
 class Graph : public Reference
 {
 public:
-    Graph(/* args */) = default;
+    Graph(vx_context context, vx_reference scope);
     ~Graph() = default;
 
     /*! \brief The array of all nodes in this graph */

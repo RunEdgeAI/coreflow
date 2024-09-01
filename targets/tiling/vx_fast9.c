@@ -118,7 +118,7 @@ static vx_status VX_CALLBACK vxFast9InputValidator(vx_node node, vx_uint32 index
     return status;
 }
 
-static vx_status VX_CALLBACK vxFast9OutputValidator(vx_node node, vx_uint32 index, vx_meta_format_t *ptr)
+static vx_status VX_CALLBACK vxFast9OutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     if (index == 3)

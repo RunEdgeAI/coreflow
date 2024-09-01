@@ -35,8 +35,34 @@
 class Tensor : public Reference
 {
 public:
-    Tensor(/* args */) = default;
+    Tensor(vx_context context, vx_reference reference);
     ~Tensor() = default;
+
+    /**
+     * @brief Validate tensor object
+     *
+     * @param tensor
+     * @return vx_bool
+     */
+    static vx_bool isValidTensor(vx_tensor tensor);
+
+    /**
+     * @brief Allocate tensor memory
+     *
+     * @param tensor
+     * @return void*
+     */
+    void* allocateTensorMemory();
+
+    /**
+     * @brief Initialize tensor object
+     *
+     * @param dimensions
+     * @param number_of_dimensions
+     * @param data_type
+     * @param fixed_point_position
+     */
+    void initTensor(const vx_size* dimensions, vx_size number_of_dimensions, vx_enum data_type, vx_int8 fixed_point_position);
 
     /*! \brief The memory layout definition */
     void *addr;

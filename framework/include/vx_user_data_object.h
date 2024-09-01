@@ -19,8 +19,20 @@
 class UserDataObject : public Reference
 {
 public:
-    UserDataObject(/* args */) = default;
+    /**
+     * @brief Construct a new User Data Object object
+     *
+     * @param context
+     * @param scope
+     */
+    UserDataObject(vx_context context, vx_reference scope);
+    /**
+     * @brief Destroy the User Data Object object
+     *
+     */
     ~UserDataObject() = default;
+
+    vx_bool allocateUserDataObject();
 
     /*! \brief Memory layout */
     vx_memory_t memory;

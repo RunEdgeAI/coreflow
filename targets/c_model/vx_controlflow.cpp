@@ -272,7 +272,7 @@ static vx_status VX_CALLBACK vxScalarOperationParamsValidator(vx_node node, cons
         return status;
     }
 
-    vx_meta_format_t *ptr = metas[3];
+    vx_meta_format ptr = metas[3];
     switch (stype3)
     {
     case VX_TYPE_CHAR:

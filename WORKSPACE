@@ -25,7 +25,7 @@ http_archive(
 load("@rules_python//python:repositories.bzl", "py_repositories")
 py_repositories()
 
-# # Example: Java toolchain
+# Example: Java toolchain
 # http_archive(
 #     name = "rules_java",
 #     urls = ["https://github.com/bazelbuild/rules_java/releases/download/5.1.0/rules_java-5.1.0.tar.gz"],

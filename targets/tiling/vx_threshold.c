@@ -103,7 +103,7 @@ static vx_status VX_CALLBACK vxThresholdInputValidator(vx_node node, vx_uint32 i
     return status;
 }
 
-static vx_status VX_CALLBACK vxThresholdOutputValidator(vx_node node, vx_uint32 index, vx_meta_format_t *ptr)
+static vx_status VX_CALLBACK vxThresholdOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     if (index == 2)
@@ -152,14 +152,14 @@ static vx_status VX_CALLBACK vxThresholdOutputValidator(vx_node node, vx_uint32 
     return status;
 }
 
-vx_tiling_kernel_t threshold_kernel = 
+vx_tiling_kernel_t threshold_kernel =
 {
     "org.khronos.openvx.tiling_threshold",
     VX_KERNEL_THRESHOLD,
     NULL,
     Threshold_image_tiling_flexible,
     Threshold_image_tiling_fast,
-    3, 
+    3,
     { { VX_INPUT, VX_TYPE_IMAGE, VX_PARAMETER_STATE_REQUIRED },
     { VX_INPUT, VX_TYPE_THRESHOLD,   VX_PARAMETER_STATE_REQUIRED },
     { VX_OUTPUT, VX_TYPE_IMAGE, VX_PARAMETER_STATE_REQUIRED } },

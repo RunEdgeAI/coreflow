@@ -31,11 +31,12 @@
 class Reference {
 public:
     /**
-     * @brief Construct a new vx reference object
+     * @brief Construct a new Reference object
      *
+     * @param context
+     * @param type
+     * @param scope
      */
-    Reference() = default;
-
     Reference(vx_context context, vx_enum type, vx_reference scope);
 
     /**
@@ -43,6 +44,8 @@ public:
      *
      */
     ~Reference() = default;
+
+    static vx_reference createReference(vx_context context, vx_enum type, vx_reftype_e refType, vx_reference scope);
 
     static void printReference(vx_reference ref);
 
@@ -62,11 +65,12 @@ public:
                                vx_reftype_e reftype,
                                vx_destructor_f special_destructor);
 
-    /*! \brief The most basic type in the OpenVX system. Any type that inherits
-    *  from vx_reference_t must have a vx_reference_t as its first memeber
-    *  to allow casting to this type.
-    * \ingroup group_int_refererence
+    /*! \brief Used to initialize any vx_reference as a delay element
+    * \param [in] d The delay to which the object belongs
+    * \param [in] the index in the delay
+    * \ingroup group_int_reference
     */
+    void initReferenceForDelay(vx_delay delay, vx_int32 index);
 
 #if !DISABLE_ICD_COMPATIBILITY
     /*! \brief Platform for ICD compatibility. */

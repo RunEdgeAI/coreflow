@@ -22,9 +22,14 @@
 
 
 /*==============================================================================
-Tensor HELPER FUNCTIONS
+Tensor INTERNAL HELPER FUNCTIONS
 =============================================================================*/
-vx_bool ownIsValidTensor(vx_tensor tensor)
+Tensor::Tensor(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_TENSOR, scope)
+{
+
+}
+
+vx_bool Tensor::isValidTensor(vx_tensor tensor)
 {
     if (Reference::isValidReference(reinterpret_cast<vx_reference>(tensor), VX_TYPE_TENSOR) == vx_true_e)
     {
@@ -37,21 +42,41 @@ vx_bool ownIsValidTensor(vx_tensor tensor)
     }
 }
 
-void* ownAllocateTensorMemory(vx_tensor tensor)
+void* Tensor::allocateTensorMemory()
 {
-    vx_size total_size = Reference::sizeOfType(tensor->data_type);
+    vx_size total_size = Reference::sizeOfType(this->data_type);
 
-    if (tensor->addr == nullptr)
+    if (this->addr == nullptr)
     {
-        for (vx_uint32 i = 0; i < tensor->number_of_dimensions; i++)
+        for (vx_uint32 i = 0; i < this->number_of_dimensions; i++)
         {
-            total_size *= tensor->dimensions[i];
+            total_size *= this->dimensions[i];
         }
 
-        tensor->addr = calloc(total_size,1);
+        this->addr = calloc(total_size,1);
     }
 
-    return tensor->addr;
+    return this->addr;
+}
+
+void Tensor::initTensor(const vx_size* dimensions, vx_size number_of_dimensions, vx_enum data_type, vx_int8 fixed_point_position)
+{
+    this->data_type = data_type;
+    this->fixed_point_position = fixed_point_position;
+    this->number_of_dimensions = (vx_uint32) number_of_dimensions;
+
+    this->dimensions[0] = dimensions[0];
+    this->stride[0] = Reference::sizeOfType(this->data_type);
+    for (vx_uint32 i = 1; i < number_of_dimensions; i++)
+    {
+        this->dimensions[i] = dimensions[i];
+        this->stride[i] = this->stride[i - 1] * this->dimensions[i - 1];
+    }
+    for (vx_uint32 i = (vx_uint32)number_of_dimensions; i < VX_MAX_TENSOR_DIMENSIONS; i++)
+    {
+        this->dimensions[i] = 0;
+        this->stride[i] = 0;
+    }
 }
 
 //TODO: move this somewhere, there's like 3 copies of this already
@@ -67,27 +92,6 @@ static VX_INLINE int validFormat(vx_enum data_type, vx_uint8 fixed_point_pos)
             (data_type == VX_TYPE_INT16 && fixed_point_pos == Q78_FIXED_POINT_POSITION) ||
             (data_type == VX_TYPE_INT8 && fixed_point_pos == 0) ||
             (data_type == VX_TYPE_UINT8 && fixed_point_pos == 0);
-}
-
-void ownInitTensor(vx_tensor tensor, const vx_size* dimensions, vx_size number_of_dimensions, vx_enum data_type, vx_int8 fixed_point_position)
-{
-    tensor->data_type = data_type;
-    tensor->fixed_point_position = fixed_point_position;
-    tensor->number_of_dimensions = (vx_uint32) number_of_dimensions;
-
-    tensor->dimensions[0] = dimensions[0];
-    tensor->stride[0] = Reference::sizeOfType(tensor->data_type);
-    for (vx_uint32 i = 1; i < number_of_dimensions; i++)
-    {
-        tensor->dimensions[i] = dimensions[i];
-        tensor->stride[i] = tensor->stride[i - 1] * tensor->dimensions[i - 1];
-    }
-    for (vx_uint32 i = (vx_uint32)number_of_dimensions; i < VX_MAX_TENSOR_DIMENSIONS; i++)
-    {
-        tensor->dimensions[i] = 0;
-        tensor->stride[i] = 0;
-    }
-
 }
 
 /*==============================================================================
@@ -120,14 +124,14 @@ VX_API_ENTRY vx_tensor VX_API_CALL vxCreateTensor(
         // return (vx_tensor)ownGetErrorObject((vx_context)context, VX_ERROR_INVALID_TYPE);
     }
 
-    // tensor = (vx_tensor)ownCreateReference(context, VX_TYPE_TENSOR, VX_EXTERNAL, &context->base);
+    tensor = (vx_tensor)Reference::createReference(context, VX_TYPE_TENSOR, VX_EXTERNAL, context);
     if (vxGetStatus((vx_reference)tensor) != VX_SUCCESS || tensor->type != VX_TYPE_TENSOR)
     {
         VX_PRINT(VX_ZONE_ERROR, "Failed to create reference for tensor.\n");
         //TODO: check, do we not need to set the err here
         return tensor;
     }
-    ownInitTensor(tensor, dims, number_of_dims, data_type, fixed_point_position);
+    tensor->initTensor(dims, number_of_dims, data_type, fixed_point_position);
                   tensor->parent = nullptr;
                   tensor->scope = (vx_reference)context;
 
@@ -168,7 +172,7 @@ VX_API_ENTRY vx_tensor VX_API_CALL vxCreateTensorFromHandle(vx_context context, 
         // return (vx_tensor)ownGetErrorObject(context, VX_ERROR_INVALID_VALUE);
     }
 
-    // tensor = (vx_tensor)ownCreateReference(context, VX_TYPE_TENSOR, VX_EXTERNAL, &context->base);
+    tensor = (vx_tensor)Reference::createReference(context, VX_TYPE_TENSOR, VX_EXTERNAL, context);
     if (vxGetStatus((vx_reference)tensor) != VX_SUCCESS || tensor->type != VX_TYPE_TENSOR)
     {
         VX_PRINT(VX_ZONE_ERROR, "Failed to create reference for tensor.\n");
@@ -203,7 +207,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSwapTensorHandle(vx_tensor tensor, void* ne
 {
     vx_status status = VX_SUCCESS;
 
-    if (ownIsValidTensor(tensor) == vx_true_e)
+    if (Tensor::isValidTensor(tensor) == vx_true_e)
     {
         if (new_ptr == nullptr)
         {
@@ -215,7 +219,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSwapTensorHandle(vx_tensor tensor, void* ne
 
             if (prev_ptr != nullptr && tensor->parent != nullptr)
             {
-                /*The tensor was already being accessed*/
+                /* The tensor was already being accessed */
                 return VX_FAILURE;
             }
 
@@ -268,7 +272,7 @@ VX_API_ENTRY vx_object_array VX_API_CALL vxCreateImageObjectArrayFromTensor(vx_t
     (void)array_size;
     (void)stride;
 
-	vx_object_array images = nullptr; //(vx_object_array)ownCreateReference(tensor->context, VX_TYPE_OBJECT_ARRAY, VX_EXTERNAL, (vx_reference)tensor->context);//  TODO scope?
+	vx_object_array images = (vx_object_array)Reference::createReference(tensor->context, VX_TYPE_OBJECT_ARRAY, VX_EXTERNAL, (vx_reference)tensor->context);
 
     if ((rect->end_x <= rect->start_x) ||
         (rect->end_y <= rect->start_y))
@@ -277,10 +281,10 @@ VX_API_ENTRY vx_object_array VX_API_CALL vxCreateImageObjectArrayFromTensor(vx_t
         goto exit;
     }
 
-    if (ownIsValidTensor(tensor) == vx_true_e)
+    if (Tensor::isValidTensor(tensor) == vx_true_e)
     {
         /* perhaps the parent hasn't been allocated yet? */
-        if (ownAllocateTensorMemory(tensor) != nullptr)
+        if (tensor->allocateTensorMemory() != nullptr)
         {
             if ((tensor->data_type == VX_TYPE_INT16 && image_format == VX_DF_IMAGE_S16) ||
                 (tensor->data_type == VX_TYPE_UINT8 && image_format == VX_DF_IMAGE_U8))
@@ -299,7 +303,7 @@ VX_API_ENTRY vx_object_array VX_API_CALL vxCreateImageObjectArrayFromTensor(vx_t
                         addr.step_y = addr.dim_x;
                         addr.stride_x = (vx_uint32) Reference::sizeOfType(tensor->data_type);
                         addr.stride_y = (vx_uint32)(tensor->dimensions[0] * Reference::sizeOfType(tensor->data_type));
-                        //vx_image exemplar = vxCreateImage (tensor->context, addr.dim_x, addr.dim_y, image_format);
+                        vx_image exemplar = vxCreateImage(tensor->context, addr.dim_x, addr.dim_y, image_format);
 						if (vxGetStatus((vx_reference)images) == VX_SUCCESS && images->type == VX_TYPE_OBJECT_ARRAY)
                         {
 							int i;
@@ -368,19 +372,17 @@ exit:
     return images;
 }
 
-
-
 VX_API_ENTRY vx_tensor VX_API_CALL vxCreateTensorFromView(vx_tensor tensor, vx_size number_of_dimensions, const vx_size * view_start, const vx_size * view_end)
 {
     vx_tensor subtensor = nullptr;
     (void)number_of_dimensions;
 
-    if ((ownIsValidTensor(tensor) == vx_true_e) && (nullptr != view_start) && (nullptr != view_end))
+    if ((Tensor::isValidTensor(tensor) == vx_true_e) && (nullptr != view_start) && (nullptr != view_end))
     {
         /* perhaps the parent hasn't been allocated yet? */
-        if (ownAllocateTensorMemory(tensor) != nullptr)
+        if (tensor->allocateTensorMemory() != nullptr)
         {
-            // subtensor = (vx_tensor)ownCreateReference(tensor->context, VX_TYPE_TENSOR, VX_EXTERNAL, &tensor->context->base);
+            subtensor = (vx_tensor)Reference::createReference(tensor->context, VX_TYPE_TENSOR, VX_EXTERNAL, tensor->context);
             if (subtensor)
             {
 				vx_uint32 p = 0;
@@ -423,9 +425,6 @@ VX_API_ENTRY vx_tensor VX_API_CALL vxCreateTensorFromView(vx_tensor tensor, vx_s
     return subtensor;
 }
 
-
-
-
 VX_API_ENTRY vx_tensor VX_API_CALL vxCreateVirtualTensor(
         vx_graph graph,
         vx_size number_of_dims,
@@ -440,12 +439,12 @@ VX_API_ENTRY vx_tensor VX_API_CALL vxCreateVirtualTensor(
     {
         if (data_type == VX_TYPE_INVALID || validFormat(data_type, fixed_point_position))
         {
-            // tensor = (vx_tensor)ownCreateReference(gref->context, VX_TYPE_TENSOR, VX_EXTERNAL, &gref->context->base);
+            tensor = (vx_tensor)Reference::createReference(gref->context, VX_TYPE_TENSOR, VX_EXTERNAL, gref->context);
             if (vxGetStatus((vx_reference)tensor) == VX_SUCCESS  && tensor->type == VX_TYPE_TENSOR)
             {
-                ownInitTensor(tensor, dims, number_of_dims, data_type, fixed_point_position);
-					tensor->parent = nullptr;
-					//tensor->scope = (vx_reference)context;
+                tensor->initTensor(dims, number_of_dims, data_type, fixed_point_position);
+                tensor->parent = nullptr;
+                // tensor->scope = (vx_reference)context;
                 tensor->is_virtual = vx_true_e;
 				tensor->scope = (vx_reference)graph;
             } else
@@ -466,23 +465,22 @@ VX_API_ENTRY vx_tensor VX_API_CALL vxCreateVirtualTensor(
 
 
 
-VX_API_ENTRY vx_status VX_API_CALL vxReleaseTensor(vx_tensor *tensor)
+VX_API_ENTRY vx_status VX_API_CALL vxReleaseTensor(vx_tensor* tensor)
 {
-//    return vxReleaseReference((vx_reference *)tensor);
+    // return vxReleaseReference((vx_reference *)tensor);
     if (tensor)
     {
         //TODO: I assume we need to release from parent like we do in vx_image.c: vxReleaseImage
     }
 
-    // return ownReleaseReferenceInt((vx_reference *)tensor, VX_TYPE_TENSOR, VX_EXTERNAL, nullptr);
-    return VX_ERROR_NOT_IMPLEMENTED;
+    return (*(vx_reference *)tensor)->releaseReference(VX_TYPE_TENSOR, VX_EXTERNAL, nullptr);
 }
 
 
 VX_API_ENTRY vx_status VX_API_CALL vxQueryTensor(vx_tensor tensor, vx_enum attribute, void *ptr, vx_size size)
 {
     vx_status status = VX_SUCCESS;
-    if (ownIsValidTensor(tensor) == vx_true_e)
+    if (Tensor::isValidTensor(tensor) == vx_true_e)
     {
         switch (attribute)
         {
@@ -591,7 +589,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapTensorPatch(vx_tensor tensor, vx_size nu
     }
 
     /* bad references */
-    if (ownIsValidTensor(tensor) == vx_false_e)
+    if (Tensor::isValidTensor(tensor) == vx_false_e)
     {
         status = VX_ERROR_INVALID_REFERENCE;
         goto exit;
@@ -610,7 +608,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapTensorPatch(vx_tensor tensor, vx_size nu
     }
     if (tensor->addr == nullptr)
     {
-        if (usage != VX_WRITE_ONLY || ownAllocateTensorMemory(tensor) == nullptr)
+        if (usage != VX_WRITE_ONLY || tensor->allocateTensorMemory() == nullptr)
         {
             VX_PRINT(VX_ZONE_ERROR, "Tensor memory was allocated failed!\n");
             status = VX_ERROR_NO_MEMORY;
@@ -687,7 +685,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapTensorPatch(vx_tensor tensor, vx_map_i
     vx_status status = VX_FAILURE;
 
     /* bad references */
-    if (ownIsValidTensor(tensor) == vx_false_e)
+    if (Tensor::isValidTensor(tensor) == vx_false_e)
     {
         status = VX_ERROR_INVALID_REFERENCE;
         goto exit;
@@ -772,7 +770,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyTensorPatch(vx_tensor tensor, vx_size n
     }
 
     /* bad references */
-    if (VX_SUCCESS == status && ownIsValidTensor(tensor) == vx_false_e)
+    if (VX_SUCCESS == status && Tensor::isValidTensor(tensor) == vx_false_e)
     {
         status = VX_ERROR_INVALID_REFERENCE;
     }
@@ -787,7 +785,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyTensorPatch(vx_tensor tensor, vx_size n
 
     if (VX_SUCCESS == status && tensor->addr == nullptr)
     {
-        if (usage != VX_WRITE_ONLY || ownAllocateTensorMemory(tensor) == nullptr)
+        if (usage != VX_WRITE_ONLY || tensor->allocateTensorMemory() == nullptr)
         {
             VX_PRINT(VX_ZONE_ERROR, "Tensor memory was not allocated!\n");
             status = VX_ERROR_NOT_ALLOCATED;
@@ -874,7 +872,6 @@ void ownFreeTensor(vx_tensor tensor)
     tensor->addr = nullptr;
 }
 
-
 void ownDestructTensor(vx_reference ref)
 {
     vx_tensor tensor = (vx_tensor)ref;
@@ -885,7 +882,7 @@ void ownDestructTensor(vx_reference ref)
     }
     else if (tensor->parent)
     {
-        // ownReleaseReferenceInt((vx_reference *)&tensor->parent, VX_TYPE_TENSOR, VX_INTERNAL, nullptr);
+        tensor->parent->releaseReference(VX_TYPE_TENSOR, VX_INTERNAL, nullptr);
     }
 }
 

@@ -499,7 +499,7 @@ static vx_status VX_CALLBACK vxGaussianPyramidInputValidator(vx_node node, vx_ui
 }
 
 
-static vx_status VX_CALLBACK vxGaussianPyramidOutputValidator(vx_node node, vx_uint32 index, vx_meta_format_t *ptr)
+static vx_status VX_CALLBACK vxGaussianPyramidOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     if (index == 1)
@@ -729,7 +729,7 @@ static vx_status VX_CALLBACK vxLaplacianPyramidInputValidator(vx_node node, vx_u
 }
 
 
-static vx_status VX_CALLBACK vxLaplacianPyramidOutputValidator(vx_node node, vx_uint32 index, vx_meta_format_t* ptr)
+static vx_status VX_CALLBACK vxLaplacianPyramidOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     vx_status status = VX_SUCCESS;
     if (index == 1)
@@ -1077,7 +1077,7 @@ static vx_status VX_CALLBACK vxLaplacianReconstructInputValidator(vx_node node, 
     return status;
 }
 
-static vx_status VX_CALLBACK vxLaplacianReconstructOutputValidator(vx_node node, vx_uint32 index, vx_meta_format_t* ptr)
+static vx_status VX_CALLBACK vxLaplacianReconstructOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     vx_status status = VX_SUCCESS;
     if (index == 2)

@@ -37,7 +37,8 @@
 class Image : public Reference
 {
 public:
-    Image(/* args */) = default;
+    Image(vx_context context, vx_reference ref);
+
     ~Image() = default;
 
     /*! \brief The memory layout definition */

@@ -40,6 +40,8 @@ cc_binary(
         "//:corevx",
         "//targets/c_model:c_model",
         "//targets/c_model:imported_openvx_c_model",
+        "//targets/debug:debug",
+        "//targets/debug:imported_openvx_debug",
         ":imported_xyz",
     ],
     linkopts = [
@@ -47,6 +49,7 @@ cc_binary(
     ],
     data = [
         "//targets/c_model:imported_openvx_c_model",
+        "//targets/debug:imported_openvx_debug",
         ":imported_xyz",
     ],
 )

@@ -41,7 +41,7 @@ using vx_user_data_object = UserDataObject*;
 /*! \brief The object type enumeration for user data object.
  * \ingroup group_user_data_object
  */
-#define VX_TYPE_USER_DATA_OBJECT          0x816 /*!< \brief A <tt>\ref vx_user_data_object</tt>. */
+#define VX_TYPE_USER_DATA_OBJECT          0x817 /*!< \brief A <tt>\ref vx_user_data_object</tt>. */
 
 /*! \brief The user data object attributes.
  * \ingroup group_user_data_object

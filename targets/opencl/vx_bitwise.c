@@ -80,7 +80,7 @@ static vx_status VX_CALLBACK vxBinaryBitwiseInputValidator(vx_node node, vx_uint
     return status;
 }
 
-static vx_status VX_CALLBACK vxBinaryBitwiseOutputValidator(vx_node node, vx_uint32 index, vx_meta_format_t *ptr)
+static vx_status VX_CALLBACK vxBinaryBitwiseOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     if (index == 2)
@@ -435,7 +435,7 @@ static vx_status VX_CALLBACK vxUnaryBitwiseInputValidator(vx_node node, vx_uint3
     return status;
 }
 
-static vx_status VX_CALLBACK vxUnaryBitwiseOutputValidator(vx_node node, vx_uint32 index, vx_meta_format_t *ptr)
+static vx_status VX_CALLBACK vxUnaryBitwiseOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     if (index == 1)

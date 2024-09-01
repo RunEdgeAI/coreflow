@@ -35,8 +35,9 @@ Node::Node(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_
 
 void Node::setParameter(vx_uint32 index, vx_reference value)
 {
-    if (parameters[index]) {
-        // ownReleaseReferenceInt(&parameters[index], parameters[index]->type, VX_INTERNAL, nullptr);
+    if (parameters[index])
+    {
+        parameters[index]->releaseReference(parameters[index]->type, VX_INTERNAL, nullptr);
     }
 
     value->incrementReference(VX_INTERNAL);
@@ -98,43 +99,43 @@ void Node::setParameter(vx_uint32 index, vx_reference value)
 //     ownReleaseReferenceInt((vx_reference *)&node->kernel, VX_TYPE_KERNEL, VX_INTERNAL, nullptr);
 // }
 
-// vx_status ownRemoveNodeInt(vx_node *n)
-// {
-//     vx_node_t *node = (vx_node_t *)(n?*n:0);
-//     vx_status status =  VX_ERROR_INVALID_REFERENCE;
-//     if (node && ownIsValidSpecificReference(&node->base, VX_TYPE_NODE))
-//     {
-//         if (node->graph)
-//         {
-//             vx_uint32 i = 0;
-//             vx_bool removedFromGraph = vx_false_e;
-//             ownSemWait(&node->graph->base.lock);
-//             /* remove the reference from the graph */
-//             for (i = 0; i < node->graph->numNodes; i++)
-//             {
-//                 if (node->graph->nodes[i] == node)
-//                 {
-//                     node->graph->numNodes--;
-//                     node->graph->nodes[i] = node->graph->nodes[node->graph->numNodes];
-//                     node->graph->nodes[node->graph->numNodes] = nullptr;
-//                     /* force the graph to be verified again */
-//                     node->graph->reverify = node->graph->verified;
-//                     node->graph->verified = vx_false_e;
-//                     node->graph->state = VX_GRAPH_STATE_UNVERIFIED;
-//                     removedFromGraph = vx_true_e;
-//                     break;
-//                 }
-//             }
-//             ownSemPost(&node->graph->base.lock);
-//             /* If this node is within a graph, release internal reference to graph */
-//             if(removedFromGraph) {
-//                 ownReleaseReferenceInt((vx_reference *)&node, VX_TYPE_NODE, VX_INTERNAL, nullptr);
-//                 status = VX_SUCCESS;
-//             }
-//         }
-//     }
-//     return status;
-// }
+vx_status ownRemoveNodeInt(vx_node node)
+{
+    vx_status status =  VX_ERROR_INVALID_REFERENCE;
+    if (node && Reference::isValidReference(reinterpret_cast<vx_reference>(node), VX_TYPE_NODE))
+    {
+        if (node->graph)
+        {
+            vx_uint32 i = 0;
+            vx_bool removedFromGraph = vx_false_e;
+            ownSemWait(&node->graph->lock);
+            /* remove the reference from the graph */
+            for (i = 0; i < node->graph->numNodes; i++)
+            {
+                if (node->graph->nodes[i] == node)
+                {
+                    node->graph->numNodes--;
+                    node->graph->nodes[i] = node->graph->nodes[node->graph->numNodes];
+                    node->graph->nodes[node->graph->numNodes] = nullptr;
+                    /* force the graph to be verified again */
+                    node->graph->reverify = node->graph->verified;
+                    node->graph->verified = vx_false_e;
+                    node->graph->state = VX_GRAPH_STATE_UNVERIFIED;
+                    removedFromGraph = vx_true_e;
+                    break;
+                }
+            }
+            ownSemPost(&node->graph->lock);
+            /* If this node is within a graph, release internal reference to graph */
+            if(removedFromGraph)
+            {
+                node->releaseReference(VX_TYPE_NODE, VX_INTERNAL, nullptr);
+                status = VX_SUCCESS;
+            }
+        }
+    }
+    return status;
+}
 
 // ![FROM SAMPLE EXTENSION]
 vx_status ownSetChildGraphOfNode(vx_node node, vx_graph graph)
@@ -194,13 +195,13 @@ vx_status ownSetChildGraphOfNode(vx_node node, vx_graph graph)
         }
         else
         {
-            //vxAddLogEntry((vx_reference)child, VX_ERROR_INVALID_GRAPH, "Number of parameters on graph does not equal number of parameters on node!");
+            vxAddLogEntry(reinterpret_cast<vx_reference>(node->child), VX_ERROR_INVALID_GRAPH, "Number of parameters on graph does not equal number of parameters on node!");
             vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_GRAPH, "Graph must have some parameters!");
         }
     }
     else if ((valid_node == vx_true_e) && (graph == nullptr) && (node->child != nullptr))
     {
-        // status = ownReleaseReferenceInt((vx_reference *)&node->child, VX_TYPE_GRAPH, VX_INTERNAL, nullptr);
+        status = node->child->releaseReference(VX_TYPE_GRAPH, VX_INTERNAL, nullptr);
     }
 
     return status;
@@ -250,8 +251,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxCreateGenericNode(vx_graph graph, vx_kernel k
             {
                 if (graph->nodes[n] == nullptr)
                 {
-                    // node = (vx_node)ownCreateReference(graph->base.context, VX_TYPE_NODE, VX_EXTERNAL, reinterpret_cast<vx_reference>(graph));
-                    node = std::make_shared<Node>(graph->context, graph).get();
+                    node = (vx_node)Reference::createReference(graph->context, VX_TYPE_NODE, VX_EXTERNAL, reinterpret_cast<vx_reference>(graph));
                     if (vxGetStatus((vx_reference)node) == VX_SUCCESS && node->type == VX_TYPE_NODE)
                     {
                         /* reference the abstract kernel. */
@@ -294,7 +294,8 @@ VX_API_ENTRY vx_node VX_API_CALL vxCreateGenericNode(vx_graph graph, vx_kernel k
             // node = (vx_node_t *)ownGetErrorObject(graph->base.context, VX_ERROR_INVALID_REFERENCE);
         }
     }
-    else {
+    else
+    {
         VX_PRINT(VX_ZONE_ERROR, "Graph %p was invalid!\n", graph);
         vxAddLogEntry((vx_reference)graph, VX_ERROR_INVALID_REFERENCE, "Graph %p as invalid!\n", graph);
     }
@@ -539,8 +540,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetNodeAttribute(vx_node node, vx_enum attr
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseNode(vx_node* node)
 {
-    // return ownReleaseReferenceInt((vx_reference *)n, VX_TYPE_NODE, VX_EXTERNAL, nullptr);
-    return VX_ERROR_NOT_IMPLEMENTED;
+    return (*(vx_reference *)node)->releaseReference(VX_TYPE_NODE, VX_EXTERNAL, nullptr);
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxRemoveNode(vx_node node)
@@ -548,10 +548,12 @@ VX_API_ENTRY vx_status VX_API_CALL vxRemoveNode(vx_node node)
     vx_status status =  VX_ERROR_INVALID_REFERENCE;
     if (node && Reference::isValidReference(reinterpret_cast<vx_reference>(node), VX_TYPE_NODE))
     {
-        // status = ownRemoveNodeInt(n);
-        if (status == VX_SUCCESS) {
-            // status = ownReleaseReferenceInt((vx_reference *)&node, VX_TYPE_NODE, VX_EXTERNAL, nullptr);
-            if (status == VX_SUCCESS) {
+        status = ownRemoveNodeInt(node);
+        if (status == VX_SUCCESS)
+        {
+            status = node->releaseReference(VX_TYPE_NODE, VX_EXTERNAL, nullptr);
+            if (status == VX_SUCCESS)
+            {
                 node = nullptr;
             }
         }

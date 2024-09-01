@@ -237,7 +237,7 @@ static vx_status VX_CALLBACK vxGaussianPyramidInputValidator(vx_node node, vx_ui
 }
 
 
-static vx_status VX_CALLBACK vxGaussianPyramidOutputValidator(vx_node node, vx_uint32 index, vx_meta_format_t *ptr)
+static vx_status VX_CALLBACK vxGaussianPyramidOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     if (index == 1)
@@ -560,7 +560,7 @@ static vx_status replicateConvolve(vx_image src, vx_convolution conv, vx_image d
             {
                 vx_int16 slice[C_MAX_CONVOLUTION_DIM * C_MAX_CONVOLUTION_DIM] = { 0 };
                 auxReadRect(src_base, &src_addr, bordermode, src_format, x, y, conv_radius_x, conv_radius_y, slice);
-                
+
                 if (y < CONV_DIM_HALF)
                 {
                     INSERT_ZERO_Y(slice, y)
@@ -829,7 +829,7 @@ static vx_status VX_CALLBACK vxLaplacianReconstructInputValidator(vx_node node, 
     return status;
 }
 
-static vx_status VX_CALLBACK vxLaplacianReconstructOutputValidator(vx_node node, vx_uint32 index, vx_meta_format_t* ptr)
+static vx_status VX_CALLBACK vxLaplacianReconstructOutputValidator(vx_node node, vx_uint32 index, vx_meta_format* ptr)
 {
     vx_status status = VX_SUCCESS;
     if (index == 2)
@@ -907,7 +907,7 @@ static vx_status ownCopyImage_S16(vx_image input, vx_image output)
     status |= vxQueryImage(input, VX_IMAGE_PLANES, &planes, sizeof(planes));
     vxQueryImage(output, VX_IMAGE_FORMAT, &out_format, sizeof(out_format));
     vxQueryImage(input, VX_IMAGE_FORMAT, &src_format, sizeof(src_format));
-    
+
     status |= vxGetValidRegionImage(input, &src_rect);
     status |= vxGetValidRegionImage(output, &dst_rect);
 

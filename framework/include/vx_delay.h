@@ -20,7 +20,7 @@
 class Delay : public Reference
 {
 public:
-    Delay() = default;
+    Delay(vx_context context, vx_reference scope);
     ~Delay() = default;
 
     /*! \brief The number of objects in the delay. */

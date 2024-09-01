@@ -78,7 +78,7 @@ static vx_status VX_CALLBACK vxPhaseInputValidator(vx_node node, vx_uint32 index
     return status;
 }
 
-static vx_status VX_CALLBACK vxPhaseOutputValidator(vx_node node, vx_uint32 index, vx_meta_format_t *ptr)
+static vx_status VX_CALLBACK vxPhaseOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 

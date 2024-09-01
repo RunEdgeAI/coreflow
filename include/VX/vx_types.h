@@ -238,7 +238,8 @@ using vx_delay = Delay*;
  * \extends vx_reference
  * \ingroup group_lut
  */
-typedef struct _vx_lut *vx_lut;
+class Array;
+using vx_lut = Array*;
 
 /*! \brief The Distribution object. This has a user-defined number of bins over
  * a user-defined range (within a uint32_t range).
@@ -281,7 +282,6 @@ typedef struct _vx_remap *vx_remap;
 /*! \brief The Array Object. Array is a strongly-typed container for other data structures.
  * \ingroup group_array
  */
-class Array;
 using vx_array = Array*;
 
 /*! \brief The ObjectArray Object. ObjectArray is a strongly-typed container of OpenVX data-objects.
@@ -332,7 +332,8 @@ typedef vx_enum vx_bool;
  * creation time.
  * \ingroup group_user_kernels
  */
-typedef struct _vx_meta_format* vx_meta_format;
+class MetaFormat;
+using vx_meta_format = MetaFormat*;
 
 /*! \brief The type enumeration lists all the known types in OpenVX.
  * \ingroup group_basic_features

@@ -178,7 +178,7 @@ static vx_status VX_CALLBACK vxMultiplyInputValidator(vx_node node, vx_uint32 in
     return status;
 }
 
-static vx_status VX_CALLBACK vxMultiplyOutputValidator(vx_node node, vx_uint32 index, vx_meta_format_t *ptr)
+static vx_status VX_CALLBACK vxMultiplyOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     if (index == 5)
@@ -244,7 +244,7 @@ static vx_status VX_CALLBACK vxMultiplyOutputValidator(vx_node node, vx_uint32 i
     }
     return status;
 }
-vx_tiling_kernel_t Multiply_kernel = 
+vx_tiling_kernel_t Multiply_kernel =
 {
     "org.khronos.openvx.tiling_multiply",
     VX_KERNEL_MULTIPLY,
