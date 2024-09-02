@@ -35,7 +35,7 @@
  * \param [in,out] pmeta
  * \ingroup group_int_meta_format
  */
-void ownReleaseMetaFormat(vx_meta_format *pmeta);
+vx_status ownReleaseMetaFormat(vx_meta_format *pmeta);
 
 /*! \brief Creates a metaformat object.
  * \param [in] context The overall context object.

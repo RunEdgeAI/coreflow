@@ -97,10 +97,12 @@ VX_API_ENTRY vx_parameter VX_API_CALL vxGetKernelParameterByIndex(vx_kernel kern
 VX_API_ENTRY vx_parameter VX_API_CALL vxGetParameterByIndex(vx_node node, vx_uint32 index)
 {
     vx_parameter param = nullptr;
+
     if (Reference::isValidReference(reinterpret_cast<vx_reference>(node), VX_TYPE_NODE) == vx_false_e)
     {
         return param;
     }
+
     if (node->kernel == nullptr)
     {
         /* this can probably never happen */
@@ -153,9 +155,21 @@ void ownDestructParameter(vx_reference ref)
     }
 }
 
-VX_API_ENTRY vx_status VX_API_CALL vxReleaseParameter(vx_parameter *param)
+VX_API_ENTRY vx_status VX_API_CALL vxReleaseParameter(vx_parameter* param)
 {
-    return (*(vx_reference *)param)->releaseReference(VX_TYPE_PARAMETER, VX_EXTERNAL, nullptr);
+    vx_status status = VX_FAILURE;
+
+    if (param != nullptr)
+    {
+        vx_parameter this_param = *param;
+        if (Reference::isValidReference((vx_reference)this_param, VX_TYPE_PARAMETER) == vx_true_e)
+        {
+            status = this_param->releaseReference(VX_TYPE_PARAMETER, VX_EXTERNAL, nullptr);
+        }
+    }
+
+    VX_PRINT(VX_ZONE_API, "%s returned %d\n", __FUNCTION__, status);
+    return status;
 }
 
 

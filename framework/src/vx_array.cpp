@@ -16,7 +16,7 @@
  */
 
 #include "vx_internal.h"
-#include "vx_array.h"
+#include "vx_context.h"
 
 /*==============================================================================
  PRIVATE INTERFACE
@@ -90,12 +90,12 @@ void ownPrintArray(vx_array array)
 vx_array ownCreateArrayInt(vx_context context, vx_enum item_type, vx_size capacity, vx_bool is_virtual, vx_enum type)
 {
     vx_array arr = (vx_array)Reference::createReference(context, type, VX_EXTERNAL, context);
-    if (vxGetStatus((vx_reference)arr) == VX_SUCCESS && type == type)
+    if (vxGetStatus((vx_reference)arr) == VX_SUCCESS && arr->type == type)
     {
         arr->item_type = item_type;
         arr->item_size = vxArrayItemSize(context, item_type);
         arr->capacity = capacity;
-        is_virtual = is_virtual;
+        arr->is_virtual = is_virtual;
         vxInitArrayMemory(arr);
     }
     return arr;
@@ -104,7 +104,7 @@ vx_array ownCreateArrayInt(vx_context context, vx_enum item_type, vx_size capaci
 void ownDestructArray(vx_reference ref)
 {
     vx_array arr = (vx_array)ref;
-    // ownFreeMemory(context, &arr->memory);
+    ownFreeMemory(ref->context, &arr->memory);
 }
 
 vx_bool ownInitVirtualArray(vx_array arr, vx_enum item_type, vx_size capacity)
@@ -148,7 +148,7 @@ vx_bool ownAllocateArray(vx_array arr)
     vx_bool res = vx_false_e;
     if (arr->capacity > 0)
     {
-        res = vx_true_e; //ownAllocateMemory(context, &arr->memory);
+        res = ownAllocateMemory(arr->context, &arr->memory);
     }
     return res;
 }
@@ -225,7 +225,7 @@ vx_status ownAccessArrayRangeInt(vx_array arr, vx_size start, vx_size end, vx_si
             vx_size *stride_save = (vx_size*)calloc(1, sizeof(vx_size));
             *stride_save = arr->item_size;
 
-            if (vx_true_e) // ownAddAccessor(context, size, usage, *ptr, &arr->base, &a, stride_save) == vx_true_e)
+            if (arr->context->addAccessor(size, usage, *ptr, (vx_reference)arr, &a, stride_save) == vx_true_e)
             {
                 vx_size offset;
                 *ptr = arr->context->accessors[a].ptr;
@@ -266,7 +266,7 @@ vx_status ownAccessArrayRangeInt(vx_array arr, vx_size start, vx_size end, vx_si
             *stride_save = *pStride;
         }
 
-        if (vx_true_e) // ownAddAccessor(context, size, usage, *ptr, &arr, &a, stride_save) == vx_true_e)
+        if (arr->context->addAccessor(size, usage, *ptr, arr, &a, stride_save) == vx_true_e)
         {
             *ptr = arr->context->accessors[a].ptr;
 
@@ -346,7 +346,7 @@ vx_status ownCommitArrayRangeInt(vx_array arr, vx_size start, vx_size end, const
         /* check to see if the range is zero area */
         vx_bool zero_area = (end == 0) ? vx_true_e : vx_false_e;
         vx_uint32 index = UINT32_MAX; // out of bounds, if given to remove, won't do anything
-        vx_bool internal = vx_true_e; // ownFindAccessor(context, ptr, &index);
+        vx_bool internal = arr->context->findAccessor(ptr, &index);
 
         if (zero_area == vx_false_e)
         {
@@ -354,7 +354,7 @@ vx_status ownCommitArrayRangeInt(vx_array arr, vx_size start, vx_size end, const
             if (internal == vx_true_e && arr->context->accessors[index].usage == VX_READ_ONLY)
             {
                 /* this is a buffer that we allocated on behalf of the user and now they are done. Do nothing else*/
-                // ownRemoveAccessor(context, index);
+                arr->context->removeAccessor(index);
             }
             else
             {
@@ -394,7 +394,7 @@ vx_status ownCommitArrayRangeInt(vx_array arr, vx_size start, vx_size end, const
                         }
 
                         /* a write only or read/write copy */
-                        // ownRemoveAccessor(context, index);
+                        arr->context->removeAccessor(index);
                     }
                     else {
                         memcpy(&beg_ptr[offset], ptr, len);
@@ -413,7 +413,7 @@ vx_status ownCommitArrayRangeInt(vx_array arr, vx_size start, vx_size end, const
             /* could be RO|WO|RW where they decided not to commit anything. */
             if (internal == vx_true_e) // RO
             {
-                // ownRemoveAccessor(context, index);
+                arr->context->removeAccessor(index);
             }
             else // RW|WO
             {
@@ -565,7 +565,7 @@ vx_status ownMapArrayRangeInt(vx_array arr, vx_size start, vx_size end, vx_map_i
     extra.array_data.end = end;
     vx_uint8 *buf = nullptr;
     vx_size size = (end - start) * arr->item_size;
-    if (vx_true_e) //ownMemoryMap(context, (vx_reference)arr, size, usage, mem_type, flags, &extra, (void **)&buf, map_id) == vx_true_e)
+    if (ownMemoryMap(arr->context, (vx_reference)arr, size, usage, mem_type, flags, &extra, (void **)&buf, map_id) == vx_true_e)
     {
         if (VX_READ_ONLY == usage || VX_READ_AND_WRITE == usage)
         {
@@ -623,15 +623,15 @@ vx_status ownUnmapArrayRangeInt(vx_array arr, vx_map_id map_id)
     }
 
     /* bad parameters */
-    // if (ownFindMemoryMap(context, (vx_reference)arr, map_id) != vx_true_e)
-    // {
-    //     VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to unmap array range\n");
-    //     return VX_ERROR_INVALID_PARAMETERS;
-    // }
+    if (ownFindMemoryMap(arr->context, (vx_reference)arr, map_id) != vx_true_e)
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to unmap array range\n");
+        return VX_ERROR_INVALID_PARAMETERS;
+    }
 
     VX_PRINT(VX_ZONE_ARRAY, "UnmapArrayRange from " VX_FMT_REF "\n", arr);
 
-    vx_context context = context;
+    vx_context context = arr->context;
     vx_memory_map_t* map = &context->memory_maps[map_id];
     if (map->used && map->ref == (vx_reference)arr)
     {
@@ -647,7 +647,7 @@ vx_status ownUnmapArrayRangeInt(vx_array arr, vx_map_id map_id)
                 vx_size size = (end - start) * arr->item_size;
                 memcpy(pDst, pSrc, size);
 
-                // ownMemoryUnmap(context, (vx_uint32)map_id);
+                ownMemoryUnmap(arr->context, (vx_uint32)map_id);
                 arr->decrementReference(VX_EXTERNAL);
                 ownSemPost(&arr->memory.locks[0]);
                 status = VX_SUCCESS;
@@ -659,8 +659,8 @@ vx_status ownUnmapArrayRangeInt(vx_array arr, vx_map_id map_id)
         }
         else
         {
-            /* rean only mode */
-            // ownMemoryUnmap(context, (vx_uint32)map_id);
+            /* read only mode */
+            ownMemoryUnmap(arr->context, (vx_uint32)map_id);
             arr->decrementReference(VX_EXTERNAL);
             status = VX_SUCCESS;
         }

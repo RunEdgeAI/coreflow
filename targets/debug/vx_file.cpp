@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+
 #include <VX/vx.h>
 #include <VX/vx_lib_debug.h>
 #include <VX/vx_helper.h>
@@ -282,15 +283,16 @@ vx_status VX_CALLBACK own_fread_image_validator(vx_node node, const vx_reference
                 VX_SUCCESS == vxGetStatus((vx_reference)fname))
             {
                 vx_map_id map_id = 0;
+                vx_char* filepath = NULL;
                 vx_char* filename = NULL;
                 vx_size filename_stride = 0;
 
-                status |= vxMapArrayRange(fname, 0, VX_MAX_FILE_NAME, &map_id, &filename_stride, (void**)&filename, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
+                status |= vxMapArrayRange(fname, 0, VX_MAX_FILE_NAME, &map_id, &filename_stride, (void**)&filepath, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
                 if (VX_SUCCESS == status && sizeof(vx_char) == filename_stride)
                 {
-                    if (strncmp(filename, "", VX_MAX_FILE_NAME) == 0)
+                    if (strncmp(filepath, "", VX_MAX_FILE_NAME) == 0)
                     {
-                        vxAddLogEntry((vx_reference)node, VX_FAILURE, "Empty file name. %s\n", filename);
+                        vxAddLogEntry((vx_reference)node, VX_FAILURE, "Empty file name. %s\n", filepath);
                         status = VX_ERROR_INVALID_VALUE;
                     }
                     else
@@ -302,9 +304,19 @@ vx_status VX_CALLBACK own_fread_image_validator(vx_node node, const vx_reference
                         vx_uint32 height = 0;
                         vx_df_image format = VX_DF_IMAGE_VIRT;
 
-                        fp = fopen(filename, "rb");
+                        fp = fopen(filepath, "rb");
                         if (fp != NULL)
                         {
+                            filename = strrchr(filepath, '/');
+                            if (filename)
+                            {
+                                filename++;
+                            }
+                            else
+                            {
+                                filename = filepath;
+                            }
+
                             ext = strrchr(filename, '.');
                             if (ext)
                             {
@@ -377,7 +389,7 @@ vx_status VX_CALLBACK own_fread_image_validator(vx_node node, const vx_reference
                         }
                         else
                         {
-                            vxAddLogEntry((vx_reference)node, VX_FAILURE, "Failed to open file %s\n", filename);
+                            vxAddLogEntry((vx_reference)node, VX_FAILURE, "Failed to open file %s\n", filepath);
                             status = VX_FAILURE;
                         }
 
@@ -390,8 +402,6 @@ vx_status VX_CALLBACK own_fread_image_validator(vx_node node, const vx_reference
 
                         if (NULL != fp)
                             fclose(fp);
-
-                        status = VX_SUCCESS;
                     } // if filename is non empty
                 }
                 else

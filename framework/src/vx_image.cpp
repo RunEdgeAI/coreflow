@@ -280,7 +280,7 @@ void ownInitImage(vx_image image, vx_uint32 width, vx_uint32 height, vx_df_image
 
 void ownFreeImage(vx_image image)
 {
-    // ownFreeMemory(image->context, &image->memory);
+    ownFreeMemory(image->context, &image->memory);
 }
 
 /* Allocate the memory for an image. The function returns vx_false_e in case
@@ -304,7 +304,7 @@ vx_bool ownAllocateImage(vx_image image)
     if (image->memory_type == VX_MEMORY_TYPE_NONE)
     {
         /* Standard image */
-        // ret = ownAllocateMemory(image->context, &image->memory);
+        ret = ownAllocateMemory(image->context, &image->memory);
         ownPrintMemory(&image->memory);
     }
     else
@@ -429,6 +429,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImage(vx_context context, vx_uint32 wi
     if ((width == 0) || (height == 0) ||
         (vxIsSupportedFourcc(format) == vx_false_e) || (format == VX_DF_IMAGE_VIRT))
     {
+        return nullptr;
         // return (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
     }
     return (vx_image)vxCreateImageInt(context, width, height, format, vx_false_e);
@@ -1434,9 +1435,11 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetImagePixelValues(vx_image image, const v
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseImage(vx_image* image)
 {
+    vx_status status = VX_FAILURE;
+
     if (image != nullptr)
     {
-        vx_image this_image = image[0];
+        vx_image this_image = *image;
         if (Reference::isValidReference((vx_reference)this_image, VX_TYPE_IMAGE) == vx_true_e)
         {
             vx_image parent = this_image->parent;
@@ -1454,10 +1457,13 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseImage(vx_image* image)
                     }
                 }
             }
+
+            status = this_image->releaseReference(VX_TYPE_IMAGE, VX_EXTERNAL, nullptr);
         }
     }
 
-    return VX_SUCCESS; //((vx_reference *)image, VX_TYPE_IMAGE, VX_EXTERNAL, nullptr);
+    VX_PRINT(VX_ZONE_API, "%s returned %d\n", __FUNCTION__, status);
+    return status;
 }
 
 VX_API_ENTRY vx_size VX_API_CALL vxComputeImagePatchSize(vx_image image,
@@ -1872,7 +1878,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCommitImagePatch(vx_image image,
          * 4.) EXTERNAL - dependant on area (do nothing on zero, determine on non-zero)
          * 5.) !INTERNAL && !EXTERNAL == MAPPED
          */
-        vx_bool internal = vx_true_e; //ownFindAccessor(image->context, ptr, &index);
+        vx_bool internal = image->context->findAccessor(ptr, &index);
 
         if ((zero_area == vx_false_e) && (image->constant == vx_true_e))
         {
@@ -1888,7 +1894,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCommitImagePatch(vx_image image,
             if (internal == vx_true_e && image->context->accessors[index].usage == VX_READ_ONLY)
             {
                 /* this is a buffer that we allocated on behalf of the user and now they are done. Do nothing else*/
-                // ownRemoveAccessor(image->context, index);
+                image->context->removeAccessor(index);
             }
             else
             {
@@ -2012,7 +2018,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCommitImagePatch(vx_image image,
                         }
 
                         /* a write only or read/write copy */
-                        // ownRemoveAccessor(image->context, index);
+                        image->context->removeAccessor(index);
                     }
                     else
                     {
@@ -2060,7 +2066,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCommitImagePatch(vx_image image,
             /* could be RO|WO|RW where they decided not to commit anything. */
             if (internal == vx_true_e) // RO
             {
-                // ownRemoveAccessor(image->context, index);
+                image->context->removeAccessor(index);
             }
             else // RW|WO
             {
@@ -2535,7 +2541,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapImagePatch(
         }
         else
         /* get mapping buffer of sufficient size and map_id */
-        if (vx_true_e) // == ownMemoryMap(image->context, (vx_reference)image, size, usage, mem_type, flags, &extra, (void**)&buf, map_id))
+        if (ownMemoryMap(image->context, (vx_reference)image, size, usage, mem_type, flags, &extra, (void**)&buf, map_id))
         {
             /* use the addressing of the internal format */
             if (image->format == VX_DF_IMAGE_U1 && start_x % 8 != 0)

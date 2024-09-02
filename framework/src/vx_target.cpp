@@ -44,6 +44,8 @@ vx_status Target::initializeTarget(vx_kernel_description_t* kernel_desc[],
                                    kernel_desc[k]->parameters,
                                    kernel_desc[k]->numParams,
                                    kernel_desc[k]->validate,
+                                   kernel_desc[k]->input_validate,
+                                   kernel_desc[k]->output_validate,
                                    kernel_desc[k]->initialize,
                                    kernel_desc[k]->deinitialize);
         VX_PRINT(VX_ZONE_KERNEL, "Initialized Kernel %s, %d\n", kernels[k]->name, status);

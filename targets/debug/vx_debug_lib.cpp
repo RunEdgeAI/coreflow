@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -58,7 +57,7 @@ vx_node vxFWriteImageNode(vx_graph graph, vx_image image, vx_char name[VX_MAX_FI
     vx_context context = vxGetContext((vx_reference)graph);
     vx_array filepath = vxCreateArray(context, VX_TYPE_CHAR, VX_MAX_FILE_NAME);
     if (vxGetStatus((vx_reference)filepath) == VX_SUCCESS) {
-        // status = vxAddArrayItems(filepath, VX_MAX_FILE_NAME, &name[0], sizeof(name[0]));
+        status = vxAddArrayItems(filepath, VX_MAX_FILE_NAME, &name[0], sizeof(name[0]));
         if (status == VX_SUCCESS)
         {
             vx_reference params[] = {
@@ -89,7 +88,7 @@ vx_node vxFWriteArrayNode(vx_graph graph, vx_array arr, vx_char name[VX_MAX_FILE
             };
 
             node = vxCreateNodeByStructure(graph, VX_KERNEL_DEBUG_FWRITE_ARRAY, params, dimof(params));
-            vxReleaseArray(&filepath); // the graph should add a reference to this, so we don't need it.
+            vxReleaseArray(&filepath); /* the graph should add a reference to this, so we don't need it. */
         }
     }
     return node;
@@ -102,7 +101,7 @@ vx_node vxFReadImageNode(vx_graph graph, vx_char name[VX_MAX_FILE_NAME], vx_imag
     vx_context context = vxGetContext((vx_reference)graph);
     vx_array filepath = vxCreateArray(context, VX_TYPE_CHAR, VX_MAX_FILE_NAME);
     if (vxGetStatus((vx_reference)filepath) == VX_SUCCESS) {
-        // status = vxAddArrayItems(filepath, VX_MAX_FILE_NAME, &name[0], sizeof(name[0]));
+        status = vxAddArrayItems(filepath, VX_MAX_FILE_NAME, &name[0], sizeof(name[0]));
         if (status == VX_SUCCESS)
         {
             vx_reference params[] = {
@@ -111,7 +110,7 @@ vx_node vxFReadImageNode(vx_graph graph, vx_char name[VX_MAX_FILE_NAME], vx_imag
             };
 
             node = vxCreateNodeByStructure(graph, VX_KERNEL_DEBUG_FREAD_IMAGE, params, dimof(params));
-            vxReleaseArray(&filepath); // the graph should add a reference to this, so we don't need it.
+            vxReleaseArray(&filepath); /* the graph should add a reference to this, so we don't need it. */
         }
     }
     return node;
@@ -133,7 +132,7 @@ vx_node vxFReadArrayNode(vx_graph graph, vx_char name[VX_MAX_FILE_NAME], vx_arra
             };
 
             node = vxCreateNodeByStructure(graph, VX_KERNEL_DEBUG_FREAD_ARRAY, params, dimof(params));
-            vxReleaseArray(&filepath); // the graph should add a reference to this, so we don't need it.
+            vxReleaseArray(&filepath); /* the graph should add a reference to this, so we don't need it. */
         }
     }
     return node;

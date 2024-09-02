@@ -34,6 +34,35 @@
 /*! \brief The implementation string which is of the format "<vendor>.<substring>" */
 extern const vx_char implementation[];
 
+/*! \brief Searches the memory maps list to find an open slot and
+ *  allocate memory for mapped buffer.
+ * \ingroup group_int_context
+ */
+VX_INT_API vx_bool ownMemoryMap(
+    vx_context   context,
+    vx_reference ref,
+    vx_size      size,
+    vx_enum      usage,
+    vx_enum      mem_type,
+    vx_uint32    flags,
+    void*        extra_data,
+    void**       ptr,
+    vx_map_id*   map_id);
+
+/*! \brief Checks the consistency of given ref & map_id by looking
+*  into memory maps list.
+ * \ingroup group_int_context
+*/
+VX_INT_API vx_bool ownFindMemoryMap(
+    vx_context   context,
+    vx_reference ref,
+    vx_map_id    map_id);
+
+/*! \brief Finds and removes a map_id from the list.
+ * \ingroup group_int_context
+ */
+VX_INT_API void ownMemoryUnmap(vx_context context, vx_uint32 map_id);
+
 /*! \brief The top level context data for the entire OpenVX instance
  * \ingroup group_int_context
  */
@@ -53,12 +82,17 @@ public:
 
     vx_status unloadTarget(vx_uint32 index, vx_bool unload_module);
 
+    VX_INT_API vx_bool addAccessor(
+                                 vx_size size,
+                                 vx_enum usage,
+                                 void *ptr,
+                                 vx_reference ref,
+                                 vx_uint32 *pIndex,
+                                 void *extra_data);
+
     VX_INT_API void removeAccessor(vx_uint32 index);
 
-    vx_reference createReference(vx_context context, vx_enum type, vx_reference scope);
-
-    template <typename T>
-    vx_reference createReference(vx_context context, vx_reference scope);
+    VX_INT_API vx_bool findAccessor(const void* ptr, vx_uint32* pIndex);
 
     vx_bool addReference(const std::shared_ptr<Reference>& ref);
 
@@ -127,4 +161,4 @@ public:
     vx_char             imm_target_string[VX_MAX_TARGET_NAME];
 };
 
-#endif // VX_CONTEXT_H
+#endif /* VX_CONTEXT_H */
