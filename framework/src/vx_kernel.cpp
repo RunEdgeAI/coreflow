@@ -102,15 +102,12 @@ vx_status Kernel::initializeKernel(vx_enum kenum,
                              vx_param_description_t* parameters,
                              vx_uint32 numParams,
                              vx_kernel_validate_f validator,
+                             vx_kernel_input_validate_f input_validator,
+                             vx_kernel_output_validate_f output_validator,
                              vx_kernel_initialize_f initialize,
                              vx_kernel_deinitialize_f deinitialize)
 {
     {
-        // if (ownAddReference(context, &kernel->base) == vx_false_e)
-        // {
-        //     return VX_ERROR_NO_RESOURCES;
-        // }
-
         incrementReference(VX_INTERNAL);
 
         // setup the kernel meta-data
@@ -119,6 +116,8 @@ vx_status Kernel::initializeKernel(vx_enum kenum,
         this->function = function;
         signature.num_parameters = numParams;
         validate = validator;
+        validate_input = input_validator;
+        validate_output = output_validator;
         this->initialize = initialize;
         this->deinitialize = deinitialize;
         attributes.borders.mode = VX_BORDER_UNDEFINED;

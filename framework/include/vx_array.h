@@ -23,6 +23,9 @@
 
 vx_bool ownValidateArray(vx_array arr, vx_enum item_type, vx_size capacity);
 
+vx_bool ownInitVirtualArray(vx_array arr, vx_enum item_type, vx_size capacity);
+
+
 /*! \brief The internal representation of a \ref vx_array
  * \ingroup group_int_array
  */

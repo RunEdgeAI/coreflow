@@ -103,13 +103,13 @@ static vx_tensor vxLocateView(vx_tensor mddata, vx_size* start, vx_size* end)
 
 static vx_bool vxCheckWriteDependency(vx_reference ref1, vx_reference ref2)
 {
-    if (!ref1 || !ref2) // garbage input
+    if (!ref1 || !ref2) /* garbage input */
         return vx_false_e;
 
     if (ref1 == ref2)
         return vx_true_e;
 
-    // write to layer then read pyramid
+    /* write to layer then read pyramid */
     if (ref1->type == VX_TYPE_PYRAMID && ref2->type == VX_TYPE_IMAGE)
     {
         vx_image img = (vx_image)ref2;
@@ -118,7 +118,7 @@ static vx_bool vxCheckWriteDependency(vx_reference ref1, vx_reference ref2)
             return vx_true_e;
     }
 
-    // write to pyramid then read a layer
+    /* write to pyramid then read a layer */
     if (ref2->type == VX_TYPE_PYRAMID && ref1->type == VX_TYPE_IMAGE)
     {
         vx_image img = (vx_image)ref1;
@@ -127,7 +127,7 @@ static vx_bool vxCheckWriteDependency(vx_reference ref1, vx_reference ref2)
             return vx_true_e;
     }
 
-    // two images or ROIs
+    /* two images or ROIs */
     if (ref1->type == VX_TYPE_IMAGE && ref2->type == VX_TYPE_IMAGE)
     {
         vx_size rr_start[VX_MAX_TENSOR_DIMENSIONS], rw_start[VX_MAX_TENSOR_DIMENSIONS], rr_end[VX_MAX_TENSOR_DIMENSIONS], rw_end[VX_MAX_TENSOR_DIMENSIONS];
@@ -137,7 +137,7 @@ static vx_bool vxCheckWriteDependency(vx_reference ref1, vx_reference ref2)
         {
             if (refr->type == VX_TYPE_IMAGE)
             {
-            // check for ROI intersection
+            /* check for ROI intersection */
                 if (rr_start[0] < rw_end[0] && rr_end[0] > rw_start[0] && rr_start[1] < rw_end[1] && rr_end[1] > rw_start[1])
                 return vx_true_e;
         }
@@ -965,7 +965,7 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
                 VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has invalid format %08x!\n",
                     graph->nodes[n]->kernel->name, p, img->format);
                 (*num_errors)++;
-                return vx_false_e; // exit on error
+                return vx_false_e; /* exit on error */
             }
         }
         else
@@ -980,10 +980,10 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
                     graph->nodes[n]->kernel->name, p, img->width, img->height);
                 VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] is an invalid dimension %ux%u!\n",
                     graph->nodes[n]->kernel->name, p, img->width, img->height);
-                VX_PRINT(VX_ZONE_ERROR, "Node: %s: expected dimension %ux%u!\n",
-                    graph->nodes[n]->kernel->name, meta->dim.image.width, meta->dim.image.height);
+                VX_PRINT(VX_ZONE_ERROR, "Node: %s: expected dimension %ux%u with format %08x!\n",
+                    graph->nodes[n]->kernel->name, meta->dim.image.width, meta->dim.image.height, meta->dim.image.format);
                 (*num_errors)++;
-                return vx_false_e; // exit on error
+                return vx_false_e; /* exit on error */
             }
             if (img->format != meta->dim.image.format)
             {
@@ -994,7 +994,7 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
                 VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has invalid format %08x!\n",
                     graph->nodes[n]->kernel->name, p, img->format);
                 (*num_errors)++;
-                return vx_false_e; // exit on error
+                return vx_false_e; /* exit on error */
             }
         }
 
@@ -1131,7 +1131,7 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
         if (vref == (vx_reference *)&arr)
         {
             VX_PRINT(VX_ZONE_GRAPH, "Creating Array From Meta Data %x and " VX_FMT_SIZE "!\n", meta->dim.array.item_type, meta->dim.array.capacity);
-            // if (ownInitVirtualArray(arr, meta->dim.array.item_type, meta->dim.array.capacity) != vx_true_e)
+            if (ownInitVirtualArray(arr, meta->dim.array.item_type, meta->dim.array.capacity) != vx_true_e)
             {
                 *status = VX_ERROR_INVALID_DIMENSION;
                 vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_DIMENSION,
@@ -1534,7 +1534,7 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
     //         return vx_false_e; //break;
     //     }
     } /* VX_TYPE_THRESHOLD */
-    if (meta->type == VX_TYPE_TENSOR)
+    else if (meta->type == VX_TYPE_TENSOR)
     {
         vx_tensor tensor = (vx_tensor)item;
         if (vref == (vx_reference*)&tensor)
@@ -1637,7 +1637,7 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
     /*! \todo support other output types for safety checks in graph verification parameters phase */
     else
     {
-        VX_PRINT(VX_ZONE_GRAPH, "Returned Meta type %d\n", meta->type);
+        VX_PRINT(VX_ZONE_GRAPH, "Returned Meta type %x\n", meta->type);
     }
 
     return vx_true_e;
@@ -1901,8 +1901,6 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
 
                 if (status == VX_SUCCESS)
                 {
-                    VX_PRINT(VX_ZONE_GRAPH, "Using new style validators - postproc\n");
-
                     for (p = 0; p < graph->nodes[n]->kernel->signature.num_parameters; p++)
                     {
                         if ((graph->nodes[n]->parameters[p] != nullptr) &&
@@ -1936,7 +1934,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                          (graph->nodes[n]->kernel->signature.directions[p] == VX_INPUT)) &&
                         (graph->nodes[n]->parameters[p] != nullptr))
                     {
-                        vx_status input_validation_status = VX_SUCCESS;
+                        vx_status input_validation_status = graph->nodes[n]->kernel->validate_input((vx_node)graph->nodes[n], p);
                         if (input_validation_status != VX_SUCCESS)
                         {
                             status = input_validation_status;
@@ -1965,11 +1963,13 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                         vx_status output_validation_status = VX_SUCCESS;
                         if (setup_output(graph, n, p, &vref, &meta, &status, &num_errors) == vx_false_e)
                             break;
-                        output_validation_status = VX_SUCCESS;
+                        output_validation_status = graph->nodes[n]->kernel->validate_output((vx_node)graph->nodes[n], p, meta);
                         if (output_validation_status == VX_SUCCESS)
                         {
                             if (postprocess_output(graph, n, p, &vref, meta, &status, &num_errors) == vx_false_e)
+                            {
                                 break;
+                            }
                         }
                         else
                         {
@@ -1982,8 +1982,6 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                                      status);
                         }
                     }
-                    if (meta)
-                       ownReleaseMetaFormat(&meta);
                 }
                 if (meta)
                     ownReleaseMetaFormat(&meta);
@@ -2044,12 +2042,12 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
 
                     if (graph->nodes[n]->parameters[p]->type == VX_TYPE_IMAGE)
                     {
-//                         if (ownAllocateImage((vx_image_t *)graph->nodes[n]->parameters[p]) == vx_false_e)
-//                         {
-//                             vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate image at node[%u] %s parameter[%u]\n",
-//                                 n, graph->nodes[n]->kernel->name, p);
+                        if (ownAllocateImage((vx_image)graph->nodes[n]->parameters[p]) == vx_false_e)
+                        {
+                            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate image at node[%u] %s parameter[%u]\n",
+                                n, graph->nodes[n]->kernel->name, p);
                             VX_PRINT(VX_ZONE_ERROR, "See log\n");
-//                         }
+                        }
                     }
                     else if ((VX_TYPE_IS_SCALAR(graph->nodes[n]->parameters[p]->type)) ||
                              (graph->nodes[n]->parameters[p]->type == VX_TYPE_RECTANGLE) ||
@@ -2625,7 +2623,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxWaitGraph(vx_graph graph)
         return VX_ERROR_INVALID_REFERENCE;
     }
 
-    if (ownSemTryWait(&graph->lock) == vx_false_e) // locked
+    if (ownSemTryWait(&graph->lock) == vx_false_e) /* locked */
     {
         vx_sem_t* p_graph_queue_lock = graph->context->p_global_lock;
         vx_graph g2;

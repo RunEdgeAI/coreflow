@@ -57,6 +57,8 @@ public:
                              vx_param_description_t *parameters,
                              vx_uint32 numParams,
                              vx_kernel_validate_f validator,
+                             vx_kernel_input_validate_f input_validator,
+                             vx_kernel_output_validate_f output_validator,
                              vx_kernel_initialize_f initialize,
                              vx_kernel_deinitialize_f deinitialize);
 
@@ -76,6 +78,10 @@ public:
     vx_bool        user_kernel;
     /*! \brief */
     vx_kernel_validate_f validate;
+    /*! \brief */
+    vx_kernel_input_validate_f validate_input;
+    /*! \brief */
+    vx_kernel_output_validate_f validate_output;
     /*! \brief */
     vx_kernel_initialize_f initialize;
     /*! \brief */

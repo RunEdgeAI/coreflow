@@ -333,7 +333,8 @@ extern "C" vx_kernel vxTargetAddKernel(vx_target target,
             target->kernels[k] = reinterpret_cast<vx_kernel>(Reference::createReference(target->context, VX_TYPE_KERNEL, VX_INTERNAL, target->context));
             target->kernels[k]->initializeKernel(enumeration, func_ptr, name,
                                nullptr, numParams,
-                               validate, initialize, deinitialize);
+                               validate, input, output,
+                               initialize, deinitialize);
             VX_PRINT(VX_ZONE_KERNEL, "Reserving %s Kernel[%u] for %s\n", target->name, k, target->kernels[k]->name);
             target->num_kernels++;
             kernel = target->kernels[k];

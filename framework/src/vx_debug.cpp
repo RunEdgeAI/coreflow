@@ -206,6 +206,7 @@ void vx_print(vx_enum zone, const char *format, ...)
         va_start(ap, format);
         vprintf(string, ap);
         va_end(ap);
+        fflush(stdout);
     }
 }
 

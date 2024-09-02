@@ -1013,7 +1013,7 @@ vx_status vx_test_graph_channels_yuv(int argc, char *argv[])
             if (vxGetStatus((vx_reference)graph) == VX_SUCCESS)
             {
                 vx_node nodes[] = {
-                    vxFReadImageNode(graph, "colorbars_640x480_I444.rgb", images[0]),
+                    vxFReadImageNode(graph, "./tests/raw/colorbars_640x480_I444.rgb", images[0]),
                     vxColorConvertNode(graph, images[0], images[1]),
                     vxFWriteImageNode(graph, images[1], "oiyuv_640x480_P420.yuv"),
                     vxChannelExtractNode(graph, images[1], VX_CHANNEL_Y, images[2]),
@@ -1459,7 +1459,7 @@ vx_status vx_test_graph_channels_rgb(int argc, char *argv[])
             if (vxGetStatus((vx_reference)graph) == VX_SUCCESS)
             {
                 vx_node nodes[] = {
-                    vxFReadImageNode(graph, "colorbars_640x480_I444.rgb", images[0]),
+                    vxFReadImageNode(graph, "./tests/raw/colorbars_640x480_I444.rgb", images[0]),
                     vxChannelExtractNode(graph, images[0], VX_CHANNEL_R, images[1]),
                     vxChannelExtractNode(graph, images[0], VX_CHANNEL_G, images[2]),
                     vxChannelExtractNode(graph, images[0], VX_CHANNEL_B, images[3]),
@@ -1532,7 +1532,7 @@ vx_status vx_test_graph_accum(int argc, char *argv[])
             if (vxGetStatus((vx_reference)graph) == VX_SUCCESS)
             {
                 vx_node nodes[] = {
-                    vxFReadImageNode(graph, "bikegray_640x480.pgm", images[0]),
+                    vxFReadImageNode(graph, "./tests/raw/bikegray_640x480.pgm", images[0]),
                     vxAccumulateImageNode(graph, images[0], images[1]),
                     vxAccumulateWeightedImageNode(graph, images[0], scalars[0], images[2]),
                     vxAccumulateSquareImageNode(graph, images[0], scalars[1], images[3]),

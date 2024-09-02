@@ -50,6 +50,7 @@ cc_binary(
     data = [
         "//targets/c_model:imported_openvx_c_model",
         "//targets/debug:imported_openvx_debug",
+        "//tests/raw:raw_data",
         ":imported_xyz",
     ],
 )
