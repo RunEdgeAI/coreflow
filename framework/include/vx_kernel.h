@@ -94,4 +94,4 @@ public:
     vx_kernel_object_deinitialize_f kernel_object_deinitialize;
 };
 
-#endif // VX_KERNEL_H
+#endif /* VX_KERNEL_H */

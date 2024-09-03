@@ -21,10 +21,28 @@
 
 #include "vx_reference.h"
 
+void ownPrintArray(vx_array array);
+
+vx_bool ownAllocateArray(vx_array arr);
+
+vx_array ownCreateArrayInt(vx_context context, vx_enum item_type, vx_size capacity, vx_bool is_virtual, vx_enum type);
+
+void ownDestructArray(vx_reference ref);
+
 vx_bool ownValidateArray(vx_array arr, vx_enum item_type, vx_size capacity);
 
 vx_bool ownInitVirtualArray(vx_array arr, vx_enum item_type, vx_size capacity);
 
+vx_status ownAccessArrayRangeInt(vx_array arr, vx_size start, vx_size end, vx_size *pStride, void **ptr, vx_enum usage);
+
+vx_status ownCommitArrayRangeInt(vx_array arr, vx_size start, vx_size end, const void *ptr);
+
+vx_status ownCopyArrayRangeInt(vx_array arr, vx_size start, vx_size end, vx_size stride, void *ptr, vx_enum usage, vx_enum mem_type);
+
+vx_status ownMapArrayRangeInt(vx_array arr, vx_size start, vx_size end, vx_map_id *map_id, vx_size *stride,
+                             void **ptr, vx_enum usage, vx_enum mem_type, vx_uint32 flags);
+
+vx_status ownUnmapArrayRangeInt(vx_array arr, vx_map_id map_id);
 
 /*! \brief The internal representation of a \ref vx_array
  * \ingroup group_int_array

@@ -74,4 +74,4 @@ public:
     vx_delay       delays[VX_INT_MAX_REF];
 };
 
-#endif // VX_GRAPH_H
+#endif /* VX_GRAPH_H */

@@ -1094,4 +1094,4 @@ extern "C" {
 }
 #endif
 
-#endif // VX_INTERNAL_H
+#endif /* VX_INTERNAL_H */

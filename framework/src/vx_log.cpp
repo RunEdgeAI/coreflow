@@ -94,13 +94,13 @@ VX_API_ENTRY void VX_API_CALL vxAddLogEntry(vx_reference ref, vx_status status, 
 
     va_start(ap, message);
     vsnprintf(string, VX_MAX_LOG_MESSAGE_LEN, message, ap);
-    string[VX_MAX_LOG_MESSAGE_LEN-1] = 0; // for MSVC which is not C99 compliant
+    string[VX_MAX_LOG_MESSAGE_LEN-1] = 0; /* for MSVC which is not C99 compliant */
     va_end(ap);
 
     if (context->log_callback == nullptr)
     {
         VX_PRINT(VX_ZONE_ERROR, "No callback is registered\n");
-        VX_PRINT(VX_ZONE_LOG, "%s\n", string);
+        VX_PRINT(VX_ZONE_LOG, "%s", string);
         return;
     }
 

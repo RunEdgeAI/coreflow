@@ -84,4 +84,4 @@ public:
     vx_size data_len;
 };
 
-#endif // VX_SCALAR_H
+#endif /* VX_SCALAR_H */

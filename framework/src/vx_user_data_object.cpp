@@ -36,7 +36,7 @@ vx_bool UserDataObject::allocateUserDataObject()
     vx_bool res = vx_false_e;
     if (size > 0)
     {
-        // res = ownAllocateMemory(context, &memory);
+        res = ownAllocateMemory(context, &memory);
     }
     return res;
 }
@@ -280,43 +280,43 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapUserDataObject(
 
     if ((vx_status)VX_SUCCESS == status)
     {
-    //     vx_memory_map_extra extra;
-    //     extra.array_data.start = offset;
-    //     extra.array_data.end = offset + size;
-    //     vx_uint8 *buf = nullptr;
-    //     if (ownMemoryMap(user_data_object->base.context, (vx_reference)user_data_object, size, usage, mem_type, flags, &extra, (void **)&buf, map_id) == vx_true_e)
-    //     {
-    //         if (VX_READ_ONLY == usage || VX_READ_AND_WRITE == usage)
-    //         {
-    //             if (ownSemWait(&user_data_object->memory.locks[0]) == vx_true_e)
-    //             {
-    //                 vx_uint8 *pSrc = (vx_uint8 *)&user_data_object->memory.ptrs[0][offset];
-    //                 vx_uint8 *pDst = (vx_uint8 *)buf;
-    //                 memcpy(pDst, pSrc, size);
+        vx_memory_map_extra extra;
+        extra.array_data.start = offset;
+        extra.array_data.end = offset + size;
+        vx_uint8 *buf = nullptr;
+        if (ownMemoryMap(user_data_object->context, (vx_reference)user_data_object, size, usage, mem_type, flags, &extra, (void **)&buf, map_id) == vx_true_e)
+        {
+            if (VX_READ_ONLY == usage || VX_READ_AND_WRITE == usage)
+            {
+                if (ownSemWait(&user_data_object->memory.locks[0]) == vx_true_e)
+                {
+                    vx_uint8 *pSrc = (vx_uint8 *)&user_data_object->memory.ptrs[0][offset];
+                    vx_uint8 *pDst = (vx_uint8 *)buf;
+                    memcpy(pDst, pSrc, size);
 
-    //                 *ptr = buf;
-    //                 ownIncrementReference(&user_data_object->base, VX_EXTERNAL);
-    //                 ownSemPost(&user_data_object->memory.locks[0]);
+                    *ptr = buf;
+                    user_data_object->incrementReference(VX_EXTERNAL);
+                    ownSemPost(&user_data_object->memory.locks[0]);
 
-    //                 status = VX_SUCCESS;
-    //             }
-    //             else
-    //             {
-    //                 status = VX_ERROR_NO_RESOURCES;
-    //             }
-    //         }
-    //         else
-    //         {
-    //             /* write only mode */
-    //             *ptr = buf;
-    //             ownIncrementReference(&user_data_object->base, VX_EXTERNAL);
-    //             status = VX_SUCCESS;
-    //         }
-    //     }
-    //     else
-    //     {
-    //         status = VX_FAILURE;
-    //     }
+                    status = VX_SUCCESS;
+                }
+                else
+                {
+                    status = VX_ERROR_NO_RESOURCES;
+                }
+            }
+            else
+            {
+                /* write only mode */
+                *ptr = buf;
+                user_data_object->incrementReference(VX_EXTERNAL);
+                status = VX_SUCCESS;
+            }
+        }
+        else
+        {
+            status = VX_FAILURE;
+        }
     }
 
     return (status);
@@ -334,44 +334,44 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapUserDataObject(vx_user_data_object use
 
     if(status == (vx_status)VX_SUCCESS)
     {
-    //     vx_context context = user_data_object->base.context;
-    //     vx_memory_map_t* map = &context->memory_maps[map_id];
-    //     if (map->used && map->ref == (vx_reference)user_data_object)
-    //     {
-    //         vx_size start = map->extra.array_data.start;
-    //         vx_size end = map->extra.array_data.end;
-    //         if (VX_WRITE_ONLY == map->usage || VX_READ_AND_WRITE == map->usage)
-    //         {
-    //             if (ownSemWait(&user_data_object->memory.locks[0]) == vx_true_e)
-    //             {
-    //                 vx_uint32 offset = (vx_uint32)start;
-    //                 vx_uint8 *pSrc = (vx_uint8 *)map->ptr;
-    //                 vx_uint8 *pDst = (vx_uint8 *)&user_data_object->memory.ptrs[0][offset];
-    //                 vx_size size = (end - start);
-    //                 memcpy(pDst, pSrc, size);
+        vx_context context = user_data_object->context;
+        vx_memory_map_t* map = &context->memory_maps[map_id];
+        if (map->used && map->ref == (vx_reference)user_data_object)
+        {
+            vx_size start = map->extra.array_data.start;
+            vx_size end = map->extra.array_data.end;
+            if (VX_WRITE_ONLY == map->usage || VX_READ_AND_WRITE == map->usage)
+            {
+                if (ownSemWait(&user_data_object->memory.locks[0]) == vx_true_e)
+                {
+                    vx_uint32 offset = (vx_uint32)start;
+                    vx_uint8 *pSrc = (vx_uint8 *)map->ptr;
+                    vx_uint8 *pDst = (vx_uint8 *)&user_data_object->memory.ptrs[0][offset];
+                    vx_size size = (end - start);
+                    memcpy(pDst, pSrc, size);
 
-    //                 ownMemoryUnmap(context, (vx_uint32)map_id);
-    //                 ownDecrementReference(&user_data_object->base, VX_EXTERNAL);
-    //                 ownSemPost(&user_data_object->memory.locks[0]);
-    //                 status = VX_SUCCESS;
-    //             }
-    //             else
-    //             {
-    //                 status = VX_ERROR_NO_RESOURCES;
-    //             }
-    //         }
-    //         else
-    //         {
-    //             /* read only mode */
-    //             ownMemoryUnmap(user_data_object->base.context, (vx_uint32)map_id);
-    //             ownDecrementReference(&user_data_object->base, VX_EXTERNAL);
-    //             status = VX_SUCCESS;
-    //         }
-    //     }
-    //     else
-    //     {
-    //         status = VX_FAILURE;
-    //     }
+                    ownMemoryUnmap(context, (vx_uint32)map_id);
+                    user_data_object->decrementReference(VX_EXTERNAL);
+                    ownSemPost(&user_data_object->memory.locks[0]);
+                    status = VX_SUCCESS;
+                }
+                else
+                {
+                    status = VX_ERROR_NO_RESOURCES;
+                }
+            }
+            else
+            {
+                /* read only mode */
+                ownMemoryUnmap(user_data_object->context, (vx_uint32)map_id);
+                user_data_object->decrementReference(VX_EXTERNAL);
+                status = VX_SUCCESS;
+            }
+        }
+        else
+        {
+            status = VX_FAILURE;
+        }
     }
 
     return status;

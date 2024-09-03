@@ -34,23 +34,23 @@
  */
 // vx_bool ownCreateConstErrors(vx_context_t *context);
 
-// /*! \brief Releases an error object.
-//  * \ingroup group_int_error
-//  */
+/*! \brief Releases an error object.
+ * \ingroup group_int_error
+ */
 // void ownReleaseErrorInt(vx_error_t **error);
 
-// /*! \brief Creates an Error Object.
-//  * \ingroup group_int_error
-//  */
+/*! \brief Creates an Error Object.
+ * \ingroup group_int_error
+ */
 // vx_error_t *ownAllocateError(vx_context_t *context, vx_status status);
 
-// /*! \brief Matches the status code against all known error objects in the
-//  * context.
-//  * \param [in] context The pointer to the overall context.
-//  * \param [in] status The status code to find.
-//  * \return Returns a matching error object.
-//  */
+/*! \brief Matches the status code against all known error objects in the
+ * context.
+ * \param [in] context The pointer to the overall context.
+ * \param [in] status The status code to find.
+ * \return Returns a matching error object.
+ */
 // vx_error_t *ownGetErrorObject(vx_context_t *context, vx_status status);
 
-#endif
+#endif /* _OPENVX_INT_ERROR_H_ */
 

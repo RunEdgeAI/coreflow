@@ -79,7 +79,7 @@ void Tensor::initTensor(const vx_size* dimensions, vx_size number_of_dimensions,
     }
 }
 
-//TODO: move this somewhere, there's like 3 copies of this already
+/* @TODO: move this somewhere, there's like 3 copies of this already */
 static VX_INLINE int validFormat(vx_enum data_type, vx_uint8 fixed_point_pos)
 {
         return
@@ -146,7 +146,7 @@ VX_API_ENTRY vx_tensor VX_API_CALL vxCreateTensorFromHandle(vx_context context, 
 
     if (Context::isValidContext(context) == vx_false_e)
     {
-        //TODO: check, do we not need to set the err here
+        /* @TODO: check, do we not need to set the err here */
         return tensor;
     }
 
@@ -467,13 +467,18 @@ VX_API_ENTRY vx_tensor VX_API_CALL vxCreateVirtualTensor(
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseTensor(vx_tensor* tensor)
 {
-    // return vxReleaseReference((vx_reference *)tensor);
-    if (tensor)
+    vx_status status = VX_FAILURE;
+
+    if (nullptr != tensor)
     {
-        //TODO: I assume we need to release from parent like we do in vx_image.c: vxReleaseImage
+        vx_tensor this_tensor = *tensor;
+        if (vx_true_e == Reference::isValidReference(this_tensor, VX_TYPE_TENSOR))
+        {
+            status = this_tensor->releaseReference(VX_TYPE_TENSOR, VX_EXTERNAL, nullptr);
+        }
     }
 
-    return (*(vx_reference *)tensor)->releaseReference(VX_TYPE_TENSOR, VX_EXTERNAL, nullptr);
+    return status;
 }
 
 
@@ -644,36 +649,36 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapTensorPatch(vx_tensor tensor, vx_size nu
     memcpy(extra.tensor_data.stride, stride, sizeof(vx_size) * number_of_dims);
     extra.tensor_data.number_of_dims = number_of_dims;
 
-    // if (VX_MEMORY_TYPE_HOST  == mem_type &&
-    //     vx_true_e == ownMemoryMap(tensor->context, (vx_reference)tensor, 0, usage, mem_type, 0, (void *)&extra, (void **)&buf, map_id))
-    // {
-    //     *ptr = tensor->addr;
+    if (VX_MEMORY_TYPE_HOST  == mem_type &&
+        vx_true_e == ownMemoryMap(tensor->context, (vx_reference)tensor, 0, usage, mem_type, 0, (void *)&extra, (void **)&buf, map_id))
+    {
+        *ptr = tensor->addr;
 
-    //     tensor->incrementReference(VX_EXTERNAL);
+        tensor->incrementReference(VX_EXTERNAL);
 
-    //     status = VX_SUCCESS;
-    // }
-    // else if (vx_true_e == ownMemoryMap(tensor->context, (vx_reference)tensor, size, usage, mem_type, 0, (void *)&extra, (void **)&buf, map_id))
-    // {
-    //     vx_uint8* user_curr_ptr = buf;
-    //     vx_uint8* tensor_ptr = (vx_uint8*)tensor->addr;
-    //     if (usage == VX_READ_ONLY || usage == VX_READ_AND_WRITE)
-    //     {
-    //         for (vx_size i = 0; i < size; i++)
-    //         {
-    //             vx_size patch_pos = 0;
-    //             vx_size tensor_pos = 0;
-    //             ComputePositionsFromIndex(i,view_start, view_end, tensor->stride, stride, number_of_dims, &tensor_pos, &patch_pos);
-    //             memcpy (user_curr_ptr + patch_pos, tensor_ptr + tensor_pos, tensor->stride[0]);
-    //         }
+        status = VX_SUCCESS;
+    }
+    else if (vx_true_e == ownMemoryMap(tensor->context, (vx_reference)tensor, size, usage, mem_type, 0, (void *)&extra, (void **)&buf, map_id))
+    {
+        vx_uint8* user_curr_ptr = buf;
+        vx_uint8* tensor_ptr = (vx_uint8*)tensor->addr;
+        if (usage == VX_READ_ONLY || usage == VX_READ_AND_WRITE)
+        {
+            for (vx_size i = 0; i < size; i++)
+            {
+                vx_size patch_pos = 0;
+                vx_size tensor_pos = 0;
+                ComputePositionsFromIndex(i,view_start, view_end, tensor->stride, stride, number_of_dims, &tensor_pos, &patch_pos);
+                memcpy (user_curr_ptr + patch_pos, tensor_ptr + tensor_pos, tensor->stride[0]);
+            }
 
-    //         ownReadFromReference(&tensor->base);
-    //     }
-    //     *ptr = buf;
-    //     tensor->incrementReference(VX_EXTERNAL);
+            // ownReadFromReference(&tensor->base);
+        }
+        *ptr = buf;
+        tensor->incrementReference(VX_EXTERNAL);
 
-    //     status = VX_SUCCESS;
-    // }
+        status = VX_SUCCESS;
+    }
 
 exit:
     VX_PRINT(VX_ZONE_API, "returned %d\n", status);
@@ -692,12 +697,12 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapTensorPatch(vx_tensor tensor, vx_map_i
     }
 
     /* bad parameters */
-    // if (ownFindMemoryMap(tensor->context, (vx_reference)tensor, map_id) != vx_true_e)
-    // {
-    //     status = VX_ERROR_INVALID_PARAMETERS;
-    //     VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to unmap image patch\n");
-    //     return status;
-    // }
+    if (ownFindMemoryMap(tensor->context, (vx_reference)tensor, map_id) != vx_true_e)
+    {
+        status = VX_ERROR_INVALID_PARAMETERS;
+        VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to unmap image patch\n");
+        return status;
+    }
 
     {
         vx_context       context = tensor->context;
@@ -741,7 +746,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapTensorPatch(vx_tensor tensor, vx_map_i
             }
 
             /* freeing mapping buffer */
-            // ownMemoryUnmap(context, (vx_uint32)map_id);
+            ownMemoryUnmap(context, (vx_uint32)map_id);
 
             tensor->decrementReference(VX_EXTERNAL);
 
@@ -812,7 +817,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyTensorPatch(vx_tensor tensor, vx_size n
     vx_enum user_memory_type_given = user_memory_type;
     if (user_memory_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
     {
-        // get user_ptr from OpenCL buffer for HOST
+        /* get user_ptr from OpenCL buffer for HOST */
         size_t size = 0;
         cl_mem opencl_buf = (cl_mem)user_ptr;
         cl_int cerr = clGetMemObjectInfo(opencl_buf, CL_MEM_SIZE, sizeof(size_t), &size, nullptr);
@@ -885,5 +890,3 @@ void ownDestructTensor(vx_reference ref)
         tensor->parent->releaseReference(VX_TYPE_TENSOR, VX_INTERNAL, nullptr);
     }
 }
-
-

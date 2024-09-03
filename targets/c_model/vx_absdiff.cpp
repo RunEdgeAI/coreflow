@@ -157,8 +157,8 @@ vx_kernel_description_t absdiff_kernel = {
     vxAbsDiffKernel,
     absdiff_kernel_params, dimof(absdiff_kernel_params),
     NULL,
-    // vxAbsDiffInputValidator,
-    // vxAbsDiffOutputValidator,
+    vxAbsDiffInputValidator,
+    vxAbsDiffOutputValidator,
     NULL,
     NULL,
 };

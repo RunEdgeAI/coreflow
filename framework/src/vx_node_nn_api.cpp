@@ -92,7 +92,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxPoolingLayer(vx_graph graph, vx_tensor inputs
         (vx_reference)rounding_scalar,
         (vx_reference)outputs,
     };
-    
+
     vx_node node = vxCreateNodeByStructure(graph, VX_KERNEL_POOLING_LAYER, params, dimof(params));
     vxReleaseScalar(&pooling_type_scalar);
     vxReleaseScalar(&pool_size_x_scalar);
@@ -168,7 +168,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxLocalResponseNormalizationLayer(vx_graph grap
         (vx_reference)beta_scalar,
         (vx_reference)outputs,
     };
-    
+
     vx_node node = vxCreateNodeByStructure(graph, VX_KERNEL_NORMALIZATION_LAYER, params, dimof(params));
     vxReleaseScalar(&type_scalar);
     vxReleaseScalar(&norm_size_scalar);
@@ -193,7 +193,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxActivationLayer(vx_graph graph, vx_tensor inp
         (vx_reference)b_scalar,
         (vx_reference)outputs,
     };
-    
+
     vx_node node = vxCreateNodeByStructure(graph, VX_KERNEL_ACTIVATION_LAYER, params, dimof(params));
     vxReleaseScalar(&func_scalar);
     vxReleaseScalar(&a_scalar);
@@ -210,7 +210,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxROIPoolingLayer(
         vx_tensor output_arr)
 {
     vx_node node = NULL;
-    
+
     if (size_of_roi_params == sizeof(vx_enum))
     {
         vx_context context = vxGetContext((vx_reference)graph);
@@ -269,5 +269,5 @@ VX_API_ENTRY vx_node VX_API_CALL vxDeconvolutionLayer(vx_graph graph, vx_tensor 
     return node;
 }
 
-#endif
-#endif//OPENVX_CONFORMANCE_NEURAL_NETWORKS
+#endif /* OPENVX_USE_NN */
+#endif /* OPENVX_CONFORMANCE_NEURAL_NETWORKS */

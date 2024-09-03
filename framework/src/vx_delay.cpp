@@ -217,9 +217,20 @@ void ownDestructDelay(vx_reference ref)
     }
 }
 
-VX_API_ENTRY vx_status VX_API_CALL vxReleaseDelay(vx_delay *d)
+VX_API_ENTRY vx_status VX_API_CALL vxReleaseDelay(vx_delay* d)
 {
-    return (*(d))->releaseReference(VX_TYPE_DELAY, VX_EXTERNAL, &ownDestructDelay);
+    vx_status status = VX_FAILURE;
+
+    if (nullptr != d)
+    {
+        vx_delay delay = *d;
+        if (vx_true_e == Reference::isValidReference(delay, VX_TYPE_DELAY))
+        {
+            status = delay->releaseReference(VX_TYPE_DELAY, VX_EXTERNAL, &ownDestructDelay);
+        }
+    }
+
+    return status;
 }
 
 VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
@@ -318,12 +329,12 @@ VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
                 //     delay->refs[i] = (vx_reference)vxCreateRemap(context, remap->src_width, remap->src_height, remap->dst_width, remap->dst_height);
                 //     break;
                 // }
-                // case VX_TYPE_LUT:
-                // {
-                //     vx_lut_t lut = (vx_lut_t)exemplar;
-                //     delay->refs[i] = (vx_reference)vxCreateLUT(context, lut->item_type, lut->capacity);
-                //     break;
-                // }
+                case VX_TYPE_LUT:
+                {
+                    vx_lut_t lut = (vx_lut_t)exemplar;
+                    delay->refs[i] = (vx_reference)vxCreateLUT(context, lut->item_type, lut->capacity);
+                    break;
+                }
                 // case VX_TYPE_PYRAMID:
                 // {
                 //     vx_pyramid pyramid = (vx_pyramid )exemplar;

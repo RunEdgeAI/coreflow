@@ -110,7 +110,7 @@ vx_status Kernel::initializeKernel(vx_enum kenum,
     {
         incrementReference(VX_INTERNAL);
 
-        // setup the kernel meta-data
+        /* setup the kernel meta-data */
         strncpy(this->name, name, VX_MAX_KERNEL_NAME - 1);
         enumeration = kenum;
         this->function = function;
@@ -467,7 +467,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseKernel(vx_kernel *kernel)
     {
         VX_PRINT(VX_ZONE_KERNEL, "Releasing kernel " VX_FMT_REF "\n", (void *)*kernel);
 
-        // deinitialize kernel object
+        /* deinitialize kernel object */
         if ((*kernel)->kernel_object_deinitialize != nullptr)
         {
             (*kernel)->kernel_object_deinitialize(*kernel);
@@ -675,7 +675,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryKernel(vx_kernel kernel, vx_enum attri
                     strncpy(kname, kernel->name, VX_MAX_KERNEL_NAME);
                     k = strtok(kname, ":");
                     v = strtok(nullptr, ":");
-                    (void)v; // need this variable in the future for variant searches
+                    (void)v; /* need this variable in the future for variant searches */
                     strncpy(reinterpret_cast<char*>(ptr), k, VX_MAX_KERNEL_NAME);
                 }
                 else
@@ -785,7 +785,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxRemoveKernel(vx_kernel kernel)
         vx_context context = kernel->context;
 
         /* Remove the reference from the context */
-        // ownRemoveReference(context, &kernel->base);
+        context->removeReference(kernel);
 
         /* find back references to kernel's target and kernel in target->kernels array */
         vx_uint32 index = (vx_uint32)(strnindex(kernel->name, ':', VX_MAX_TARGET_NAME));
