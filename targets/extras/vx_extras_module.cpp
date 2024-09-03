@@ -1,4 +1,4 @@
-/* 
+/*
 
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
@@ -32,7 +32,7 @@
  */
 static vx_kernel_description_t* kernels[] =
 {
-    &edge_trace_kernel,
+    // &edge_trace_kernel,
     &euclidean_nonmaxsuppression_harris_kernel,
     &harris_score_kernel,
     &laplacian3x3_kernel,
@@ -58,7 +58,7 @@ static vx_uint32 num_kernels = dimof(kernels);
  * correctly.
  * \ingroup group_implementation
  */
-/*VX_API_ENTRY*/ vx_status VX_API_CALL vxPublishKernels(vx_context context)
+extern "C" VX_API_ENTRY vx_status VX_API_CALL vxPublishKernels(vx_context context)
 {
     vx_status status = VX_FAILURE;
     vx_uint32 p = 0, k = 0;
@@ -122,7 +122,7 @@ static vx_uint32 num_kernels = dimof(kernels);
  * and uses the predefined name for the entry point, "vxUnpublishKernels".
  * \ingroup group_example_kernel
  */
-/*VX_API_ENTRY*/ vx_status VX_API_CALL vxUnpublishKernels(vx_context context)
+extern "C" VX_API_ENTRY vx_status VX_API_CALL vxUnpublishKernels(vx_context context)
 {
     vx_status status = VX_FAILURE;
 

@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -80,13 +79,15 @@ static vx_kernel_description_t *target_kernels[] =
     &lbp_kernel,
     &bilateral_filter_kernel,
     &match_template_kernel,
+    &harris_kernel,
+    &hogcells_kernel,
+    &hogfeatures_kernel,
 #ifdef ENABLED
     &scale_image_kernel,
     &equalize_hist_kernel,
     &scalar_operation_kernel,
     &houghlinesp_kernel,
     &histogram_kernel,
-    &harris_kernel,
     &nonlinearfilter_kernel,
     &select_kernel,
     &threshold_kernel,
@@ -101,8 +102,6 @@ static vx_kernel_description_t *target_kernels[] =
     &laplacian_pyramid_kernel,
     &laplacian_reconstruct_kernel,
     &copy_kernel,
-    &hogcells_kernel,
-    &hogfeatures_kernel,
 #endif /* ENABLED */
 #ifdef OPENVX_USE_NN
     &nn_convolution_kernel,

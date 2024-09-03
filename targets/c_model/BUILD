@@ -10,7 +10,7 @@ cc_library(
         "vx_convolution.cpp",
         "vx_controlflow.cpp",
         "vx_copy.cpp",
-        "vx_h*.cpp",
+        "vx_histogram.cpp",
         "vx_nonlinear*.cpp",
         "vx_o*.cpp",
         "vx_py*.cpp",
@@ -28,6 +28,7 @@ cc_library(
     deps = [
         "//:corevx",
         "//kernels/c_model:c_model_kernels",
+        "//targets/extras:extras",
     ],
     visibility = ["//visibility:public"]
 )

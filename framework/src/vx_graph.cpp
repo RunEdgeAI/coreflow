@@ -108,7 +108,10 @@ static vx_bool vxCheckWriteDependency(vx_reference ref1, vx_reference ref2)
         return vx_false_e;
 
     if (ref1 == ref2)
+    {
+        VX_PRINT(VX_ZONE_API, "returned true - equal refs\n");
         return vx_true_e;
+    }
 
     /* write to layer then read pyramid */
     if (ref1->type == VX_TYPE_PYRAMID && ref2->type == VX_TYPE_IMAGE)
@@ -140,7 +143,9 @@ static vx_bool vxCheckWriteDependency(vx_reference ref1, vx_reference ref2)
             {
                 /* check for ROI intersection */
                 if (rr_start[0] < rw_end[0] && rr_end[0] > rw_start[0] && rr_start[1] < rw_end[1] && rr_end[1] > rw_start[1])
-                return vx_true_e;
+                {
+                    return vx_true_e;
+                }
             }
             else
             {
@@ -2008,13 +2013,13 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                         for (p1 = 0; p1 < graph->nodes[n]->kernel->signature.num_parameters; p1++)
                         {
                             if ((graph->nodes[n1]->kernel->signature.directions[p1] == VX_OUTPUT) ||
-                                 (graph->nodes[n1]->kernel->signature.directions[p1] == VX_BIDIRECTIONAL))
+                                (graph->nodes[n1]->kernel->signature.directions[p1] == VX_BIDIRECTIONAL))
                             {
-                                if (vxCheckWriteDependency(graph->nodes[n]->parameters[p], graph->nodes[n1]->parameters[p1]))
+                                if (vx_true_e == vxCheckWriteDependency(graph->nodes[n]->parameters[p], graph->nodes[n1]->parameters[p1]))
                                 {
                                     status = VX_ERROR_MULTIPLE_WRITERS;
                                     VX_PRINT(VX_ZONE_GRAPH, "Multiple Writer to a reference found, check log!\n");
-                                    vxAddLogEntry(reinterpret_cast<vx_reference>(graph), status, "Node %u and Node %u are trying to output to the same reference " VX_FMT_REF "\n", n, n1, graph->nodes[n]->parameters[p]);
+                                    vxAddLogEntry(reinterpret_cast<vx_reference>(graph), status, "Node %s and Node %s are trying to output to the same reference " VX_FMT_REF "\n", graph->nodes[n]->kernel->name, graph->nodes[n1]->kernel->name, graph->nodes[n]->parameters[p]);
                                 }
                             }
                         }
@@ -2292,13 +2297,13 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                         {
                             vx_image image = (vx_image)ref;
                             for (i = 0; i < image->memory.nptrs; i++)
-                                // graph->nodes[n]->costs.bandwidth += ownComputeMemorySize(&image->memory, i);
+                                graph->nodes[n]->costs.bandwidth += ownComputeMemorySize(&image->memory, i);
                             break;
                         }
                         case VX_TYPE_ARRAY:
                         {
                             vx_array array = (vx_array)ref;
-                            // graph->nodes[n]->costs.bandwidth += ownComputeMemorySize(&array->memory, 0);
+                            graph->nodes[n]->costs.bandwidth += ownComputeMemorySize(&array->memory, 0);
                             break;
                         }
                         case VX_TYPE_PYRAMID:
@@ -2310,7 +2315,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                                 vx_image image = pyr->levels[j];
                                 for (i = 0; i < image->memory.nptrs; i++)
                                 {
-                                    // graph->nodes[n]->costs.bandwidth += ownComputeMemorySize(&image->memory, i);
+                                    graph->nodes[n]->costs.bandwidth += ownComputeMemorySize(&image->memory, i);
                                 }
                             }
                             break;
