@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,7 +47,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxChannelExtractNode(vx_graph graph,
                                            VX_KERNEL_CHANNEL_EXTRACT,
                                            params,
                                            dimof(params));
-    vxReleaseScalar(&scalar); // node hold reference
+    vxReleaseScalar(&scalar); /* node hold reference */
     return node;
 }
 

@@ -44,60 +44,60 @@ void Node::setParameter(vx_uint32 index, vx_reference value)
     parameters[index] = (vx_reference)value;
 }
 
-// void ownDestructNode(vx_reference ref)
-// {
-//     vx_uint32 p = 0;
-//     vx_node node = (vx_node)ref;
+void ownDestructNode(vx_reference ref)
+{
+    vx_uint32 p = 0;
+    vx_node node = (vx_node)ref;
 
-//     if (node->kernel == nullptr)
-//     {
-//         VX_PRINT(VX_ZONE_WARNING, "Node has no kernel!\n");
-//         DEBUG_BREAK();
-//     }
+    if (node->kernel == nullptr)
+    {
+        VX_PRINT(VX_ZONE_WARNING, "Node has no kernel!\n");
+        DEBUG_BREAK();
+    }
 
-//     /* de-initialize the kernel */
-//     if (node->kernel->deinitialize)
-//     {
-//         vx_status status;
-//         if ((node->kernel->user_kernel == vx_true_e) && (node->local_data_set_by_implementation == vx_false_e))
-//             node->local_data_change_is_enabled = vx_true_e;
-//         status = node->kernel->deinitialize((vx_node)node,
-//                                             (vx_reference *)node->parameters,
-//                                             node->kernel->signature.num_parameters);
-//         node->local_data_change_is_enabled = vx_false_e;
-//         if (status != VX_SUCCESS)
-//         {
-//             VX_PRINT(VX_ZONE_ERROR,"Failed to de-initialize kernel %s!\n", node->kernel->name);
-//         }
-//     }
+    /* de-initialize the kernel */
+    if (node->kernel->deinitialize)
+    {
+        vx_status status;
+        if ((node->kernel->user_kernel == vx_true_e) && (node->local_data_set_by_implementation == vx_false_e))
+            node->local_data_change_is_enabled = vx_true_e;
+        status = node->kernel->deinitialize((vx_node)node,
+                                            (vx_reference *)node->parameters,
+                                            node->kernel->signature.num_parameters);
+        node->local_data_change_is_enabled = vx_false_e;
+        if (status != VX_SUCCESS)
+        {
+            VX_PRINT(VX_ZONE_ERROR,"Failed to de-initialize kernel %s!\n", node->kernel->name);
+        }
+    }
 
-//     /* remove, don't delete, all references from the node itself */
-//     for (p = 0; p < node->kernel->signature.num_parameters; p++)
-//     {
-//         vx_reference ref = node->parameters[p];
-//         if (ref)
-//         {
-//             /* Remove the potential delay association */
-//             if (ref->delay!=nullptr) {
-//                 vx_bool res = ownRemoveAssociationToDelay(ref, node, p);
-//                 if (res == vx_false_e) {
-//                     VX_PRINT(VX_ZONE_ERROR, "Internal error removing delay association\n");
-//                 }
-//             }
-//             ownReleaseReferenceInt(&ref, ref->type, VX_INTERNAL, nullptr);
-//             node->parameters[p] = nullptr;
-//         }
-//     }
+    /* remove, don't delete, all references from the node itself */
+    for (p = 0; p < node->kernel->signature.num_parameters; p++)
+    {
+        vx_reference ref = node->parameters[p];
+        if (ref)
+        {
+            /* Remove the potential delay association */
+            if (ref->delay!=nullptr) {
+                vx_bool res = ownRemoveAssociationToDelay(ref, node, p);
+                if (res == vx_false_e) {
+                    VX_PRINT(VX_ZONE_ERROR, "Internal error removing delay association\n");
+                }
+            }
+            ref->releaseReference(ref->type, VX_INTERNAL, nullptr);
+            node->parameters[p] = nullptr;
+        }
+    }
 
-//     /* free the local memory */
-//     if (node->attributes.localDataPtr)
-//     {
-//         free(node->attributes.localDataPtr);
-//         node->attributes.localDataPtr = nullptr;
-//     }
+    /* free the local memory */
+    if (node->attributes.localDataPtr)
+    {
+        free(node->attributes.localDataPtr);
+        node->attributes.localDataPtr = nullptr;
+    }
 
-//     ownReleaseReferenceInt((vx_reference *)&node->kernel, VX_TYPE_KERNEL, VX_INTERNAL, nullptr);
-// }
+    node->kernel->releaseReference(VX_TYPE_KERNEL, VX_INTERNAL, nullptr);
+}
 
 vx_status ownRemoveNodeInt(vx_node node)
 {
@@ -137,7 +137,7 @@ vx_status ownRemoveNodeInt(vx_node node)
     return status;
 }
 
-// ![FROM SAMPLE EXTENSION]
+/* ![FROM SAMPLE EXTENSION] */
 vx_status ownSetChildGraphOfNode(vx_node node, vx_graph graph)
 {
     vx_status status = VX_ERROR_INVALID_GRAPH;
@@ -218,7 +218,7 @@ vx_graph ownGetChildGraphOfNode(vx_node node)
 
     return graph;
 }
-// ![FROM SAMPLE EXTENSION]
+/* ![FROM SAMPLE EXTENSION] */
 
 static vx_kernel findKernelByEnum(vx_target target, vx_enum enumeration)
 {
@@ -650,38 +650,38 @@ VX_API_ENTRY vx_status VX_API_CALL vxReplicateNode(vx_graph graph, vx_node first
 
 			if (replicate[p] == vx_true_e)
 			{
-				// if (Reference::isValidReference(ref, type) == vx_true_e)
-				// {
-				// 	vx_size items = 0;
-				// 	if (Reference::isValidReference(ref->scope, VX_TYPE_PYRAMID) == vx_true_e)
-				// 	{
-				// 		vx_pyramid pyramid = (vx_pyramid)ref->scope;
-				// 		vxQueryPyramid(pyramid, VX_PYRAMID_LEVELS, &items, sizeof(vx_size));
-				// 	}
-				// 	else if (Reference::isValidReference(ref->scope, VX_TYPE_OBJECT_ARRAY) == vx_true_e)
-				// 	{
-				// 		vx_object_array object_array = (vx_object_array)ref->scope;
-				// 		vxQueryObjectArray(object_array, VX_OBJECT_ARRAY_NUMITEMS, &items, sizeof(vx_size));
-				// 	}
-				// 	else
-                //     {
-                //         status = VX_FAILURE;
-                //     }
+				if (Reference::isValidReference(ref, type) == vx_true_e)
+				{
+					vx_size items = 0;
+					if (Reference::isValidReference(ref->scope, VX_TYPE_PYRAMID) == vx_true_e)
+					{
+						// vx_pyramid pyramid = (vx_pyramid)ref->scope;
+						// vxQueryPyramid(pyramid, VX_PYRAMID_LEVELS, &items, sizeof(vx_size));
+					}
+					else if (Reference::isValidReference(ref->scope, VX_TYPE_OBJECT_ARRAY) == vx_true_e)
+					{
+						vx_object_array object_array = (vx_object_array)ref->scope;
+						vxQueryObjectArray(object_array, VX_OBJECT_ARRAY_NUMITEMS, &items, sizeof(vx_size));
+					}
+					else
+                    {
+                        status = VX_FAILURE;
+                    }
 
-				// 	if (num_of_replicas == 0)
-                //     {
-				// 		num_of_replicas = items;
-                //     }
+					if (num_of_replicas == 0)
+                    {
+						num_of_replicas = items;
+                    }
 
-				// 	if (num_of_replicas != 0 && items != num_of_replicas)
-                //     {
-				// 		status = VX_FAILURE;
-                //     }
-				// }
-				// else
-                // {
-				// 	status = VX_FAILURE;
-                // }
+					if (num_of_replicas != 0 && items != num_of_replicas)
+                    {
+						status = VX_FAILURE;
+                    }
+				}
+				else
+                {
+					status = VX_FAILURE;
+                }
 			}
 
 			vxReleaseReference(&ref);
@@ -732,7 +732,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetNodeTarget(vx_node node, vx_enum target_
                     if (target_lower_string)
                     {
                         unsigned int i;
-                        // to lower case
+                        /* to lower case */
                         for (i = 0; target_string[i] != 0; i++)
                         {
                             target_lower_string[i] = (char)tolower(target_string[i]);

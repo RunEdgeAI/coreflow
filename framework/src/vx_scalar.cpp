@@ -191,9 +191,20 @@ VX_API_ENTRY vx_scalar VX_API_CALL vxCreateVirtualScalar(vx_graph graph, vx_enum
     return (vx_scalar)scalar;
 }
 
-VX_API_ENTRY vx_status VX_API_CALL vxReleaseScalar(vx_scalar *s)
+VX_API_ENTRY vx_status VX_API_CALL vxReleaseScalar(vx_scalar* s)
 {
-    return (*(vx_reference *)s)->releaseReference(VX_TYPE_SCALAR, VX_EXTERNAL, nullptr);
+    vx_status status = VX_FAILURE;
+
+    if (nullptr != s)
+    {
+        vx_scalar scalar = *s;
+        if (vx_true_e == Reference::isValidReference(scalar, VX_TYPE_SCALAR))
+        {
+            status = scalar->releaseReference(VX_TYPE_SCALAR, VX_EXTERNAL, nullptr);
+        }
+    }
+
+    return status;
 } /* vxReleaseScalar() */
 
 VX_API_ENTRY vx_status VX_API_CALL vxQueryScalar(vx_scalar scalar, vx_enum attribute, void* ptr, vx_size size)

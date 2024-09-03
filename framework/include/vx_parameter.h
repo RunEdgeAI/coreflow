@@ -57,4 +57,4 @@ public:
     vx_kernel      kernel;
 };
 
-#endif // VX_PARAMETER_H
+#endif /* VX_PARAMETER_H */

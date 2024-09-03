@@ -314,7 +314,7 @@ vx_status ownCommitArrayRangeInt(vx_array arr, vx_size start, vx_size end, const
 {
     vx_status status = VX_ERROR_INVALID_REFERENCE;
 
-    vx_bool external = vx_true_e; // assume that it was an allocated buffer
+    vx_bool external = vx_true_e; /* assume that it was an allocated buffer */
 
     if ((ptr == nullptr) ||
         (start > end) || (end > arr->num_items))
@@ -345,7 +345,7 @@ vx_status ownCommitArrayRangeInt(vx_array arr, vx_size start, vx_size end, const
     {
         /* check to see if the range is zero area */
         vx_bool zero_area = (end == 0) ? vx_true_e : vx_false_e;
-        vx_uint32 index = UINT32_MAX; // out of bounds, if given to remove, won't do anything
+        vx_uint32 index = UINT32_MAX; /*  out of bounds, if given to remove, won't do anything */
         vx_bool internal = arr->context->findAccessor(ptr, &index);
 
         if (zero_area == vx_false_e)
@@ -411,11 +411,11 @@ vx_status ownCommitArrayRangeInt(vx_array arr, vx_size start, vx_size end, const
         else
         {
             /* could be RO|WO|RW where they decided not to commit anything. */
-            if (internal == vx_true_e) // RO
+            if (internal == vx_true_e) /* RO */
             {
                 arr->context->removeAccessor(index);
             }
-            else // RW|WO
+            else /* RW|WO */
             {
                 ownSemPost(&arr->memory.locks[0]);
             }

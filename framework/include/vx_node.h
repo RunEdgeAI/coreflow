@@ -97,4 +97,4 @@ public:
     vx_bool             replicated_flags[VX_INT_MAX_PARAMS];
 };
 
-#endif // VX_NODE_H
+#endif /* VX_NODE_H */

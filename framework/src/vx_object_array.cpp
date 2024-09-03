@@ -191,8 +191,8 @@ static vx_status ownInitObjectArrayInt(vx_object_array arr, vx_reference exempla
                     status = VX_ERROR_INVALID_REFERENCE;
                 break;
             case VX_TYPE_LUT:
-                // if (vxQueryLUT((vx_lut)exemplar, VX_LUT_TYPE, &lut_type, sizeof(lut_type)) != VX_SUCCESS ||
-                //     vxQueryLUT((vx_lut)exemplar, VX_LUT_COUNT, &lut_count, sizeof(lut_count)) != VX_SUCCESS)
+                if (vxQueryLUT((vx_lut)exemplar, VX_LUT_TYPE, &lut_type, sizeof(lut_type)) != VX_SUCCESS ||
+                    vxQueryLUT((vx_lut)exemplar, VX_LUT_COUNT, &lut_count, sizeof(lut_count)) != VX_SUCCESS)
                     status = VX_ERROR_INVALID_REFERENCE;
                 break;
             case VX_TYPE_THRESHOLD:
@@ -248,20 +248,18 @@ static vx_status ownInitObjectArrayInt(vx_object_array arr, vx_reference exempla
                 // case VX_TYPE_REMAP:
                 //     ref = (vx_reference)vxCreateRemap(context, remap_srcwidth, remap_srcheight, remap_dstwidth, remap_dstheight);
                 //     break;
-                // case VX_TYPE_LUT:
-                //     ref = (vx_reference)vxCreateLUT(context, lut_type, lut_count);
-                //     break;
+                case VX_TYPE_LUT:
+                    ref = (vx_reference)vxCreateLUT(context, lut_type, lut_count);
+                    break;
                 // case VX_TYPE_THRESHOLD:
                 //     ref = (vx_reference)vxCreateThreshold(context, threshold_type, threshold_data_type);
                 //     break;
                 case VX_TYPE_TENSOR:
                     ref = (vx_reference)vxCreateTensor(context, tensor_num_dims, tensor_dims, tensor_type, tensor_fpp);
                     break;
-#if defined(OPENVX_USE_USER_DATA_OBJECT)
                 case VX_TYPE_USER_DATA_OBJECT:
                     ref = (vx_reference)vxCreateUserDataObject(context, udo_name, udo_size, nullptr);
                     break;
-#endif
                 default:
                     ref = nullptr;
                     break;
@@ -406,11 +404,19 @@ VX_API_ENTRY vx_object_array VX_API_CALL vxCreateVirtualObjectArray(vx_graph gra
     return arr;
 }
 
-VX_API_ENTRY vx_status VX_API_CALL vxReleaseObjectArray(vx_object_array *arr)
+VX_API_ENTRY vx_status VX_API_CALL vxReleaseObjectArray(vx_object_array* arr)
 {
-    /* nullptr means standard destructor */
-    // return ownReleaseReferenceInt((vx_reference_t **)arr, VX_TYPE_OBJECT_ARRAY, VX_EXTERNAL, nullptr);
-    return VX_ERROR_NOT_IMPLEMENTED;
+    vx_status status = VX_FAILURE;
+
+    if (nullptr != arr)
+    {
+        vx_object_array object_array = *arr;
+        if (vx_true_e == Reference::isValidReference(object_array, VX_TYPE_OBJECT_ARRAY))
+        {
+            status = object_array->releaseReference(VX_TYPE_OBJECT_ARRAY, VX_EXTERNAL, nullptr);
+        }
+    }
+    return status;
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxQueryObjectArray(vx_object_array arr, vx_enum attribute, void *ptr, vx_size size)

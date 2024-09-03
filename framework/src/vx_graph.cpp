@@ -80,6 +80,7 @@ static vx_reference vxLocateBaseLocation(vx_reference ref, vx_size* start, vx_si
     }
     return ref;
 }
+
 static vx_tensor vxLocateView(vx_tensor mddata, vx_size* start, vx_size* end)
 {
     for (vx_uint32 i = 0; i < VX_MAX_TENSOR_DIMENSIONS; i++)
@@ -137,10 +138,10 @@ static vx_bool vxCheckWriteDependency(vx_reference ref1, vx_reference ref2)
         {
             if (refr->type == VX_TYPE_IMAGE)
             {
-            /* check for ROI intersection */
+                /* check for ROI intersection */
                 if (rr_start[0] < rw_end[0] && rr_end[0] > rw_start[0] && rr_start[1] < rw_end[1] && rr_end[1] > rw_start[1])
                 return vx_true_e;
-        }
+            }
             else
             {
                 if (refr->type == VX_TYPE_TENSOR)
@@ -154,7 +155,7 @@ static vx_bool vxCheckWriteDependency(vx_reference ref1, vx_reference ref2)
                         }
                     }
                     return vx_true_e;
-    }
+                }
             }
         }
     }
@@ -173,7 +174,7 @@ static vx_bool vxCheckWriteDependency(vx_reference ref1, vx_reference ref2)
                     return vx_false_e;
                 }
             }
-                return vx_true_e;
+            return vx_true_e;
         }
     }
 
@@ -908,7 +909,7 @@ static vx_bool setup_output(vx_graph graph, vx_uint32 n, vx_uint32 p, vx_referen
             *status = VX_ERROR_INVALID_SCOPE;
             vxAddLogEntry((vx_reference)(*vref), *status, "Virtual Reference is in the wrong scope, created from another graph!\n");
             (*num_errors)++;
-            return vx_false_e; // break;
+            return vx_false_e; /* break; */
         }
         /* ok if context, pyramid or this graph */
     }
@@ -936,7 +937,7 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
             "Node: %s: parameter[%u] is not a valid type %d!\n",
             graph->nodes[n]->kernel->name, p, meta->type);
         (*num_errors)++;
-        return vx_false_e; // exit on error
+        return vx_false_e; /* exit on error */
     }
 
     if (meta->type == VX_TYPE_IMAGE)
@@ -1550,7 +1551,7 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
                 VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has invalid data type %08x or fixed point position %d!\n",
                     graph->nodes[n]->kernel->name, p, tensor->data_type, tensor->fixed_point_position);
                 (*num_errors)++;
-                return vx_false_e; // exit on error
+                return vx_false_e; /* exit on error */
             }
             if (tensor->number_of_dimensions != 0)
             {
@@ -1565,7 +1566,7 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
                        VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has invalid dimension size %d in dimension %d!\n",
                            graph->nodes[n]->kernel->name, p, tensor->dimensions[i], i);
                        (*num_errors)++;
-                       return vx_false_e; // exit on error
+                       return vx_false_e; /* exit on error */
                    }
                }
             }
@@ -1578,7 +1579,7 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
                 VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has invalid dimension %d!\n",
                     graph->nodes[n]->kernel->name, p, tensor->number_of_dimensions);
                 (*num_errors)++;
-                return vx_false_e; // exit on error
+                return vx_false_e; /* exit on error */
             }
     //         ownInitTensor(tensor, meta->dim.tensor.dimensions, meta->dim.tensor.number_of_dimensions, meta->dim.tensor.data_type, meta->dim.tensor.fixed_point_position);
     //         ownAllocateTensorMemory(tensor);
@@ -1594,7 +1595,7 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
                 VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] is an invalid number of dimensions %u!\n",
                     graph->nodes[n]->kernel->name, p, tensor->number_of_dimensions);
                 (*num_errors)++;
-                return vx_false_e; // exit on error
+                return vx_false_e; /* exit on error */
             }
             for (unsigned i = 0; i < tensor->number_of_dimensions; i++)
             {
@@ -1607,7 +1608,7 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
                     VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has an invalid dimension %u!\n",
                         graph->nodes[n]->kernel->name, p, tensor->dimensions[i]);
                     (*num_errors)++;
-                    return vx_false_e; // exit on error
+                    return vx_false_e; /* exit on error */
                 }
             }
             if (tensor->data_type != meta->dim.tensor.data_type)
@@ -1619,7 +1620,7 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
                 VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has invalid data type %08x!\n",
                     graph->nodes[n]->kernel->name, p, tensor->data_type);
                 (*num_errors)++;
-                return vx_false_e; // exit on error
+                return vx_false_e; /* exit on error */
             }
             if (tensor->fixed_point_position != meta->dim.tensor.fixed_point_position)
             {
@@ -1630,7 +1631,7 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
                 VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has invalid fixed point position  %08x!\n",
                     graph->nodes[n]->kernel->name, p, tensor->fixed_point_position);
                 (*num_errors)++;
-                return vx_false_e; // exit on error
+                return vx_false_e; /* exit on error */
             }
         }
     } /* VX_TYPE_TENSOR */
@@ -1660,7 +1661,7 @@ static vx_bool postprocess_output(vx_graph graph, vx_uint32 n, vx_uint32 p, vx_r
             "Node: %s: parameter[%u] is not a valid type %d!\n",
             graph->nodes[n]->kernel->name, p, meta->type);
         (*num_errors)++;
-        return vx_false_e; // exit on error
+        return vx_false_e; /* exit on error */
     }
 
     if (meta->type == VX_TYPE_OBJECT_ARRAY)
@@ -2057,13 +2058,13 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                     }
                     else if (graph->nodes[n]->parameters[p]->type == VX_TYPE_LUT)
                     {
-                        // vx_lut_t *lut = (vx_lut_t *)graph->nodes[n]->parameters[p];
-//                         if (ownAllocateMemory(graph->context, &lut->memory) == vx_false_e)
-//                         {
-//                             vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate lut at node[%u] %s parameter[%u]\n",
-//                                 n, graph->nodes[n]->kernel->name, p);
-//                             VX_PRINT(VX_ZONE_ERROR, "See log\n");
-//                         }
+                        vx_lut_t lut = (vx_lut_t)graph->nodes[n]->parameters[p];
+                        if (ownAllocateMemory(graph->context, &lut->memory) == vx_false_e)
+                        {
+                            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate lut at node[%u] %s parameter[%u]\n",
+                                n, graph->nodes[n]->kernel->name, p);
+                            VX_PRINT(VX_ZONE_ERROR, "See log\n");
+                        }
                     }
                     else if (graph->nodes[n]->parameters[p]->type == VX_TYPE_DISTRIBUTION)
                     {
@@ -2102,12 +2103,12 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                     }
                     else if (graph->nodes[n]->kernel->signature.types[p] == VX_TYPE_ARRAY)
                     {
-//                         if (ownAllocateArray((vx_array_t *)graph->nodes[n]->parameters[p]) == vx_false_e)
-//                         {
-//                             vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate array at node[%u] %s parameter[%u]\n",
-//                                 n, graph->nodes[n]->kernel->name, p);
-//                             VX_PRINT(VX_ZONE_ERROR, "See log\n");
-//                         }
+                        if (ownAllocateArray((vx_array)graph->nodes[n]->parameters[p]) == vx_false_e)
+                        {
+                            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate array at node[%u] %s parameter[%u]\n",
+                                n, graph->nodes[n]->kernel->name, p);
+                            VX_PRINT(VX_ZONE_ERROR, "See log\n");
+                        }
                     }
                     /*! \todo add other memory objects to graph auto-allocator as needed! */
                 }

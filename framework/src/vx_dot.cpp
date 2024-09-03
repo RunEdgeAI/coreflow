@@ -121,7 +121,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
                             for (d = 0u; d < num_data; d++)
                                 if (data[d] == node->parameters[p])
                                     break;
-                            if (d == num_data) continue; // ref not found
+                            if (d == num_data) continue; /* ref not found */
                             fprintf(fp, "\tD%u -> N%u;\n", d, next_nodes[n]);
                         }
                         else if (node->kernel->signature.directions[p] == VX_OUTPUT)
@@ -171,4 +171,4 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
     return status;
 }
 
-#endif
+#endif /* EXPERIMENTAL_USE_DOT */

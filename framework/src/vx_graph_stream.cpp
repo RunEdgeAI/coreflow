@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#if 1 //def OPENVX_USE_STREAMING
+#ifdef OPENVX_USE_STREAMING
 
 #include <VX/vx.h>
 #include <VX/vx_khr_pipelining.h>

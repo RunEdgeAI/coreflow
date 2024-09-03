@@ -195,7 +195,7 @@ vx_status Context::unloadTarget(vx_uint32 index, vx_bool unload_module)
         memset(&target->funcs, 0xFE, sizeof(vx_target_funcs_t));
         if (target->decrementReference(VX_INTERNAL) == 0)
         {
-            /* The ownReleaseReferenceInt() below errors out if the internal index is 0 */
+            /* The ReleaseReference() below errors out if the internal index is 0 */
             target->incrementReference(VX_INTERNAL);
             if (unload_module)
             {
@@ -1411,7 +1411,7 @@ static vx_target* findTargetByString(vx_context context, const char* target_stri
     if (target_lower_string)
     {
         unsigned int i;
-        // to lower case
+        /* to lower case */
         for (i = 0; target_string[i] != 0; i++)
         {
             target_lower_string[i] = (char)tolower(target_string[i]);

@@ -143,8 +143,8 @@ vx_kernel_description_t and_kernel = {
     vxAndKernel,
     binary_bitwise_kernel_params, dimof(binary_bitwise_kernel_params),
     NULL,
-    // vxBinaryBitwiseInputValidator,
-    // vxBinaryBitwiseOutputValidator,
+    vxBinaryBitwiseInputValidator,
+    vxBinaryBitwiseOutputValidator,
     NULL,
     NULL,
 };
@@ -169,8 +169,8 @@ vx_kernel_description_t or_kernel = {
     vxOrKernel,
     binary_bitwise_kernel_params, dimof(binary_bitwise_kernel_params),
     NULL,
-    // vxBinaryBitwiseInputValidator,
-    // vxBinaryBitwiseOutputValidator,
+    vxBinaryBitwiseInputValidator,
+    vxBinaryBitwiseOutputValidator,
     NULL,
     NULL,
 };
@@ -195,8 +195,8 @@ vx_kernel_description_t xor_kernel = {
     vxXorKernel,
     binary_bitwise_kernel_params, dimof(binary_bitwise_kernel_params),
     NULL,
-    // vxBinaryBitwiseInputValidator,
-    // vxBinaryBitwiseOutputValidator,
+    vxBinaryBitwiseInputValidator,
+    vxBinaryBitwiseOutputValidator,
     NULL,
     NULL,
 };
@@ -280,8 +280,8 @@ vx_kernel_description_t not_kernel = {
     vxNotKernel,
     unary_bitwise_kernel_params, dimof(unary_bitwise_kernel_params),
     NULL,
-    // vxUnaryBitwiseInputValidator,
-    // vxUnaryBitwiseOutputValidator,
+    vxUnaryBitwiseInputValidator,
+    vxUnaryBitwiseOutputValidator,
     NULL,
     NULL,
 };

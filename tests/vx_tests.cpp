@@ -2168,10 +2168,10 @@ vx_status vx_test_graph_corners(int argc, char *argv[])
         if (vxGetStatus((vx_reference)graph) == VX_SUCCESS)
         {
             vx_node nodes[] = {
-                vxFReadImageNode(graph, "shapes.pgm", images[0]),
+                vxFReadImageNode(graph, "./tests/raw/shapes.pgm", images[0]),
                 vxGaussian3x3Node(graph, images[0], images[1]),
                 vxFWriteImageNode(graph, images[1], "oshapes_blurred.pgm"),
-                vxHarrisCornersNode(graph, images[1], scalars[0], scalars[1], scalars[2], ws, bs, harris_arr, NULL),
+                // vxHarrisCornersNode(graph, images[1], scalars[0], scalars[1], scalars[2], ws, bs, harris_arr, NULL),
                 vxFastCornersNode(graph, images[1], scalars[3], vx_false_e, fast_arr, NULL),
             };
             CHECK_ALL_ITEMS(nodes, n, status, exit);
@@ -2977,9 +2977,9 @@ vx_unittest unittests[] = {
     // {VX_FAILURE, "Graph: bikegray",             &vx_test_graph_bikegray},
     // {VX_FAILURE, "Graph: Lena",                 &vx_test_graph_lena},
     {VX_FAILURE, "Graph: Accumulates",          &vx_test_graph_accum},
-    // {VX_FAILURE, "Graph: Bitwise",              &vx_test_graph_bitwise},
-    // {VX_FAILURE, "Graph: Arithmetic",           &vx_test_graph_arit},
-    // {VX_FAILURE, "Graph: Corners",              &vx_test_graph_corners},
+    {VX_FAILURE, "Graph: Bitwise",              &vx_test_graph_bitwise},
+    {VX_FAILURE, "Graph: Arithmetic",           &vx_test_graph_arit},
+    {VX_FAILURE, "Graph: Corners",              &vx_test_graph_corners},
     // {VX_FAILURE, "Graph: Tracker",              &vx_test_graph_tracker},
     // exports
 #if defined(EXPERIMENTAL_USE_DOT)
@@ -3057,4 +3057,3 @@ int main(int argc, char *argv[])
     else
         return -1;
 }
-

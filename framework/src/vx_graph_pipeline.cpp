@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#if 1 //def OPENVX_USE_PIPELINING
+#ifdef OPENVX_USE_PIPELINING
 
 #include <VX/vx.h>
 #include <VX/vx_khr_pipelining.h>

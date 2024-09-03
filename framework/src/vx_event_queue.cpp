@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#if 1 //def OPENVX_USE_PIPELINING
+#ifdef OPENVX_USE_PIPELINING
 
 #include <VX/vx.h>
 #include <VX/vx_khr_pipelining.h>
@@ -50,4 +50,4 @@ VX_API_ENTRY vx_status VX_API_CALL vxRegisterEvent(vx_reference ref,
     return VX_ERROR_NOT_IMPLEMENTED;
 }
 
-#endif
+#endif /* OPENVX_USE PIPELINING */

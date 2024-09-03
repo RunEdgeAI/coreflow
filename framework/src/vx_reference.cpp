@@ -472,13 +472,13 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseReference(vx_reference* ref_ptr)
         // case VX_TYPE_CONVOLUTION:  status = vxReleaseConvolution((vx_convolution*)ref_ptr); break;
         // case VX_TYPE_DISTRIBUTION: status = vxReleaseDistribution((vx_distribution*)ref_ptr); break;
         case VX_TYPE_IMAGE:        status = vxReleaseImage((vx_image*)ref_ptr); break;
-        // case VX_TYPE_LUT:          status = vxReleaseLUT((vx_lut*)ref_ptr); break;
+        case VX_TYPE_LUT:          status = vxReleaseLUT((vx_lut*)ref_ptr); break;
         // case VX_TYPE_MATRIX:       status = vxReleaseMatrix((vx_matrix*)ref_ptr); break;
         // case VX_TYPE_PYRAMID:      status = vxReleasePyramid((vx_pyramid*)ref_ptr); break;
         // case VX_TYPE_REMAP:        status = vxReleaseRemap((vx_remap*)ref_ptr); break;
         case VX_TYPE_SCALAR:       status = vxReleaseScalar((vx_scalar*)ref_ptr); break;
         // case VX_TYPE_THRESHOLD:    status = vxReleaseThreshold((vx_threshold*)ref_ptr); break;
-        // case VX_TYPE_DELAY:        status = vxReleaseDelay((vx_delay*)ref_ptr); break;
+        case VX_TYPE_DELAY:        status = vxReleaseDelay((vx_delay*)ref_ptr); break;
         case VX_TYPE_KERNEL:       status = vxReleaseKernel((vx_kernel*)ref_ptr); break;
         case VX_TYPE_PARAMETER:    status = vxReleaseParameter((vx_parameter*)ref_ptr); break;
         case VX_TYPE_TENSOR:       status = vxReleaseTensor((vx_tensor*)ref_ptr); break;
