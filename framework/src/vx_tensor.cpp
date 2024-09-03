@@ -546,7 +546,7 @@ int CheckSizes(vx_size* dimensions, const vx_size * view_start, const vx_size * 
 
 }
 
-vx_size ComputePatchSize (const vx_size * view_start, const vx_size * view_end, vx_size number_of_dimensions)
+vx_size ComputePatchSize(const vx_size * view_start, const vx_size * view_end, vx_size number_of_dimensions)
 {
     vx_size total_size = 1;
     for (vx_size i = 0; i < number_of_dimensions; i++)
