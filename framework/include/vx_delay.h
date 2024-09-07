@@ -20,8 +20,23 @@
 class Delay : public Reference
 {
 public:
+    /**
+     * @brief Construct a new Delay object
+     *
+     * @param context
+     * @param scope
+     */
     Delay(vx_context context, vx_reference scope);
+
+    /**
+     * @brief Destroy the Delay object
+     *
+     */
     ~Delay() = default;
+
+    static vx_bool removeAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i);
+
+    static vx_bool addAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i);
 
     /*! \brief The number of objects in the delay. */
     vx_size count;

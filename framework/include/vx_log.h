@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef _OPENVX_INT_LOG_H_
-#define _OPENVX_INT_LOG_H_
+#ifndef VX_LOG_H
+#define VX_LOG_H
 
 #include <VX/vx.h>
 
@@ -28,4 +28,4 @@
  * \brief The Internal Log API
  */
 
- #endif
+ #endif /* VX_LOG_H */

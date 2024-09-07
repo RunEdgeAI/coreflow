@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef _OPENVX_INT_MEMORY_H_
-#define _OPENVX_INT_MEMORY_H_
+#ifndef VX_MEMORY_H
+#define VX_MEMORY_H
 
 #include <VX/vx.h>
 #include "vx_internal.h"
@@ -41,5 +41,4 @@ void ownPrintMemory(vx_memory_t *mem);
 
 vx_size ownComputeMemorySize(vx_memory_t *memory, vx_uint32 p);
 
-#endif
-
+#endif /* VX_MEMORY_H */

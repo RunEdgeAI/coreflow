@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef _OPENVX_INT_OSAL_H_
-#define _OPENVX_INT_OSAL_H_
+#ifndef VX_OSAL_H
+#define VX_OSAL_H
 
 #include <VX/vx.h>
 
@@ -193,4 +193,4 @@ vx_bool ownIssueThreadpool(vx_threadpool_t *pool, vx_value_set_t workitems[], ui
 
 vx_bool ownCompleteThreadpool(vx_threadpool_t *pool, vx_bool blocking);
 
-#endif
+#endif /* VX_OSAL_H */

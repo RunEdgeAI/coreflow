@@ -26,6 +26,7 @@ public:
      * @param scope
      */
     UserDataObject(vx_context context, vx_reference scope);
+
     /**
      * @brief Destroy the User Data Object object
      *

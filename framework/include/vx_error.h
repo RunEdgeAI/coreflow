@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef _OPENVX_INT_ERROR_H_
-#define _OPENVX_INT_ERROR_H_
+#ifndef VX_ERROR_H
+#define VX_ERROR_H
 
 #include <VX/vx.h>
 #include "vx_internal.h"
@@ -52,5 +52,5 @@
  */
 // vx_error_t *ownGetErrorObject(vx_context_t *context, vx_status status);
 
-#endif /* _OPENVX_INT_ERROR_H_ */
+#endif /* VX_ERROR_H */
 

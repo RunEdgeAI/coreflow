@@ -885,7 +885,7 @@ static vx_bool setup_output(vx_graph graph, vx_uint32 n, vx_uint32 p, vx_referen
                             vx_status* status, vx_uint32* num_errors)
 {
     *vref = graph->nodes[n]->parameters[p];
-    *meta = ownCreateMetaFormat(graph->context);
+    *meta = vxCreateMetaFormat(graph->context);
 
     /* check to see if the reference is virtual */
     if ((*vref)->is_virtual == vx_false_e)
@@ -959,8 +959,8 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
                 img->width = meta->dim.image.width;
                 img->height = meta->dim.image.height;
                 /* we have to go set all the other dimensional information up. */
-                ownInitImage(img, img->width, img->height, img->format);
-                ownPrintImage(img); /* show that it's been created. */
+                img->initImage(img->width, img->height, img->format);
+                vxPrintImage(img); /* show that it's been created. */
             }
             else
             {
@@ -1137,7 +1137,7 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
         if (vref == (vx_reference *)&arr)
         {
             VX_PRINT(VX_ZONE_GRAPH, "Creating Array From Meta Data %x and " VX_FMT_SIZE "!\n", meta->dim.array.item_type, meta->dim.array.capacity);
-            if (ownInitVirtualArray(arr, meta->dim.array.item_type, meta->dim.array.capacity) != vx_true_e)
+            if (arr->initVirtualArray(meta->dim.array.item_type, meta->dim.array.capacity) != vx_true_e)
             {
                 *status = VX_ERROR_INVALID_DIMENSION;
                 vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_DIMENSION,
@@ -1151,7 +1151,7 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
         }
         else
         {
-            if (ownValidateArray(arr, meta->dim.array.item_type, meta->dim.array.capacity) != vx_true_e)
+            if (arr->validateArray(meta->dim.array.item_type, meta->dim.array.capacity) != vx_true_e)
             {
                 *status = VX_ERROR_INVALID_DIMENSION;
                 vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_DIMENSION,
@@ -1674,7 +1674,7 @@ static vx_bool postprocess_output(vx_graph graph, vx_uint32 n, vx_uint32 p, vx_r
         vx_object_array objarr = (vx_object_array)graph->nodes[n]->parameters[p];
         VX_PRINT(VX_ZONE_GRAPH, "meta: type 0x%08x, 0x%08x " VX_FMT_SIZE "\n", meta->type, meta->dim.object_array.item_type, meta->dim.object_array.num_items);
 
-        if (ownValidateObjectArray(objarr, meta->dim.object_array.item_type, meta->dim.object_array.num_items) != vx_true_e)
+        if (ObjectArray::isValidObjectArray(objarr, meta->dim.object_array.item_type, meta->dim.object_array.num_items) != vx_true_e)
         {
             *status = VX_ERROR_INVALID_DIMENSION;
             vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_DIMENSION,
@@ -1924,7 +1924,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                 {
                     if (metas[p])
                     {
-                        ownReleaseMetaFormat(&metas[p]);
+                        vxReleaseMetaFormat(&metas[p]);
                     }
                 }
             }
@@ -1990,7 +1990,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                     }
                 }
                 if (meta)
-                    ownReleaseMetaFormat(&meta);
+                    vxReleaseMetaFormat(&meta);
             }
         }
 
@@ -2048,7 +2048,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
 
                     if (graph->nodes[n]->parameters[p]->type == VX_TYPE_IMAGE)
                     {
-                        if (ownAllocateImage((vx_image)graph->nodes[n]->parameters[p]) == vx_false_e)
+                        if (static_cast<vx_image>(graph->nodes[n]->parameters[p])->allocateImage() == vx_false_e)
                         {
                             vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate image at node[%u] %s parameter[%u]\n",
                                 n, graph->nodes[n]->kernel->name, p);
@@ -2108,7 +2108,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                     }
                     else if (graph->nodes[n]->kernel->signature.types[p] == VX_TYPE_ARRAY)
                     {
-                        if (ownAllocateArray((vx_array)graph->nodes[n]->parameters[p]) == vx_false_e)
+                        if (static_cast<vx_array>(graph->nodes[n]->parameters[p])->allocateArray() == vx_false_e)
                         {
                             vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate array at node[%u] %s parameter[%u]\n",
                                 n, graph->nodes[n]->kernel->name, p);

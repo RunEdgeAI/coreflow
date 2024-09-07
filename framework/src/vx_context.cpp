@@ -409,8 +409,7 @@ VX_INT_API vx_bool Context::findAccessor(const void* ptr, vx_uint32* pIndex)
     return worked;
 }
 
-VX_INT_API vx_bool ownMemoryMap(
-    vx_context   context,
+VX_INT_API vx_bool Context::memoryMap(
     vx_reference ref,
     vx_size      size,
     vx_enum      usage,
@@ -425,11 +424,11 @@ VX_INT_API vx_bool ownMemoryMap(
     vx_bool   worked = vx_false_e;
 
     /* lock the table for modification */
-    if (vx_true_e == ownSemWait(&context->memory_maps_lock))
+    if (vx_true_e == ownSemWait(&memory_maps_lock))
     {
-        for (id = 0u; id < dimof(context->memory_maps); id++)
+        for (id = 0u; id < dimof(memory_maps); id++)
         {
-            if (context->memory_maps[id].used == vx_false_e)
+            if (memory_maps[id].used == vx_false_e)
             {
                 VX_PRINT(VX_ZONE_CONTEXT, "Found free memory map slot[%u]\n", id);
 
@@ -439,23 +438,23 @@ VX_INT_API vx_bool ownMemoryMap(
                     buf = (vx_uint8*)malloc(size);
                     if (buf == NULL)
                     {
-                        ownSemPost(&context->memory_maps_lock);
+                        ownSemPost(&memory_maps_lock);
                         return vx_false_e;
                     }
                 }
 
-                context->memory_maps[id].used       = vx_true_e;
-                context->memory_maps[id].ref        = ref;
-                context->memory_maps[id].ptr        = buf;
-                context->memory_maps[id].usage      = usage;
-                context->memory_maps[id].mem_type   = mem_type;
-                context->memory_maps[id].flags      = flags;
+                memory_maps[id].used       = vx_true_e;
+                memory_maps[id].ref        = ref;
+                memory_maps[id].ptr        = buf;
+                memory_maps[id].usage      = usage;
+                memory_maps[id].mem_type   = mem_type;
+                memory_maps[id].flags      = flags;
 
                 vx_memory_map_extra* extra = (vx_memory_map_extra*)extra_data;
                 if (VX_TYPE_IMAGE == ref->type)
                 {
-                    context->memory_maps[id].extra.image_data.plane_index = extra->image_data.plane_index;
-                    context->memory_maps[id].extra.image_data.rect        = extra->image_data.rect;
+                    memory_maps[id].extra.image_data.plane_index = extra->image_data.plane_index;
+                    memory_maps[id].extra.image_data.rect        = extra->image_data.rect;
                 }
                 else if (VX_TYPE_ARRAY == ref->type ||
                          VX_TYPE_LUT == ref->type ||
@@ -463,19 +462,19 @@ VX_INT_API vx_bool ownMemoryMap(
                 )
                 {
                     vx_memory_map_extra* extra = (vx_memory_map_extra*)extra_data;
-                    context->memory_maps[id].extra.array_data.start = extra->array_data.start;
-                    context->memory_maps[id].extra.array_data.end   = extra->array_data.end;
+                    memory_maps[id].extra.array_data.start = extra->array_data.start;
+                    memory_maps[id].extra.array_data.end   = extra->array_data.end;
                 }
                 else if (VX_TYPE_TENSOR == ref->type)
                 {
                     vx_memory_map_extra* extra = (vx_memory_map_extra*)extra_data;
-                    memcpy(context->memory_maps[id].extra.tensor_data.start,
+                    memcpy(memory_maps[id].extra.tensor_data.start,
                            extra->tensor_data.start, sizeof(vx_size) * extra->tensor_data.number_of_dims);
-                    memcpy(context->memory_maps[id].extra.tensor_data.end,
+                    memcpy(memory_maps[id].extra.tensor_data.end,
                            extra->tensor_data.end, sizeof(vx_size) * extra->tensor_data.number_of_dims);
-                    memcpy(context->memory_maps[id].extra.tensor_data.stride,
+                    memcpy(memory_maps[id].extra.tensor_data.stride,
                            extra->tensor_data.stride, sizeof(vx_size) * extra->tensor_data.number_of_dims);
-                    context->memory_maps[id].extra.tensor_data.number_of_dims = extra->tensor_data.number_of_dims;
+                    memory_maps[id].extra.tensor_data.number_of_dims = extra->tensor_data.number_of_dims;
                 }
 
                 *ptr = buf;
@@ -488,16 +487,15 @@ VX_INT_API vx_bool ownMemoryMap(
         }
 
         /* we're done, unlock the table */
-        worked = ownSemPost(&context->memory_maps_lock);
+        worked = ownSemPost(&memory_maps_lock);
     }
     else
         worked = vx_false_e;
 
     return worked;
-} /* ownMemoryMap() */
+} /* MemoryMap() */
 
-VX_INT_API vx_bool ownFindMemoryMap(
-    vx_context   context,
+VX_INT_API vx_bool Context::findMemoryMap(
     vx_reference ref,
     vx_map_id    map_id)
 {
@@ -505,51 +503,51 @@ VX_INT_API vx_bool ownFindMemoryMap(
     vx_uint32 id = (vx_uint32)map_id;
 
     /* check index range */
-    if (id < dimof(context->memory_maps))
+    if (id < dimof(memory_maps))
     {
         /* lock the table for exclusive access */
-        if (vx_true_e == ownSemWait(&context->memory_maps_lock))
+        if (vx_true_e == ownSemWait(&memory_maps_lock))
         {
-            if ((context->memory_maps[id].used == vx_true_e) && (context->memory_maps[id].ref == ref))
+            if ((memory_maps[id].used == vx_true_e) && (memory_maps[id].ref == ref))
             {
                 worked = vx_true_e;
             }
 
             /* unlock the table */
-            worked &= ownSemPost(&context->memory_maps_lock);
+            worked &= ownSemPost(&memory_maps_lock);
         }
     }
 
     return worked;
-} /* ownFindMemoryMap() */
+} /* FindMemoryMap() */
 
-VX_INT_API void ownMemoryUnmap(vx_context context, vx_uint32 map_id)
+VX_INT_API void Context::memoryUnmap(vx_uint32 map_id)
 {
     /* lock the table for modification */
-    if (vx_true_e == ownSemWait(&context->memory_maps_lock))
+    if (vx_true_e == ownSemWait(&memory_maps_lock))
     {
-        if (context->memory_maps[map_id].used == vx_true_e)
+        if (memory_maps[map_id].used == vx_true_e)
         {
-            if (context->memory_maps[map_id].ptr != NULL)
+            if (memory_maps[map_id].ptr != NULL)
             {
                 /* freeing mapped buffer */
-                free(context->memory_maps[map_id].ptr);
+                free(memory_maps[map_id].ptr);
 
-                memset(&context->memory_maps[map_id], 0, sizeof(vx_memory_map_t));
+                memset(&memory_maps[map_id], 0, sizeof(vx_memory_map_t));
             }
             VX_PRINT(VX_ZONE_CONTEXT, "Removed memory mapping[%u]\n", map_id);
         }
 
-        context->memory_maps[map_id].used = vx_false_e;
+        memory_maps[map_id].used = vx_false_e;
 
         /* we're done, unlock the table */
-        ownSemPost(&context->memory_maps_lock);
+        ownSemPost(&memory_maps_lock);
     }
     else
         VX_PRINT(VX_ZONE_ERROR, "ownSemWait() failed!\n");
 
     return;
-} /* ownMemoryUnmap() */
+} /* MemoryUnmap() */
 
 /******************************************************************************/
 /* PUBLIC API */
@@ -818,7 +816,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
                 if (context->memory_maps[a].used)
                 {
                     VX_PRINT(VX_ZONE_ERROR, "Memory map %d not unmapped\n", a);
-                    ownMemoryUnmap(context, a);
+                    context->memoryUnmap(a);
                 }
             }
 

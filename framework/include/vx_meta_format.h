@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2014-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,8 +15,8 @@
  */
 
 
-#ifndef VX_INT_META_FORMAT_H
-#define VX_INT_META_FORMAT_H
+#ifndef VX_META_FORMAT_H
+#define VX_META_FORMAT_H
 
 #include <VX/vx.h>
 
@@ -31,18 +30,6 @@
  * \brief The Internal Meta Format API
  */
 
-/*! \brief Releases a meta-format object.
- * \param [in,out] pmeta
- * \ingroup group_int_meta_format
- */
-vx_status ownReleaseMetaFormat(vx_meta_format *pmeta);
-
-/*! \brief Creates a metaformat object.
- * \param [in] context The overall context object.
- * \ingroup group_int_meta_format
- */
-vx_meta_format ownCreateMetaFormat(vx_context context);
-
 /*!
  * \brief This structure is used to extract meta data from a validation
  * function. If the data object between nodes is virtual, this will allow the
@@ -52,11 +39,24 @@ vx_meta_format ownCreateMetaFormat(vx_context context);
 class MetaFormat : public Reference
 {
 public:
+    /**
+     * @brief Construct a new Meta Format object
+     *
+     * @param context
+     * @param scope
+     */
     MetaFormat(vx_context context, vx_reference scope);
+
+    /**
+     * @brief Destroy the Meta Format object
+     *
+     */
     ~MetaFormat() = default;
 
-    vx_size size;               /*!< \brief The size of struct. */
-    vx_enum type;               /*!< \brief The <tt>\ref vx_type_e</tt> or <tt>\ref vx_df_image_e</tt> code */
+    /*!< \brief The size of struct. */
+    vx_size size;
+    /*!< \brief The <tt>\ref vx_type_e</tt> or <tt>\ref vx_df_image_e</tt> code */
+    vx_enum type;
     /*! \brief A struct of the configuration types needed by all object types. */
     struct dim {
         /*! \brief When a VX_TYPE_IMAGE */
@@ -132,4 +132,16 @@ public:
     vx_kernel_image_valid_rectangle_f set_valid_rectangle_callback;
 };
 
-#endif /* VX_INT_META_FORMAT_H */
+/*! \brief Creates a metaformat object.
+ * \param [in] context The overall context object.
+ * \ingroup group_int_meta_format
+ */
+vx_meta_format vxCreateMetaFormat(vx_context context);
+
+/*! \brief Releases a meta-format object.
+ * \param [in,out] pmeta
+ * \ingroup group_int_meta_format
+ */
+vx_status vxReleaseMetaFormat(vx_meta_format *pmeta);
+
+#endif /* VX_META_FORMAT_H */

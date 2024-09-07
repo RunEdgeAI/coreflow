@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,8 +35,23 @@
 class Scalar : public Reference
 {
 public:
+    /**
+     * @brief Construct a new Scalar object
+     *
+     * @param context
+     * @param scope
+     */
     Scalar(vx_context context, vx_reference scope);
-    ~Scalar() = default;
+
+    /**
+     * @brief Destroy the Scalar object
+     *
+     */
+    ~Scalar();
+
+    void* allocateScalarMemory(vx_size size);
+
+    void destructScalar();
 
     /*! \brief The atomic type of the scalar */
     vx_enum               data_type;

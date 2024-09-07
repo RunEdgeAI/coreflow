@@ -89,7 +89,7 @@ static vx_kernel_description_t *target_kernels[] =
     &tensor_matrix_multiply_kernel,
     &halfscale_gaussian_kernel,
     &hogfeatures_kernel,
-    &hogcells_kernel, 
+    &hogcells_kernel,
     &nonmaxsuppression_kernel,
     &houghlinesp_kernel,
     &tensor_lut_kernel,
@@ -429,7 +429,7 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
         {
             vxQueryNode(node, VX_NODE_OUTPUT_TILE_BLOCK_SIZE, &tiles[p].tile_block, sizeof(vx_tile_block_size_t));
             vxQueryNode(node, VX_NODE_INPUT_NEIGHBORHOOD, &tiles[p].neighborhood, sizeof(vx_neighborhood_size_t));
-            ownPrintImage((vx_image_t *)parameters[p]);
+            vxPrintImage((vx_image_t *)parameters[p]);
             images[p] = (vx_image)parameters[p];
             vxQueryImage(images[p], VX_IMAGE_WIDTH, &tiles[p].image.width, sizeof(vx_uint32));
             vxQueryImage(images[p], VX_IMAGE_HEIGHT, &tiles[p].image.height, sizeof(vx_uint32));

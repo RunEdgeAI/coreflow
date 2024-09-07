@@ -132,4 +132,3 @@ vx_size ownComputeMemorySize(vx_memory_t *memory, vx_uint32 p)
 {
     return (memory->ndims == 0 ? 0 : (memory->dims[p][memory->ndims-1] * memory->strides[p][memory->ndims-1]));
 }
-
