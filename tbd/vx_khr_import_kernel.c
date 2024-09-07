@@ -79,7 +79,7 @@ static vx_status VX_CALLBACK vxNNEFInitializer(vx_node node, const vx_reference 
 
     // copy NNEF graph to node
     node->attributes.localDataPtr = nnef_graph_copy(node->kernel->attributes.localDataPtr);
-   
+
     if (!nnef_graph_allocate_buffers(node->attributes.localDataPtr, perror))
     {
         //nnef allocate buffers failed
@@ -99,13 +99,13 @@ static vx_status VX_CALLBACK vxNNEFDeinitializer(vx_node node, const vx_referenc
 
     for (i = 0; i < num; i++)
     {
-        ownReleaseMetaFormat(&meta[i]);
+        vxReleaseMetaFormat(&meta[i]);
     }
-    // destroy NNEF graph in node 
+    // destroy NNEF graph in node
     nnef_graph_release(node->attributes.localDataPtr);
-    
+
     node->attributes.localDataPtr = NULL;
- 
+
     return status;
 }
 
@@ -113,7 +113,7 @@ static vx_status VX_CALLBACK vxNNEFKernelDeinitializer(vx_kernel nn_kernel)
 {
     vx_status status = VX_SUCCESS;
 
-    // destroy NNEF graph in kernel 
+    // destroy NNEF graph in kernel
     nnef_graph_release(nn_kernel->attributes.localDataPtr);
 
     nn_kernel->attributes.localDataPtr = NULL;
@@ -171,9 +171,9 @@ static vx_status VX_CALLBACK vxNNEFKernel(vx_node node, const vx_reference *para
     {
         tensors[i] = (vx_tensor)parameters[i];
 
-        size_t input_tensor_data_size = compute_patch_size(tensors[i]->dimensions, tensors[i]->number_of_dimensions) * 
+        size_t input_tensor_data_size = compute_patch_size(tensors[i]->dimensions, tensors[i]->number_of_dimensions) *
                                                            sizeof_tensor_type(tensors[i]->data_type);
-        
+
         memcpy(nnef_tensor_data(nnef_graph_find_tensor(nnef_graph_node, inputs[i])), tensors[i]->addr, input_tensor_data_size);
     }
 
@@ -189,7 +189,7 @@ static vx_status VX_CALLBACK vxNNEFKernel(vx_node node, const vx_reference *para
     {
         tensors[i] = (vx_tensor)parameters[i];
 
-        size_t output_tensor_data_size = compute_patch_size(tensors[i]->dimensions, tensors[i]->number_of_dimensions) * 
+        size_t output_tensor_data_size = compute_patch_size(tensors[i]->dimensions, tensors[i]->number_of_dimensions) *
                                                             sizeof_tensor_type(tensors[i]->data_type);
 
         tensors[i]->addr = malloc(output_tensor_data_size);
@@ -203,7 +203,7 @@ static vx_status VX_CALLBACK vxNNEFKernel(vx_node node, const vx_reference *para
         free(inputs);
     if (NULL != outputs)
         free(outputs);
-    
+
     return status;
 }
 
@@ -351,7 +351,7 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxImportKernelFromURL(vx_context context, con
     sprintf(kernel_name, "nnef.import.%d", counter++);
 
     kernel = CreateNNEFKernel(context, input_num, output_num, kernel_name);
-    
+
     kernel->attributes.localDataPtr = nnef_graph;
 
     vx_meta_format *meta;
@@ -360,7 +360,7 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxImportKernelFromURL(vx_context context, con
 
     for (i = 0; i < num; i++)
     {
-        meta[i] = ownCreateMetaFormat(context);
+        meta[i] = vxCreateMetaFormat(context);
         meta[i]->type = VX_TYPE_TENSOR;
     }
 

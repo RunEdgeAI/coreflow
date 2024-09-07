@@ -34,42 +34,22 @@
 /*! \brief The implementation string which is of the format "<vendor>.<substring>" */
 extern const vx_char implementation[];
 
-/*! \brief Searches the memory maps list to find an open slot and
- *  allocate memory for mapped buffer.
- * \ingroup group_int_context
- */
-VX_INT_API vx_bool ownMemoryMap(
-    vx_context   context,
-    vx_reference ref,
-    vx_size      size,
-    vx_enum      usage,
-    vx_enum      mem_type,
-    vx_uint32    flags,
-    void*        extra_data,
-    void**       ptr,
-    vx_map_id*   map_id);
-
-/*! \brief Checks the consistency of given ref & map_id by looking
-*  into memory maps list.
- * \ingroup group_int_context
-*/
-VX_INT_API vx_bool ownFindMemoryMap(
-    vx_context   context,
-    vx_reference ref,
-    vx_map_id    map_id);
-
-/*! \brief Finds and removes a map_id from the list.
- * \ingroup group_int_context
- */
-VX_INT_API void ownMemoryUnmap(vx_context context, vx_uint32 map_id);
-
 /*! \brief The top level context data for the entire OpenVX instance
  * \ingroup group_int_context
  */
 class Context : public Reference
 {
 public:
+    /**
+     * @brief Construct a new Context object
+     *
+     */
     Context();
+
+    /**
+     * @brief Destroy the Context object
+     *
+     */
     ~Context() = default;
 
     static vx_bool isValidContext(vx_context context);
@@ -97,6 +77,33 @@ public:
     vx_bool addReference(const std::shared_ptr<Reference>& ref);
 
     vx_bool removeReference(vx_reference ref);
+
+    /*! \brief Searches the memory maps list to find an open slot and
+     *  allocate memory for mapped buffer.
+     * \ingroup group_int_context
+     */
+    VX_INT_API vx_bool memoryMap(
+        vx_reference ref,
+        vx_size      size,
+        vx_enum      usage,
+        vx_enum      mem_type,
+        vx_uint32    flags,
+        void*        extra_data,
+        void**       ptr,
+        vx_map_id*   map_id);
+
+    /*! \brief Checks the consistency of given ref & map_id by looking
+     *  into memory maps list.
+     * \ingroup group_int_context
+     */
+    VX_INT_API vx_bool findMemoryMap(
+        vx_reference ref,
+        vx_map_id    map_id);
+
+    /*! \brief Finds and removes a map_id from the list.
+     * \ingroup group_int_context
+     */
+    VX_INT_API void memoryUnmap(vx_uint32 map_id);
 
     /*! \brief The pointer to process global lock */
     vx_sem_t*           p_global_lock;
@@ -146,7 +153,7 @@ public:
         vx_char name[VX_MAX_STRUCT_NAME];
     } user_structs[VX_INT_MAX_USER_STRUCTS];
     /*! \brief The worker pool used to parallelize the graph*/
-    vx_threadpool_t    *workers;
+    vx_threadpool_t*    workers;
     /*! \brief The immediate mode border */
     vx_border_t         imm_border;
     /*! \brief The unsupported border mode policy for immediate mode functions */

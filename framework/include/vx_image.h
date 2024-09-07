@@ -37,9 +37,72 @@
 class Image : public Reference
 {
 public:
+    /**
+     * @brief Construct a new Image object
+     *
+     * @param context
+     * @param ref
+     */
     Image(vx_context context, vx_reference ref);
 
+    /**
+     * @brief Destroy the Image object
+     *
+     */
     ~Image() = default;
+
+    /*! \brief Used to validate the vx_image types.
+     * \param [in] img The vx_image to validate.
+     * \ingroup group_int_image
+     */
+    static vx_bool isValidImage(vx_image image);
+
+    static vx_image createImage(vx_context context,
+                                   vx_uint32 width,
+                                   vx_uint32 height,
+                                   vx_df_image color,
+                                   vx_bool is_virtual);
+
+    /*! \brief Used to initialize a single plane in an image object.
+     * \param [in] index The index to the plane.
+     * \param [in] bpp The unit size (size of pixel).
+     * \param [in] width The width in pixels.
+     * \param [in] height The height in pixels.
+     * \ingroup group_int_image
+     */
+    void initPlane(vx_uint32 index,
+                   vx_uint32 soc,
+                   vx_uint32 channels,
+                   vx_uint32 width,
+                   vx_uint32 height);
+
+    /*! \brief Used to initialize the image meta-data structure with the correct
+     * values per the df_image code.
+     * \param [in,out] image The image object.
+     * \param [in] width Width in pixels
+     * \param [in] height Height in pixels
+     * \param [in] color VX_DF_IMAGE color space.
+     * \ingroup group_int_image
+     */
+    void initImage(vx_uint32 width, vx_uint32 height, vx_df_image color);
+
+    /*! \brief Used to allocate an image object.
+     * \param [in,out] image The image object.
+     * \ingroup group_int_image
+     */
+    vx_bool allocateImage();
+
+    /*! \brief Used to free an image object.
+     * Only the data is freed, not the
+     * meta-data structure.
+     * \ingroup group_int_image
+     */
+    void freeImage();
+
+    /*! \brief Destroys an image
+     * \ingroup group_int_image
+     */
+    void destructImage();
 
     /*! \brief The memory layout definition */
     vx_memory_t    memory;
@@ -74,5 +137,19 @@ public:
     cl_image_format cl_format;
 #endif
 };
+
+/*! \brief Determines which VX_DF_IMAGE are supported in the sample implementation.
+ * \param [in] code The df_image code to test.
+ * \retval vx_bool
+ * \retval vx_true_e The code is supported.
+ * \retval vx_false_e The code is not supported.
+ * \ingroup group_int_image
+ */
+vx_bool vxIsSupportedFourcc(vx_df_image code);
+
+/*! \brief Prints the values of the images.
+ * \ingroup group_int_image
+ */
+void vxPrintImage(vx_image image);
 
 #endif /* VX_IMAGE_H */

@@ -23,24 +23,11 @@ MetaFormat::MetaFormat(vx_context context, vx_reference scope) : Reference(conte
 
 }
 
-vx_status ownReleaseMetaFormat(vx_meta_format* pmeta)
-{
-    vx_status status = VX_FAILURE;
+/******************************************************************************/
+/* PUBLIC */
+/******************************************************************************/
 
-    if (pmeta != nullptr)
-    {
-        vx_meta_format this_meta_format = *pmeta;
-        if (Reference::isValidReference((vx_reference)this_meta_format, VX_TYPE_META_FORMAT) == vx_true_e)
-        {
-            status = this_meta_format->releaseReference(VX_TYPE_META_FORMAT, VX_EXTERNAL, nullptr);
-        }
-    }
-
-    VX_PRINT(VX_ZONE_API, "%s returned %d\n", __FUNCTION__, status);
-    return status;
-}
-
-vx_meta_format ownCreateMetaFormat(vx_context context)
+vx_meta_format vxCreateMetaFormat(vx_context context)
 {
     vx_meta_format meta = nullptr;
 
@@ -56,10 +43,6 @@ vx_meta_format ownCreateMetaFormat(vx_context context)
 
     return meta;
 }
-
-/******************************************************************************/
-// PUBLIC
-/******************************************************************************/
 
 VX_API_ENTRY vx_status VX_API_CALL vxQueryMetaFormatAttribute(vx_meta_format meta, vx_enum attribute, void *ptr, vx_size size)
 {
@@ -812,5 +795,22 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetMetaFormatFromReference(vx_meta_format m
         break;
     }
 
+    return status;
+}
+
+vx_status vxReleaseMetaFormat(vx_meta_format* pmeta)
+{
+    vx_status status = VX_FAILURE;
+
+    if (pmeta != nullptr)
+    {
+        vx_meta_format this_meta_format = *pmeta;
+        if (Reference::isValidReference((vx_reference)this_meta_format, VX_TYPE_META_FORMAT) == vx_true_e)
+        {
+            status = this_meta_format->releaseReference(VX_TYPE_META_FORMAT, VX_EXTERNAL, nullptr);
+        }
+    }
+
+    VX_PRINT(VX_ZONE_API, "%s returned %d\n", __FUNCTION__, status);
     return status;
 }

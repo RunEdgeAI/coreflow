@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +36,18 @@
 class Target : public Reference
 {
 public:
+    /**
+     * @brief Construct a new Target object
+     *
+     * @param context
+     * @param scope
+     */
     Target(vx_context context, vx_reference scope);
+
+    /**
+     * @brief Destroy the Target object
+     *
+     */
     ~Target() = default;
 
     static void printTarget(vx_target target, vx_uint32 index);
@@ -50,6 +60,10 @@ public:
                              vx_uint32 numkernels);
 
     vx_status deinitializeTarget();
+
+    vx_uint32 findTargetIndex();
+
+    vx_kernel findKernelByEnum(vx_enum enumeration);
 
     /*! \brief A quick checking method to see if the target is usable. */
     vx_bool             enabled;

@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,6 +26,11 @@ Tensor INTERNAL HELPER FUNCTIONS
 Tensor::Tensor(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_TENSOR, scope)
 {
 
+}
+
+Tensor::~Tensor()
+{
+    destructTensor();
 }
 
 vx_bool Tensor::isValidTensor(vx_tensor tensor)
@@ -76,6 +80,20 @@ void Tensor::initTensor(const vx_size* dimensions, vx_size number_of_dimensions,
     {
         this->dimensions[i] = 0;
         this->stride[i] = 0;
+    }
+}
+
+void Tensor::destructTensor()
+{
+    /* if it's not imported and does not have a parent, free it */
+    if (parent == nullptr && addr)
+    {
+        free (addr);
+        addr = nullptr;
+    }
+    else if (parent)
+    {
+        parent->releaseReference(VX_TYPE_TENSOR, VX_INTERNAL, nullptr);
     }
 }
 
@@ -650,7 +668,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapTensorPatch(vx_tensor tensor, vx_size nu
     extra.tensor_data.number_of_dims = number_of_dims;
 
     if (VX_MEMORY_TYPE_HOST  == mem_type &&
-        vx_true_e == ownMemoryMap(tensor->context, (vx_reference)tensor, 0, usage, mem_type, 0, (void *)&extra, (void **)&buf, map_id))
+        vx_true_e == tensor->context->memoryMap((vx_reference)tensor, 0, usage, mem_type, 0, (void *)&extra, (void **)&buf, map_id))
     {
         *ptr = tensor->addr;
 
@@ -658,7 +676,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapTensorPatch(vx_tensor tensor, vx_size nu
 
         status = VX_SUCCESS;
     }
-    else if (vx_true_e == ownMemoryMap(tensor->context, (vx_reference)tensor, size, usage, mem_type, 0, (void *)&extra, (void **)&buf, map_id))
+    else if (vx_true_e == tensor->context->memoryMap((vx_reference)tensor, size, usage, mem_type, 0, (void *)&extra, (void **)&buf, map_id))
     {
         vx_uint8* user_curr_ptr = buf;
         vx_uint8* tensor_ptr = (vx_uint8*)tensor->addr;
@@ -697,7 +715,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapTensorPatch(vx_tensor tensor, vx_map_i
     }
 
     /* bad parameters */
-    if (ownFindMemoryMap(tensor->context, (vx_reference)tensor, map_id) != vx_true_e)
+    if (tensor->context->findMemoryMap((vx_reference)tensor, map_id) != vx_true_e)
     {
         status = VX_ERROR_INVALID_PARAMETERS;
         VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to unmap image patch\n");
@@ -746,7 +764,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapTensorPatch(vx_tensor tensor, vx_map_i
             }
 
             /* freeing mapping buffer */
-            ownMemoryUnmap(context, (vx_uint32)map_id);
+            context->memoryUnmap((vx_uint32)map_id);
 
             tensor->decrementReference(VX_EXTERNAL);
 
@@ -869,24 +887,4 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyTensorPatch(vx_tensor tensor, vx_size n
 exit:
     VX_PRINT(VX_ZONE_API, "returned %d\n", status);
     return status;
-}
-
-void ownFreeTensor(vx_tensor tensor)
-{
-    free (tensor->addr);
-    tensor->addr = nullptr;
-}
-
-void ownDestructTensor(vx_reference ref)
-{
-    vx_tensor tensor = (vx_tensor)ref;
-    /* if it's not imported and does not have a parent, free it */
-    if (tensor->parent == nullptr)
-    {
-        ownFreeTensor(tensor);
-    }
-    else if (tensor->parent)
-    {
-        tensor->parent->releaseReference(VX_TYPE_TENSOR, VX_INTERNAL, nullptr);
-    }
 }

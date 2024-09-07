@@ -21,7 +21,7 @@
 VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char dotfile[], vx_bool showData)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
-    if (ownIsValidSpecificReference(&graph->base, VX_TYPE_GRAPH) == vx_true_e)
+    if (Reference::isValidReference(graph, VX_TYPE_GRAPH) == vx_true_e)
     {
         FILE *fp = fopen(dotfile, "w+");
         if (fp)
@@ -41,13 +41,13 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
             fprintf(fp, "\tnode [shape=oval style=filled fillcolor=red fontsize=27];\n");
             for (n = 0; n < graph->numNodes; n++)
             {
-                vx_node_t *node = graph->nodes[n];
+                vx_node node = graph->nodes[n];
                 fprintf(fp, "\tN%u [label=\"N%u\\n%s\"];\n", n, n, node->kernel->name);
                 if (showData)
                 {
                     for (p = 0u; p < node->kernel->signature.num_parameters; p++)
                     {
-                        if (node->parameters[p] == NULL) continue;
+                        if (node->parameters[p] == nullptr) continue;
                         for (d = 0u; d < num_data; d++)
                         {
                             if (data[d] == node->parameters[p])
@@ -55,7 +55,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
                         }
                         if (d == num_data)
                         {
-                            // new reference added to data list
+                            /* new reference added to data list */
                             data[num_data++] = node->parameters[p];
                         }
                     }
@@ -66,10 +66,10 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
                 for (d = 0u; d < num_data; d++)
                 {
                     vx_int32 i = ownStringFromType(data[d]->type);
-                    if (data[d] == NULL) continue;
+                    if (data[d] == nullptr) continue;
                     if (data[d]->type == VX_TYPE_IMAGE)
                     {
-                        vx_image_t *image = (vx_image_t *)data[d];
+                        vx_image image = (vx_image)data[d];
                         vx_char fcc[5];
                         strncpy(fcc, (char *)&image->format, 4);
                         fcc[4] = '\0';
@@ -77,7 +77,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
                     }
                     else if (data[d]->type == VX_TYPE_ARRAY)
                     {
-                        vx_array_t *arr = (vx_array_t *)data[d];
+                        vx_array arr = (vx_array)data[d];
                         if (arr->item_type == VX_TYPE_CHAR || arr->item_size == sizeof(char))
                             fprintf(fp, "\tD%u [shape=box label=\"\\\"%s\\\"\"];\n", d, arr->memory.ptrs[0]);
                         else
@@ -85,7 +85,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
                     }
                     else if (data[d]->type == VX_TYPE_PYRAMID)
                     {
-                        vx_pyramid_t *pyr = (vx_pyramid_t *)data[d];
+                        vx_pyramid pyr = (vx_pyramid)data[d];
                         fprintf(fp, "\tD%u [shape=triangle label=\"%lfx"VX_FMT_REF"\\nPyramid\"];\n", d, pyr->scale, pyr->levels);
                     }
                     else
@@ -105,7 +105,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
                 for (n = 0; n < num_next; n++)
                 {
                     /* for each head, start tracing the graph */
-                    vx_node_t *node = graph->nodes[next_nodes[n]];
+                    vx_node node = graph->nodes[next_nodes[n]];
 
                     if (graph->nodes[next_nodes[n]]->executed == vx_true_e) continue;
 
@@ -116,7 +116,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
                         if (showData && node->kernel->signature.directions[p] == VX_INPUT)
                         {
                             ownFindNodesWithReference(graph,node->parameters[p],
-                                                     NULL, &count,VX_OUTPUT);
+                                                     nullptr, &count,VX_OUTPUT);
                             if (count > 0) continue;
                             for (d = 0u; d < num_data; d++)
                                 if (data[d] == node->parameters[p])
@@ -131,7 +131,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
                                                               dep_nodes,
                                                               &count,
                                                               VX_INPUT);
-                            //printf("N%u has %u dep nodes on parameter[%u], %d\n", next_nodes[n], count, p, status);
+                            /* printf("N%u has %u dep nodes on parameter[%u], %d\n", next_nodes[n], count, p, status); */
                             for (n2 = 0; status == VX_SUCCESS && n2 < count; n2++)
                             {
                                 if (showData)

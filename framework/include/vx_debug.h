@@ -178,11 +178,6 @@ void vx_set_debug_zone_from_env(void);
  */
 void ownPrintImageAddressing(const vx_imagepatch_addressing_t *addr);
 
-/*! \brief Prints the values of the images.
- * \ingroup group_int_image
- */
-void ownPrintImage(vx_image image);
-
 /*! \brief Prints the name of an object type.
  * \ingroup group_int_debug
  */
@@ -192,5 +187,4 @@ const char *ownGetObjectTypeName(vx_enum type);
 }
 #endif
 
-#endif
-
+#endif /* VX_DEBUG_H */

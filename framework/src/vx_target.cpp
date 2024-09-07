@@ -135,12 +135,12 @@ const char* Target::reverse_strstr(const char* string, const char* substr)
     return last;
 }
 
-vx_uint32 vxFindTargetIndex(vx_target target)
+vx_uint32 Target::findTargetIndex()
 {
     vx_uint32 t = 0u;
-    for (t = 0u; t < target->context->num_kernels; t++)
+    for (t = 0u; t < context->num_kernels; t++)
     {
-        if (target == target->context->targets[t])
+        if (this == context->targets[t])
         {
             break;
         }
@@ -148,6 +148,18 @@ vx_uint32 vxFindTargetIndex(vx_target target)
     return t;
 }
 
+vx_kernel Target::findKernelByEnum(vx_enum enumeration)
+{
+    vx_uint32 k = 0;
+    for (k = 0; k < num_kernels; k++)
+    {
+        if (kernels[k]->enumeration == enumeration)
+        {
+            return kernels[k];
+        }
+    }
+    return nullptr;
+}
 /******************************************************************************/
 /* PUBLIC API */
 /******************************************************************************/

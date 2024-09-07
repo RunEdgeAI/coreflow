@@ -26,7 +26,7 @@ Delay::Delay(vx_context context, vx_reference scope) : Reference(context, VX_TYP
     this->type = VX_TYPE_DELAY;
 }
 
-vx_bool ownAddAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i)
+vx_bool Delay::addAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i)
 {
 
     vx_delay delay = value->delay;
@@ -68,7 +68,7 @@ vx_bool ownAddAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i)
     return vx_true_e;
 }
 
-vx_bool ownRemoveAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i)
+vx_bool Delay::removeAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i)
 {
     vx_delay delay = value->delay;
     vx_int32 delay_index = value->delay_slot_index;

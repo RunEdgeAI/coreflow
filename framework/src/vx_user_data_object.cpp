@@ -284,7 +284,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapUserDataObject(
         extra.array_data.start = offset;
         extra.array_data.end = offset + size;
         vx_uint8 *buf = nullptr;
-        if (ownMemoryMap(user_data_object->context, (vx_reference)user_data_object, size, usage, mem_type, flags, &extra, (void **)&buf, map_id) == vx_true_e)
+        if (user_data_object->context->memoryMap((vx_reference)user_data_object, size, usage, mem_type, flags, &extra, (void **)&buf, map_id) == vx_true_e)
         {
             if (VX_READ_ONLY == usage || VX_READ_AND_WRITE == usage)
             {
@@ -350,7 +350,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapUserDataObject(vx_user_data_object use
                     vx_size size = (end - start);
                     memcpy(pDst, pSrc, size);
 
-                    ownMemoryUnmap(context, (vx_uint32)map_id);
+                    context->memoryUnmap((vx_uint32)map_id);
                     user_data_object->decrementReference(VX_EXTERNAL);
                     ownSemPost(&user_data_object->memory.locks[0]);
                     status = VX_SUCCESS;
@@ -363,7 +363,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapUserDataObject(vx_user_data_object use
             else
             {
                 /* read only mode */
-                ownMemoryUnmap(user_data_object->context, (vx_uint32)map_id);
+                user_data_object->context->memoryUnmap((vx_uint32)map_id);
                 user_data_object->decrementReference(VX_EXTERNAL);
                 status = VX_SUCCESS;
             }

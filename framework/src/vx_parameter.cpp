@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -268,7 +267,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetParameterByIndex(vx_node node, vx_uint32
     {
         if (node->parameters[index]->delay!=nullptr) {
             // we already have a delay element here */
-            vx_bool res = ownRemoveAssociationToDelay(node->parameters[index], node, index);
+            vx_bool res = Delay::removeAssociationToDelay(node->parameters[index], node, index);
             if (res == vx_false_e)
             {
                 VX_PRINT(VX_ZONE_ERROR, "Internal error removing delay association\n");
@@ -280,7 +279,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetParameterByIndex(vx_node node, vx_uint32
 
     if (value->delay!=nullptr) {
         /* the new parameter is a delay element */
-        vx_bool res = ownAddAssociationToDelay(value, node, index);
+        vx_bool res = Delay::addAssociationToDelay(value, node, index);
         if (res == vx_false_e)
         {
             VX_PRINT(VX_ZONE_ERROR, "Internal error adding delay association\n");

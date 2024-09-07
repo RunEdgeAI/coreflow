@@ -58,10 +58,25 @@ vx_graph ownGetChildGraphOfNode(vx_node node);
 class Node : public Reference
 {
 public:
+    /**
+     * @brief Construct a new Node object
+     *
+     * @param context
+     * @param scope
+     */
     Node(vx_context context, vx_reference scope);
-    ~Node() = default;
+
+    /**
+     * @brief Destroy the Node object
+     *
+     */
+    ~Node();
 
     void setParameter(vx_uint32 index, vx_reference value);
+
+    void destructNode();
+
+    vx_status removeNode();
 
     /*! \brief The pointer to the kernel structure */
     vx_kernel           kernel;

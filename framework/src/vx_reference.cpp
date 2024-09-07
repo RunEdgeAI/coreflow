@@ -389,7 +389,7 @@ void Reference::initReferenceForDelay(vx_delay d, vx_int32 index)
 }
 
 /*****************************************************************************/
-// PUBLIC APIS
+/* PUBLIC APIS */
 /*****************************************************************************/
 
 VX_API_ENTRY vx_status VX_API_CALL vxQueryReference(vx_reference ref, vx_enum attribute, void *ptr, vx_size size)

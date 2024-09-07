@@ -33,6 +33,11 @@ Node::Node(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_
 
 }
 
+Node::~Node()
+{
+    destructNode();
+}
+
 void Node::setParameter(vx_uint32 index, vx_reference value)
 {
     if (parameters[index])
@@ -44,92 +49,92 @@ void Node::setParameter(vx_uint32 index, vx_reference value)
     parameters[index] = (vx_reference)value;
 }
 
-void ownDestructNode(vx_reference ref)
+void Node::destructNode()
 {
     vx_uint32 p = 0;
-    vx_node node = (vx_node)ref;
 
-    if (node->kernel == nullptr)
+    if (kernel == nullptr)
     {
         VX_PRINT(VX_ZONE_WARNING, "Node has no kernel!\n");
         DEBUG_BREAK();
     }
 
     /* de-initialize the kernel */
-    if (node->kernel->deinitialize)
+    if (kernel->deinitialize)
     {
         vx_status status;
-        if ((node->kernel->user_kernel == vx_true_e) && (node->local_data_set_by_implementation == vx_false_e))
-            node->local_data_change_is_enabled = vx_true_e;
-        status = node->kernel->deinitialize((vx_node)node,
-                                            (vx_reference *)node->parameters,
-                                            node->kernel->signature.num_parameters);
-        node->local_data_change_is_enabled = vx_false_e;
+        if ((kernel->user_kernel == vx_true_e) && (local_data_set_by_implementation == vx_false_e))
+            local_data_change_is_enabled = vx_true_e;
+        status = kernel->deinitialize((vx_node)this,
+                                            (vx_reference *)parameters,
+                                            kernel->signature.num_parameters);
+        local_data_change_is_enabled = vx_false_e;
         if (status != VX_SUCCESS)
         {
-            VX_PRINT(VX_ZONE_ERROR,"Failed to de-initialize kernel %s!\n", node->kernel->name);
+            VX_PRINT(VX_ZONE_ERROR,"Failed to de-initialize kernel %s!\n", kernel->name);
         }
     }
 
     /* remove, don't delete, all references from the node itself */
-    for (p = 0; p < node->kernel->signature.num_parameters; p++)
+    for (p = 0; p < kernel->signature.num_parameters; p++)
     {
-        vx_reference ref = node->parameters[p];
+        vx_reference ref = parameters[p];
         if (ref)
         {
             /* Remove the potential delay association */
-            if (ref->delay!=nullptr) {
-                vx_bool res = ownRemoveAssociationToDelay(ref, node, p);
-                if (res == vx_false_e) {
+            if (ref->delay!=nullptr)
+            {
+                vx_bool res = Delay::removeAssociationToDelay(ref, this, p);
+                if (res == vx_false_e)
+                {
                     VX_PRINT(VX_ZONE_ERROR, "Internal error removing delay association\n");
                 }
             }
             ref->releaseReference(ref->type, VX_INTERNAL, nullptr);
-            node->parameters[p] = nullptr;
+            parameters[p] = nullptr;
         }
     }
 
     /* free the local memory */
-    if (node->attributes.localDataPtr)
+    if (attributes.localDataPtr)
     {
-        free(node->attributes.localDataPtr);
-        node->attributes.localDataPtr = nullptr;
+        free(attributes.localDataPtr);
+        attributes.localDataPtr = nullptr;
     }
 
-    node->kernel->releaseReference(VX_TYPE_KERNEL, VX_INTERNAL, nullptr);
+    kernel->releaseReference(VX_TYPE_KERNEL, VX_INTERNAL, nullptr);
 }
 
-vx_status ownRemoveNodeInt(vx_node node)
+vx_status Node::removeNode()
 {
     vx_status status =  VX_ERROR_INVALID_REFERENCE;
-    if (node && Reference::isValidReference(reinterpret_cast<vx_reference>(node), VX_TYPE_NODE))
     {
-        if (node->graph)
+        if (graph)
         {
             vx_uint32 i = 0;
             vx_bool removedFromGraph = vx_false_e;
-            ownSemWait(&node->graph->lock);
+            ownSemWait(&graph->lock);
             /* remove the reference from the graph */
-            for (i = 0; i < node->graph->numNodes; i++)
+            for (i = 0; i < graph->numNodes; i++)
             {
-                if (node->graph->nodes[i] == node)
+                if (graph->nodes[i] == this)
                 {
-                    node->graph->numNodes--;
-                    node->graph->nodes[i] = node->graph->nodes[node->graph->numNodes];
-                    node->graph->nodes[node->graph->numNodes] = nullptr;
+                    graph->numNodes--;
+                    graph->nodes[i] = graph->nodes[graph->numNodes];
+                    graph->nodes[graph->numNodes] = nullptr;
                     /* force the graph to be verified again */
-                    node->graph->reverify = node->graph->verified;
-                    node->graph->verified = vx_false_e;
-                    node->graph->state = VX_GRAPH_STATE_UNVERIFIED;
+                    graph->reverify = graph->verified;
+                    graph->verified = vx_false_e;
+                    graph->state = VX_GRAPH_STATE_UNVERIFIED;
                     removedFromGraph = vx_true_e;
                     break;
                 }
             }
-            ownSemPost(&node->graph->lock);
+            ownSemPost(&graph->lock);
             /* If this node is within a graph, release internal reference to graph */
             if(removedFromGraph)
             {
-                node->releaseReference(VX_TYPE_NODE, VX_INTERNAL, nullptr);
+                releaseReference(VX_TYPE_NODE, VX_INTERNAL, nullptr);
                 status = VX_SUCCESS;
             }
         }
@@ -219,19 +224,6 @@ vx_graph ownGetChildGraphOfNode(vx_node node)
     return graph;
 }
 /* ![FROM SAMPLE EXTENSION] */
-
-static vx_kernel findKernelByEnum(vx_target target, vx_enum enumeration)
-{
-    vx_uint32 k = 0;
-    for (k = 0; k < target->num_kernels; k++)
-    {
-        if (target->kernels[k]->enumeration == enumeration)
-        {
-            return target->kernels[k];
-        }
-    }
-    return nullptr;
-}
 
 /******************************************************************************/
 /* PUBLIC FUNCTIONS */
@@ -548,7 +540,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxRemoveNode(vx_node node)
     vx_status status =  VX_ERROR_INVALID_REFERENCE;
     if (node && Reference::isValidReference(reinterpret_cast<vx_reference>(node), VX_TYPE_NODE))
     {
-        status = ownRemoveNodeInt(node);
+        status = node->removeNode();
         if (status == VX_SUCCESS)
         {
             status = node->releaseReference(VX_TYPE_NODE, VX_EXTERNAL, nullptr);
@@ -719,7 +711,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetNodeTarget(vx_node node, vx_enum target_
                 for (t = 0; (t < context->num_targets) && (kernel == nullptr); t++)
                 {
                     rt = context->priority_targets[t];
-                    kernel = findKernelByEnum(context->targets[rt], node->kernel->enumeration);
+                    kernel = context->targets[rt]->findKernelByEnum(node->kernel->enumeration);
                     if (nullptr != kernel)
                         break;
                 }
@@ -743,7 +735,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetNodeTarget(vx_node node, vx_enum target_
                             rt = context->priority_targets[t];
                             if (Target::matchTargetNameWithString(context->targets[rt]->name, target_lower_string) == vx_true_e)
                             {
-                                kernel = findKernelByEnum(context->targets[rt], node->kernel->enumeration);
+                                kernel = context->targets[rt]->findKernelByEnum(node->kernel->enumeration);
                             }
                         }
 

@@ -21,11 +21,9 @@
 #include "vx_internal.h"
 #include "vx_image.h"
 
-Image::Image(vx_context context, vx_reference ref) : Reference(context, VX_TYPE_IMAGE, ref)
-{
-
-}
-
+/*==============================================================================
+ INTERNAL HELPERS
+ =============================================================================*/
 static vx_uint32 vxComputePatchOffset(vx_uint32 x, vx_uint32 y, const vx_imagepatch_addressing_t* addr)
 {
     if (addr->stride_x == 0 && addr->stride_x_bits != 0)
@@ -137,198 +135,6 @@ static vx_size vxSizeOfChannel(vx_df_image color)
     return size;
 }
 
-void ownInitPlane(vx_image image,
-                 vx_uint32 index,
-                 vx_uint32 soc,
-                 vx_uint32 channels,
-                 vx_uint32 width,
-                 vx_uint32 height)
-{
-    if (image)
-    {
-        image->memory.strides[index][VX_DIM_C] = soc;
-        image->memory.dims[index][VX_DIM_C] = channels;
-        image->memory.dims[index][VX_DIM_X] = width;
-        image->memory.dims[index][VX_DIM_Y] = height;
-        image->memory.ndims = VX_DIM_MAX;
-        image->scale[index][VX_DIM_C] = 1;
-        image->scale[index][VX_DIM_X] = 1;
-        image->scale[index][VX_DIM_Y] = 1;
-        image->bounds[index][VX_DIM_C][VX_BOUND_START] = 0;
-        image->bounds[index][VX_DIM_C][VX_BOUND_END] = channels;
-        image->bounds[index][VX_DIM_X][VX_BOUND_START] = 0;
-        image->bounds[index][VX_DIM_X][VX_BOUND_END] = width;
-        image->bounds[index][VX_DIM_Y][VX_BOUND_START] = 0;
-        image->bounds[index][VX_DIM_Y][VX_BOUND_END] = height;
-    }
-}
-
-void ownInitImage(vx_image image, vx_uint32 width, vx_uint32 height, vx_df_image color)
-{
-    vx_uint32 soc = (vx_uint32)vxSizeOfChannel(color);
-    image->width = width;
-    image->height = height;
-    image->format = color;
-    image->range = VX_CHANNEL_RANGE_FULL;
-    image->memory_type = VX_MEMORY_TYPE_NONE;
-    /* when an image is allocated, it's not valid until it's been written to.
-     * this inverted rectangle is needed for the initial write case.
-     */
-    image->region.start_x = width;
-    image->region.start_y = height;
-    image->region.end_x = 0;
-    image->region.end_y = 0;
-
-    switch (image->format)
-    {
-        case VX_DF_IMAGE_U1:
-        case VX_DF_IMAGE_U8:
-        case VX_DF_IMAGE_U16:
-        case VX_DF_IMAGE_U32:
-        case VX_DF_IMAGE_S16:
-        case VX_DF_IMAGE_S32:
-        case VX_DF_IMAGE_F32:
-            image->space = VX_COLOR_SPACE_NONE;
-            break;
-        default:
-            image->space = VX_COLOR_SPACE_DEFAULT;
-            break;
-    }
-
-    switch (image->format)
-    {
-        case VX_DF_IMAGE_VIRT:
-            break;
-        case VX_DF_IMAGE_NV12:
-        case VX_DF_IMAGE_NV21:
-            image->planes = 2;
-            ownInitPlane(image, 0, soc, 1, image->width, image->height);
-            ownInitPlane(image, 1, soc, 2, image->width/2, image->height/2);
-            image->scale[1][VX_DIM_X] = 2;
-            image->scale[1][VX_DIM_Y] = 2;
-            image->bounds[1][VX_DIM_X][VX_BOUND_END] *= image->scale[1][VX_DIM_X];
-            image->bounds[1][VX_DIM_Y][VX_BOUND_END] *= image->scale[1][VX_DIM_Y];
-            break;
-        case VX_DF_IMAGE_RGB:
-            image->planes = 1;
-            ownInitPlane(image, 0, soc, 3, image->width, image->height);
-            break;
-        case VX_DF_IMAGE_RGBX:
-            image->planes = 1;
-            ownInitPlane(image, 0, soc, 4, image->width, image->height);
-            break;
-        case VX_DF_IMAGE_UYVY:
-        case VX_DF_IMAGE_YUYV:
-            image->planes = 1;
-            ownInitPlane(image, 0, soc, 2, image->width, image->height);
-            break;
-        case VX_DF_IMAGE_YUV4:
-            image->planes = 3;
-            ownInitPlane(image, 0, soc, 1, image->width, image->height);
-            ownInitPlane(image, 1, soc, 1, image->width, image->height);
-            ownInitPlane(image, 2, soc, 1, image->width, image->height);
-            break;
-        case VX_DF_IMAGE_IYUV:
-            image->planes = 3;
-            ownInitPlane(image, 0, soc, 1, image->width, image->height);
-            ownInitPlane(image, 1, soc, 1, image->width/2, image->height/2);
-            ownInitPlane(image, 2, soc, 1, image->width/2, image->height/2);
-            image->scale[1][VX_DIM_X] = 2;
-            image->scale[1][VX_DIM_Y] = 2;
-            image->scale[2][VX_DIM_X] = 2;
-            image->scale[2][VX_DIM_Y] = 2;
-            image->bounds[1][VX_DIM_X][VX_BOUND_END] *= image->scale[1][VX_DIM_X];
-            image->bounds[1][VX_DIM_Y][VX_BOUND_END] *= image->scale[1][VX_DIM_Y];
-            image->bounds[2][VX_DIM_X][VX_BOUND_END] *= image->scale[2][VX_DIM_X];
-            image->bounds[2][VX_DIM_Y][VX_BOUND_END] *= image->scale[2][VX_DIM_Y];
-            break;
-        case VX_DF_IMAGE_U1:
-            image->planes = 1;
-            ownInitPlane(image, 0, soc, 1, image->width, image->height);
-            image->memory.stride_x_bits[0] = 1;
-            break;
-        case VX_DF_IMAGE_U8:
-            image->planes = 1;
-            ownInitPlane(image, 0, soc, 1, image->width, image->height);
-            break;
-        case VX_DF_IMAGE_U16:
-        case VX_DF_IMAGE_S16:
-            image->planes = 1;
-            ownInitPlane(image, 0, soc, 1, image->width, image->height);
-            break;
-        case VX_DF_IMAGE_U32:
-        case VX_DF_IMAGE_S32:
-            image->planes = 1;
-            ownInitPlane(image, 0, soc, 1, image->width, image->height);
-            break;
-        case VX_DF_IMAGE_F32:
-            image->planes = 1;
-            ownInitPlane(image, 0, soc, 1, image->width, image->height);
-            break;
-        default:
-            /*! should not get here unless there's a bug in the
-             * vxIsSupportedFourcc call.
-             */
-            VX_PRINT(VX_ZONE_ERROR, "#################################################\n");
-            VX_PRINT(VX_ZONE_ERROR, "Unsupported IMAGE FORMAT!!!\n");
-            VX_PRINT(VX_ZONE_ERROR, "#################################################\n");
-            break;
-    }
-    image->memory.nptrs = image->planes;
-    ownPrintImage(image);
-}
-
-void ownFreeImage(vx_image image)
-{
-    ownFreeMemory(image->context, &image->memory);
-}
-
-/* Allocate the memory for an image. The function returns vx_false_e in case
- * the image could not be allocated:
- * - No memory resource
- * - Handled reclaimed for images created from handle
-*/
-vx_bool ownAllocateImage(vx_image image)
-{
-    vx_bool ret = vx_true_e;
-
-    /*
-     * Note: ownAllocateMemory allocates memory when the 'memory->allocated' flag
-     * is 'vx_false_e'. For images created from handle, this flag is set to
-     * 'vx_false_e' when there is no handle and no memory allocation should be done
-     * by OpenVX. ownAllocateMemory then must not be called for images created from
-     * handle.
-     */
-
-    /* Only request allocation OpenVX controlled memory */
-    if (image->memory_type == VX_MEMORY_TYPE_NONE)
-    {
-        /* Standard image */
-        ret = ownAllocateMemory(image->context, &image->memory);
-        ownPrintMemory(&image->memory);
-    }
-    else
-    {
-        /* This is an image created from handle */
-        ret = image->memory.allocated;
-    }
-
-    return ret;
-}
-vx_bool ownIsValidImage(vx_image image)
-{
-    if ((Reference::isValidReference(reinterpret_cast<vx_reference>(image), VX_TYPE_IMAGE) == vx_true_e) &&
-        (vxIsSupportedFourcc(image->format) == vx_true_e))
-    {
-        return vx_true_e;
-    }
-    else
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Invalid Image!\n");
-        return vx_false_e;
-    }
-}
-
 static vx_bool vxIsOdd(vx_uint32 a)
 {
     if (a & 0x1)
@@ -351,46 +157,7 @@ vx_bool vxIsValidDimensions(vx_uint32 width, vx_uint32 height, vx_df_image color
     return vx_true_e;
 }
 
-static vx_image vxCreateImageInt(vx_context context,
-                                     vx_uint32 width,
-                                     vx_uint32 height,
-                                     vx_df_image color,
-                                     vx_bool is_virtual)
-{
-    vx_image image = nullptr;
-
-    if (Context::isValidContext(context) == vx_true_e)
-    {
-        if (vxIsSupportedFourcc(color) == vx_true_e)
-        {
-            if (vxIsValidDimensions(width, height, color) == vx_true_e)
-            {
-                image = (vx_image)Reference::createReference(context, VX_TYPE_IMAGE, VX_EXTERNAL, context);
-                if (vxGetStatus((vx_reference)image) == VX_SUCCESS && image->type == VX_TYPE_IMAGE)
-                {
-                    image->is_virtual = is_virtual;
-                    ownInitImage(image, width, height, color);
-                }
-            }
-            else
-            {
-                VX_PRINT(VX_ZONE_ERROR, "Requested Image Dimensions are invalid!\n");
-                vxAddLogEntry((vx_reference)image, VX_ERROR_INVALID_DIMENSION, "Requested Image Dimensions was invalid!\n");
-                // image = (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_DIMENSION);
-            }
-        }
-        else
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Requested Image Format was invalid!\n");
-            vxAddLogEntry((vx_reference)context, VX_ERROR_INVALID_FORMAT, "Requested Image Format was invalid!\n");
-            // image = (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_FORMAT);
-        }
-    }
-
-    return image;
-}
-
-void ownPrintImage(vx_image image)
+void vxPrintImage(vx_image image)
 {
     vx_uint32 p = 0;
     vx_char df_image[5];
@@ -420,6 +187,270 @@ void ownPrintImage(vx_image image)
     }
 }
 
+/*==============================================================================
+ PRIVATE INTERFACE
+ =============================================================================*/
+Image::Image(vx_context context, vx_reference ref) : Reference(context, VX_TYPE_IMAGE, ref)
+{
+
+}
+
+void Image::initPlane(vx_uint32 index,
+                      vx_uint32 soc,
+                      vx_uint32 channels,
+                      vx_uint32 width,
+                      vx_uint32 height)
+{
+    memory.strides[index][VX_DIM_C] = soc;
+    memory.dims[index][VX_DIM_C] = channels;
+    memory.dims[index][VX_DIM_X] = width;
+    memory.dims[index][VX_DIM_Y] = height;
+    memory.ndims = VX_DIM_MAX;
+    scale[index][VX_DIM_C] = 1;
+    scale[index][VX_DIM_X] = 1;
+    scale[index][VX_DIM_Y] = 1;
+    bounds[index][VX_DIM_C][VX_BOUND_START] = 0;
+    bounds[index][VX_DIM_C][VX_BOUND_END] = channels;
+    bounds[index][VX_DIM_X][VX_BOUND_START] = 0;
+    bounds[index][VX_DIM_X][VX_BOUND_END] = width;
+    bounds[index][VX_DIM_Y][VX_BOUND_START] = 0;
+    bounds[index][VX_DIM_Y][VX_BOUND_END] = height;
+}
+
+void Image::initImage(vx_uint32 width, vx_uint32 height, vx_df_image color)
+{
+    vx_uint32 soc = (vx_uint32)vxSizeOfChannel(color);
+    this->width = width;
+    this->height = height;
+    format = color;
+    range = VX_CHANNEL_RANGE_FULL;
+    memory_type = VX_MEMORY_TYPE_NONE;
+    /* when an image is allocated, it's not valid until it's been written to.
+     * this inverted rectangle is needed for the initial write case.
+     */
+    region.start_x = width;
+    region.start_y = height;
+    region.end_x = 0;
+    region.end_y = 0;
+
+    switch (format)
+    {
+        case VX_DF_IMAGE_U1:
+        case VX_DF_IMAGE_U8:
+        case VX_DF_IMAGE_U16:
+        case VX_DF_IMAGE_U32:
+        case VX_DF_IMAGE_S16:
+        case VX_DF_IMAGE_S32:
+        case VX_DF_IMAGE_F32:
+            space = VX_COLOR_SPACE_NONE;
+            break;
+        default:
+            space = VX_COLOR_SPACE_DEFAULT;
+            break;
+    }
+
+    switch (format)
+    {
+        case VX_DF_IMAGE_VIRT:
+            break;
+        case VX_DF_IMAGE_NV12:
+        case VX_DF_IMAGE_NV21:
+            planes = 2;
+            initPlane(0, soc, 1, this->width, this->height);
+            initPlane(1, soc, 2, this->width/2, this->height/2);
+            scale[1][VX_DIM_X] = 2;
+            scale[1][VX_DIM_Y] = 2;
+            bounds[1][VX_DIM_X][VX_BOUND_END] *= scale[1][VX_DIM_X];
+            bounds[1][VX_DIM_Y][VX_BOUND_END] *= scale[1][VX_DIM_Y];
+            break;
+        case VX_DF_IMAGE_RGB:
+            planes = 1;
+            initPlane(0, soc, 3, this->width, this->height);
+            break;
+        case VX_DF_IMAGE_RGBX:
+            planes = 1;
+            initPlane(0, soc, 4, this->width, this->height);
+            break;
+        case VX_DF_IMAGE_UYVY:
+        case VX_DF_IMAGE_YUYV:
+            planes = 1;
+            initPlane(0, soc, 2, this->width, this->height);
+            break;
+        case VX_DF_IMAGE_YUV4:
+            planes = 3;
+            initPlane(0, soc, 1, this->width, this->height);
+            initPlane(1, soc, 1, this->width, this->height);
+            initPlane(2, soc, 1, this->width, this->height);
+            break;
+        case VX_DF_IMAGE_IYUV:
+            planes = 3;
+            initPlane(0, soc, 1, this->width, this->height);
+            initPlane(1, soc, 1, this->width/2, this->height/2);
+            initPlane(2, soc, 1, this->width/2, this->height/2);
+            scale[1][VX_DIM_X] = 2;
+            scale[1][VX_DIM_Y] = 2;
+            scale[2][VX_DIM_X] = 2;
+            scale[2][VX_DIM_Y] = 2;
+            bounds[1][VX_DIM_X][VX_BOUND_END] *= scale[1][VX_DIM_X];
+            bounds[1][VX_DIM_Y][VX_BOUND_END] *= scale[1][VX_DIM_Y];
+            bounds[2][VX_DIM_X][VX_BOUND_END] *= scale[2][VX_DIM_X];
+            bounds[2][VX_DIM_Y][VX_BOUND_END] *= scale[2][VX_DIM_Y];
+            break;
+        case VX_DF_IMAGE_U1:
+            planes = 1;
+            initPlane(0, soc, 1, this->width, this->height);
+            memory.stride_x_bits[0] = 1;
+            break;
+        case VX_DF_IMAGE_U8:
+            planes = 1;
+            initPlane(0, soc, 1, this->width, this->height);
+            break;
+        case VX_DF_IMAGE_U16:
+        case VX_DF_IMAGE_S16:
+            planes = 1;
+            initPlane(0, soc, 1, this->width, this->height);
+            break;
+        case VX_DF_IMAGE_U32:
+        case VX_DF_IMAGE_S32:
+            planes = 1;
+            initPlane(0, soc, 1, this->width, this->height);
+            break;
+        case VX_DF_IMAGE_F32:
+            planes = 1;
+            initPlane(0, soc, 1, this->width, this->height);
+            break;
+        default:
+            /*! should not get here unless there's a bug in the
+             * vxIsSupportedFourcc call.
+             */
+            VX_PRINT(VX_ZONE_ERROR, "#################################################\n");
+            VX_PRINT(VX_ZONE_ERROR, "Unsupported IMAGE FORMAT!!!\n");
+            VX_PRINT(VX_ZONE_ERROR, "#################################################\n");
+            break;
+    }
+    memory.nptrs = planes;
+    vxPrintImage(this);
+}
+
+void Image::freeImage()
+{
+    ownFreeMemory(context, &memory);
+}
+
+/* Allocate the memory for an image. The function returns vx_false_e in case
+ * the image could not be allocated:
+ * - No memory resource
+ * - Handled reclaimed for images created from handle
+*/
+vx_bool Image::allocateImage()
+{
+    vx_bool ret = vx_true_e;
+
+    /*
+     * Note: ownAllocateMemory allocates memory when the 'memory->allocated' flag
+     * is 'vx_false_e'. For images created from handle, this flag is set to
+     * 'vx_false_e' when there is no handle and no memory allocation should be done
+     * by OpenVX. ownAllocateMemory then must not be called for images created from
+     * handle.
+     */
+
+    /* Only request allocation OpenVX controlled memory */
+    if (memory_type == VX_MEMORY_TYPE_NONE)
+    {
+        /* Standard image */
+        ret = ownAllocateMemory(context, &memory);
+        ownPrintMemory(&memory);
+    }
+    else
+    {
+        /* This is an image created from handle */
+        ret = memory.allocated;
+    }
+
+    return ret;
+}
+
+vx_bool Image::isValidImage(vx_image image)
+{
+    if ((Reference::isValidReference(reinterpret_cast<vx_reference>(image), VX_TYPE_IMAGE) == vx_true_e) &&
+        (vxIsSupportedFourcc(image->format) == vx_true_e))
+    {
+        return vx_true_e;
+    }
+    else
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid Image!\n");
+        return vx_false_e;
+    }
+}
+
+vx_image Image::createImage(vx_context context,
+                            vx_uint32 width,
+                            vx_uint32 height,
+                            vx_df_image color,
+                            vx_bool is_virtual)
+{
+    vx_image image = nullptr;
+
+    if (Context::isValidContext(context) == vx_true_e)
+    {
+        if (vxIsSupportedFourcc(color) == vx_true_e)
+        {
+            if (vxIsValidDimensions(width, height, color) == vx_true_e)
+            {
+                image = (vx_image)Reference::createReference(context, VX_TYPE_IMAGE, VX_EXTERNAL, context);
+                if (vxGetStatus((vx_reference)image) == VX_SUCCESS && image->type == VX_TYPE_IMAGE)
+                {
+                    image->is_virtual = is_virtual;
+                    image->initImage(width, height, color);
+                }
+            }
+            else
+            {
+                VX_PRINT(VX_ZONE_ERROR, "Requested Image Dimensions are invalid!\n");
+                vxAddLogEntry((vx_reference)image, VX_ERROR_INVALID_DIMENSION, "Requested Image Dimensions was invalid!\n");
+                // image = (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_DIMENSION);
+            }
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Requested Image Format was invalid!\n");
+            vxAddLogEntry((vx_reference)context, VX_ERROR_INVALID_FORMAT, "Requested Image Format was invalid!\n");
+            // image = (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_FORMAT);
+        }
+    }
+
+    return image;
+}
+
+
+void Image::destructImage()
+{
+    /* if it's not imported and does not have a parent, free it */
+    if ((memory_type == VX_MEMORY_TYPE_NONE) && (parent == nullptr))
+    {
+        freeImage();
+    }
+    else if (parent)
+    {
+        parent->releaseReference(VX_TYPE_IMAGE, VX_INTERNAL, nullptr);
+    }
+    else if (memory_type != VX_MEMORY_TYPE_NONE)
+    {
+        vx_uint32 p = 0u;
+        for (p = 0; p < planes; p++)
+        {
+            ownDestroySem(&memory.locks[p]);
+            memory.ptrs[p] = nullptr;
+            memory.strides[p][VX_DIM_C] = 0;
+            memory.strides[p][VX_DIM_X] = 0;
+            memory.strides[p][VX_DIM_Y] = 0;
+            memory.stride_x_bits[p] = 0;
+        }
+        memory.allocated = vx_false_e;
+    }
+}
+
 /******************************************************************************/
 /* PUBLIC API */
 /******************************************************************************/
@@ -432,7 +463,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImage(vx_context context, vx_uint32 wi
         return nullptr;
         // return (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
     }
-    return (vx_image)vxCreateImageInt(context, width, height, format, vx_false_e);
+    return (vx_image)Image::createImage(context, width, height, format, vx_false_e);
 }
 
 VX_API_ENTRY vx_image VX_API_CALL vxCreateUniformImage(vx_context context, vx_uint32 width, vx_uint32 height, vx_df_image format, const vx_pixel_value_t *value)
@@ -597,7 +628,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateVirtualImage(vx_graph graph, vx_uint32
 
     if (Reference::isValidReference(graph, VX_TYPE_GRAPH) == vx_true_e)
     {
-        image = vxCreateImageInt(graph->context, width, height, format, vx_true_e);
+        image = Image::createImage(graph->context, width, height, format, vx_true_e);
         if (vxGetStatus((vx_reference)image) == VX_SUCCESS && image->type == VX_TYPE_IMAGE)
         {
             image->scope = (vx_reference)graph;
@@ -611,7 +642,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromROI(vx_image image, const vx_
 {
     vx_image subimage = nullptr;
 
-    if (ownIsValidImage(image) == vx_true_e)
+    if (Image::isValidImage(image) == vx_true_e)
     {
         if (!rect ||
             rect->start_x >= rect->end_x ||
@@ -632,7 +663,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromROI(vx_image image, const vx_
         else
         {
             /* perhaps the parent hasn't been allocated yet? */
-            if (ownAllocateImage(image) == vx_true_e)
+            if (image->allocateImage() == vx_true_e)
             {
                 subimage = (vx_image)Reference::createReference(image->context, VX_TYPE_IMAGE, VX_EXTERNAL, image->context);
                 if (vxGetStatus((vx_reference)subimage) == VX_SUCCESS)
@@ -709,7 +740,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromROI(vx_image image, const vx_
                         subimage->memory.offset[p] = offset;
                     }
 
-                    ownPrintImage(subimage);
+                    vxPrintImage(subimage);
                 }
                 else
                 {
@@ -738,10 +769,10 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromChannel(vx_image image, vx_en
 {
     vx_image subimage = nullptr;
 
-    if (ownIsValidImage(image) == vx_true_e)
+    if (Image::isValidImage(image) == vx_true_e)
     {
         /* perhaps the parent hasn't been allocated yet? */
-        if (ownAllocateImage(image) == vx_true_e)
+        if (image->allocateImage() == vx_true_e)
         {
             /* check for valid parameters */
             switch (channel)
@@ -905,7 +936,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromChannel(vx_image image, vx_en
                 subimage->region.end_x   = 0;
                 subimage->region.end_y   = 0;
 
-                ownPrintImage(subimage);
+                vxPrintImage(subimage);
             }
             else
             {
@@ -996,7 +1027,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSwapImageHandle(vx_image image, void* const
     vx_status status = VX_SUCCESS;
     (void)num_planes;
 
-    if (ownIsValidImage(image) == vx_true_e)
+    if (Image::isValidImage(image) == vx_true_e)
     {
         if (image->memory_type != VX_MEMORY_TYPE_NONE)
         {
@@ -1119,7 +1150,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSwapImageHandle(vx_image image, void* const
 VX_API_ENTRY vx_status VX_API_CALL vxQueryImage(vx_image image, vx_enum attribute, void *ptr, vx_size size)
 {
     vx_status status = VX_SUCCESS;
-    if (ownIsValidImage(image) == vx_true_e)
+    if (Image::isValidImage(image) == vx_true_e)
     {
         switch (attribute)
         {
@@ -1225,7 +1256,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryImage(vx_image image, vx_enum attribut
 VX_API_ENTRY vx_status VX_API_CALL vxSetImageAttribute(vx_image image, vx_enum attribute, const void *ptr, vx_size size)
 {
     vx_status status = VX_SUCCESS;
-    if (ownIsValidImage(image) == vx_true_e)
+    if (Image::isValidImage(image) == vx_true_e)
     {
         switch (attribute)
         {
@@ -1253,38 +1284,10 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetImageAttribute(vx_image image, vx_enum a
     return status;
 }
 
-void ownDestructImage(vx_reference ref)
-{
-    vx_image image = (vx_image)ref;
-    /* if it's not imported and does not have a parent, free it */
-    if ((image->memory_type == VX_MEMORY_TYPE_NONE) && (image->parent == nullptr))
-    {
-        ownFreeImage(image);
-    }
-    else if (image->parent)
-    {
-        image->parent->releaseReference(VX_TYPE_IMAGE, VX_INTERNAL, nullptr);
-    }
-    else if (image->memory_type != VX_MEMORY_TYPE_NONE)
-    {
-        vx_uint32 p = 0u;
-        for (p = 0; p < image->planes; p++)
-        {
-            ownDestroySem(&image->memory.locks[p]);
-            image->memory.ptrs[p] = nullptr;
-            image->memory.strides[p][VX_DIM_C] = 0;
-            image->memory.strides[p][VX_DIM_X] = 0;
-            image->memory.strides[p][VX_DIM_Y] = 0;
-            image->memory.stride_x_bits[p] = 0;
-        }
-        image->memory.allocated = vx_false_e;
-    }
-}
-
 VX_API_ENTRY vx_status VX_API_CALL vxSetImagePixelValues(vx_image image, const vx_pixel_value_t *pixel_value)
 {
     vx_status status = VX_SUCCESS;
-    if (ownIsValidImage(image) == vx_true_e)
+    if (Image::isValidImage(image) == vx_true_e)
     {
         vx_uint32 x, y, p, width, height;
         vx_size planes = 0;
@@ -1473,7 +1476,7 @@ VX_API_ENTRY vx_size VX_API_CALL vxComputeImagePatchSize(vx_image image,
     vx_size size = 0ul;
     vx_uint32 start_x = 0u, start_y = 0u, end_x = 0u, end_y = 0u;
 
-    if ((ownIsValidImage(image) == vx_true_e) && (rect))
+    if ((Image::isValidImage(image) == vx_true_e) && (rect))
     {
         start_x = rect->start_x;
         start_y = rect->start_y;
@@ -1482,7 +1485,7 @@ VX_API_ENTRY vx_size VX_API_CALL vxComputeImagePatchSize(vx_image image,
 
         if (image->memory.ptrs[0] == nullptr)
         {
-            if (ownAllocateImage(image) == vx_false_e)
+            if (image->allocateImage() == vx_false_e)
             {
                 vxAddLogEntry((vx_reference)image, VX_ERROR_NO_MEMORY, "Failed to allocate image!\n");
                 return 0;
@@ -1493,7 +1496,7 @@ VX_API_ENTRY vx_size VX_API_CALL vxComputeImagePatchSize(vx_image image,
             vx_size pixelSize;
             vx_size numPixels = ((end_x-start_x)/image->scale[plane_index][VX_DIM_X]) *
                                 ((end_y-start_y)/image->scale[plane_index][VX_DIM_Y]);
-            ownPrintImage(image);
+            vxPrintImage(image);
             if (image->memory.strides[plane_index][VX_DIM_X] == 0 && image->memory.stride_x_bits[plane_index] != 0)
             {
                 /* data type does not have integer byte size, e.g. VX_DF_IMAGE_U1 image */
@@ -1553,7 +1556,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxAccessImagePatch(vx_image image,
 
     /* bad references */
     if ((!rect) ||
-        (ownIsValidImage(image) == vx_false_e))
+        (Image::isValidImage(image) == vx_false_e))
     {
         status = VX_ERROR_INVALID_REFERENCE;
         goto exit;
@@ -1584,7 +1587,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxAccessImagePatch(vx_image image,
     }
 
     /* The image needs to be allocated */
-    if ((image->memory.ptrs[0] == nullptr) && (ownAllocateImage(image) == vx_false_e))
+    if ((image->memory.ptrs[0] == nullptr) && (image->allocateImage() == vx_false_e))
     {
         VX_PRINT(VX_ZONE_ERROR, "No memory!\n");
         status = VX_ERROR_NO_MEMORY;
@@ -1812,13 +1815,13 @@ VX_API_ENTRY vx_status VX_API_CALL vxCommitImagePatch(vx_image image,
     vx_bool zero_area = ((((end_x - start_x) == 0) || ((end_y - start_y) == 0)) ? vx_true_e : vx_false_e);
     vx_uint32 index = UINT32_MAX; // out of bounds, if given to remove, won't do anything
 
-    if (ownIsValidImage(image) == vx_false_e)
+    if (Image::isValidImage(image) == vx_false_e)
         return VX_ERROR_INVALID_REFERENCE;
 
     VX_PRINT(VX_ZONE_IMAGE, "CommitImagePatch to " VX_FMT_REF " from ptr %p plane %u to {%u,%u},{%u,%u}\n",
         image, ptr, plane_index, start_x, start_y, end_x, end_y);
 
-    ownPrintImage(image);
+    vxPrintImage(image);
     ownPrintImageAddressing(addr);
 
     /* determine if virtual before checking for memory */
@@ -1852,7 +1855,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCommitImagePatch(vx_image image,
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid start,end coordinates! plane %u {%u,%u},{%u,%u}\n",
                  plane_index, start_x, start_y, end_x, end_y);
-        ownPrintImage(image);
+        vxPrintImage(image);
         DEBUG_BREAK();
         status = VX_ERROR_INVALID_PARAMETERS;
         goto exit;
@@ -2111,7 +2114,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyImagePatch(
     }
 
     /* bad references */
-    if ( ownIsValidImage(image) == vx_false_e )
+    if ( Image::isValidImage(image) == vx_false_e )
     {
         status = VX_ERROR_INVALID_REFERENCE;
         goto exit;
@@ -2142,7 +2145,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyImagePatch(
     }
 
     /* The image needs to be allocated */
-    if ((image->memory.ptrs[0] == nullptr) && (ownAllocateImage(image) == vx_false_e))
+    if ((image->memory.ptrs[0] == nullptr) && (image->allocateImage() == vx_false_e))
     {
         VX_PRINT(VX_ZONE_ERROR, "No memory!\n");
         status = VX_ERROR_NO_MEMORY;
@@ -2451,7 +2454,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapImagePatch(
     }
 
     /* bad references */
-    if (ownIsValidImage(image) == vx_false_e)
+    if (Image::isValidImage(image) == vx_false_e)
     {
         status = VX_ERROR_INVALID_REFERENCE;
         goto exit;
@@ -2482,7 +2485,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapImagePatch(
     }
 
     /* The image needs to be allocated */
-    if ((image->memory.ptrs[0] == nullptr) && (ownAllocateImage(image) == vx_false_e))
+    if ((image->memory.ptrs[0] == nullptr) && (image->allocateImage() == vx_false_e))
     {
         VX_PRINT(VX_ZONE_ERROR, "No memory!\n");
         status = VX_ERROR_NO_MEMORY;
@@ -2513,7 +2516,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapImagePatch(
         extra.image_data.plane_index = plane_index;
         extra.image_data.rect        = *rect;
 
-        if (VX_MEMORY_TYPE_NONE != image->memory_type && vx_true_e == ownMemoryMap(image->context, (vx_reference)image, 0, usage, mem_type, flags, &extra, (void**)&buf, map_id))
+        if (VX_MEMORY_TYPE_NONE != image->memory_type && vx_true_e == image->context->memoryMap((vx_reference)image, 0, usage, mem_type, flags, &extra, (void**)&buf, map_id))
         {
             /* use the addressing of the internal format */
             if (image->format == VX_DF_IMAGE_U1 && start_x % 8 != 0)
@@ -2541,7 +2544,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapImagePatch(
         }
         else
         /* get mapping buffer of sufficient size and map_id */
-        if (ownMemoryMap(image->context, (vx_reference)image, size, usage, mem_type, flags, &extra, (void**)&buf, map_id))
+        if (image->context->memoryMap((vx_reference)image, size, usage, mem_type, flags, &extra, (void**)&buf, map_id))
         {
             /* use the addressing of the internal format */
             if (image->format == VX_DF_IMAGE_U1 && start_x % 8 != 0)
@@ -2647,14 +2650,14 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapImagePatch(vx_image image, vx_map_id m
     vx_status status = VX_SUCCESS;
 
     /* bad references */
-    if (ownIsValidImage(image) == vx_false_e)
+    if (Image::isValidImage(image) == vx_false_e)
     {
         status = VX_ERROR_INVALID_REFERENCE;
         goto exit;
     }
 
     /* bad parameters */
-    if (ownFindMemoryMap(image->context, (vx_reference)image, map_id) != vx_true_e)
+    if (image->context->findMemoryMap((vx_reference)image, map_id) != vx_true_e)
     {
         status = VX_ERROR_INVALID_PARAMETERS;
         VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to unmap image patch\n");
@@ -2775,7 +2778,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapImagePatch(vx_image image, vx_map_id m
             }
 
             /* freeing mapping buffer */
-            ownMemoryUnmap(context, (vx_uint32)map_id);
+            image->context->memoryUnmap((vx_uint32)map_id);
 
             image->decrementReference(VX_EXTERNAL);
             status = VX_SUCCESS;
@@ -2821,7 +2824,7 @@ VX_API_ENTRY void* VX_API_CALL vxFormatImagePatchAddress2d(void *ptr, vx_uint32 
 VX_API_ENTRY vx_status VX_API_CALL vxGetValidRegionImage(vx_image image, vx_rectangle_t *rect)
 {
     vx_status status = VX_ERROR_INVALID_REFERENCE;
-    if (ownIsValidImage(image) == vx_true_e)
+    if (Image::isValidImage(image) == vx_true_e)
     {
         status = VX_ERROR_INVALID_PARAMETERS;
         if (rect)
@@ -2850,7 +2853,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetImageValidRectangle(vx_image image, cons
 {
     vx_status status = VX_ERROR_INVALID_REFERENCE;
 
-    if (ownIsValidImage(image) == vx_true_e)
+    if (Image::isValidImage(image) == vx_true_e)
     {
         if (rect)
         {

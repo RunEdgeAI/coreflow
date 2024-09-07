@@ -21,7 +21,17 @@
  PRIVATE INTERFACE
  =============================================================================*/
 
-static vx_bool ownIsValidObjectArray(vx_object_array arr)
+ObjectArray::ObjectArray(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_OBJECT_ARRAY, scope)
+{
+
+}
+
+ObjectArray::~ObjectArray()
+{
+    destructObjectArray();
+}
+
+vx_bool ObjectArray::isValidObjectArray(vx_object_array arr)
 {
     if (arr == nullptr ||
         !Reference::isValidReference(reinterpret_cast<vx_reference>(arr), VX_TYPE_OBJECT_ARRAY))
@@ -39,11 +49,11 @@ static vx_bool ownIsValidObjectArray(vx_object_array arr)
     return vx_true_e;
 }
 
-static vx_status ownInitObjectArrayInt(vx_object_array arr, vx_reference exemplar, vx_size num_items)
+vx_status ObjectArray::initObjectArray(vx_reference exemplar, vx_size num_items)
 {
     vx_status status = VX_SUCCESS;
 
-    vx_bool is_virtual = arr->is_virtual;
+    vx_bool is_virtual = this->is_virtual;
     vx_enum item_type = exemplar->type;
 
     vx_uint32 image_width, image_height;
@@ -73,7 +83,7 @@ static vx_status ownInitObjectArrayInt(vx_object_array arr, vx_reference exempla
 
     if (is_virtual)
     {
-        vx_graph graph = (vx_graph)arr->scope;
+        vx_graph graph = (vx_graph)scope;
 
         switch (item_type)
         {
@@ -126,16 +136,16 @@ static vx_status ownInitObjectArrayInt(vx_object_array arr, vx_reference exempla
 
             if (Reference::isValidReference(ref, item_type))
             {
-                arr->items[i] = ref;
+                items[i] = ref;
                 /* set the scope of the reference to the object array */
-                ref->scope = (vx_reference)arr;
+                ref->scope = (vx_reference)this;
             }
             else
             {
                 /* free all allocated references */
                 for (vx_uint32 j = 0u; j < i; j++)
                 {
-                    arr->items[j]->releaseReference(item_type, VX_EXTERNAL, nullptr);
+                    items[j]->releaseReference(item_type, VX_EXTERNAL, nullptr);
                 }
 
                 return VX_ERROR_NO_RESOURCES;
@@ -144,7 +154,7 @@ static vx_status ownInitObjectArrayInt(vx_object_array arr, vx_reference exempla
     }
     else
     {
-        vx_context context = (vx_context)arr->scope;
+        vx_context context = (vx_context)scope;
 
         switch (item_type)
         {
@@ -267,16 +277,16 @@ static vx_status ownInitObjectArrayInt(vx_object_array arr, vx_reference exempla
 
             if (Reference::isValidReference(ref, item_type))
             {
-                arr->items[i] = ref;
+                items[i] = ref;
                 /* set the scope of the reference to the object array */
-                ref->scope = (vx_reference)arr;
+                ref->scope = (vx_reference)this;
             }
             else
             {
                 /* free all allocated references */
                 for (vx_uint32 j = 0u; j < i; j++)
                 {
-                    arr->items[j]->releaseReference(item_type, VX_EXTERNAL, nullptr);
+                    items[j]->releaseReference(item_type, VX_EXTERNAL, nullptr);
                 }
 
                 return VX_ERROR_NO_RESOURCES;
@@ -284,8 +294,8 @@ static vx_status ownInitObjectArrayInt(vx_object_array arr, vx_reference exempla
         }
     }
 
-    arr->item_type = item_type;
-    arr->num_items = num_items;
+    this->item_type = item_type;
+    this->num_items = num_items;
 
     return VX_SUCCESS;
 }
@@ -294,7 +304,7 @@ static vx_status ownInitObjectArrayInt(vx_object_array arr, vx_reference exempla
  INTERNAL INTERFACE
  =============================================================================*/
 
-vx_object_array ownCreateObjectArrayInt(vx_reference scope, vx_reference exemplar, vx_size count, vx_bool is_virtual)
+vx_object_array ObjectArray::createObjectArray(vx_reference scope, vx_reference exemplar, vx_size count, vx_bool is_virtual)
 {
     vx_context context = scope->context ? scope->context : (vx_context)scope;
     vx_object_array arr = nullptr;
@@ -305,7 +315,7 @@ vx_object_array ownCreateObjectArrayInt(vx_reference scope, vx_reference exempla
         arr->scope = scope;
         arr->is_virtual = is_virtual;
 
-        if (ownInitObjectArrayInt(arr, exemplar, count) != VX_SUCCESS)
+        if (arr->initObjectArray(exemplar, count) != VX_SUCCESS)
         {
             arr->releaseReference(VX_TYPE_OBJECT_ARRAY, VX_EXTERNAL, nullptr);
             // arr = (vx_object_array)ownGetErrorObject(context, VX_ERROR_NO_MEMORY);
@@ -314,16 +324,15 @@ vx_object_array ownCreateObjectArrayInt(vx_reference scope, vx_reference exempla
     return arr;
 }
 
-void ownDestructObjectArray(vx_reference ref)
+void ObjectArray::destructObjectArray()
 {
-    vx_object_array arr = (vx_object_array)ref;
     vx_status status = VX_FAILURE;
 
-    VX_PRINT(VX_ZONE_KERNEL, "Releasing object array " VX_FMT_REF "\n", (void *)ref);
-    for (vx_uint32 i = 0u; i < arr->num_items; i++)
+    VX_PRINT(VX_ZONE_KERNEL, "Releasing object array " VX_FMT_REF "\n", (void *)this);
+    for (vx_uint32 i = 0u; i < num_items; i++)
     {
         /* nullptr means standard destructor */
-        status = arr->items[i]->releaseReference(arr->item_type, VX_EXTERNAL, nullptr);
+        status = items[i]->releaseReference(item_type, VX_EXTERNAL, nullptr);
 
         if (status != VX_SUCCESS)
         {
@@ -332,7 +341,7 @@ void ownDestructObjectArray(vx_reference ref)
     }
 }
 
-vx_bool ownValidateObjectArray(vx_object_array objarr, vx_enum item_type, vx_size num_items)
+vx_bool ObjectArray::isValidObjectArray(vx_object_array objarr, vx_enum item_type, vx_size num_items)
 {
     vx_bool res = vx_false_e;
     if (objarr->item_type == item_type &&
@@ -362,7 +371,7 @@ VX_API_ENTRY vx_object_array VX_API_CALL vxCreateObjectArray(vx_context context,
             (exemplar->type != VX_TYPE_DELAY) &&
             (exemplar->type != VX_TYPE_OBJECT_ARRAY))
         {
-            arr = ownCreateObjectArrayInt((vx_reference)context, exemplar, count, vx_false_e);
+            arr = ObjectArray::createObjectArray((vx_reference)context, exemplar, count, vx_false_e);
 
             if (arr == nullptr)
             {
@@ -388,7 +397,7 @@ VX_API_ENTRY vx_object_array VX_API_CALL vxCreateVirtualObjectArray(vx_graph gra
             (exemplar->type != VX_TYPE_DELAY) &&
             (exemplar->type != VX_TYPE_OBJECT_ARRAY))
         {
-            arr = ownCreateObjectArrayInt((vx_reference)graph, exemplar, count, vx_true_e);
+            arr = ObjectArray::createObjectArray((vx_reference)graph, exemplar, count, vx_true_e);
 
             if (arr == nullptr)
             {
@@ -423,7 +432,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryObjectArray(vx_object_array arr, vx_en
 {
     vx_status status = VX_ERROR_INVALID_REFERENCE;
 
-    if (ownIsValidObjectArray(arr) == vx_true_e)
+    if (ObjectArray::isValidObjectArray(arr) == vx_true_e)
     {
         status = VX_SUCCESS;
         switch (attribute)
@@ -463,7 +472,7 @@ VX_API_ENTRY vx_reference VX_API_CALL vxGetObjectArrayItem(vx_object_array arr, 
 {
     vx_reference item = nullptr;
 
-    if (ownIsValidObjectArray(arr) == vx_true_e)
+    if (ObjectArray::isValidObjectArray(arr) == vx_true_e)
     {
         if (index < arr->num_items)
         {

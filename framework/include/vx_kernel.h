@@ -37,8 +37,25 @@
 class Kernel : public Reference
 {
 public:
+    /**
+     * @brief Construct a new Kernel object
+     *
+     * @param context
+     * @param scope
+     */
     Kernel(vx_context context, vx_reference scope);
 
+    /**
+     * @brief Construct a new Kernel object
+     *
+     * @param context
+     * @param kenum
+     * @param function
+     * @param name
+     * @param parameters
+     * @param numParams
+     * @param scope
+     */
     Kernel(vx_context context,
             vx_enum kenum,
             vx_kernel_f function,
@@ -47,6 +64,10 @@ public:
             vx_uint32 numParams,
             vx_reference scope);
 
+    /**
+     * @brief Destroy the Kernel object
+     *
+     */
     ~Kernel() = default;
 
     static vx_bool isKernelUnique(vx_kernel kernel);

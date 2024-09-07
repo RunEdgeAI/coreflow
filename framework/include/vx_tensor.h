@@ -35,8 +35,19 @@
 class Tensor : public Reference
 {
 public:
+    /**
+     * @brief Construct a new Tensor object
+     *
+     * @param context
+     * @param reference
+     */
     Tensor(vx_context context, vx_reference reference);
-    ~Tensor() = default;
+
+    /**
+     * @brief Destroy the Tensor object
+     *
+     */
+    ~Tensor();
 
     /**
      * @brief Validate tensor object
@@ -63,6 +74,8 @@ public:
      * @param fixed_point_position
      */
     void initTensor(const vx_size* dimensions, vx_size number_of_dimensions, vx_enum data_type, vx_int8 fixed_point_position);
+
+    void destructTensor();
 
     /*! \brief The memory layout definition */
     void *addr;

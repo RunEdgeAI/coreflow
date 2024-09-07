@@ -1,4 +1,4 @@
-/* 
+/*
 
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef _OPENVX_INT_LUT_H_
-#define _OPENVX_INT_LUT_H_
+#ifndef VX_LUT_H
+#define VX_LUT_H
 
 #include <VX/vx.h>
 #include "vx_internal.h"
@@ -31,10 +31,4 @@
  * \brief The Internal LUT API.
  */
 
-/*! \brief Releases a lut with internal references.
- * \param [in] lut The lut to release.
- * \ingroup group_int_lut
- */
-void ownReleaseLUTInt(vx_lut_t *lut);
-
-#endif
+#endif /* VX_LUT_H */

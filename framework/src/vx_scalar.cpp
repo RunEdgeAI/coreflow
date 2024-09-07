@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,24 +22,28 @@ Scalar::Scalar(vx_context context, vx_reference scope) : Reference(context, VX_T
 
 }
 
-static void* ownAllocateScalarMemory(vx_scalar scalar, vx_size size)
+Scalar::~Scalar()
 {
-    if (scalar->data_addr == nullptr)
-    {
-        scalar->data_addr = calloc(size, 1);
-    }
-
-    return scalar->data_addr;
+    destructScalar();
 }
 
-void ownDestructScalar(vx_reference ref)
+void* Scalar::allocateScalarMemory(vx_size size)
 {
-    vx_scalar scalar = (vx_scalar)ref;
-    if (scalar->data_addr)
+    if (data_addr == nullptr)
     {
-        free(scalar->data_addr);
-        scalar->data_addr = nullptr;
-        scalar->data_len = 0;
+        data_addr = calloc(size, 1);
+    }
+
+    return data_addr;
+}
+
+void Scalar::destructScalar()
+{
+    if (data_addr)
+    {
+        free(data_addr);
+        data_addr = nullptr;
+        data_len = 0;
     }
 }
 
@@ -411,7 +414,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyScalarWithSize(vx_scalar scalar, vx_siz
     case VX_WRITE_ONLY:
         if (scalar->data_addr == nullptr)
         {
-            if(nullptr == ownAllocateScalarMemory(scalar, size))
+            if(nullptr == scalar->allocateScalarMemory(size))
             {
                 status = VX_ERROR_NO_MEMORY;
             }
@@ -427,7 +430,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyScalarWithSize(vx_scalar scalar, vx_siz
             {
                 void *tmp_addr = scalar->data_addr;
                 scalar->data_addr = nullptr;
-                if(nullptr == ownAllocateScalarMemory(scalar, size))
+                if(nullptr == scalar->allocateScalarMemory(size))
                 {
                     scalar->data_addr = tmp_addr;
                     status = VX_ERROR_NO_MEMORY;

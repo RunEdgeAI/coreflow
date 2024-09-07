@@ -35,12 +35,12 @@ VX_API_ENTRY vx_lut VX_API_CALL vxCreateLUT(vx_context context, vx_enum data_typ
             else
 #endif
             {
-                lut = (vx_lut_t)ownCreateArrayInt(context, VX_TYPE_UINT8, count, vx_false_e, VX_TYPE_LUT);
+                lut = (vx_lut_t)Array::createArray(context, VX_TYPE_UINT8, count, vx_false_e, VX_TYPE_LUT);
                 if (vxGetStatus((vx_reference)lut) == VX_SUCCESS && lut->type == VX_TYPE_LUT)
                 {
                     lut->num_items = count;
                     lut->offset = 0;
-                    ownPrintArray(lut);
+                    vxPrintArray(lut);
                 }
             }
         }
@@ -54,24 +54,24 @@ VX_API_ENTRY vx_lut VX_API_CALL vxCreateLUT(vx_context context, vx_enum data_typ
             }
             else
             {
-                lut = (vx_lut_t)ownCreateArrayInt(context, VX_TYPE_INT16, count, vx_false_e, VX_TYPE_LUT);
+                lut = (vx_lut_t)Array::createArray(context, VX_TYPE_INT16, count, vx_false_e, VX_TYPE_LUT);
                 if (vxGetStatus((vx_reference)lut) == VX_SUCCESS && lut->type == VX_TYPE_LUT)
                 {
                     lut->num_items = count;
                     lut->offset = (vx_uint32)(count/2);
-                    ownPrintArray(lut);
+                    vxPrintArray(lut);
                 }
             }
         }
 #if !defined(OPENVX_STRICT_1_0)
         else if (data_type == VX_TYPE_UINT16)
         {
-            lut = (vx_lut_t)ownCreateArrayInt(context, VX_TYPE_UINT16, count, vx_false_e, VX_TYPE_LUT);
+            lut = (vx_lut_t)Array::createArray(context, VX_TYPE_UINT16, count, vx_false_e, VX_TYPE_LUT);
             if (vxGetStatus((vx_reference)lut) == VX_SUCCESS && lut->type == VX_TYPE_LUT)
             {
                 lut->num_items = count;
                 lut->offset = 0;
-                ownPrintArray(lut);
+                vxPrintArray(lut);
             }
         }
 #endif
@@ -108,7 +108,7 @@ VX_API_ENTRY vx_lut VX_API_CALL vxCreateVirtualLUT(vx_graph graph, vx_enum data_
 void vxDestructLUT(vx_reference ref)
 {
     vx_lut_t lut = (vx_lut_t)ref;
-    ownDestructArray((vx_reference)lut);
+    lut->destructArray();
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseLUT(vx_lut* l)
@@ -188,7 +188,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxAccessLUT(vx_lut lut, void **ptr, vx_enum u
     vx_status status = VX_FAILURE;
     if (Reference::isValidReference(reinterpret_cast<vx_reference>(lut), VX_TYPE_LUT) == vx_true_e)
     {
-        status = ownAccessArrayRangeInt((vx_array)lut, 0, lut->num_items, nullptr, ptr, usage);
+        status = lut->accessArrayRange(0, lut->num_items, nullptr, ptr, usage);
     }
     else
     {
@@ -202,7 +202,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCommitLUT(vx_lut lut, const void *ptr)
     vx_status status = VX_FAILURE;
     if (Reference::isValidReference(reinterpret_cast<vx_reference>(lut), VX_TYPE_LUT) == vx_true_e)
     {
-        status = ownCommitArrayRangeInt((vx_array)lut, 0, lut->num_items, ptr);
+        status = lut->commitArrayRange(0, lut->num_items, ptr);
     }
     else
     {
@@ -246,7 +246,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyLUT(vx_lut lut, void *user_ptr, vx_enum
         }
 #endif
 
-        status = ownCopyArrayRangeInt((vx_array)lut, 0, lut->num_items, stride, user_ptr, usage, user_mem_type);
+        status = lut->copyArrayRange(0, lut->num_items, stride, user_ptr, usage, user_mem_type);
 
 #ifdef OPENVX_USE_OPENCL_INTEROP
         if (user_mem_type_given == VX_MEMORY_TYPE_OPENCL_BUFFER)
@@ -280,7 +280,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapLUT(vx_lut lut, vx_map_id *map_id, void 
 #endif
 
         vx_size stride = lut->item_size;
-        status = ownMapArrayRangeInt((vx_array)lut, 0, lut->num_items, map_id, &stride, ptr, usage, mem_type, flags);
+        status = lut->mapArrayRange(0, lut->num_items, map_id, &stride, ptr, usage, mem_type, flags);
 
 #ifdef OPENVX_USE_OPENCL_INTEROP
         vx_size size = lut->num_items * stride;
@@ -336,7 +336,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapLUT(vx_lut lut, vx_map_id map_id)
         }
 #endif
 
-        status = ownUnmapArrayRangeInt((vx_array)lut, map_id);
+        status = lut->unmapArrayRange(map_id);
     }
     else
     {
