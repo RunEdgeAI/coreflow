@@ -764,9 +764,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetMetaFormatFromReference(vx_meta_format m
         }
         case VX_TYPE_LUT:
         {
-            // vx_lut_t *lut = (vx_lut_t *)item;
-            // meta->dim.lut.type = lut->item_type;
-            // meta->dim.lut.count = lut->num_items;
+            vx_lut_t lut = (vx_lut_t)item;
+            meta->dim.lut.type = lut->item_type;
+            meta->dim.lut.count = lut->num_items;
             break;
         }
         case VX_TYPE_THRESHOLD:
