@@ -923,34 +923,6 @@ typedef struct _vx_threshold {
     vx_df_image output_format;
 } vx_threshold_t;
 
-/*! \brief The internal matrix structure.
- * \ingroup group_int_matrix
- */
-typedef struct _vx_matrix {
-    /*! \brief Base object */
-    vx_reference base;
-    /*! \brief Memory Layout */
-    vx_memory_t memory;
-    /*! \brief From \ref vx_type_e */
-    vx_enum data_type;
-    /*! \brief Number of columns */
-    vx_size columns;
-    /*! \brief Number of rows */
-    vx_size rows;
-    /*! \brief Origin */
-    vx_coordinates2d_t origin;
-    /*! \brief Pattern */
-    vx_enum pattern;
-} vx_matrix_t;
-
-/*! \brief A convolution is a special type of matrix (MxM)
- * \ingroup group_int_convolution
- */
-typedef struct _vx_convolution {
-    vx_matrix_t base;   /*!< \brief Inherits everything from \ref vx_matrix_t. */
-    vx_uint32 scale;    /*!< \brief The Scale Factor. */
-} vx_convolution_t;
-
 /*! \brief A pyramid object. Contains a set of scaled images.
  * \ingroup group_int_pyramid
  */
@@ -1033,11 +1005,11 @@ static vx_type_size_t type_sizes[] = {
     {VX_TYPE_IMAGE,     sizeof(vx_image)},
     {VX_TYPE_SCALAR,    sizeof(vx_scalar)},
     {VX_TYPE_TENSOR,    sizeof(vx_tensor)},
-    {VX_TYPE_CONVOLUTION, sizeof(vx_convolution_t)},
+    {VX_TYPE_CONVOLUTION, sizeof(vx_convolution)},
     {VX_TYPE_DELAY,     sizeof(vx_delay)},
     {VX_TYPE_DISTRIBUTION, sizeof(vx_distribution_t)},
     {VX_TYPE_LUT,       sizeof(vx_lut_t)},
-    {VX_TYPE_MATRIX,    sizeof(vx_matrix_t)},
+    {VX_TYPE_MATRIX,    sizeof(vx_matrix)},
     {VX_TYPE_PYRAMID,   sizeof(vx_pyramid_t)},
     {VX_TYPE_REMAP,     sizeof(vx_remap_t)},
     {VX_TYPE_THRESHOLD, sizeof(vx_threshold_t)},
@@ -1051,15 +1023,14 @@ static vx_type_size_t type_sizes[] = {
 };
 
 // PROTOTYPES FOR INTERNAL FUNCTIONS
-// #include "vx_convolution.h"
 // #include "vx_distribution.h"
-// #include "vx_matrix.h"
 // #include "vx_pyramid.h"
 // #include "vx_threshold.h"
 // #include "vx_remap.h"
 // #include "vx_import.h"
 #include "vx_array.h"
 #include "vx_context.h"
+#include "vx_convolution.h"
 #include "vx_debug.h"
 #include "vx_delay.h"
 #include "vx_error.h"
@@ -1068,6 +1039,7 @@ static vx_type_size_t type_sizes[] = {
 #include "vx_kernel.h"
 #include "vx_log.h"
 #include "vx_lut.h"
+#include "vx_matrix.h"
 #include "vx_memory.h"
 #include "vx_meta_format.h"
 #include "vx_node.h"

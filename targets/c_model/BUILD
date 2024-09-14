@@ -7,17 +7,13 @@ cc_library(
     ],
     exclude = [
         "vx_canny.cpp",
-        "vx_convolution.cpp",
         "vx_controlflow.cpp",
         "vx_copy.cpp",
         "vx_histogram.cpp",
-        "vx_nonlinear*.cpp",
         "vx_o*.cpp",
         "vx_py*.cpp",
         "vx_remap.cpp",
-        "vx_s*.cpp",
         "vx_th*.cpp",
-        "vx_warp.cpp",
     ]),
     includes = [
         ".",

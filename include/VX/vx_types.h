@@ -252,7 +252,8 @@ typedef struct _vx_distribution *vx_distribution;
  * \extends vx_reference
  * \ingroup group_matrix
  */
-typedef struct _vx_matrix *vx_matrix;
+class Matrix;
+using vx_matrix = Matrix*;
 
 /*! \brief The Image Pyramid object. A set of scaled images.
  * \extends vx_reference
@@ -271,7 +272,8 @@ typedef struct _vx_threshold *vx_threshold;
  * \extends vx_reference
  * \ingroup group_convolution
  */
-typedef struct _vx_convolution *vx_convolution;
+class Convolution;
+using vx_convolution = Convolution*;
 
 /*! \brief The remap table Object. A remap table contains per-pixel mapping of
  * output pixels to input pixels.

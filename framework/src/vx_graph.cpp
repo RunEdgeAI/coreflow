@@ -1454,26 +1454,26 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
     } /* VX_TYPE_SCALAR */
     else if (meta->type == VX_TYPE_MATRIX)
     {
-        // vx_matrix_t *matrix = (vx_matrix_t *)item;
-        // if (matrix->data_type != meta->dim.matrix.type)
-        // {
-        //     *status = VX_ERROR_INVALID_TYPE;
-        //     vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_TYPE,
-        //         "Node: %s: parameter[%u] has an invalid data type 0x%08x\n",
-        //         graph->nodes[n]->kernel->name, p, matrix->data_type);
-        //     (*num_errors)++;
-        //     return vx_false_e; //break;
-        // }
+        vx_matrix matrix = (vx_matrix)*item;
+        if (matrix->data_type != meta->dim.matrix.type)
+        {
+            *status = VX_ERROR_INVALID_TYPE;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_TYPE,
+                "Node: %s: parameter[%u] has an invalid data type 0x%08x\n",
+                graph->nodes[n]->kernel->name, p, matrix->data_type);
+            (*num_errors)++;
+            return vx_false_e; //break;
+        }
 
-        // if (matrix->columns != meta->dim.matrix.cols || matrix->rows != meta->dim.matrix.rows)
-        // {
-        //     *status = VX_ERROR_INVALID_DIMENSION;
-        //     vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_DIMENSION,
-        //         "Node: %s: parameter[%u] has an invalid matrix dimention %ux%u\n",
-        //         graph->nodes[n]->kernel->name, p, matrix->data_type, matrix->rows, matrix->columns);
-        //     (*num_errors)++;
-        //     return vx_false_e; //break;
-        // }
+        if (matrix->columns != meta->dim.matrix.cols || matrix->rows != meta->dim.matrix.rows)
+        {
+            *status = VX_ERROR_INVALID_DIMENSION;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_DIMENSION,
+                "Node: %s: parameter[%u] has an invalid matrix dimention %ux%u\n",
+                graph->nodes[n]->kernel->name, p, matrix->data_type, matrix->rows, matrix->columns);
+            (*num_errors)++;
+            return vx_false_e; //break;
+        }
     } /* VX_TYPE_MATRIX */
     else if (meta->type == VX_TYPE_DISTRIBUTION)
     {
@@ -1517,16 +1517,16 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
     } /* VX_TYPE_REMAP */
     else if (meta->type == VX_TYPE_LUT)
     {
-    //     vx_lut_t *lut = (vx_lut_t *)item;
-    //     if (lut->item_type != meta->dim.lut.type || lut->num_items != meta->dim.lut.count)
-    //     {
-    //         *status = VX_ERROR_INVALID_DIMENSION;
-    //         vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_DIMENSION,
-    //             "Node: %s: parameter[%u] has an invalid item type 0x%08x or count " VX_FMT_SIZE "\n",
-    //             graph->nodes[n]->kernel->name, p, lut->item_type, lut->num_items);
-    //         (*num_errors)++;
-    //         return vx_false_e; //break;
-    //     }
+        vx_lut_t lut = (vx_lut_t)*item;
+        if (lut->item_type != meta->dim.lut.type || lut->num_items != meta->dim.lut.count)
+        {
+            *status = VX_ERROR_INVALID_DIMENSION;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_DIMENSION,
+                "Node: %s: parameter[%u] has an invalid item type 0x%08x or count " VX_FMT_SIZE "\n",
+                graph->nodes[n]->kernel->name, p, lut->item_type, lut->num_items);
+            (*num_errors)++;
+            return vx_false_e; //break;
+        }
     } /* VX_TYPE_LUT */
     else if (meta->type == VX_TYPE_THRESHOLD)
     {
@@ -1542,7 +1542,7 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
     } /* VX_TYPE_THRESHOLD */
     else if (meta->type == VX_TYPE_TENSOR)
     {
-        vx_tensor tensor = (vx_tensor)item;
+        vx_tensor tensor = (vx_tensor)*item;
         if (vref == (vx_reference*)&tensor)
         {
             VX_PRINT(VX_ZONE_GRAPH, "Creating Tensor From Meta Data!\n");
@@ -2098,13 +2098,13 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                     else if ((graph->nodes[n]->parameters[p]->type == VX_TYPE_MATRIX) ||
                               (graph->nodes[n]->parameters[p]->type == VX_TYPE_CONVOLUTION))
                     {
-//                         vx_matrix_t *mat = (vx_matrix_t *)graph->nodes[n]->parameters[p];
-//                         if (ownAllocateMemory(graph->context, &mat->memory) == vx_false_e)
-//                         {
-//                             vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate matrix (or subtype) at node[%u] %s parameter[%u]\n",
-//                                 n, graph->nodes[n]->kernel->name, p);
-//                             VX_PRINT(VX_ZONE_ERROR, "See log\n");
-//                         }
+                        vx_matrix mat = (vx_matrix)graph->nodes[n]->parameters[p];
+                        if (ownAllocateMemory(graph->context, &mat->memory) == vx_false_e)
+                        {
+                            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate matrix (or subtype) at node[%u] %s parameter[%u]\n",
+                                n, graph->nodes[n]->kernel->name, p);
+                            VX_PRINT(VX_ZONE_ERROR, "See log\n");
+                        }
                     }
                     else if (graph->nodes[n]->kernel->signature.types[p] == VX_TYPE_ARRAY)
                     {

@@ -303,20 +303,20 @@ VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
                     delay->refs[i] = (vx_reference)vxCreateArray(context, arr->item_type, arr->capacity);
                     break;
                 }
-                // case VX_TYPE_MATRIX:
-                // {
-                //     vx_matrix mat = (vx_matrix)exemplar;
-                //     delay->refs[i] = (vx_reference)vxCreateMatrix(context, mat->data_type, mat->columns, mat->rows);
-                //     break;
-                // }
-                // case VX_TYPE_CONVOLUTION:
-                // {
-                //     vx_convolution conv = (vx_convolution)exemplar;
-                //     vx_convolution conv2 = vxCreateConvolution(context, conv->columns, conv->rows);
-                //     conv2->scale = conv->scale;
-                //     delay->refs[i] = (vx_reference)conv2;
-                //     break;
-                // }
+                case VX_TYPE_MATRIX:
+                {
+                    vx_matrix mat = (vx_matrix)exemplar;
+                    delay->refs[i] = (vx_reference)vxCreateMatrix(context, mat->data_type, mat->columns, mat->rows);
+                    break;
+                }
+                case VX_TYPE_CONVOLUTION:
+                {
+                    vx_convolution conv = (vx_convolution)exemplar;
+                    vx_convolution conv2 = vxCreateConvolution(context, conv->columns, conv->rows);
+                    conv2->scale = conv->scale;
+                    delay->refs[i] = (vx_reference)conv2;
+                    break;
+                }
                 // case VX_TYPE_DISTRIBUTION:
                 // {
                 //     vx_distribution dist = (vx_distribution)exemplar;

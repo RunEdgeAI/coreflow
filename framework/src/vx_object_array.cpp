@@ -182,9 +182,9 @@ vx_status ObjectArray::initObjectArray(vx_reference exemplar, vx_size num_items)
                     status = VX_ERROR_INVALID_REFERENCE;
                 break;
             case VX_TYPE_MATRIX:
-                // if (vxQueryMatrix((vx_matrix)exemplar, VX_MATRIX_TYPE, &matrix_type, sizeof(matrix_type)) != VX_SUCCESS ||
-                //     vxQueryMatrix((vx_matrix)exemplar, VX_MATRIX_ROWS, &matrix_rows, sizeof(matrix_rows)) != VX_SUCCESS ||
-                //     vxQueryMatrix((vx_matrix)exemplar, VX_MATRIX_COLUMNS, &matrix_cols, sizeof(matrix_cols)) != VX_SUCCESS)
+                if (vxQueryMatrix((vx_matrix)exemplar, VX_MATRIX_TYPE, &matrix_type, sizeof(matrix_type)) != VX_SUCCESS ||
+                    vxQueryMatrix((vx_matrix)exemplar, VX_MATRIX_ROWS, &matrix_rows, sizeof(matrix_rows)) != VX_SUCCESS ||
+                    vxQueryMatrix((vx_matrix)exemplar, VX_MATRIX_COLUMNS, &matrix_cols, sizeof(matrix_cols)) != VX_SUCCESS)
                     status = VX_ERROR_INVALID_REFERENCE;
                 break;
             case VX_TYPE_DISTRIBUTION:
@@ -249,9 +249,9 @@ vx_status ObjectArray::initObjectArray(vx_reference exemplar, vx_size num_items)
                 // case VX_TYPE_PYRAMID:
                 //     ref = (vx_reference)vxCreatePyramid(context, pyramid_levels, pyramid_scale, pyramid_width, pyramid_height, pyramid_format);
                 //     break;
-                // case VX_TYPE_MATRIX:
-                //     ref = (vx_reference)vxCreateMatrix(context, matrix_type, matrix_cols, matrix_rows);
-                //     break;
+                case VX_TYPE_MATRIX:
+                    ref = (vx_reference)vxCreateMatrix(context, matrix_type, matrix_cols, matrix_rows);
+                    break;
                 // case VX_TYPE_DISTRIBUTION:
                 //     ref = (vx_reference)vxCreateDistribution(context, distribution_bins, distribution_offset, distribution_range);
                 //     break;
