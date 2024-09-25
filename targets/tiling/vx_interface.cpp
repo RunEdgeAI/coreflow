@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -129,7 +128,7 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxAddTilingKernelEx(vx_context c,
         VX_PRINT(VX_ZONE_ERROR, "Invalid Context\n");
         return (vx_kernel)NULL;
     }
-    if  ( ((validate == NULL) && (input == NULL || output == NULL)) ||       
+    if  ( ((validate == NULL) && (input == NULL || output == NULL)) ||
         num_params > VX_INT_MAX_PARAMS || num_params == 0 ||
         name == NULL ||
         strncmp(name, "",  VX_MAX_KERNEL_NAME) == 0)
@@ -192,7 +191,7 @@ vx_status VX_API_CALL vxPublishKernels(vx_context context)
             tiling_kernels[k]->function,
             tiling_kernels[k]->flexible_function,
             tiling_kernels[k]->fast_function,
-            tiling_kernels[k]->num_params,            
+            tiling_kernels[k]->num_params,
             tiling_kernels[k]->validate,
             tiling_kernels[k]->input_validator,
             tiling_kernels[k]->output_validator,
@@ -752,7 +751,7 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
         if (src_rect.start_x != 0 && borders.mode == VX_BORDER_CONSTANT)
         {
             is_U1 = 1;
-        }   
+        }
     }
 
     if ((node->kernel->enumeration == VX_KERNEL_WARP_AFFINE || node->kernel->enumeration == VX_KERNEL_SCALE_IMAGE) && is_U1 != 0)
@@ -811,7 +810,7 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
     vx_uint32 blkCntY = (height / tile_size_y) * tile_size_y;
     vx_uint32 blkCntX = (width / tile_size_x) * tile_size_x;
 
-    //tiling fast function    
+    //tiling fast function
     if (((vx_node_t *)node)->kernel->tilingfast_function && is_U1 == 0)
     {
         for (ty = 0u; (ty < blkCntY) && (status == VX_SUCCESS); ty += tile_size_y)
@@ -830,9 +829,9 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
                 ((vx_node_t *)node)->kernel->tilingfast_function(params, tile_memory, size);
             }
         }
-    
+
         if (((vx_node_t *)node)->kernel->tilingflexible_function && ((blkCntY < height) || (blkCntX < width)))
-        {    
+        {
             for (p = 0u; p < num; p++)
             {
                 if (types[p] == VX_TYPE_IMAGE)
@@ -845,7 +844,7 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
             ((vx_node_t *)node)->kernel->tilingflexible_function(params, tile_memory, size);
         }
     }
-    //tiling flexible function  
+    //tiling flexible function
     else if (((vx_node_t *)node)->kernel->tilingflexible_function)
     {
         for (p = 0u; p < num; p++)
