@@ -246,7 +246,8 @@ using vx_lut = Array*;
  * \extends vx_reference
  * \ingroup group_distribution
  */
-typedef struct _vx_distribution *vx_distribution;
+class Distribution;
+using vx_distribution = Distribution*;
 
 /*! \brief The Matrix Object. An MxN matrix of some unit type.
  * \extends vx_reference
@@ -259,14 +260,16 @@ using vx_matrix = Matrix*;
  * \extends vx_reference
  * \ingroup group_pyramid
  */
-typedef struct _vx_pyramid *vx_pyramid;
+class Pyramid;
+using vx_pyramid = Pyramid*;
 
 /*! \brief The Threshold Object. A thresholding object contains the types and
  * limit values of the thresholding required.
  * \extends vx_reference
  * \ingroup group_threshold
  */
-typedef struct _vx_threshold *vx_threshold;
+class Threshold;
+using vx_threshold = Threshold*;
 
 /*! \brief The Convolution Object. A user-defined convolution kernel of MxM elements.
  * \extends vx_reference
@@ -279,7 +282,8 @@ using vx_convolution = Convolution*;
  * output pixels to input pixels.
  * \ingroup group_remap
  */
-typedef struct _vx_remap *vx_remap;
+class Remap;
+using vx_remap = Remap*;
 
 /*! \brief The Array Object. Array is a strongly-typed container for other data structures.
  * \ingroup group_array

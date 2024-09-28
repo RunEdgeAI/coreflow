@@ -212,7 +212,7 @@ vx_status ownFindNodesWithReference(vx_graph graph,
             vx_enum dir = graph->nodes[n]->kernel->signature.directions[p];
             vx_reference thisref = graph->nodes[n]->parameters[p];
 
-            /* VX_PRINT(VX_ZONE_GRAPH,"\tchecking node[%u].parameter[%u] dir = %d ref = "VX_FMT_REF" (=?%d:"VX_FMT_REF")\n", n, p, dir, thisref, reftype, ref); */
+            VX_PRINT(VX_ZONE_GRAPH,"\tchecking node[%u].parameter[%u] dir = %d ref = " VX_FMT_REF " (=?%d:" VX_FMT_REF ")\n", n, p, dir, thisref, reftype, ref);
             if ((dir == reftype) && vxCheckWriteDependency(thisref, ref))
             {
                 if (nc < max)
@@ -1166,279 +1166,279 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
     }
     else if (meta->type == VX_TYPE_PYRAMID)
     {
-    //     vx_pyramid_t *pyramid = (vx_pyramid_t *)item;
+        vx_pyramid pyramid = (vx_pyramid)*item;
 
-    //     vx_uint32 i;
-    //     vx_bool res = vx_true_e;
+        vx_uint32 i;
+        vx_bool res = vx_true_e;
 
-    //     VX_PRINT(VX_ZONE_GRAPH, "meta: type 0x%08x, %ux%u:%u:%lf\n",
-    //         meta->type,
-    //         meta->dim.pyramid.width,
-    //         meta->dim.pyramid.height,
-    //         meta->dim.pyramid.levels,
-    //         meta->dim.pyramid.scale);
-    //     VX_PRINT(VX_ZONE_GRAPH, "Nodes[%u] %s parameters[%u]\n", n, graph->nodes[n]->kernel->name, p);
+        VX_PRINT(VX_ZONE_GRAPH, "meta: type 0x%08x, %ux%u:%u:%lf\n",
+            meta->type,
+            meta->dim.pyramid.width,
+            meta->dim.pyramid.height,
+            meta->dim.pyramid.levels,
+            meta->dim.pyramid.scale);
+        VX_PRINT(VX_ZONE_GRAPH, "Nodes[%u] %s parameters[%u]\n", n, graph->nodes[n]->kernel->name, p);
 
-    //     if ((pyramid->numLevels != meta->dim.pyramid.levels) ||
-    //         (pyramid->scale != meta->dim.pyramid.scale))
-    //     {
-    //         *status = VX_ERROR_INVALID_VALUE;
-    //         vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status, "Either levels (%u?=%u) or scale (%lf?=%lf) are invalid\n",
-    //             pyramid->numLevels, meta->dim.pyramid.levels,
-    //             pyramid->scale, meta->dim.pyramid.scale);
-    //         (*num_errors)++;
-    //         return vx_false_e; //break;
-    //     }
+        if ((pyramid->numLevels != meta->dim.pyramid.levels) ||
+            (pyramid->scale != meta->dim.pyramid.scale))
+        {
+            *status = VX_ERROR_INVALID_VALUE;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status, "Either levels (%u?=%u) or scale (%lf?=%lf) are invalid\n",
+                pyramid->numLevels, meta->dim.pyramid.levels,
+                pyramid->scale, meta->dim.pyramid.scale);
+            (*num_errors)++;
+            return vx_false_e; //break;
+        }
 
-    //     if ((pyramid->format != VX_DF_IMAGE_VIRT) &&
-    //         (pyramid->format != meta->dim.pyramid.format))
-    //     {
-    //         *status = VX_ERROR_INVALID_FORMAT;
-    //         vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status, "Invalid pyramid format %x, needs %x\n",
-    //             pyramid->format,
-    //             meta->dim.pyramid.format);
-    //         (*num_errors)++;
-    //         return vx_false_e; //break;
-    //     }
+        if ((pyramid->format != VX_DF_IMAGE_VIRT) &&
+            (pyramid->format != meta->dim.pyramid.format))
+        {
+            *status = VX_ERROR_INVALID_FORMAT;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status, "Invalid pyramid format %x, needs %x\n",
+                pyramid->format,
+                meta->dim.pyramid.format);
+            (*num_errors)++;
+            return vx_false_e; //break;
+        }
 
-    //     if (((pyramid->width != 0) &&
-    //         (pyramid->width != meta->dim.pyramid.width)) ||
-    //         ((pyramid->height != 0) &&
-    //         (pyramid->height != meta->dim.pyramid.height)))
-    //     {
-    //         *status = VX_ERROR_INVALID_DIMENSION;
-    //         vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status, "Invalid pyramid dimensions %ux%u, needs %ux%u\n",
-    //             pyramid->width, pyramid->height,
-    //             meta->dim.pyramid.width, meta->dim.pyramid.height);
-    //         (*num_errors)++;
-    //         return vx_false_e; //break;
-    //     }
+        if (((pyramid->width != 0) &&
+            (pyramid->width != meta->dim.pyramid.width)) ||
+            ((pyramid->height != 0) &&
+            (pyramid->height != meta->dim.pyramid.height)))
+        {
+            *status = VX_ERROR_INVALID_DIMENSION;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status, "Invalid pyramid dimensions %ux%u, needs %ux%u\n",
+                pyramid->width, pyramid->height,
+                meta->dim.pyramid.width, meta->dim.pyramid.height);
+            (*num_errors)++;
+            return vx_false_e; //break;
+        }
 
-    //     /* check to see if the pyramid is virtual */
-    //     if (vref == (vx_reference_t *)pyramid)
-    //     {
-    //         ownInitPyramid(pyramid,
-    //             meta->dim.pyramid.levels,
-    //             meta->dim.pyramid.scale,
-    //             meta->dim.pyramid.width,
-    //             meta->dim.pyramid.height,
-    //             meta->dim.pyramid.format);
-    //     }
+        /* check to see if the pyramid is virtual */
+        if (vref == (vx_reference*)&pyramid)
+        {
+            ownInitPyramid(pyramid,
+                meta->dim.pyramid.levels,
+                meta->dim.pyramid.scale,
+                meta->dim.pyramid.width,
+                meta->dim.pyramid.height,
+                meta->dim.pyramid.format);
+        }
 
-    //     if (nullptr != meta->set_valid_rectangle_callback)
-    //         graph->nodes[n]->attributes.valid_rect_reset = vx_false_e;
+        if (nullptr != meta->set_valid_rectangle_callback)
+            graph->nodes[n]->attributes.valid_rect_reset = vx_false_e;
 
-    //     if (vx_false_e == graph->nodes[n]->attributes.valid_rect_reset &&
-    //         nullptr != meta->set_valid_rectangle_callback)
-    //     {
-    //         /* calculate pyramid levels valid rectangles */
+        if (vx_false_e == graph->nodes[n]->attributes.valid_rect_reset &&
+            nullptr != meta->set_valid_rectangle_callback)
+        {
+            /* calculate pyramid levels valid rectangles */
 
-    //         vx_uint32 nparams = 0;
-    //         vx_uint32 num_in_images = 0;
-    //         vx_rectangle_t** in_rect = nullptr;
-    //         vx_rectangle_t** out_rect = nullptr;
+            vx_uint32 nparams = 0;
+            vx_uint32 num_in_images = 0;
+            vx_rectangle_t** in_rect = nullptr;
+            vx_rectangle_t** out_rect = nullptr;
 
-    //         vx_node node = graph->nodes[n];
+            vx_node node = graph->nodes[n];
 
-    //         if (VX_SUCCESS != vxQueryNode(node, VX_NODE_PARAMETERS, &nparams, sizeof(nparams)))
-    //         {
-    //             *status = VX_FAILURE;
-    //             return vx_false_e;
-    //         }
+            if (VX_SUCCESS != vxQueryNode(node, VX_NODE_PARAMETERS, &nparams, sizeof(nparams)))
+            {
+                *status = VX_FAILURE;
+                return vx_false_e;
+            }
 
-    //         /* compute num of input images */
-    //         for (i = 0; i < nparams; i++)
-    //         {
-    //             if (VX_INPUT == node->kernel->signature.directions[i] &&
-    //                 VX_TYPE_IMAGE == node->parameters[i]->type)
-    //             {
-    //                 num_in_images++;
-    //             }
-    //         }
+            /* compute num of input images */
+            for (i = 0; i < nparams; i++)
+            {
+                if (VX_INPUT == node->kernel->signature.directions[i] &&
+                    VX_TYPE_IMAGE == node->parameters[i]->type)
+                {
+                    num_in_images++;
+                }
+            }
 
-    //         in_rect = (vx_rectangle_t**)malloc(num_in_images * sizeof(vx_rectangle_t*));
-    //         if (nullptr == in_rect)
-    //         {
-    //             *status = VX_FAILURE;
-    //             return vx_false_e;
-    //         }
+            in_rect = (vx_rectangle_t**)malloc(num_in_images * sizeof(vx_rectangle_t*));
+            if (nullptr == in_rect)
+            {
+                *status = VX_FAILURE;
+                return vx_false_e;
+            }
 
-    //         for (i = 0; i < num_in_images; i++)
-    //             in_rect[i] = nullptr;
+            for (i = 0; i < num_in_images; i++)
+                in_rect[i] = nullptr;
 
-    //         for (i = 0; i < nparams; i++)
-    //         {
-    //             if (VX_INPUT == node->kernel->signature.directions[i] &&
-    //                 VX_TYPE_IMAGE == node->parameters[i]->type)
-    //             {
-    //                 in_rect[i] = (vx_rectangle_t*)malloc(sizeof(vx_rectangle_t));
-    //                 if (nullptr == in_rect[i])
-    //                 {
-    //                     *status = VX_FAILURE;
-    //                     res = vx_false_e;
-    //                     break;
-    //                 }
+            for (i = 0; i < nparams; i++)
+            {
+                if (VX_INPUT == node->kernel->signature.directions[i] &&
+                    VX_TYPE_IMAGE == node->parameters[i]->type)
+                {
+                    in_rect[i] = (vx_rectangle_t*)malloc(sizeof(vx_rectangle_t));
+                    if (nullptr == in_rect[i])
+                    {
+                        *status = VX_FAILURE;
+                        res = vx_false_e;
+                        break;
+                    }
 
-    //                 if (VX_SUCCESS != vxGetValidRegionImage((vx_image)node->parameters[i], in_rect[i]))
-    //                 {
-    //                     *status = VX_FAILURE;
-    //                     res = vx_false_e;
-    //                     break;
-    //                 }
-    //             }
-    //         }
+                    if (VX_SUCCESS != vxGetValidRegionImage((vx_image)node->parameters[i], in_rect[i]))
+                    {
+                        *status = VX_FAILURE;
+                        res = vx_false_e;
+                        break;
+                    }
+                }
+            }
 
-    //         if (vx_false_e != res)
-    //         {
-    //             out_rect = (vx_rectangle_t**)malloc(meta->dim.pyramid.levels * sizeof(vx_rectangle_t*));
-    //             if (nullptr != out_rect)
-    //             {
-    //                 vx_uint32 k;
-    //                 for (k = 0; k < meta->dim.pyramid.levels; k++)
-    //                     out_rect[k] = nullptr;
+            if (vx_false_e != res)
+            {
+                out_rect = (vx_rectangle_t**)malloc(meta->dim.pyramid.levels * sizeof(vx_rectangle_t*));
+                if (nullptr != out_rect)
+                {
+                    vx_uint32 k;
+                    for (k = 0; k < meta->dim.pyramid.levels; k++)
+                        out_rect[k] = nullptr;
 
-    //                 for (i = 0; i < meta->dim.pyramid.levels; i++)
-    //                 {
-    //                     out_rect[i] = (vx_rectangle_t*)malloc(sizeof(vx_rectangle_t));
-    //                     if (nullptr == out_rect[i])
-    //                     {
-    //                         *status = VX_FAILURE;
-    //                         res = vx_false_e;
-    //                         break;
-    //                     }
-    //                 }
-    //             }
-    //             else
-    //             {
-    //                 *status = VX_FAILURE;
-    //                 res = vx_false_e;
-    //             }
-    //         }
+                    for (i = 0; i < meta->dim.pyramid.levels; i++)
+                    {
+                        out_rect[i] = (vx_rectangle_t*)malloc(sizeof(vx_rectangle_t));
+                        if (nullptr == out_rect[i])
+                        {
+                            *status = VX_FAILURE;
+                            res = vx_false_e;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    *status = VX_FAILURE;
+                    res = vx_false_e;
+                }
+            }
 
-    //         if (vx_false_e != res)
-    //         {
-    //             /* calculate pyramid levels valid rectangles */
-    //             if (VX_SUCCESS == meta->set_valid_rectangle_callback(graph->nodes[n], p, (const vx_rectangle_t* const*)in_rect, out_rect))
-    //             {
-    //                 for (i = 0; i < meta->dim.pyramid.levels; i++)
-    //                 {
-    //                     vx_image img = vxGetPyramidLevel(pyramid, i);
+            if (vx_false_e != res)
+            {
+                /* calculate pyramid levels valid rectangles */
+                if (VX_SUCCESS == meta->set_valid_rectangle_callback(graph->nodes[n], p, (const vx_rectangle_t* const*)in_rect, out_rect))
+                {
+                    for (i = 0; i < meta->dim.pyramid.levels; i++)
+                    {
+                        vx_image img = vxGetPyramidLevel(pyramid, i);
 
-    //                     if (vx_false_e == ownIsValidSpecificReference((vx_reference)img, VX_TYPE_IMAGE))
-    //                     {
-    //                         *status = VX_FAILURE;
-    //                         res = vx_false_e;
-    //                         vxReleaseImage(&img); /* already on error path, ignore additional errors */
-    //                         break;
-    //                     }
+                        if (vx_false_e == Reference::isValidReference((vx_reference)img, VX_TYPE_IMAGE))
+                        {
+                            *status = VX_FAILURE;
+                            res = vx_false_e;
+                            vxReleaseImage(&img); /* already on error path, ignore additional errors */
+                            break;
+                        }
 
-    //                     if (VX_SUCCESS != vxSetImageValidRectangle(img, out_rect[i]))
-    //                     {
-    //                         *status = VX_FAILURE;
-    //                         res = vx_false_e;
-    //                         vxReleaseImage(&img); /* already on error path, ignore additional errors */
-    //                         break;
-    //                     }
+                        if (VX_SUCCESS != vxSetImageValidRectangle(img, out_rect[i]))
+                        {
+                            *status = VX_FAILURE;
+                            res = vx_false_e;
+                            vxReleaseImage(&img); /* already on error path, ignore additional errors */
+                            break;
+                        }
 
-    //                     if (VX_SUCCESS != vxReleaseImage(&img))
-    //                     {
-    //                         *status = VX_FAILURE;
-    //                         res = vx_false_e;
-    //                         break;
-    //                     }
-    //                 } /* for pyramid levels */
-    //             }
-    //             else
-    //             {
-    //                 *status = VX_FAILURE;
-    //                 res = vx_false_e;
-    //             }
-    //         } /* if successful memory allocation */
+                        if (VX_SUCCESS != vxReleaseImage(&img))
+                        {
+                            *status = VX_FAILURE;
+                            res = vx_false_e;
+                            break;
+                        }
+                    } /* for pyramid levels */
+                }
+                else
+                {
+                    *status = VX_FAILURE;
+                    res = vx_false_e;
+                }
+            } /* if successful memory allocation */
 
-    //         /* deallocate rectangle arrays */
-    //         for (i = 0; i < num_in_images; i++)
-    //         {
-    //             if (nullptr != in_rect && nullptr != in_rect[i])
-    //             {
-    //                 free(in_rect[i]);
-    //             }
-    //         }
+            /* deallocate rectangle arrays */
+            for (i = 0; i < num_in_images; i++)
+            {
+                if (nullptr != in_rect && nullptr != in_rect[i])
+                {
+                    free(in_rect[i]);
+                }
+            }
 
-    //         if (nullptr != in_rect)
-    //             free(in_rect);
+            if (nullptr != in_rect)
+                free(in_rect);
 
-    //         for (i = 0; i < meta->dim.pyramid.levels; i++)
-    //         {
-    //             if (nullptr != out_rect && nullptr != out_rect[i])
-    //                 free(out_rect[i]);
-    //         }
+            for (i = 0; i < meta->dim.pyramid.levels; i++)
+            {
+                if (nullptr != out_rect && nullptr != out_rect[i])
+                    free(out_rect[i]);
+            }
 
-    //         if (nullptr != out_rect)
-    //             free(out_rect);
+            if (nullptr != out_rect)
+                free(out_rect);
 
-    //         return res;
-    //     }
+            return res;
+        }
 
-    //     if (vx_true_e == graph->nodes[n]->attributes.valid_rect_reset)
-    //     {
-    //         /* reset output pyramid levels valid rectangles */
+        if (vx_true_e == graph->nodes[n]->attributes.valid_rect_reset)
+        {
+            /* reset output pyramid levels valid rectangles */
 
-    //         vx_bool res = vx_true_e;
+            vx_bool res = vx_true_e;
 
-    //         for (i = 0; i < meta->dim.pyramid.levels; i++)
-    //         {
-    //             vx_uint32 width = 0;
-    //             vx_uint32 height = 0;
-    //             vx_rectangle_t out_rect;
+            for (i = 0; i < meta->dim.pyramid.levels; i++)
+            {
+                vx_uint32 width = 0;
+                vx_uint32 height = 0;
+                vx_rectangle_t out_rect;
 
-    //             vx_image img = vxGetPyramidLevel(pyramid, i);
+                vx_image img = vxGetPyramidLevel(pyramid, i);
 
-    //             if (vx_false_e == ownIsValidSpecificReference((vx_reference)img, VX_TYPE_IMAGE))
-    //             {
-    //                 *status = VX_FAILURE;
-    //                 return vx_false_e;
-    //             }
+                if (vx_false_e == Reference::isValidReference((vx_reference)img, VX_TYPE_IMAGE))
+                {
+                    *status = VX_FAILURE;
+                    return vx_false_e;
+                }
 
-    //             if (VX_SUCCESS != vxQueryImage(img, VX_IMAGE_WIDTH, &width, sizeof(width)))
-    //             {
-    //                 *status = VX_FAILURE;
-    //                 res = vx_false_e;
-    //                 vxReleaseImage(&img); /* already on error path, ignore additional errors */
-    //                 break;
-    //             }
+                if (VX_SUCCESS != vxQueryImage(img, VX_IMAGE_WIDTH, &width, sizeof(width)))
+                {
+                    *status = VX_FAILURE;
+                    res = vx_false_e;
+                    vxReleaseImage(&img); /* already on error path, ignore additional errors */
+                    break;
+                }
 
-    //             if (VX_SUCCESS != vxQueryImage(img, VX_IMAGE_HEIGHT, &height, sizeof(height)))
-    //             {
-    //                 *status = VX_FAILURE;
-    //                 res = vx_false_e;
-    //                 vxReleaseImage(&img); /* already on error path, ignore additional errors */
-    //                 break;
-    //             }
+                if (VX_SUCCESS != vxQueryImage(img, VX_IMAGE_HEIGHT, &height, sizeof(height)))
+                {
+                    *status = VX_FAILURE;
+                    res = vx_false_e;
+                    vxReleaseImage(&img); /* already on error path, ignore additional errors */
+                    break;
+                }
 
-    //             if (vx_false_e != res)
-    //             {
-    //                 out_rect.start_x = 0;
-    //                 out_rect.start_y = 0;
-    //                 out_rect.end_x   = width;
-    //                 out_rect.end_y   = height;
+                if (vx_false_e != res)
+                {
+                    out_rect.start_x = 0;
+                    out_rect.start_y = 0;
+                    out_rect.end_x   = width;
+                    out_rect.end_y   = height;
 
-    //                 /* pyramid level valid rectangle is a whole image */
-    //                 if (VX_SUCCESS != vxSetImageValidRectangle(img, &out_rect))
-    //                 {
-    //                     *status = VX_FAILURE;
-    //                     res = vx_false_e;
-    //                 }
-    //             }
+                    /* pyramid level valid rectangle is a whole image */
+                    if (VX_SUCCESS != vxSetImageValidRectangle(img, &out_rect))
+                    {
+                        *status = VX_FAILURE;
+                        res = vx_false_e;
+                    }
+                }
 
-    //             if (VX_SUCCESS != vxReleaseImage(&img))
-    //             {
-    //                 *status = VX_FAILURE;
-    //                 res = vx_false_e;
-    //             }
-    //         } /* for pyramid levels */
+                if (VX_SUCCESS != vxReleaseImage(&img))
+                {
+                    *status = VX_FAILURE;
+                    res = vx_false_e;
+                }
+            } /* for pyramid levels */
 
-    //         return res;
-    //     }
+            return res;
+        }
     } /* VX_TYPE_PYRAMID */
     else if (meta->type == VX_TYPE_SCALAR)
     {
@@ -1477,43 +1477,43 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
     } /* VX_TYPE_MATRIX */
     else if (meta->type == VX_TYPE_DISTRIBUTION)
     {
-    //     vx_distribution_t *distribution = (vx_distribution_t *)item;
-    //     //fix
-    //     if (distribution->offset_x != meta->dim.distribution.offset ||
-    //         distribution->range_x != meta->dim.distribution.range ||
-    //         distribution->memory.dims[0][VX_DIM_X] != meta->dim.distribution.bins)
-    //     {
-    //         *status = VX_ERROR_INVALID_VALUE;
-    //         vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_VALUE,
-    //             "Node: %s: parameter[%u] has an invalid offset %u, number of bins %u or range %u\n",
-    //             graph->nodes[n]->kernel->name, p, distribution->offset_x,
-    //             distribution->memory.dims[0][VX_DIM_X], distribution->range_x);
-    //         (*num_errors)++;
-    //         return vx_false_e; //break;
-    //     }
+        vx_distribution distribution = (vx_distribution)*item;
+        //fix
+        if (distribution->offset_x != meta->dim.distribution.offset ||
+            distribution->range_x != meta->dim.distribution.range ||
+            distribution->memory.dims[0][VX_DIM_X] != meta->dim.distribution.bins)
+        {
+            *status = VX_ERROR_INVALID_VALUE;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_VALUE,
+                "Node: %s: parameter[%u] has an invalid offset %u, number of bins %u or range %u\n",
+                graph->nodes[n]->kernel->name, p, distribution->offset_x,
+                distribution->memory.dims[0][VX_DIM_X], distribution->range_x);
+            (*num_errors)++;
+            return vx_false_e; //break;
+        }
     } /* VX_TYPE_DISTRIBUTION */
     else if (meta->type == VX_TYPE_REMAP)
     {
-    //     vx_remap_t *remap = (vx_remap_t *)item;
-    //     if (remap->src_width != meta->dim.remap.src_width || remap->src_height != meta->dim.remap.src_height)
-    //     {
-    //         *status = VX_ERROR_INVALID_DIMENSION;
-    //         vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_DIMENSION,
-    //             "Node: %s: parameter[%u] has an invalid source dimention %ux%u\n",
-    //             graph->nodes[n]->kernel->name, p);
-    //         (*num_errors)++;
-    //         return vx_false_e; //break;
-    //     }
+        vx_remap remap = (vx_remap)*item;
+        if (remap->src_width != meta->dim.remap.src_width || remap->src_height != meta->dim.remap.src_height)
+        {
+            *status = VX_ERROR_INVALID_DIMENSION;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_DIMENSION,
+                "Node: %s: parameter[%u] has an invalid source dimention %ux%u\n",
+                graph->nodes[n]->kernel->name, p);
+            (*num_errors)++;
+            return vx_false_e; //break;
+        }
 
-    //     if (remap->dst_width != meta->dim.remap.dst_width || remap->dst_height != meta->dim.remap.dst_height)
-    //     {
-    //         *status = VX_ERROR_INVALID_DIMENSION;
-    //         vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_DIMENSION,
-    //             "Node: %s: parameter[%u] has an invalid destination dimention %ux%u",
-    //             graph->nodes[n]->kernel->name, p);
-    //         (*num_errors)++;
-    //         return vx_false_e; //break;
-    //     }
+        if (remap->dst_width != meta->dim.remap.dst_width || remap->dst_height != meta->dim.remap.dst_height)
+        {
+            *status = VX_ERROR_INVALID_DIMENSION;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_DIMENSION,
+                "Node: %s: parameter[%u] has an invalid destination dimention %ux%u",
+                graph->nodes[n]->kernel->name, p);
+            (*num_errors)++;
+            return vx_false_e; //break;
+        }
     } /* VX_TYPE_REMAP */
     else if (meta->type == VX_TYPE_LUT)
     {
@@ -1530,15 +1530,15 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
     } /* VX_TYPE_LUT */
     else if (meta->type == VX_TYPE_THRESHOLD)
     {
-    //     vx_threshold_t *threshold = (vx_threshold_t *)item;
-    //     if (threshold->thresh_type != meta->dim.threshold.type)
-    //     {
-    //         *status = VX_ERROR_INVALID_TYPE;
-    //         vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_TYPE,
-    //             "Threshold contains invalid typed objects for node %s\n", graph->nodes[n]->kernel->name);
-    //         (*num_errors)++;
-    //         return vx_false_e; //break;
-    //     }
+        vx_threshold threshold = (vx_threshold)*item;
+        if (threshold->thresh_type != meta->dim.threshold.type)
+        {
+            *status = VX_ERROR_INVALID_TYPE;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_TYPE,
+                "Threshold contains invalid typed objects for node %s\n", graph->nodes[n]->kernel->name);
+            (*num_errors)++;
+            return vx_false_e; //break;
+        }
     } /* VX_TYPE_THRESHOLD */
     else if (meta->type == VX_TYPE_TENSOR)
     {
@@ -1586,8 +1586,8 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
                 (*num_errors)++;
                 return vx_false_e; /* exit on error */
             }
-    //         ownInitTensor(tensor, meta->dim.tensor.dimensions, meta->dim.tensor.number_of_dimensions, meta->dim.tensor.data_type, meta->dim.tensor.fixed_point_position);
-    //         ownAllocateTensorMemory(tensor);
+            tensor->initTensor(meta->dim.tensor.dimensions, meta->dim.tensor.number_of_dimensions, meta->dim.tensor.data_type, meta->dim.tensor.fixed_point_position);
+            tensor->allocateTensorMemory();
         }
         else
         {
@@ -2073,27 +2073,27 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                     }
                     else if (graph->nodes[n]->parameters[p]->type == VX_TYPE_DISTRIBUTION)
                     {
-//                         vx_distribution_t *dist = (vx_distribution_t *)graph->nodes[n]->parameters[p];
-//                         if (ownAllocateMemory(graph->context, &dist->memory) == vx_false_e)
-//                         {
-//                             vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate distribution at node[%u] %s parameter[%u]\n",
-//                                 n, graph->nodes[n]->kernel->name, p);
-//                             VX_PRINT(VX_ZONE_ERROR, "See log\n");
-//                         }
+                        vx_distribution dist = (vx_distribution)graph->nodes[n]->parameters[p];
+                        if (ownAllocateMemory(graph->context, &dist->memory) == vx_false_e)
+                        {
+                            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate distribution at node[%u] %s parameter[%u]\n",
+                                n, graph->nodes[n]->kernel->name, p);
+                            VX_PRINT(VX_ZONE_ERROR, "See log\n");
+                        }
                     }
                     else if (graph->nodes[n]->parameters[p]->type == VX_TYPE_PYRAMID)
                     {
-//                         vx_pyramid_t *pyr = (vx_pyramid_t *)graph->nodes[n]->parameters[p];
-//                         vx_uint32 i = 0;
-//                         for (i = 0; i < pyr->numLevels; i++)
-//                         {
-//                             if (ownAllocateImage((vx_image_t *)pyr->levels[i]) == vx_false_e)
-//                             {
-//                                 vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate pyramid image at node[%u] %s parameter[%u]\n",
-//                                     n, graph->nodes[n]->kernel->name, p);
-//                                 VX_PRINT(VX_ZONE_ERROR, "See log\n");
-//                             }
-//                         }
+                        vx_pyramid pyr = (vx_pyramid)graph->nodes[n]->parameters[p];
+                        vx_uint32 i = 0;
+                        for (i = 0; i < pyr->numLevels; i++)
+                        {
+                            if ((pyr->levels[i]->allocateImage()) == vx_false_e)
+                            {
+                                vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate pyramid image at node[%u] %s parameter[%u]\n",
+                                    n, graph->nodes[n]->kernel->name, p);
+                                VX_PRINT(VX_ZONE_ERROR, "See log\n");
+                            }
+                        }
                     }
                     else if ((graph->nodes[n]->parameters[p]->type == VX_TYPE_MATRIX) ||
                               (graph->nodes[n]->parameters[p]->type == VX_TYPE_CONVOLUTION))

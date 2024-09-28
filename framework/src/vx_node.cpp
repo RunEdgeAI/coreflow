@@ -647,8 +647,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxReplicateNode(vx_graph graph, vx_node first
 					vx_size items = 0;
 					if (Reference::isValidReference(ref->scope, VX_TYPE_PYRAMID) == vx_true_e)
 					{
-						// vx_pyramid pyramid = (vx_pyramid)ref->scope;
-						// vxQueryPyramid(pyramid, VX_PYRAMID_LEVELS, &items, sizeof(vx_size));
+						vx_pyramid pyramid = (vx_pyramid)ref->scope;
+						vxQueryPyramid(pyramid, VX_PYRAMID_LEVELS, &items, sizeof(vx_size));
 					}
 					else if (Reference::isValidReference(ref->scope, VX_TYPE_OBJECT_ARRAY) == vx_true_e)
 					{

@@ -846,43 +846,6 @@ typedef struct _vx_delay_param_t {
  */
 typedef vx_array vx_lut_t;
 
-/*! \brief A remap is a 2D image of float32 pairs.
- * \ingroup group_int_remap
- */
-typedef struct _vx_remap {
-    /*! \brief The internal reference object. */
-    vx_reference base;
-    /*! \brief The memory layout */
-    vx_memory_t memory;
-    /*! \brief Input Width */
-    vx_uint32 src_width;
-    /*! \brief Input Height */
-    vx_uint32 src_height;
-    /*! \brief Output Width */
-    vx_uint32 dst_width;
-    /*! \brief Output Height */
-    vx_uint32 dst_height;
-} vx_remap_t;
-
-/*! \brief A histogram.
- * \ingroup group_int_histogram
- */
-typedef struct _vx_distribution {
-    /*! \brief Base object */
-    vx_reference base;
-    /*! \brief Memory layout */
-    vx_memory_t memory;
-    /*! \brief The total number of the values in the active X dimension of the distribution. */
-    vx_uint32 range_x;
-    /*! \brief The total number of the values in the active Y dimension of the distribution. */
-    vx_uint32 range_y;
-    /*! \brief The number of inactive elements from zero in the X dimension */
-    vx_int32 offset_x;
-    /*! \brief The number of inactive elements from zero in the Y dimension */
-    vx_int32 offset_y;
-} vx_distribution_t;
-
-
 #define VX_DEFAULT_THRESHOLD_FALSE_VALUE 0
 #define VX_DEFAULT_THRESHOLD_TRUE_VALUE  255
 
@@ -896,52 +859,6 @@ typedef struct _vx_distribution {
 #define VX_S32_THRESHOLD_TRUE_VALUE  (-1)
 #define VX_U32_THRESHOLD_FALSE_VALUE 0
 #define VX_U32_THRESHOLD_TRUE_VALUE  0xFFFFFFFF
-
-/*! \brief The internal threshold structure.
- * \ingroup group_int_threshold
- */
-typedef struct _vx_threshold {
-    /*! \brief Base object */
-    vx_reference base;
-    /*! \brief From \ref vx_threshold_type_e */
-    vx_enum thresh_type;
-    /*! \brief From \ref vx_type_e */
-    vx_enum data_type;
-    /*! \brief The binary threshold value */
-    vx_pixel_value_t value;
-    /*! \brief Lower bound for range threshold */
-    vx_pixel_value_t lower;
-    /*! \brief Upper bound for range threshold */
-    vx_pixel_value_t upper;
-    /*! \brief True value for output */
-    vx_pixel_value_t true_value;
-    /*! \brief False value for output */
-    vx_pixel_value_t false_value;
-    /*! \brief The input image format */
-    vx_df_image input_format;
-    /*! \brief The output image format  */
-    vx_df_image output_format;
-} vx_threshold_t;
-
-/*! \brief A pyramid object. Contains a set of scaled images.
- * \ingroup group_int_pyramid
- */
-typedef struct _vx_pyramid {
-    /*! \brief Base object */
-    vx_reference base;
-    /*! \brief Number of levels in the pyramid */
-    vx_size numLevels;
-    /*! \brief Array of images */
-    vx_image *levels;
-    /*! \brief Scaling factor between levels of the pyramid. */
-    vx_float32 scale;
-    /*! \brief Level 0 width */
-    vx_uint32 width;
-    /*! \brief Level 0 height */
-    vx_uint32 height;
-    /*! \brief Format for all levels */
-    vx_df_image format;
-} vx_pyramid_t;
 
 /*! \brief The internal representation of any import object.
  * \ingroup group_int_import
@@ -1007,12 +924,12 @@ static vx_type_size_t type_sizes[] = {
     {VX_TYPE_TENSOR,    sizeof(vx_tensor)},
     {VX_TYPE_CONVOLUTION, sizeof(vx_convolution)},
     {VX_TYPE_DELAY,     sizeof(vx_delay)},
-    {VX_TYPE_DISTRIBUTION, sizeof(vx_distribution_t)},
+    {VX_TYPE_DISTRIBUTION, sizeof(vx_distribution)},
     {VX_TYPE_LUT,       sizeof(vx_lut_t)},
     {VX_TYPE_MATRIX,    sizeof(vx_matrix)},
-    {VX_TYPE_PYRAMID,   sizeof(vx_pyramid_t)},
-    {VX_TYPE_REMAP,     sizeof(vx_remap_t)},
-    {VX_TYPE_THRESHOLD, sizeof(vx_threshold_t)},
+    {VX_TYPE_PYRAMID,   sizeof(vx_pyramid)},
+    {VX_TYPE_REMAP,     sizeof(vx_remap)},
+    {VX_TYPE_THRESHOLD, sizeof(vx_threshold)},
 #if defined(OPENVX_USE_IX) || defined(OPENVX_USE_XML)
     {VX_TYPE_IMPORT,    sizeof(vx_import_t)},
 #endif
@@ -1023,16 +940,13 @@ static vx_type_size_t type_sizes[] = {
 };
 
 // PROTOTYPES FOR INTERNAL FUNCTIONS
-// #include "vx_distribution.h"
-// #include "vx_pyramid.h"
-// #include "vx_threshold.h"
-// #include "vx_remap.h"
 // #include "vx_import.h"
 #include "vx_array.h"
 #include "vx_context.h"
 #include "vx_convolution.h"
 #include "vx_debug.h"
 #include "vx_delay.h"
+#include "vx_distribution.h"
 #include "vx_error.h"
 #include "vx_graph.h"
 #include "vx_image.h"
@@ -1046,10 +960,13 @@ static vx_type_size_t type_sizes[] = {
 #include "vx_object_array.h"
 #include "vx_osal.h"
 #include "vx_parameter.h"
+#include "vx_pyramid.h"
 #include "vx_reference.h"
+#include "vx_remap.h"
 #include "vx_scalar.h"
 #include "vx_target.h"
 #include "vx_tensor.h"
+#include "vx_threshold.h"
 #include "vx_user_data_object.h"
 
 #ifdef __cplusplus

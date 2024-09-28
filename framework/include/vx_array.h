@@ -36,6 +36,15 @@ public:
     Array(vx_context context, vx_reference scope);
 
     /**
+     * @brief Construct a new Array object
+     *
+     * @param context
+     * @param type
+     * @param scope
+     */
+    Array(vx_context context, vx_enum type, vx_reference scope);
+
+    /**
      * @brief Destroy the Array object
      *
      */

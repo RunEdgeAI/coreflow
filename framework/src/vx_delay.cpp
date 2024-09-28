@@ -317,36 +317,36 @@ VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
                     delay->refs[i] = (vx_reference)conv2;
                     break;
                 }
-                // case VX_TYPE_DISTRIBUTION:
-                // {
-                //     vx_distribution dist = (vx_distribution)exemplar;
-                //     delay->refs[i] = (vx_reference)vxCreateDistribution(context, dist->memory.dims[0][VX_DIM_X], dist->offset_x, dist->range_x);
-                //     break;
-                // }
-                // case VX_TYPE_REMAP:
-                // {
-                //     vx_remap remap = (vx_remap)exemplar;
-                //     delay->refs[i] = (vx_reference)vxCreateRemap(context, remap->src_width, remap->src_height, remap->dst_width, remap->dst_height);
-                //     break;
-                // }
+                case VX_TYPE_DISTRIBUTION:
+                {
+                    vx_distribution dist = (vx_distribution)exemplar;
+                    delay->refs[i] = (vx_reference)vxCreateDistribution(context, dist->memory.dims[0][VX_DIM_X], dist->offset_x, dist->range_x);
+                    break;
+                }
+                case VX_TYPE_REMAP:
+                {
+                    vx_remap remap = (vx_remap)exemplar;
+                    delay->refs[i] = (vx_reference)vxCreateRemap(context, remap->src_width, remap->src_height, remap->dst_width, remap->dst_height);
+                    break;
+                }
                 case VX_TYPE_LUT:
                 {
                     vx_lut_t lut = (vx_lut_t)exemplar;
                     delay->refs[i] = (vx_reference)vxCreateLUT(context, lut->item_type, lut->capacity);
                     break;
                 }
-                // case VX_TYPE_PYRAMID:
-                // {
-                //     vx_pyramid pyramid = (vx_pyramid )exemplar;
-                //     delay->refs[i] = (vx_reference)vxCreatePyramid(context, pyramid->numLevels, pyramid->scale, pyramid->width, pyramid->height, pyramid->format);
-                //     break;
-                // }
-                // case VX_TYPE_THRESHOLD:
-                // {
-                //     vx_threshold thresh = (vx_threshold )exemplar;
-                //     delay->refs[i] = (vx_reference)vxCreateThreshold(context, thresh->thresh_type, VX_TYPE_UINT8);
-                //     break;
-                // }
+                case VX_TYPE_PYRAMID:
+                {
+                    vx_pyramid pyramid = (vx_pyramid )exemplar;
+                    delay->refs[i] = (vx_reference)vxCreatePyramid(context, pyramid->numLevels, pyramid->scale, pyramid->width, pyramid->height, pyramid->format);
+                    break;
+                }
+                case VX_TYPE_THRESHOLD:
+                {
+                    vx_threshold thresh = (vx_threshold )exemplar;
+                    delay->refs[i] = (vx_reference)vxCreateThreshold(context, thresh->thresh_type, VX_TYPE_UINT8);
+                    break;
+                }
                 case VX_TYPE_SCALAR:
                 {
                     vx_scalar scalar = (vx_scalar )exemplar;

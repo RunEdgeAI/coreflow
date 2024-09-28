@@ -181,7 +181,7 @@ vx_node vxCreateNodeByStructure(vx_graph graph,
         }
         else
         {
-            vxAddLogEntry((vx_reference)graph, VX_ERROR_INVALID_PARAMETERS, "Failed to create node with kernel enum %d\n", kernelenum);
+            vxAddLogEntry((vx_reference)graph, VX_ERROR_INVALID_PARAMETERS, "Failed to create node with kernel enum %x\n", kernelenum);
             status = VX_ERROR_NO_MEMORY;
         }
         vxReleaseKernel(&kernel);
@@ -258,42 +258,42 @@ vx_status vxLinkParametersByReference(vx_parameter a, vx_parameter b) {
 }
 
 
-// vx_status vxSetAffineRotationMatrix(vx_matrix matrix,
-//                                     vx_float32 angle,
-//                                     vx_float32 scale,
-//                                     vx_float32 center_x,
-//                                     vx_float32 center_y)
-// {
-//     vx_status status = VX_FAILURE;
-//     vx_float32 mat[3][2];
-//     vx_size columns = 0ul, rows = 0ul;
-//     vx_enum type = 0;
-//     vxQueryMatrix(matrix, VX_MATRIX_COLUMNS, &columns, sizeof(columns));
-//     vxQueryMatrix(matrix, VX_MATRIX_ROWS, &rows, sizeof(rows));
-//     vxQueryMatrix(matrix, VX_MATRIX_TYPE, &type, sizeof(type));
-//     if ((columns == 2) && (rows == 3) && (type == VX_TYPE_FLOAT32))
-//     {
-//         status = vxCopyMatrix(matrix, mat, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
-//         if (status == VX_SUCCESS)
-//         {
-//             vx_float32 radians = (angle / 360.0f) * (vx_float32)VX_TAU;
-//             vx_float32 a = scale * (vx_float32)cos(radians);
-//             vx_float32 b = scale * (vx_float32)sin(radians);
-//             mat[0][0] = a;
-//             mat[1][0] = b;
-//             mat[2][0] = ((1.0f - a) * center_x) - (b * center_y);
-//             mat[0][1] = -b;
-//             mat[1][1] = a;
-//             mat[2][1] = (b * center_x) + ((1.0f - a) * center_y);
-//             status = vxCopyMatrix(matrix, mat, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-//         }
-//     }
-//     else
-//     {
-//         vxAddLogEntry((vx_reference)matrix, status, "Failed to set affine matrix due to type or dimension mismatch!\n");
-//     }
-//     return status;
-// }
+vx_status vxSetAffineRotationMatrix(vx_matrix matrix,
+                                    vx_float32 angle,
+                                    vx_float32 scale,
+                                    vx_float32 center_x,
+                                    vx_float32 center_y)
+{
+    vx_status status = VX_FAILURE;
+    vx_float32 mat[3][2];
+    vx_size columns = 0ul, rows = 0ul;
+    vx_enum type = 0;
+    vxQueryMatrix(matrix, VX_MATRIX_COLUMNS, &columns, sizeof(columns));
+    vxQueryMatrix(matrix, VX_MATRIX_ROWS, &rows, sizeof(rows));
+    vxQueryMatrix(matrix, VX_MATRIX_TYPE, &type, sizeof(type));
+    if ((columns == 2) && (rows == 3) && (type == VX_TYPE_FLOAT32))
+    {
+        status = vxCopyMatrix(matrix, mat, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
+        if (status == VX_SUCCESS)
+        {
+            vx_float32 radians = (angle / 360.0f) * (vx_float32)VX_TAU;
+            vx_float32 a = scale * (vx_float32)cos(radians);
+            vx_float32 b = scale * (vx_float32)sin(radians);
+            mat[0][0] = a;
+            mat[1][0] = b;
+            mat[2][0] = ((1.0f - a) * center_x) - (b * center_y);
+            mat[0][1] = -b;
+            mat[1][1] = a;
+            mat[2][1] = (b * center_x) + ((1.0f - a) * center_y);
+            status = vxCopyMatrix(matrix, mat, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+        }
+    }
+    else
+    {
+        vxAddLogEntry((vx_reference)matrix, status, "Failed to set affine matrix due to type or dimension mismatch!\n");
+    }
+    return status;
+}
 
 vx_status vxAlterRectangle(vx_rectangle_t *rect,
                            vx_int32 dsx,
