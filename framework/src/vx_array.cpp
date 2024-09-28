@@ -87,6 +87,11 @@ Array::Array(vx_context context, vx_reference scope) : Reference(context, VX_TYP
 
 }
 
+Array::Array(vx_context context, vx_enum type, vx_reference scope) : Reference(context, type, scope)
+{
+
+}
+
 Array::~Array()
 {
     destructArray();

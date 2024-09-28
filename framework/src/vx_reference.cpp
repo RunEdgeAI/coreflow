@@ -205,7 +205,6 @@ vx_reference Reference::createReference(vx_context context, vx_enum type, vx_ref
             {
                 const auto& spT = std::make_shared<Graph>(context, scope);
                 (void)context->addReference(spT);
-                // Ensure the shared pointer can be cast or converted to vx_reference
                 ref = static_cast<vx_reference>(spT.get());
                 break;
             }
@@ -213,7 +212,6 @@ vx_reference Reference::createReference(vx_context context, vx_enum type, vx_ref
             {
                 const auto& spT = std::make_shared<Node>(context, scope);
                 (void)context->addReference(spT);
-                // Ensure the shared pointer can be cast or converted to vx_reference
                 ref = static_cast<vx_reference>(spT.get());
                 break;
             }
@@ -221,7 +219,6 @@ vx_reference Reference::createReference(vx_context context, vx_enum type, vx_ref
             {
                 const auto& spT = std::make_shared<Kernel>(context, scope);
                 (void)context->addReference(spT);
-                // Ensure the shared pointer can be cast or converted to vx_reference
                 ref = static_cast<vx_reference>(spT.get());
                 break;
             }
@@ -229,7 +226,6 @@ vx_reference Reference::createReference(vx_context context, vx_enum type, vx_ref
             {
                 const auto& spT = std::make_shared<Parameter>(context, scope);
                 (void)context->addReference(spT);
-                // Ensure the shared pointer can be cast or converted to vx_reference
                 ref = static_cast<vx_reference>(spT.get());
                 break;
             }
@@ -237,7 +233,6 @@ vx_reference Reference::createReference(vx_context context, vx_enum type, vx_ref
             {
                 const auto& spT = std::make_shared<Image>(context, scope);
                 (void)context->addReference(spT);
-                // Ensure the shared pointer can be cast or converted to vx_reference
                 ref = static_cast<vx_reference>(spT.get());
                 break;
             }
@@ -245,7 +240,6 @@ vx_reference Reference::createReference(vx_context context, vx_enum type, vx_ref
             {
                 const auto& spT = std::make_shared<Scalar>(context, scope);
                 (void)context->addReference(spT);
-                // Ensure the shared pointer can be cast or converted to vx_reference
                 ref = static_cast<vx_reference>(spT.get());
                 break;
             }
@@ -253,15 +247,14 @@ vx_reference Reference::createReference(vx_context context, vx_enum type, vx_ref
             {
                 const auto& spT = std::make_shared<Tensor>(context, scope);
                 (void)context->addReference(spT);
-                // Ensure the shared pointer can be cast or converted to vx_reference
                 ref = static_cast<vx_reference>(spT.get());
                 break;
             }
+            case VX_TYPE_LUT:
             case VX_TYPE_ARRAY:
             {
-                const auto& spT = std::make_shared<Array>(context, scope);
+                const auto& spT = std::make_shared<Array>(context, type, scope);
                 (void)context->addReference(spT);
-                // Ensure the shared pointer can be cast or converted to vx_reference
                 ref = static_cast<vx_reference>(spT.get());
                 break;
             }
@@ -269,7 +262,6 @@ vx_reference Reference::createReference(vx_context context, vx_enum type, vx_ref
             {
                 const auto& spT = std::make_shared<ObjectArray>(context, scope);
                 (void)context->addReference(spT);
-                // Ensure the shared pointer can be cast or converted to vx_reference
                 ref = static_cast<vx_reference>(spT.get());
                 break;
             }
@@ -277,7 +269,6 @@ vx_reference Reference::createReference(vx_context context, vx_enum type, vx_ref
             {
                 const auto& spT = std::make_shared<Matrix>(context, scope);
                 (void)context->addReference(spT);
-                // Ensure the shared pointer can be cast or converted to vx_reference
                 ref = static_cast<vx_reference>(spT.get());
                 break;
             }
@@ -285,7 +276,6 @@ vx_reference Reference::createReference(vx_context context, vx_enum type, vx_ref
             {
                 const auto& spT = std::make_shared<Convolution>(context, scope);
                 (void)context->addReference(spT);
-                // Ensure the shared pointer can be cast or converted to vx_reference
                 ref = static_cast<vx_reference>(spT.get());
                 break;
             }
@@ -293,7 +283,6 @@ vx_reference Reference::createReference(vx_context context, vx_enum type, vx_ref
             {
                 const auto& spT = std::make_shared<UserDataObject>(context, scope);
                 (void)context->addReference(spT);
-                // Ensure the shared pointer can be cast or converted to vx_reference
                 ref = static_cast<vx_reference>(spT.get());
                 break;
             }
@@ -301,7 +290,34 @@ vx_reference Reference::createReference(vx_context context, vx_enum type, vx_ref
             {
                 const auto& spT = std::make_shared<Delay>(context, scope);
                 (void)context->addReference(spT);
-                // Ensure the shared pointer can be cast or converted to vx_reference
+                ref = static_cast<vx_reference>(spT.get());
+                break;
+            }
+            case VX_TYPE_DISTRIBUTION:
+            {
+                const auto& spT = std::make_shared<Distribution>(context, scope);
+                (void)context->addReference(spT);
+                ref = static_cast<vx_reference>(spT.get());
+                break;
+            }
+            case VX_TYPE_REMAP:
+            {
+                const auto& spT = std::make_shared<Remap>(context, scope);
+                (void)context->addReference(spT);
+                ref = static_cast<vx_reference>(spT.get());
+                break;
+            }
+            case VX_TYPE_PYRAMID:
+            {
+                const auto& spT = std::make_shared<Pyramid>(context, scope);
+                (void)context->addReference(spT);
+                ref = static_cast<vx_reference>(spT.get());
+                break;
+            }
+            case VX_TYPE_THRESHOLD:
+            {
+                const auto& spT = std::make_shared<Threshold>(context, scope);
+                (void)context->addReference(spT);
                 ref = static_cast<vx_reference>(spT.get());
                 break;
             }
@@ -309,7 +325,6 @@ vx_reference Reference::createReference(vx_context context, vx_enum type, vx_ref
             {
                 const auto& spT = std::make_shared<MetaFormat>(context, scope);
                 (void)context->addReference(spT);
-                // Ensure the shared pointer can be cast or converted to vx_reference
                 ref = static_cast<vx_reference>(spT.get());
                 break;
             }
@@ -317,7 +332,6 @@ vx_reference Reference::createReference(vx_context context, vx_enum type, vx_ref
             {
                 const auto& spT = std::make_shared<Target>(context, scope);
                 (void)context->addReference(spT);
-                // Ensure the shared pointer can be cast or converted to vx_reference
                 ref = static_cast<vx_reference>(spT.get());
                 break;
             }
@@ -490,14 +504,14 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseReference(vx_reference* ref_ptr)
         case VX_TYPE_ARRAY:        status = vxReleaseArray((vx_array*)ref_ptr); break;
         case VX_TYPE_OBJECT_ARRAY: status = vxReleaseObjectArray((vx_object_array*)ref_ptr); break;
         case VX_TYPE_CONVOLUTION:  status = vxReleaseConvolution((vx_convolution*)ref_ptr); break;
-        // case VX_TYPE_DISTRIBUTION: status = vxReleaseDistribution((vx_distribution*)ref_ptr); break;
+        case VX_TYPE_DISTRIBUTION: status = vxReleaseDistribution((vx_distribution*)ref_ptr); break;
         case VX_TYPE_IMAGE:        status = vxReleaseImage((vx_image*)ref_ptr); break;
         case VX_TYPE_LUT:          status = vxReleaseLUT((vx_lut*)ref_ptr); break;
         case VX_TYPE_MATRIX:       status = vxReleaseMatrix((vx_matrix*)ref_ptr); break;
-        // case VX_TYPE_PYRAMID:      status = vxReleasePyramid((vx_pyramid*)ref_ptr); break;
-        // case VX_TYPE_REMAP:        status = vxReleaseRemap((vx_remap*)ref_ptr); break;
+        case VX_TYPE_PYRAMID:      status = vxReleasePyramid((vx_pyramid*)ref_ptr); break;
+        case VX_TYPE_REMAP:        status = vxReleaseRemap((vx_remap*)ref_ptr); break;
         case VX_TYPE_SCALAR:       status = vxReleaseScalar((vx_scalar*)ref_ptr); break;
-        // case VX_TYPE_THRESHOLD:    status = vxReleaseThreshold((vx_threshold*)ref_ptr); break;
+        case VX_TYPE_THRESHOLD:    status = vxReleaseThreshold((vx_threshold*)ref_ptr); break;
         case VX_TYPE_DELAY:        status = vxReleaseDelay((vx_delay*)ref_ptr); break;
         case VX_TYPE_KERNEL:       status = vxReleaseKernel((vx_kernel*)ref_ptr); break;
         case VX_TYPE_PARAMETER:    status = vxReleaseParameter((vx_parameter*)ref_ptr); break;
