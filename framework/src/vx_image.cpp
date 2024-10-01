@@ -190,7 +190,21 @@ void vxPrintImage(vx_image image)
 /*==============================================================================
  PRIVATE INTERFACE
  =============================================================================*/
-Image::Image(vx_context context, vx_reference ref) : Reference(context, VX_TYPE_IMAGE, ref)
+Image::Image(vx_context context, vx_reference ref) : Reference(context, VX_TYPE_IMAGE, ref),
+memory(),
+width(0),
+height(0),
+format(),
+planes(0),
+space(),
+range(),
+scale(),
+bounds(),
+parent(nullptr),
+subimages(),
+constant(vx_false_e),
+region(),
+memory_type()
 {
 
 }
@@ -1455,7 +1469,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseImage(vx_image* image)
                 {
                     if (parent->subimages[n] == this_image)
                     {
-                        parent->subimages[n] = 0;
+                        parent->subimages[n] = nullptr;
                         break;
                     }
                 }

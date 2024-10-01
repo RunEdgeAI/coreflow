@@ -18,7 +18,21 @@
 #include "vx_internal.h"
 #include "vx_kernel.h"
 
-Kernel::Kernel(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_KERNEL, scope)
+Kernel::Kernel(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_KERNEL, scope),
+name(""),
+enumeration(VX_ERROR_NOT_SUPPORTED),
+function(nullptr),
+signature(),
+enabled(vx_false_e),
+user_kernel(vx_false_e),
+validate(nullptr),
+validate_input(nullptr),
+validate_output(nullptr),
+initialize(nullptr),
+deinitialize(nullptr),
+attributes(),
+affinity(0),
+kernel_object_deinitialize(nullptr)
 {
 }
 
@@ -70,20 +84,27 @@ void vxPrintKernel(vx_kernel kernel)
 vx_bool Kernel::isKernelUnique(vx_kernel kernel)
 {
     vx_uint32 t = 0u, k = 0u;
-    vx_context context = kernel->context;
     vx_bool unique = vx_true_e;
 
-
-    for (t = 0u; t < context->num_targets; t++)
+    if (!kernel)
     {
-        for (k = 0u; k < VX_INT_MAX_KERNELS; k++)
+        unique = vx_false_e;
+    }
+
+    if (unique == vx_true_e)
+    {
+        vx_context context = kernel->context;
+        for (t = 0u; t < context->num_targets; t++)
         {
-            if (context->targets[t]->kernels[k] &&
-                context->targets[t]->kernels[k]->enabled &&
-                context->targets[t]->kernels[k]->enumeration == kernel->enumeration)
+            for (k = 0u; k < VX_INT_MAX_KERNELS; k++)
+            {
+                if (context->targets[t]->kernels[k] &&
+                    context->targets[t]->kernels[k]->enabled &&
+                    context->targets[t]->kernels[k]->enumeration == kernel->enumeration)
                 {
-                unique = vx_false_e;
-                break;
+                    unique = vx_false_e;
+                    break;
+                }
             }
         }
     }

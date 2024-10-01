@@ -28,7 +28,23 @@ void vxPrintNode(vx_node node)
             node->context->targets[node->affinity]->name);
 }
 
-Node::Node(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_NODE, scope)
+Node::Node(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_NODE, scope),
+kernel(nullptr),
+parameters(),
+status(VX_FAILURE),
+perf(),
+callback(nullptr),
+local_data_change_is_enabled(vx_false_e),
+local_data_set_by_implementation(vx_false_e),
+graph(nullptr),
+visited(vx_false_e),
+executed(vx_false_e),
+attributes(),
+affinity(0),
+child(nullptr),
+costs(),
+is_replicated(vx_false_e),
+replicated_flags()
 {
 
 }
