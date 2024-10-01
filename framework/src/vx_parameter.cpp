@@ -263,17 +263,16 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetParameterByIndex(vx_node node, vx_uint32
         }
     }
 
-    if (node->parameters[index])
+    if (node->parameters[index] &&
+        node->parameters[index]->delay != nullptr)
     {
-        if (node->parameters[index]->delay!=nullptr) {
-            // we already have a delay element here */
-            vx_bool res = Delay::removeAssociationToDelay(node->parameters[index], node, index);
-            if (res == vx_false_e)
-            {
-                VX_PRINT(VX_ZONE_ERROR, "Internal error removing delay association\n");
-                status = VX_ERROR_INVALID_REFERENCE;
-                goto exit;
-            }
+        // we already have a delay element here */
+        vx_bool res = Delay::removeAssociationToDelay(node->parameters[index], node, index);
+        if (res == vx_false_e)
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Internal error removing delay association\n");
+            status = VX_ERROR_INVALID_REFERENCE;
+            goto exit;
         }
     }
 

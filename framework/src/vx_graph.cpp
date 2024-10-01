@@ -21,7 +21,21 @@
 static vx_value_set_t graph_queue[10];
 static vx_size numGraphsQueued = 0ul;
 
-Graph::Graph(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_GRAPH, scope)
+Graph::Graph(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_GRAPH, scope),
+nodes(),
+perf(),
+numNodes(0),
+heads(),
+numHeads(0),
+state(VX_FAILURE),
+verified(vx_false_e),
+reverify(vx_false_e),
+lock(),
+parameters(),
+numParams(0),
+should_serialize(vx_false_e),
+parentGraph(nullptr),
+delays()
 {
 
 }

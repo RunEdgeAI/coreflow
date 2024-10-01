@@ -15,7 +15,15 @@
 
 #include "vx_internal.h"
 
-Target::Target(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_TARGET, scope)
+Target::Target(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_TARGET, scope),
+enabled(vx_false_e),
+name(""),
+module(),
+funcs(),
+priority(0),
+num_kernels(0),
+kernels(),
+reserved(nullptr)
 {
 }
 
