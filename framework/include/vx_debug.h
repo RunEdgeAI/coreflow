@@ -107,7 +107,7 @@ enum vx_debug_zone_e {
 #endif
 #endif
 
-#if (defined(__linux__) || defined(__QNX__)) && !defined(__ANDROID__)
+#if (defined(__linux__) || defined(__QNX__)) || defined(__APPLE__) && !defined(__ANDROID__)
 
 #define VX_BACKTRACE(zone) { \
     void *stack[50]; \

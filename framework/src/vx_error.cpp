@@ -74,7 +74,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxGetStatus(vx_reference ref)
     if (ref == nullptr)
     {
         /*! \internal probably ran out of handles or memory */
-        VX_PRINT(VX_ZONE_ERROR, "Nullptr\n");
+        VX_PRINT(VX_ZONE_ERROR, "Nullptr reference\n");
         return VX_ERROR_NO_RESOURCES;
     }
     else if (Reference::isValidReference(ref) == vx_true_e)
