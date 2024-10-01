@@ -47,6 +47,7 @@
 #include <cstdarg>
 #include <ctime>
 #if defined(__APPLE__)
+#include <execinfo.h>
 #include <mach/mach.h>
 #include <mach/mach_time.h>
 #include <unistd.h>
