@@ -4,9 +4,6 @@ cc_library(
     name = "extras",
     srcs = glob([
         "*.cpp",
-    ],
-    exclude = [
-        "vx_edge_trace.cpp"
     ]),
     hdrs = glob([
         "*.h"

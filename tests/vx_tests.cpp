@@ -1050,380 +1050,380 @@ exit:
     return status;
 }
 
-// vx_status vx_test_graph_bikegray(int argc, char *argv[])
-// {
-//     vx_status status = VX_FAILURE;
-//     vx_context context = vxCreateContext();
-//     (void)argc;
-//     (void)argv;
+vx_status vx_test_graph_bikegray(int argc, char *argv[])
+{
+    vx_status status = VX_FAILURE;
+    vx_context context = vxCreateContext();
+    (void)argc;
+    (void)argv;
 
-//     if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
-//     {
-//         vxRegisterHelperAsLogReader(context);
-//         vx_uint32 i = 0, w = 640, h = 480, w2 = 300, h2 = 200, x = 0, y = 0;
-//         vx_uint32 range = 256, windows = 16;
-//         vx_image images[] = {
-//             vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 0: luma */
-//             vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),              /* 1: scaled */
-//             vxCreateImage(context, w2, h2, VX_DF_IMAGE_S16),             /* 2: grad_x */
-//             vxCreateImage(context, w2, h2, VX_DF_IMAGE_S16),             /* 3: grad_y */
-//             vxCreateImage(context, w2, h2, VX_DF_IMAGE_S16),             /* 4: mag */
-//             vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),              /* 5: phase */
-//             vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),              /* 6: LUT out */
-//             vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),              /* 7: AbsDiff */
-//             vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),              /* 8: Threshold */
-//             vxCreateImage(context, w2, h2, VX_DF_IMAGE_U32),             /* 9: Integral */
-//             vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),              /* 10: Eroded */
-//             vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),              /* 11: Dilated */
-//             vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 12: Median */
-//             vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 13: Box */
-//             vxCreateImage(context, w2, h2, VX_DF_IMAGE_S16),             /* 14: UpDepth */
-//             vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 15: Canny */
-//             vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 16: EqualizeHistogram */
-//             vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),              /* 17: DownDepth Gy */
-//             vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),                /* 18: Remapped */
-//             vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),                /* 19: Remapped 2*/
-//             vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),                /* 20: Diff */
-//         };
-//         vx_lut lut = vxCreateLUT(context, VX_TYPE_UINT8, 256);
-//         vx_uint8 *tmp = NULL;
-//         vx_int32 *histogram = NULL;
-//         vx_distribution dist = vxCreateDistribution(context, windows, 0, range);
-//         vx_float32 mean = 0.0f, stddev = 0.0f;
-//         vx_scalar s_mean = vxCreateScalar(context, VX_TYPE_FLOAT32, &mean);
-//         vx_scalar s_stddev = vxCreateScalar(context, VX_TYPE_FLOAT32, &stddev);
-//         vx_threshold thresh = vxCreateThreshold(context, VX_THRESHOLD_TYPE_BINARY, VX_TYPE_UINT8);
-//         vx_int32 lo = 140;
-//         vx_scalar minVal = vxCreateScalar(context, VX_TYPE_UINT8, NULL);
-//         vx_scalar maxVal = vxCreateScalar(context, VX_TYPE_UINT8, NULL);
-//         vx_array minLoc = vxCreateArray(context, VX_TYPE_COORDINATES2D, 1);
-//         vx_array maxLoc = vxCreateArray(context, VX_TYPE_COORDINATES2D, 1);
-//         vx_threshold hyst = vxCreateThreshold(context, VX_THRESHOLD_TYPE_RANGE, VX_TYPE_UINT8);
-//         vx_int32 lower = 40, upper = 250;
-//         vx_enum policy = VX_CONVERT_POLICY_SATURATE;
-//         vx_int32 shift = 7;
-//         vx_scalar sshift = vxCreateScalar(context, VX_TYPE_INT32, &shift);
-//         vx_int32 noshift = 0;
-//         vx_scalar snoshift = vxCreateScalar(context, VX_TYPE_INT32, &noshift);
-//         vx_remap table = vxCreateRemap(context, w, h, w2, h2);
-//         vx_float32 dx = (vx_float32)w/w2, dy = (vx_float32)h/h2;
+    if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
+    {
+        vxRegisterHelperAsLogReader(context);
+        vx_uint32 i = 0, w = 640, h = 480, w2 = 300, h2 = 200, x = 0, y = 0;
+        vx_uint32 range = 256, windows = 16;
+        vx_image images[] = {
+            vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 0: luma */
+            vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),              /* 1: scaled */
+            vxCreateImage(context, w2, h2, VX_DF_IMAGE_S16),             /* 2: grad_x */
+            vxCreateImage(context, w2, h2, VX_DF_IMAGE_S16),             /* 3: grad_y */
+            vxCreateImage(context, w2, h2, VX_DF_IMAGE_S16),             /* 4: mag */
+            vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),              /* 5: phase */
+            vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),              /* 6: LUT out */
+            vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),              /* 7: AbsDiff */
+            vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),              /* 8: Threshold */
+            vxCreateImage(context, w2, h2, VX_DF_IMAGE_U32),             /* 9: Integral */
+            vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),              /* 10: Eroded */
+            vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),              /* 11: Dilated */
+            vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 12: Median */
+            vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 13: Box */
+            vxCreateImage(context, w2, h2, VX_DF_IMAGE_S16),             /* 14: UpDepth */
+            vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 15: Canny */
+            vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 16: EqualizeHistogram */
+            vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),              /* 17: DownDepth Gy */
+            vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),              /* 18: Remapped */
+            vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),              /* 19: Remapped 2*/
+            vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),              /* 20: Diff */
+        };
+        vx_lut lut = vxCreateLUT(context, VX_TYPE_UINT8, 256);
+        vx_uint8 *tmp = NULL;
+        vx_int32 *histogram = NULL;
+        vx_distribution dist = vxCreateDistribution(context, windows, 0, range);
+        vx_float32 mean = 0.0f, stddev = 0.0f;
+        vx_scalar s_mean = vxCreateScalar(context, VX_TYPE_FLOAT32, &mean);
+        vx_scalar s_stddev = vxCreateScalar(context, VX_TYPE_FLOAT32, &stddev);
+        vx_threshold thresh = vxCreateThreshold(context, VX_THRESHOLD_TYPE_BINARY, VX_TYPE_UINT8);
+        vx_int32 lo = 140;
+        vx_scalar minVal = vxCreateScalar(context, VX_TYPE_UINT8, NULL);
+        vx_scalar maxVal = vxCreateScalar(context, VX_TYPE_UINT8, NULL);
+        vx_array minLoc = vxCreateArray(context, VX_TYPE_COORDINATES2D, 1);
+        vx_array maxLoc = vxCreateArray(context, VX_TYPE_COORDINATES2D, 1);
+        vx_threshold hyst = vxCreateThreshold(context, VX_THRESHOLD_TYPE_RANGE, VX_TYPE_UINT8);
+        vx_int32 lower = 40, upper = 250;
+        vx_enum policy = VX_CONVERT_POLICY_SATURATE;
+        vx_int32 shift = 7;
+        vx_scalar sshift = vxCreateScalar(context, VX_TYPE_INT32, &shift);
+        vx_int32 noshift = 0;
+        vx_scalar snoshift = vxCreateScalar(context, VX_TYPE_INT32, &noshift);
+        vx_remap table = vxCreateRemap(context, w, h, w2, h2);
+        vx_float32 dx = (vx_float32)w/w2, dy = (vx_float32)h/h2;
 
-//         CHECK_ALL_ITEMS(images, i, status, exit);
+        CHECK_ALL_ITEMS(images, i, status, exit);
 
-//         status = vxAccessLUT(lut, (void **)&tmp, VX_WRITE_ONLY);
-//         if (status == VX_SUCCESS)
-//         {
-//             for (i = 0; i < range; i++)
-//             {
-//                 vx_uint32 g = (vx_uint32)pow(i,1/0.93);
-//                 tmp[i] = (vx_uint8)(g >= range ? (range - 1): g);
-//             }
-//             status = vxCommitLUT(lut, tmp);
-//         }
+        status = vxAccessLUT(lut, (void **)&tmp, VX_WRITE_ONLY);
+        if (status == VX_SUCCESS)
+        {
+            for (i = 0; i < range; i++)
+            {
+                vx_uint32 g = (vx_uint32)pow(i,1/0.93);
+                tmp[i] = (vx_uint8)(g >= range ? (range - 1): g);
+            }
+            status = vxCommitLUT(lut, tmp);
+        }
 
-//         /* create the remapping for "image scaling" using remap */
-//         for (y = 0; y < h2; y++)
-//         {
-//             for (x = 0; x < w2; x++)
-//             {
-//                 vx_float32 nx = dx*x;
-//                 vx_float32 ny = dy*y;
-//                 //printf("Setting point %lu, %lu from %lf, %lf (dx,dy=%lf,%lf)\n", x, y, nx, ny, dx, dy);
-//                 vxSetRemapPoint(table, x, y, nx, ny);
-//             }
-//         }
+        /* create the remapping for "image scaling" using remap */
+        for (y = 0; y < h2; y++)
+        {
+            for (x = 0; x < w2; x++)
+            {
+                vx_float32 nx = dx*x;
+                vx_float32 ny = dy*y;
+                //printf("Setting point %lu, %lu from %lf, %lf (dx,dy=%lf,%lf)\n", x, y, nx, ny, dx, dy);
+                vxSetRemapPoint(table, x, y, nx, ny);
+            }
+        }
 
-//         status |= vxSetThresholdAttribute(thresh, VX_THRESHOLD_THRESHOLD_VALUE, &lo, sizeof(lo));
-//         status |= vxSetThresholdAttribute(hyst, VX_THRESHOLD_THRESHOLD_LOWER, &lower, sizeof(lower));
-//         status |= vxSetThresholdAttribute(hyst, VX_THRESHOLD_THRESHOLD_UPPER, &upper, sizeof(upper));
-//         status |= vxLoadKernels(context, "openvx-debug");
-//         if (status == VX_SUCCESS)
-//         {
-//             vx_graph graph = vxCreateGraph(context);
-//             if (vxGetStatus((vx_reference)graph) == VX_SUCCESS)
-//             {
-//                 vx_node nodes[] = {
-//                     vxFReadImageNode(graph, "bikegray_640x480.pgm", images[0]),
-//                     vxMedian3x3Node(graph, images[0], images[12]),
-//                     vxBox3x3Node(graph, images[0], images[13]),
-//                     vxScaleImageNode(graph, images[0], images[1], VX_INTERPOLATION_AREA),
-//                     vxTableLookupNode(graph, images[1], lut, images[6]),
-//                     vxHistogramNode(graph, images[6], dist),
-//                     vxSobel3x3Node(graph, images[1], images[2], images[3]),
-//                     vxMagnitudeNode(graph, images[2], images[3], images[4]),
-//                     vxPhaseNode(graph, images[2], images[3], images[5]),
-//                     vxAbsDiffNode(graph, images[6], images[1], images[7]),
-//                     vxConvertDepthNode(graph, images[7], images[14], policy, sshift),
-//                     vxMeanStdDevNode(graph, images[7], s_mean, s_stddev),
-//                     vxThresholdNode(graph, images[6], thresh, images[8]),
-//                     vxIntegralImageNode(graph, images[7], images[9]),
-//                     vxErode3x3Node(graph, images[8], images[10]),
-//                     vxDilate3x3Node(graph, images[8], images[11]),
-//                     vxMinMaxLocNode(graph, images[7], minVal, maxVal, minLoc, maxLoc, 0, 0),
-//                     vxCannyEdgeDetectorNode(graph, images[0], hyst, 3, VX_NORM_L1, images[15]),
-//                     vxEqualizeHistNode(graph, images[0], images[16]),
-//                     vxConvertDepthNode(graph, images[3], images[17], policy, snoshift),
-//                     vxRemapNode(graph, images[0], table, VX_INTERPOLATION_NEAREST_NEIGHBOR, images[18]),
-//                     vxRemapNode(graph, images[0], table, VX_INTERPOLATION_BILINEAR, images[19]),
-//                     vxAbsDiffNode(graph, images[18], images[19], images[20]),
+        status |= vxSetThresholdAttribute(thresh, VX_THRESHOLD_THRESHOLD_VALUE, &lo, sizeof(lo));
+        status |= vxSetThresholdAttribute(hyst, VX_THRESHOLD_THRESHOLD_LOWER, &lower, sizeof(lower));
+        status |= vxSetThresholdAttribute(hyst, VX_THRESHOLD_THRESHOLD_UPPER, &upper, sizeof(upper));
+        status |= vxLoadKernels(context, "openvx-debug");
+        status |= vxLoadKernels(context, "openvx-extras");
+        if (status == VX_SUCCESS)
+        {
+            vx_graph graph = vxCreateGraph(context);
+            if (vxGetStatus((vx_reference)graph) == VX_SUCCESS)
+            {
+                vx_node nodes[] = {
+                    vxFReadImageNode(graph, "./tests/raw/bikegray_640x480.pgm", images[0]),
+                    vxMedian3x3Node(graph, images[0], images[12]),
+                    vxBox3x3Node(graph, images[0], images[13]),
+                    vxScaleImageNode(graph, images[0], images[1], VX_INTERPOLATION_AREA),
+                    vxTableLookupNode(graph, images[1], lut, images[6]),
+                    vxHistogramNode(graph, images[6], dist),
+                    vxSobel3x3Node(graph, images[1], images[2], images[3]),
+                    vxMagnitudeNode(graph, images[2], images[3], images[4]),
+                    vxPhaseNode(graph, images[2], images[3], images[5]),
+                    vxAbsDiffNode(graph, images[6], images[1], images[7]),
+                    vxConvertDepthNode(graph, images[7], images[14], policy, sshift),
+                    vxMeanStdDevNode(graph, images[7], s_mean, s_stddev),
+                    vxThresholdNode(graph, images[6], thresh, images[8]),
+                    vxIntegralImageNode(graph, images[7], images[9]),
+                    vxErode3x3Node(graph, images[8], images[10]),
+                    vxDilate3x3Node(graph, images[8], images[11]),
+                    vxMinMaxLocNode(graph, images[7], minVal, maxVal, minLoc, maxLoc, 0, 0),
+                    vxCannyEdgeDetectorNode(graph, images[0], hyst, 3, VX_NORM_L1, images[15]),
+                    vxEqualizeHistNode(graph, images[0], images[16]),
+                    vxConvertDepthNode(graph, images[3], images[17], policy, snoshift),
+                    vxRemapNode(graph, images[0], table, VX_INTERPOLATION_NEAREST_NEIGHBOR, images[18]),
+                    vxRemapNode(graph, images[0], table, VX_INTERPOLATION_BILINEAR, images[19]),
+                    vxAbsDiffNode(graph, images[18], images[19], images[20]),
 
-//                     vxFWriteImageNode(graph, images[0], "obikegray_640x480_P400.pgm"),
-//                     vxFWriteImageNode(graph, images[1], "obikegray_300x200_P400.pgm"),
-//                     vxFWriteImageNode(graph, images[2], "obikegradh_300x200_P400_-16b.bw"),
-//                     vxFWriteImageNode(graph, images[3], "obikegradv_300x200_P400_-16b.bw"),
-//                     vxFWriteImageNode(graph, images[4], "obikemag_300x200_P400.pgm"),
-//                     vxFWriteImageNode(graph, images[5], "obikeatan_300x200_P400.pgm"),
-//                     vxFWriteImageNode(graph, images[6], "obikeluty_300x200_P400.pgm"),
-//                     vxFWriteImageNode(graph, images[7], "obikediff_300x200_P400.pgm"),
-//                     vxFWriteImageNode(graph, images[8], "obikethsh_300x200_P400.pgm"),
-//                     vxFWriteImageNode(graph, images[9], "obikesums_600x200_P400_16b.bw"),
-//                     vxFWriteImageNode(graph, images[10], "obikeerod_300x200_P400.pgm"),
-//                     vxFWriteImageNode(graph, images[11], "obikedilt_300x200_P400.pgm"),
-//                     vxFWriteImageNode(graph, images[12], "obikemed_640x480_P400.pgm"),
-//                     vxFWriteImageNode(graph, images[13], "obikeavg_640x480_P400.pgm"),
-//                     vxFWriteImageNode(graph, images[14], "obikediff_300x200_P400_16b.bw"),
-//                     vxFWriteImageNode(graph, images[15], "obikecanny_640x480_P400.pgm"),
-//                     vxFWriteImageNode(graph, images[16], "obikeeqhist_640x480_P400.pgm"),
-//                     vxFWriteImageNode(graph, images[17], "obikegrady8_300x200_P400.pgm"),
-//                     vxFWriteImageNode(graph, images[18], "obikeremap_nn_300x200_P400.pgm"),
-//                     vxFWriteImageNode(graph, images[19], "obikeremap_bi_300x200_P400.pgm"),
-//                     vxFWriteImageNode(graph, images[20], "obikeremap_ab_300x200_P400.pgm"),
-//                 };
-//                 vx_print_log((vx_reference)context);
-//                 CHECK_ALL_ITEMS(nodes, i, status, exit);
-//                 if (status == VX_SUCCESS)
-//                 {
-//                     status = vxVerifyGraph(graph);
-//                     vx_print_log((vx_reference)graph);
-//                     if (status == VX_SUCCESS)
-//                     {
-//                         status = vxProcessGraph(graph);
-//                         assert(status == VX_SUCCESS);
-//                     }
-//                     else
-//                     {
-//                         vx_print_log((vx_reference)graph);
-//                     }
-//                     if (status == VX_SUCCESS)
-//                     {
-//                         vx_coordinates2d_t min_l, *p_min_l = &min_l;
-//                         vx_coordinates2d_t max_l, *p_max_l = &max_l;
-//                         vx_size stride = 0;
-//                         vx_uint8 min_v = 255;
-//                         vx_uint8 max_v = 0;
-//                         vx_map_id map_id = 0;
+                    vxFWriteImageNode(graph, images[0], "obikegray_640x480_P400.pgm"),
+                    vxFWriteImageNode(graph, images[1], "obikegray_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[2], "obikegradh_300x200_P400_-16b.bw"),
+                    vxFWriteImageNode(graph, images[3], "obikegradv_300x200_P400_-16b.bw"),
+                    vxFWriteImageNode(graph, images[4], "obikemag_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[5], "obikeatan_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[6], "obikeluty_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[7], "obikediff_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[8], "obikethsh_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[9], "obikesums_600x200_P400_16b.bw"),
+                    vxFWriteImageNode(graph, images[10], "obikeerod_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[11], "obikedilt_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[12], "obikemed_640x480_P400.pgm"),
+                    vxFWriteImageNode(graph, images[13], "obikeavg_640x480_P400.pgm"),
+                    vxFWriteImageNode(graph, images[14], "obikediff_300x200_P400_16b.bw"),
+                    vxFWriteImageNode(graph, images[15], "obikecanny_640x480_P400.pgm"),
+                    vxFWriteImageNode(graph, images[16], "obikeeqhist_640x480_P400.pgm"),
+                    vxFWriteImageNode(graph, images[17], "obikegrady8_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[18], "obikeremap_nn_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[19], "obikeremap_bi_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[20], "obikeremap_ab_300x200_P400.pgm"),
+                };
+                vx_print_log((vx_reference)context);
+                CHECK_ALL_ITEMS(nodes, i, status, exit);
+                if (status == VX_SUCCESS)
+                {
+                    status = vxVerifyGraph(graph);
+                    vx_print_log((vx_reference)graph);
+                    if (status == VX_SUCCESS)
+                    {
+                        status = vxProcessGraph(graph);
+                        assert(status == VX_SUCCESS);
+                    }
+                    else
+                    {
+                        vx_print_log((vx_reference)graph);
+                    }
+                    if (status == VX_SUCCESS)
+                    {
+                        vx_coordinates2d_t min_l, *p_min_l = &min_l;
+                        vx_coordinates2d_t max_l, *p_max_l = &max_l;
+                        vx_size stride = 0;
+                        vx_uint8 min_v = 255;
+                        vx_uint8 max_v = 0;
+                        vx_map_id map_id = 0;
 
-//                         vxAccessArrayRange(minLoc, 0, 1, &stride, (void **)&p_min_l, VX_READ_ONLY);
-//                         vxCommitArrayRange(minLoc, 0, 0, p_min_l);
-//                         vxAccessArrayRange(maxLoc, 0, 1, &stride, (void **)&p_max_l, VX_READ_ONLY);
-//                         vxCommitArrayRange(maxLoc, 0, 0, p_max_l);
+                        vxAccessArrayRange(minLoc, 0, 1, &stride, (void **)&p_min_l, VX_READ_ONLY);
+                        vxCommitArrayRange(minLoc, 0, 0, p_min_l);
+                        vxAccessArrayRange(maxLoc, 0, 1, &stride, (void **)&p_max_l, VX_READ_ONLY);
+                        vxCommitArrayRange(maxLoc, 0, 0, p_max_l);
 
-//                         vxCopyScalar(minVal, &min_v, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
-//                         vxCopyScalar(maxVal, &max_v, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
+                        vxCopyScalar(minVal, &min_v, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
+                        vxCopyScalar(maxVal, &max_v, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
 
-//                         printf("Min Value in AbsDiff = %u, at %d,%d\n", min_v, min_l.x, min_l.y);
-//                         printf("Max Value in AbsDiff = %u, at %d,%d\n", max_v, max_l.x, max_l.y);
+                        printf("Min Value in AbsDiff = %u, at %d,%d\n", min_v, min_l.x, min_l.y);
+                        printf("Max Value in AbsDiff = %u, at %d,%d\n", max_v, max_l.x, max_l.y);
 
-//                         vxCopyScalar(s_mean, &mean, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
-//                         vxCopyScalar(s_stddev, &stddev, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
+                        vxCopyScalar(s_mean, &mean, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
+                        vxCopyScalar(s_stddev, &stddev, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
 
-//                         printf("AbsDiff Mean = %lf\n", mean);
-//                         printf("AbsDiff Stddev = %lf\n", stddev);
+                        printf("AbsDiff Mean = %lf\n", mean);
+                        printf("AbsDiff Stddev = %lf\n", stddev);
 
-//                         vxMapDistribution(dist, &map_id, (void**)&histogram, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, 0);
-//                         for (i = 0; i < windows; i++)
-//                         {
-//                             printf("histogram[%u] = %d\n", i, histogram[i]);
-//                         }
-//                         vxUnmapDistribution(dist, map_id);
-//                     }
-//                     else
-//                     {
-//                         printf("Graph failed (%d)\n", status);
-//                         for (i = 0; i < dimof(nodes); i++)
-//                         {
-//                             status = VX_SUCCESS;
-//                             vxQueryNode(nodes[i], VX_NODE_STATUS, &status, sizeof(status));
-//                             if (status != VX_SUCCESS)
-//                             {
-//                                 printf("nodes[%u] failed with %d\n", i, status);
-//                             }
-//                         }
-//                         status = VX_ERROR_NOT_SUFFICIENT;
-//                     }
-//                     for (i = 0; i < dimof(nodes); i++)
-//                     {
-//                         vxReleaseNode(&nodes[i]);
-//                     }
-//                 }
-//                 vxReleaseGraph(&graph);
-//             }
-//             status |= vxUnloadKernels(context, "openvx-debug");
-//         }
-//         for (i = 0; i < dimof(images); i++)
-//         {
-//             vxReleaseImage(&images[i]);
-//         }
-// exit:
-//         //vx_print_log((vx_reference)context);
-//         /* Deregister log callback */
-//         vxRegisterLogCallback(context, NULL, vx_false_e);
-//         vxReleaseRemap(&table);
-//         vxReleaseScalar(&sshift);
-//         vxReleaseScalar(&snoshift);
-//         vxReleaseThreshold(&hyst);
-//         vxReleaseThreshold(&thresh);
-//         vxReleaseContext(&context);
-//     }
-//     return status;
-// }
+                        vxMapDistribution(dist, &map_id, (void**)&histogram, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, 0);
+                        for (i = 0; i < windows; i++)
+                        {
+                            printf("histogram[%u] = %d\n", i, histogram[i]);
+                        }
+                        vxUnmapDistribution(dist, map_id);
+                    }
+                    else
+                    {
+                        printf("Graph failed (%d)\n", status);
+                        for (i = 0; i < dimof(nodes); i++)
+                        {
+                            status = VX_SUCCESS;
+                            vxQueryNode(nodes[i], VX_NODE_STATUS, &status, sizeof(status));
+                            if (status != VX_SUCCESS)
+                            {
+                                printf("nodes[%u] failed with %d\n", i, status);
+                            }
+                        }
+                        status = VX_ERROR_NOT_SUFFICIENT;
+                    }
+                    for (i = 0; i < dimof(nodes); i++)
+                    {
+                        vxReleaseNode(&nodes[i]);
+                    }
+                }
+                vxReleaseGraph(&graph);
+            }
+            status |= vxUnloadKernels(context, "openvx-debug");
+        }
+        for (i = 0; i < dimof(images); i++)
+        {
+            vxReleaseImage(&images[i]);
+        }
+exit:
+        //vx_print_log((vx_reference)context);
+        /* Deregister log callback */
+        vxRegisterLogCallback(context, NULL, vx_false_e);
+        vxReleaseRemap(&table);
+        vxReleaseScalar(&sshift);
+        vxReleaseScalar(&snoshift);
+        vxReleaseThreshold(&hyst);
+        vxReleaseThreshold(&thresh);
+        vxReleaseContext(&context);
+    }
+    return status;
+}
 
-// vx_status vx_test_graph_lena(int argc, char *argv[])
-// {
-//     vx_status status = VX_FAILURE;
-//     vx_context context = vxCreateContext();
-//     (void)argc;
-//     (void)argv;
+vx_status vx_test_graph_lena(int argc, char *argv[])
+{
+    vx_status status = VX_FAILURE;
+    vx_context context = vxCreateContext();
+    (void)argc;
+    (void)argv;
 
-//     if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
-//     {
-//         vx_uint32 i = 0, w = 512, h = 512;
-//         vx_image images[] = {
-//             vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 0: BW */
-//             vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 1: Median */
-//             vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 2: Box */
-//             vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 3: Gaussian */
-//             vxCreateImage(context, w, h, VX_DF_IMAGE_S16),               /* 4: Custom */
-//             vxCreateImage(context, w, h, VX_DF_IMAGE_S16),               /* 5: Custom */
-//             vxCreateImage(context, w, h, VX_DF_IMAGE_S16),               /* 6: Mag */
-//             vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 7: Laplacian */
-//             vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 8: Affine */
-//             vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 9: Perspective */
-//         };
-//         vx_convolution conv[] = {
-//             vxCreateConvolution(context, 3, 3),
-//             vxCreateConvolution(context, 3, 3),
-//         };
-//         vx_pyramid pyramid = vxCreatePyramid(context, 4, VX_SCALE_PYRAMID_HALF, w, h, VX_DF_IMAGE_U8);
-//         vx_matrix affine = vxCreateMatrix(context, VX_TYPE_FLOAT32, 2, 3);
-//         vx_matrix perspective = vxCreateMatrix(context, VX_TYPE_FLOAT32, 3, 3);
-//         /* just some non-sense filters */
-//         vx_int16 mat1[3][3] = {
-//             { 1, 0,-1},
-//             { 3, 0,-3},
-//             { 1, 0,-1},
-//         };
-//         vx_int16 mat2[3][3] = {
-//             { 1, 3, 1},
-//             { 0, 0, 0},
-//             {-1,-3,-1},
-//         };
-//         /* rotate and mirror, and scale */
-//        vx_float32 mat4[3][3] = {
-//             {0, 1, 0},
-//             {1, 0, 0},
-//             {0, 0, 0.5},
-//         };
+    if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
+    {
+        vx_uint32 i = 0, w = 512, h = 512;
+        vx_image images[] = {
+            vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 0: BW */
+            vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 1: Median */
+            vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 2: Box */
+            vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 3: Gaussian */
+            vxCreateImage(context, w, h, VX_DF_IMAGE_S16),               /* 4: Custom */
+            vxCreateImage(context, w, h, VX_DF_IMAGE_S16),               /* 5: Custom */
+            vxCreateImage(context, w, h, VX_DF_IMAGE_S16),               /* 6: Mag */
+            vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 7: Laplacian */
+            vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 8: Affine */
+            vxCreateImage(context, w, h, VX_DF_IMAGE_U8),                /* 9: Perspective */
+        };
+        vx_convolution conv[] = {
+            vxCreateConvolution(context, 3, 3),
+            vxCreateConvolution(context, 3, 3),
+        };
+        vx_pyramid pyramid = vxCreatePyramid(context, 4, VX_SCALE_PYRAMID_HALF, w, h, VX_DF_IMAGE_U8);
+        vx_matrix affine = vxCreateMatrix(context, VX_TYPE_FLOAT32, 2, 3);
+        vx_matrix perspective = vxCreateMatrix(context, VX_TYPE_FLOAT32, 3, 3);
+        /* just some non-sense filters */
+        vx_int16 mat1[3][3] = {
+            { 1, 0,-1},
+            { 3, 0,-3},
+            { 1, 0,-1},
+        };
+        vx_int16 mat2[3][3] = {
+            { 1, 3, 1},
+            { 0, 0, 0},
+            {-1,-3,-1},
+        };
+        /* rotate and mirror, and scale */
+       vx_float32 mat4[3][3] = {
+            {0, 1, 0},
+            {1, 0, 0},
+            {0, 0, 0.5},
+        };
 
-//         CHECK_ALL_ITEMS(images, i, status, exit);
-//         vxCopyConvolutionCoefficients(conv[0], (vx_int16 *)mat1, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-//         vxCopyConvolutionCoefficients(conv[1], (vx_int16 *)mat2, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-//         vxSetAffineRotationMatrix(affine, 45.0, 0.5, (vx_float32)w/2, (vx_float32)h/2);
-//         vxCopyMatrix(perspective, mat4, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+        CHECK_ALL_ITEMS(images, i, status, exit);
+        vxCopyConvolutionCoefficients(conv[0], (vx_int16 *)mat1, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+        vxCopyConvolutionCoefficients(conv[1], (vx_int16 *)mat2, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+        vxSetAffineRotationMatrix(affine, 45.0, 0.5, (vx_float32)w/2, (vx_float32)h/2);
+        vxCopyMatrix(perspective, mat4, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
 
-//         status |= vxLoadKernels(context, "openvx-debug");
-//         status |= vxLoadKernels(context, "openvx-extras");
+        status |= vxLoadKernels(context, "openvx-debug");
+        status |= vxLoadKernels(context, "openvx-extras");
+        if (status == VX_SUCCESS)
+        {
+            vx_perf_t perf;
+            vx_graph graph = vxCreateGraph(context);
+            vxDirective((vx_reference)context, VX_DIRECTIVE_ENABLE_PERFORMANCE);
+            if (vxGetStatus((vx_reference)graph) == VX_SUCCESS)
+            {
+                vx_node nodes[] = {
+                    vxFReadImageNode(graph, "./tests/raw/lena_512x512.pgm", images[0]),
+                    vxMedian3x3Node(graph, images[0], images[1]),
+                    vxBox3x3Node(graph, images[0], images[2]),
+                    vxGaussian3x3Node(graph, images[0], images[3]),
+                    vxConvolveNode(graph, images[3], conv[0], images[4]),
+                    vxConvolveNode(graph, images[3], conv[1], images[5]),
+                    vxMagnitudeNode(graph, images[4], images[5], images[6]),
+                    vxLaplacian3x3Node(graph, images[0], images[7]),
+                    // vxGaussianPyramidNode(graph, images[0], pyramid),
+                    // vxWarpAffineNode(graph, images[0], affine, VX_INTERPOLATION_NEAREST_NEIGHBOR, images[8]),
+                    // vxWarpPerspectiveNode(graph, images[0], perspective, VX_INTERPOLATION_NEAREST_NEIGHBOR, images[9]),
+                    vxFWriteImageNode(graph, images[1], "olenamed_512x512_P400.bw"),
+                    vxFWriteImageNode(graph, images[2], "olenaavg_512x512_P400.bw"),
+                    vxFWriteImageNode(graph, images[3], "olenagau_512x512_P400.bw"),
+                    vxFWriteImageNode(graph, images[4], "olenacus1_512x512_P400_-16b.bw"),
+                    vxFWriteImageNode(graph, images[5], "olenacus2_512x512_P400_-16b.bw"),
+                    vxFWriteImageNode(graph, images[6], "olenamag_512x512_P400.bw"),
+                    vxFWriteImageNode(graph, images[7], "olenalapl_512x512_P400.bw"),
+                    vxFWriteImageNode(graph, images[8], "olenaaffine_512x512_P400.bw"),
+                    vxFWriteImageNode(graph, images[9], "olenaperspec_512x512_P400.bw"),
+                };
+                CHECK_ALL_ITEMS(nodes, i, status, exit);
+                if (status == VX_SUCCESS)
+                {
+                    status = vxVerifyGraph(graph);
+                    if (status == VX_SUCCESS)
+                    {
+                        // in testing this graph goes from ~55ms to ~(28-30)ms with SMP.
+                        //vxHint(context, (vx_reference)graph, VX_HINT_SERIALIZE);
 
-//         if (status == VX_SUCCESS)
-//         {
-//             vx_perf_t perf;
-//             vx_graph graph = vxCreateGraph(context);
-//             vxDirective((vx_reference)context, VX_DIRECTIVE_ENABLE_PERFORMANCE);
-//             if (vxGetStatus((vx_reference)graph) == VX_SUCCESS)
-//             {
-//                 vx_node nodes[] = {
-//                     vxFReadImageNode(graph, "lena_512x512.pgm", images[0]),
-//                     vxMedian3x3Node(graph, images[0], images[1]),
-//                     vxBox3x3Node(graph, images[0], images[2]),
-//                     vxGaussian3x3Node(graph, images[0], images[3]),
-//                     vxConvolveNode(graph, images[3], conv[0], images[4]),
-//                     vxConvolveNode(graph, images[3], conv[1], images[5]),
-//                     vxMagnitudeNode(graph, images[4], images[5], images[6]),
-//                     vxLaplacian3x3Node(graph, images[0], images[7]),
-//                     vxGaussianPyramidNode(graph, images[0], pyramid),
-//                     vxWarpAffineNode(graph, images[0], affine, VX_INTERPOLATION_NEAREST_NEIGHBOR, images[8]),
-//                     vxWarpPerspectiveNode(graph, images[0], perspective, VX_INTERPOLATION_NEAREST_NEIGHBOR, images[9]),
-//                     vxFWriteImageNode(graph, images[1], "olenamed_512x512_P400.bw"),
-//                     vxFWriteImageNode(graph, images[2], "olenaavg_512x512_P400.bw"),
-//                     vxFWriteImageNode(graph, images[3], "olenagau_512x512_P400.bw"),
-//                     vxFWriteImageNode(graph, images[4], "olenacus1_512x512_P400_-16b.bw"),
-//                     vxFWriteImageNode(graph, images[5], "olenacus2_512x512_P400_-16b.bw"),
-//                     vxFWriteImageNode(graph, images[6], "olenamag_512x512_P400.bw"),
-//                     vxFWriteImageNode(graph, images[7], "olenalapl_512x512_P400.bw"),
-//                     vxFWriteImageNode(graph, images[8], "olenaaffine_512x512_P400.bw"),
-//                     vxFWriteImageNode(graph, images[9], "olenaperspec_512x512_P400.bw"),
-//                 };
-//                 CHECK_ALL_ITEMS(nodes, i, status, exit);
-//                 if (status == VX_SUCCESS)
-//                 {
-//                     status = vxVerifyGraph(graph);
-//                     if (status == VX_SUCCESS)
-//                     {
-//                         // in testing this graph goes from ~55ms to ~(28-30)ms with SMP.
-//                         //vxHint(context, (vx_reference)graph, VX_HINT_SERIALIZE);
-
-//                         // not working quite yet.
-//                         //vxExportGraphToDot(graph, "lena.dot", vx_false_e);
-//                         status = vxProcessGraph(graph);
-//                     }
-//                     if (status == VX_SUCCESS)
-//                     {
-//                         vxuFWriteImage(context, vxGetPyramidLevel(pyramid, 0), "olenapyr_512x512_P400.bw");
-//                         vxuFWriteImage(context, vxGetPyramidLevel(pyramid, 1), "olenapyr_256x256_P400.bw");
-//                         vxuFWriteImage(context, vxGetPyramidLevel(pyramid, 2), "olenapyr_128x128_P400.bw");
-//                         vxuFWriteImage(context, vxGetPyramidLevel(pyramid, 3), "olenapyr_64x64_P400.bw");
-//                     }
-//                     else
-//                     {
-//                         printf("Graph failed (%d)\n", status);
-//                         for (i = 0; i < dimof(nodes); i++)
-//                         {
-//                             status = VX_SUCCESS;
-//                             vxQueryNode(nodes[i], VX_NODE_STATUS, &status, sizeof(status));
-//                             if (status != VX_SUCCESS)
-//                             {
-//                                 printf("nodes[%u] failed with %d\n", i, status);
-//                             }
-//                         }
-//                         status = VX_ERROR_NOT_SUFFICIENT;
-//                     }
-//                     for (i = 0; i < dimof(nodes); i++)
-//                     {
-//                         vxQueryNode(nodes[i], VX_NODE_PERFORMANCE, &perf, sizeof(perf));
-//                         printf("Nodes[%u] average exec: %0.3lfms\n", i, (vx_float32)perf.avg/10000000.0f);
-//                         vxReleaseNode(&nodes[i]);
-//                     }
-//                 }
-//                 vxQueryGraph(graph, VX_GRAPH_PERFORMANCE, &perf, sizeof(perf));
-//                 printf("Graph average exec: %0.3lfms\n", (vx_float32)perf.avg/10000000.0f);
-//                 vxReleaseGraph(&graph);
-//             }
-//             status |= vxUnloadKernels(context, "openvx-extras");
-//             status |= vxUnloadKernels(context, "openvx-debug");
-//         }
-//         vxReleasePyramid(&pyramid);
-//         vxReleaseMatrix(&affine);
-//         vxReleaseMatrix(&perspective);
-//         for (i = 0; i < dimof(images); i++)
-//         {
-//             vxReleaseImage(&images[i]);
-//         }
-// exit:
-//         //vx_print_log((vx_reference)context);
-//         vxReleaseContext(&context);
-//     }
-//     return status;
-// }
+                        // not working quite yet.
+                        //vxExportGraphToDot(graph, "lena.dot", vx_false_e);
+                        status = vxProcessGraph(graph);
+                    }
+                    if (status == VX_SUCCESS)
+                    {
+                        vxuFWriteImage(context, vxGetPyramidLevel(pyramid, 0), "olenapyr_512x512_P400.bw");
+                        vxuFWriteImage(context, vxGetPyramidLevel(pyramid, 1), "olenapyr_256x256_P400.bw");
+                        vxuFWriteImage(context, vxGetPyramidLevel(pyramid, 2), "olenapyr_128x128_P400.bw");
+                        vxuFWriteImage(context, vxGetPyramidLevel(pyramid, 3), "olenapyr_64x64_P400.bw");
+                    }
+                    else
+                    {
+                        printf("Graph failed (%d)\n", status);
+                        for (i = 0; i < dimof(nodes); i++)
+                        {
+                            status = VX_SUCCESS;
+                            vxQueryNode(nodes[i], VX_NODE_STATUS, &status, sizeof(status));
+                            if (status != VX_SUCCESS)
+                            {
+                                printf("nodes[%u] failed with %d\n", i, status);
+                            }
+                        }
+                        status = VX_ERROR_NOT_SUFFICIENT;
+                    }
+                    for (i = 0; i < dimof(nodes); i++)
+                    {
+                        vxQueryNode(nodes[i], VX_NODE_PERFORMANCE, &perf, sizeof(perf));
+                        printf("Nodes[%u] average exec: %0.3lfms\n", i, (vx_float32)perf.avg/10000000.0f);
+                        vxReleaseNode(&nodes[i]);
+                    }
+                }
+                vxQueryGraph(graph, VX_GRAPH_PERFORMANCE, &perf, sizeof(perf));
+                printf("Graph average exec: %0.3lfms\n", (vx_float32)perf.avg/10000000.0f);
+                vxReleaseGraph(&graph);
+            }
+            status |= vxUnloadKernels(context, "openvx-extras");
+            status |= vxUnloadKernels(context, "openvx-debug");
+        }
+        vxReleasePyramid(&pyramid);
+        vxReleaseMatrix(&affine);
+        vxReleaseMatrix(&perspective);
+        for (i = 0; i < dimof(images); i++)
+        {
+            vxReleaseImage(&images[i]);
+        }
+exit:
+        //vx_print_log((vx_reference)context);
+        vxReleaseContext(&context);
+    }
+    return status;
+}
 
 
 vx_status vx_test_graph_channels_rgb(int argc, char *argv[])
@@ -2213,120 +2213,120 @@ exit:
     return status;
 }
 
-// vx_status vx_test_graph_tracker(int argc, char *argv[])
-// {
-//     vx_status status = VX_FAILURE;
-//     vx_context context = vxCreateContext();
-//     (void)argc;
-//     (void)argv;
+vx_status vx_test_graph_tracker(int argc, char *argv[])
+{
+    vx_status status = VX_FAILURE;
+    vx_context context = vxCreateContext();
+    (void)argc;
+    (void)argv;
 
-//     if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
-//     {
-//         vx_uint32 n;
-//         vx_uint32 width = 3072;
-//         vx_size winSize = 32;
-//         vx_uint32 height = 2048;
-//         vx_float32  sens_thresh = 20000000000.0f;
-//         vx_enum criteria = VX_TERM_CRITERIA_BOTH;// lk params
-//         vx_float32 epsilon = 0.01f;
-//         vx_uint32 num_iterations = 10;
-//         vx_bool use_initial_estimate = vx_true_e;
-//         vx_float32 min_distance = 4.9f;// harris params
-//         vx_float32 sensitivity = 0.041f;
-//         vx_int32 gradient_size = 3;
-//         vx_int32 block_size = 3;
-//         vx_uint32 num_corners = 0;
-//         vx_array old_features = vxCreateArray(context, VX_TYPE_KEYPOINT, 2000);
-//         vx_array new_features = vxCreateArray(context, VX_TYPE_KEYPOINT, 2000);
-//         vx_scalar epsilon_s = vxCreateScalar(context,VX_TYPE_FLOAT32,&epsilon);
-//         vx_scalar num_iterations_s =  vxCreateScalar(context,VX_TYPE_UINT32,&num_iterations);
-//         vx_scalar use_initial_estimate_s =  vxCreateScalar(context,VX_TYPE_BOOL,&use_initial_estimate);
-//         vx_scalar min_distance_s =  vxCreateScalar(context,VX_TYPE_FLOAT32,&min_distance);
-//         vx_scalar sensitivity_s =  vxCreateScalar(context,VX_TYPE_FLOAT32,&sensitivity);
-//         vx_scalar sens_thresh_s = vxCreateScalar(context,VX_TYPE_FLOAT32,&sens_thresh);
-//         vx_scalar num_corners_s = vxCreateScalar(context,VX_TYPE_SIZE,&num_corners);;
+    if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
+    {
+        vx_uint32 n;
+        vx_uint32 width = 3072;
+        vx_size winSize = 32;
+        vx_uint32 height = 2048;
+        vx_float32  sens_thresh = 20000000000.0f;
+        vx_enum criteria = VX_TERM_CRITERIA_BOTH;// lk params
+        vx_float32 epsilon = 0.01f;
+        vx_uint32 num_iterations = 10;
+        vx_bool use_initial_estimate = vx_true_e;
+        vx_float32 min_distance = 4.9f;// harris params
+        vx_float32 sensitivity = 0.041f;
+        vx_int32 gradient_size = 3;
+        vx_int32 block_size = 3;
+        vx_uint32 num_corners = 0;
+        vx_array old_features = vxCreateArray(context, VX_TYPE_KEYPOINT, 2000);
+        vx_array new_features = vxCreateArray(context, VX_TYPE_KEYPOINT, 2000);
+        vx_scalar epsilon_s = vxCreateScalar(context,VX_TYPE_FLOAT32,&epsilon);
+        vx_scalar num_iterations_s =  vxCreateScalar(context,VX_TYPE_UINT32,&num_iterations);
+        vx_scalar use_initial_estimate_s =  vxCreateScalar(context,VX_TYPE_BOOL,&use_initial_estimate);
+        vx_scalar min_distance_s =  vxCreateScalar(context,VX_TYPE_FLOAT32,&min_distance);
+        vx_scalar sensitivity_s =  vxCreateScalar(context,VX_TYPE_FLOAT32,&sensitivity);
+        vx_scalar sens_thresh_s = vxCreateScalar(context,VX_TYPE_FLOAT32,&sens_thresh);
+        vx_scalar num_corners_s = vxCreateScalar(context,VX_TYPE_SIZE,&num_corners);;
 
-//         vx_scalar scalars[] = {
-//                 epsilon_s,
-//                 num_iterations_s,
-//                 use_initial_estimate_s,
-//                 min_distance_s,
-//                 sensitivity_s,
-//                 sens_thresh_s,
-//                 num_corners_s
-//         };
+        vx_scalar scalars[] = {
+                epsilon_s,
+                num_iterations_s,
+                use_initial_estimate_s,
+                min_distance_s,
+                sensitivity_s,
+                sens_thresh_s,
+                num_corners_s
+        };
 
-//         vx_array arrays[] = {
-//                 old_features,
-//                 new_features
-//         };
+        vx_array arrays[] = {
+                old_features,
+                new_features
+        };
 
-//         vx_image images[] = {
-//             vxCreateImage(context, width, height, VX_DF_IMAGE_UYVY),     // index 0: Input 1
-//             vxCreateImage(context, width, height, VX_DF_IMAGE_UYVY),     // index 1: Input 2
-//             vxCreateImage(context, width, height, VX_DF_IMAGE_U8),       // index 2: Get Y channel
-//             vxCreateImage(context, width, height, VX_DF_IMAGE_U8),       // index 3: Get Y channel
-//         };
-//         vx_pyramid pyramid_new = vxCreatePyramid(context,4,0.5f, width, height, VX_DF_IMAGE_U8);
-//         vx_pyramid pyramid_old = vxCreatePyramid(context,4,0.5f, width, height, VX_DF_IMAGE_U8);
+        vx_image images[] = {
+            vxCreateImage(context, width, height, VX_DF_IMAGE_UYVY),     // index 0: Input 1
+            vxCreateImage(context, width, height, VX_DF_IMAGE_UYVY),     // index 1: Input 2
+            vxCreateImage(context, width, height, VX_DF_IMAGE_U8),       // index 2: Get Y channel
+            vxCreateImage(context, width, height, VX_DF_IMAGE_U8),       // index 3: Get Y channel
+        };
+        vx_pyramid pyramid_new = vxCreatePyramid(context,4,0.5f, width, height, VX_DF_IMAGE_U8);
+        vx_pyramid pyramid_old = vxCreatePyramid(context,4,0.5f, width, height, VX_DF_IMAGE_U8);
 
-//         vx_pyramid pyramids[] = {
-//                 pyramid_new,
-//                 pyramid_old
-//         };
+        vx_pyramid pyramids[] = {
+                pyramid_new,
+                pyramid_old
+        };
 
-//         vx_graph graph = vxCreateGraph(context);
-//         if (vxGetStatus((vx_reference)graph) == VX_SUCCESS)
-//         {
-//             vx_node nodes[] = {
-//                 vxChannelExtractNode(graph, images[0], VX_CHANNEL_Y, images[2]),
-//                 vxGaussianPyramidNode(graph, images[2], pyramid_new),
-//                 vxChannelExtractNode(graph, images[1], VX_CHANNEL_Y, images[3]),
-//                 vxGaussianPyramidNode(graph, images[3], pyramid_old),
-//                 vxHarrisCornersNode(graph, images[3], sens_thresh_s, min_distance_s,sensitivity_s,gradient_size,block_size, old_features,num_corners_s),
-//                 vxOpticalFlowPyrLKNode(graph, pyramid_old,  pyramid_new, old_features,old_features,new_features,criteria,epsilon_s,num_iterations_s,use_initial_estimate_s,winSize )
-//              };
+        vx_graph graph = vxCreateGraph(context);
+        if (vxGetStatus((vx_reference)graph) == VX_SUCCESS)
+        {
+            vx_node nodes[] = {
+                vxChannelExtractNode(graph, images[0], VX_CHANNEL_Y, images[2]),
+                vxGaussianPyramidNode(graph, images[2], pyramid_new),
+                vxChannelExtractNode(graph, images[1], VX_CHANNEL_Y, images[3]),
+                vxGaussianPyramidNode(graph, images[3], pyramid_old),
+                vxHarrisCornersNode(graph, images[3], sens_thresh_s, min_distance_s,sensitivity_s,gradient_size,block_size, old_features,num_corners_s),
+                // vxOpticalFlowPyrLKNode(graph, pyramid_old,  pyramid_new, old_features,old_features,new_features,criteria,epsilon_s,num_iterations_s,use_initial_estimate_s,winSize )
+             };
 
-//             CHECK_ALL_ITEMS(nodes, n, status, exit);
-//             status = vxVerifyGraph(graph);
-//             if (status == VX_SUCCESS)
-//             {
+            CHECK_ALL_ITEMS(nodes, n, status, exit);
+            status = vxVerifyGraph(graph);
+            if (status == VX_SUCCESS)
+            {
 
 
-//                 status |= vxuFReadImage(context,"superresFirst_3072x2048_UYVY.yuv", images[0]);
-//                 status |= vxuFReadImage(context,"superresSecond_3072x2048_UYVY.yuv", images[1]);
+                // status |= vxuFReadImage(context,"./tests/raw/superresFirst_3072x2048_UYVY.yuv", images[0]);
+                // status |= vxuFReadImage(context,"./tests/raw/superresSecond_3072x2048_UYVY.yuv", images[1]);
 
-//                 if (status == VX_SUCCESS)
-//                     status = vxProcessGraph(graph);
+                if (status == VX_SUCCESS)
+                    status = vxProcessGraph(graph);
 
-//             }
-// exit:
-//             for (n = 0; n < dimof(nodes); n++)
-//             {
-//                 vxReleaseNode(&nodes[n]);
-//             }
-//             vxReleaseGraph(&graph);
-//          }
-//         for (n = 0; n < dimof(images); n++)
-//         {
-//             vxReleaseImage(&images[n]);
-//         }
-//         for (n = 0; n < dimof(pyramids); n++)
-//         {
-//             vxReleasePyramid(&pyramids[n]);
-//         }
-//         for (n = 0; n < dimof(arrays); n++)
-//         {
-//             vxReleaseArray(&arrays[n]);
-//         }
-//         for (n = 0; n < dimof(scalars); n++)
-//         {
-//             vxReleaseScalar(&scalars[n]);
-//         }
-//         vxReleaseContext(&context);
-//     }
-//     return status;
-// }
+            }
+exit:
+            for (n = 0; n < dimof(nodes); n++)
+            {
+                vxReleaseNode(&nodes[n]);
+            }
+            vxReleaseGraph(&graph);
+         }
+        for (n = 0; n < dimof(images); n++)
+        {
+            vxReleaseImage(&images[n]);
+        }
+        for (n = 0; n < dimof(pyramids); n++)
+        {
+            vxReleasePyramid(&pyramids[n]);
+        }
+        for (n = 0; n < dimof(arrays); n++)
+        {
+            vxReleaseArray(&arrays[n]);
+        }
+        for (n = 0; n < dimof(scalars); n++)
+        {
+            vxReleaseScalar(&scalars[n]);
+        }
+        vxReleaseContext(&context);
+    }
+    return status;
+}
 
 #if defined(EXPERIMENTAL_USE_DOT)
 vx_status vx_test_graph_dot_export(int argc, char *argv[])
@@ -2345,7 +2345,7 @@ vx_status vx_test_graph_dot_export(int argc, char *argv[])
                 vxCreateVirtualImage(graph, 0, 0, VX_DF_IMAGE_VIRT),
             };
             vx_node nodes[] = {
-                vxFReadImageNode(graph, "lena_512x512.pgm", images[0]),
+                vxFReadImageNode(graph, "./tests/raw/lena_512x512.pgm", images[0]),
                 vxGaussian3x3Node(graph, images[0], images[1]),
                 vxFWriteImageNode(graph, images[1], "oblena_512x512.pgm"),
             };
@@ -2974,13 +2974,13 @@ vx_unittest unittests[] = {
     // graphs
     {VX_FAILURE, "Graph: ColorBars YUV",        &vx_test_graph_channels_yuv},
     {VX_FAILURE, "Graph: ColorBars RGB",        &vx_test_graph_channels_rgb},
-    // {VX_FAILURE, "Graph: bikegray",             &vx_test_graph_bikegray},
-    // {VX_FAILURE, "Graph: Lena",                 &vx_test_graph_lena},
+    {VX_FAILURE, "Graph: bikegray",             &vx_test_graph_bikegray},
+    {VX_FAILURE, "Graph: Lena",                 &vx_test_graph_lena},
     {VX_FAILURE, "Graph: Accumulates",          &vx_test_graph_accum},
     {VX_FAILURE, "Graph: Bitwise",              &vx_test_graph_bitwise},
     {VX_FAILURE, "Graph: Arithmetic",           &vx_test_graph_arit},
     {VX_FAILURE, "Graph: Corners",              &vx_test_graph_corners},
-    // {VX_FAILURE, "Graph: Tracker",              &vx_test_graph_tracker},
+    {VX_FAILURE, "Graph: Tracker",              &vx_test_graph_tracker},
     // exports
 #if defined(EXPERIMENTAL_USE_DOT)
     {VX_FAILURE, "Export: DOT",                 &vx_test_graph_dot_export},

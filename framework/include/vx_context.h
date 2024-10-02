@@ -50,7 +50,7 @@ public:
      * @brief Destroy the Context object
      *
      */
-    ~Context() = default;
+    ~Context();
 
     static vx_bool isValidContext(vx_context context);
 

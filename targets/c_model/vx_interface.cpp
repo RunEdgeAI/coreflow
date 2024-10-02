@@ -82,7 +82,6 @@ static vx_kernel_description_t *target_kernels[] =
     &harris_kernel,
     &hogcells_kernel,
     &hogfeatures_kernel,
-#ifdef ENABLED
     &scale_image_kernel,
     &equalize_hist_kernel,
     &scalar_operation_kernel,
@@ -96,13 +95,12 @@ static vx_kernel_description_t *target_kernels[] =
     &canny_kernel,
     &warp_affine_kernel,
     &warp_perspective_kernel,
-    &optpyrlk_kernel,
     &remap_kernel,
     &halfscale_gaussian_kernel,
     &laplacian_pyramid_kernel,
     &laplacian_reconstruct_kernel,
     &copy_kernel,
-#endif /* ENABLED */
+    &optpyrlk_kernel,
 #ifdef OPENVX_USE_NN
     &nn_convolution_kernel,
     &nn_deconvolution_kernel,

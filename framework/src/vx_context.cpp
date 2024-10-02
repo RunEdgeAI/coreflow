@@ -56,6 +56,24 @@ Context::Context() : Reference(nullptr, VX_TYPE_CONTEXT, nullptr)
 {
 }
 
+Context::~Context()
+{
+
+    vx_uint32 r;
+    for (r = 0; r < VX_INT_MAX_REF; r++)
+    {
+        vx_reference ref = reftable[r].get();
+        if (ref)
+        {
+            printf("ref removed: ");
+            Reference::printReference(ref); // For debugging
+            reftable[r].reset();
+            reftable[r] = nullptr;
+            num_references--;
+        }
+    }
+}
+
 vx_bool Context::isValidContext(vx_context context)
 {
     vx_bool ret = vx_false_e;
@@ -569,7 +587,7 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContextFromPlatform(struct _vx_platf
 VX_API_ENTRY vx_context VX_API_CALL vxCreateContext(void)
 #endif
 {
-    std::shared_ptr<Context> context = nullptr;
+    vx_context context;
 
     if (single_context == nullptr)
     {
@@ -583,7 +601,8 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContext(void)
         /* read the variables for debugging flags */
         vx_set_debug_zone_from_env();
 
-        context = std::make_shared<Context>();
+        single_context = std::make_shared<Context>();
+        context = single_context.get();
 
         if (context)
         {
@@ -607,7 +626,7 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContext(void)
                                                   VX_INT_MAX_REF, /* very deep queues! */
                                                   sizeof(vx_work_t),
                                                   vxWorkerNode,
-                                                  context.get());
+                                                  context);
             // ownCreateConstErrors(context);
 
             /* initialize modules */
@@ -686,7 +705,6 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContext(void)
             ownInitQueue(&context->proc.output);
             context->proc.running = vx_true_e;
             context->proc.thread = ownCreateThread(vxWorkerGraph, &context->proc);
-            single_context = context;
             context->imm_target_enum = VX_TARGET_ANY;
             memset(context->imm_target_string, 0, sizeof(context->imm_target_string));
 
@@ -696,12 +714,12 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContext(void)
     }
     else
     {
-        context = single_context;
+        context = single_context.get();
         context->incrementReference(VX_EXTERNAL);
     }
     ownSemPost(&context_lock);
 
-    return (vx_context)context.get();
+    return context;
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
@@ -839,6 +857,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
             ownDestroySem(&global_lock);
             ownSemPost(&context_lock);
             ownDestroySem(&context_lock);
+            single_context.reset();
             single_context = nullptr;
 
             return status;

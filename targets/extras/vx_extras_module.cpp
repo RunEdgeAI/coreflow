@@ -32,7 +32,7 @@
  */
 static vx_kernel_description_t* kernels[] =
 {
-    // &edge_trace_kernel,
+    &edge_trace_kernel,
     &euclidean_nonmaxsuppression_harris_kernel,
     &harris_score_kernel,
     &laplacian3x3_kernel,
