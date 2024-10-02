@@ -44,7 +44,8 @@ cc_binary(
         ":imported_xyz",
     ],
     linkopts = [
-        "-Wl,-rpath,@executable_path",  # This tells the linker to search for shared libraries relative to the binary's location
+        # This tells the linker to search for shared libraries relative to the binary's location
+        "-Wl,-rpath,@executable_path",
     ],
     data = [
         "//targets/c_model:imported_openvx_c_model",

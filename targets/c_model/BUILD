@@ -4,16 +4,6 @@ cc_library(
     srcs = glob([
         "*.cpp",
         "*.h",
-    ],
-    exclude = [
-        "vx_canny.cpp",
-        "vx_controlflow.cpp",
-        "vx_copy.cpp",
-        "vx_histogram.cpp",
-        "vx_o*.cpp",
-        "vx_py*.cpp",
-        "vx_remap.cpp",
-        "vx_th*.cpp",
     ]),
     includes = [
         ".",
@@ -24,6 +14,7 @@ cc_library(
     deps = [
         "//:corevx",
         "//kernels/c_model:c_model_kernels",
+        "//targets/debug:debug",
         "//targets/extras:extras",
     ],
     visibility = ["//visibility:public"]
