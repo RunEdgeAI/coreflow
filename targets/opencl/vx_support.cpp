@@ -1,5 +1,4 @@
-/* 
-
+/*
  * Copyright (c) 2011-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,7 +44,7 @@ static size_t flines(FILE *fp)
     }
     return numLines;
 }
-        
+
 cl_int clBuildError(cl_int build_status, const char *label, const char *function, const char *file, int line)
 {
     switch (build_status)

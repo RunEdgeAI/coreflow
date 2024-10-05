@@ -15,7 +15,7 @@
 
 /*!
  * \file
- * \brief The Absolute Difference Kernel.
+ * \brief The Gradient Phase Kernel
  * \author Erik Rainey <erik.rainey@gmail.com>
  */
 
@@ -28,7 +28,7 @@
 static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_reference parameters[], vx_uint32 num)
 {
     vx_status status = VX_FAILURE;
-    vx_context context = node->base.context;
+    vx_context context = node->context;
 
     vx_cl_kernel_description_t *vxclk = vxclFindKernel(node->kernel->enumeration);
     vx_uint32 pidx, pln, didx, plidx, argidx;
@@ -92,14 +92,13 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         }
     }
 
-
     err = clEnqueueNDRangeKernel(context->queues[plidx][didx],
         kernel,
         2,
         off_dim,
         work_dim,
         NULL,
-        we, writeEvents, &node->base.event);
+        we, writeEvents, &node->event);
 
     clFinish(context->queues[plidx][didx]);
 
@@ -146,17 +145,27 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
     return status;
 }
 
-static vx_status VX_CALLBACK vxAbsDiffKernel(vx_node node, const vx_reference parameters[], vx_uint32 num)
+static
+vx_param_description_t phase_kernel_params[] =
+{
+    { VX_INPUT,  VX_TYPE_IMAGE, VX_PARAMETER_STATE_REQUIRED },
+    { VX_INPUT,  VX_TYPE_IMAGE, VX_PARAMETER_STATE_REQUIRED },
+    { VX_OUTPUT, VX_TYPE_IMAGE, VX_PARAMETER_STATE_REQUIRED },
+};
+
+static
+vx_status VX_CALLBACK vxPhaseKernel(vx_node node, const vx_reference parameters[], vx_uint32 num)
 {
     vx_status status = vxclCallOpenCLKernel(node, parameters, num);
 
     return status;
-}
+} /* vxPhaseKernel() */
 
-static vx_status VX_CALLBACK vxAbsDiffInputValidator(vx_node node, vx_uint32 index)
+static vx_status VX_CALLBACK vxPhaseInputValidator(vx_node node, vx_uint32 index)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
-    if (index == 0 )
+
+    if (index == 0 || index == 1)
     {
         vx_image input = 0;
         vx_parameter param = vxGetParameterByIndex(node, index);
@@ -166,122 +175,101 @@ static vx_status VX_CALLBACK vxAbsDiffInputValidator(vx_node node, vx_uint32 ind
         {
             vx_df_image format = 0;
             vxQueryImage(input, VX_IMAGE_FORMAT, &format, sizeof(format));
-            if (format == VX_DF_IMAGE_U8
-                || format == VX_DF_IMAGE_S16
-#if defined(OPENVX_USE_S16)
-                || format == VX_DF_IMAGE_U16
-#endif
-                )
-                status = VX_SUCCESS;
-            vxReleaseImage(&input);
-        }
-        vxReleaseParameter(&param);
-    }
-    else if (index == 1)
-    {
-        vx_image images[2];
-        vx_parameter param[2] = {
-            vxGetParameterByIndex(node, 0),
-            vxGetParameterByIndex(node, 1),
-        };
-        vxQueryParameter(param[0], VX_PARAMETER_REF, &images[0], sizeof(images[0]));
-        vxQueryParameter(param[1], VX_PARAMETER_REF, &images[1], sizeof(images[1]));
-        if (images[0] && images[1])
-        {
-            vx_uint32 width[2], height[2];
-            vx_df_image format[2];
-
-            vxQueryImage(images[0], VX_IMAGE_WIDTH, &width[0], sizeof(width[0]));
-            vxQueryImage(images[1], VX_IMAGE_WIDTH, &width[1], sizeof(width[1]));
-            vxQueryImage(images[0], VX_IMAGE_HEIGHT, &height[0], sizeof(height[0]));
-            vxQueryImage(images[1], VX_IMAGE_HEIGHT, &height[1], sizeof(height[1]));
-            vxQueryImage(images[0], VX_IMAGE_FORMAT, &format[0], sizeof(format[0]));
-            vxQueryImage(images[1], VX_IMAGE_FORMAT, &format[1], sizeof(format[1]));
-            if (width[0] == width[1] && height[0] == height[1] && format[0] == format[1])
+            if (format == VX_DF_IMAGE_S16 || format == VX_DF_IMAGE_F32)
             {
-                status = VX_SUCCESS;
-            }
-            vxReleaseImage(&images[0]);
-            vxReleaseImage(&images[1]);
-        }
-        vxReleaseParameter(&param[0]);
-        vxReleaseParameter(&param[1]);
-    }
-    return status;
-}
-
-static vx_status VX_CALLBACK vxAbsDiffOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
-{
-    vx_status status = VX_ERROR_INVALID_PARAMETERS;
-    if (index == 2)
-    {
-        vx_parameter param[2] = {
-            vxGetParameterByIndex(node, 0),
-            vxGetParameterByIndex(node, 1),
-        };
-        if ((vxGetStatus((vx_reference)param[0]) == VX_SUCCESS) &&
-            (vxGetStatus((vx_reference)param[1]) == VX_SUCCESS))
-        {
-            vx_image images[2];
-            vxQueryParameter(param[0], VX_PARAMETER_REF, &images[0], sizeof(images[0]));
-            vxQueryParameter(param[1], VX_PARAMETER_REF, &images[1], sizeof(images[1]));
-            if (images[0] && images[1])
-            {
-                vx_uint32 width[2], height[2];
-                vx_df_image format = 0;
-                vxQueryImage(images[0], VX_IMAGE_FORMAT, &format, sizeof(format));
-                vxQueryImage(images[0], VX_IMAGE_WIDTH, &width[0], sizeof(width[0]));
-                vxQueryImage(images[1], VX_IMAGE_WIDTH, &width[1], sizeof(width[1]));
-                vxQueryImage(images[0], VX_IMAGE_HEIGHT, &height[0], sizeof(height[0]));
-                vxQueryImage(images[1], VX_IMAGE_HEIGHT, &height[1], sizeof(height[1]));
-                if (width[0] == width[1] && height[0] == height[1] &&
-                    (format == VX_DF_IMAGE_U8
-                     || format == VX_DF_IMAGE_S16
-#if defined(OPENVX_USE_S16)
-                     || format == VX_DF_IMAGE_U16
-#endif
-                     ))
+                if (index == 0)
                 {
-                    ptr->type = VX_TYPE_IMAGE;
-                    ptr->dim.image.format = format;
-                    ptr->dim.image.width = width[0];
-                    ptr->dim.image.height = height[1];
                     status = VX_SUCCESS;
                 }
-                vxReleaseImage(&images[0]);
-                vxReleaseImage(&images[1]);
+                else
+                {
+                    vx_parameter param0 = vxGetParameterByIndex(node, index);
+                    vx_image input0 = 0;
+
+                    vxQueryParameter(param0, VX_PARAMETER_REF, &input0, sizeof(input0));
+                    if (input0)
+                    {
+                        vx_uint32 width0 = 0, height0 = 0, width1 = 0, height1 = 0;
+                        vxQueryImage(input0, VX_IMAGE_WIDTH, &width0, sizeof(width0));
+                        vxQueryImage(input0, VX_IMAGE_HEIGHT, &height0, sizeof(height0));
+                        vxQueryImage(input, VX_IMAGE_WIDTH, &width1, sizeof(width1));
+                        vxQueryImage(input, VX_IMAGE_HEIGHT, &height1, sizeof(height1));
+
+                        if (width0 == width1 && height0 == height1)
+                            status = VX_SUCCESS;
+
+                        vxReleaseImage(&input0);
+                    }
+
+                    vxReleaseParameter(&param0);
+                }
             }
-            vxReleaseParameter(&param[0]);
-            vxReleaseParameter(&param[1]);
+
+            vxReleaseImage(&input);
         }
+
+        vxReleaseParameter(&param);
     }
+
     return status;
 }
 
-static vx_param_description_t absdiff_kernel_params[] = {
-    {VX_INPUT, VX_TYPE_IMAGE, VX_PARAMETER_STATE_REQUIRED},
-    {VX_INPUT, VX_TYPE_IMAGE, VX_PARAMETER_STATE_REQUIRED},
-    {VX_OUTPUT, VX_TYPE_IMAGE, VX_PARAMETER_STATE_REQUIRED},
-};
+static vx_status VX_CALLBACK vxPhaseOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
+{
+    vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-vx_cl_kernel_description_t absdiff_kernel = {
+    if (index == 2)
     {
-    VX_KERNEL_ABSDIFF,
-    "org.khronos.openvx.absdiff",
-    vxAbsDiffKernel,
-    absdiff_kernel_params, dimof(absdiff_kernel_params),
+        vx_image input = 0;
+        vx_parameter param = vxGetParameterByIndex(node, 0);
+
+        vxQueryParameter(param, VX_PARAMETER_REF, &input, sizeof(input));
+        if (input)
+        {
+            vx_uint32   width = 0;
+            vx_uint32   height = 0;
+            vx_df_image format = 0;
+
+            vxQueryImage(input, VX_IMAGE_WIDTH, &width, sizeof(width));
+            vxQueryImage(input, VX_IMAGE_HEIGHT, &height, sizeof(height));
+            vxQueryImage(input, VX_IMAGE_FORMAT, &format, sizeof(format));
+
+            ptr->type = VX_TYPE_IMAGE;
+            ptr->dim.image.format = VX_DF_IMAGE_U8;
+            ptr->dim.image.width  = width;
+            ptr->dim.image.height = height;
+
+            status = VX_SUCCESS;
+
+            vxReleaseImage(&input);
+        }
+
+        vxReleaseParameter(&param);
+    }
+
+    return status;
+}
+
+vx_cl_kernel_description_t phase_kernel =
+{
+    {
+    VX_KERNEL_PHASE,
+    "org.khronos.openvx.phase",
+    vxPhaseKernel,
+    phase_kernel_params, dimof(phase_kernel_params),
     NULL,
-    vxAbsDiffInputValidator,
-    vxAbsDiffOutputValidator,
+    vxPhaseInputValidator,
+    vxPhaseOutputValidator,
     NULL,
     NULL,
     },
-    VX_CL_SOURCE_DIR""FILE_JOINER"vx_absdiff.cl",
-    "vx_absdiff",
+    /* VX_CL_SOURCE_DIR"" FILE_JOINER */"vx_phase.cl",
+    "vx_phase",
     INIT_PROGRAMS,
     INIT_KERNELS,
     INIT_NUMKERNELS,
     INIT_RETURNS,
     NULL,
 };
+
 

@@ -123,7 +123,7 @@ static vx_param_description_t binary_bitwise_kernel_params[] = {
 static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_reference parameters[], vx_uint32 num)
 {
     vx_status status = VX_FAILURE;
-    vx_context context = node->base.context;
+    vx_context context = node->context;
 
     vx_cl_kernel_description_t *vxclk = vxclFindKernel(node->kernel->enumeration);
     vx_uint32 pidx, pln, didx, plidx, argidx;
@@ -194,7 +194,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                                  off_dim,
                                  work_dim,
                                  NULL,
-                                 we, writeEvents, &node->base.event);
+                                 we, writeEvents, &node->event);
 
     clFinish(context->queues[plidx][didx]);
 
@@ -283,10 +283,10 @@ static vx_status vxBinaryU1Op(vx_image in1, vx_image in2, vx_image output, bitwi
         {
             vx_uint32 xShftd = x + rect.start_x % 8;     // U1 valid region start bit offset
             vx_uint8 *src[2] = {
-                vxFormatImagePatchAddress2d(src_base[0], xShftd, y, &src_addr[0]),
-                vxFormatImagePatchAddress2d(src_base[1], xShftd, y, &src_addr[1]),
+                (vx_uint8*)vxFormatImagePatchAddress2d(src_base[0], xShftd, y, &src_addr[0]),
+                (vx_uint8*)vxFormatImagePatchAddress2d(src_base[1], xShftd, y, &src_addr[1]),
             };
-            vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, xShftd, y, &dst_addr);
+            vx_uint8 *dst = (vx_uint8*)vxFormatImagePatchAddress2d(dst_base, xShftd, y, &dst_addr);
 
             vx_uint8 mask  = 1 << (xShftd % 8);
             vx_uint8 pixel = op(*src[0], *src[1]) & mask;
@@ -328,7 +328,7 @@ vx_cl_kernel_description_t and_kernel = {
         NULL,
         NULL,
     },
-    VX_CL_SOURCE_DIR""FILE_JOINER"vx_and.cl",
+    /* VX_CL_SOURCE_DIR"" FILE_JOINER */"vx_and.cl",
     "vx_and",
     INIT_PROGRAMS,
     INIT_KERNELS,
@@ -365,7 +365,7 @@ vx_cl_kernel_description_t orr_kernel = {
         NULL,
         NULL,
     },
-    VX_CL_SOURCE_DIR""FILE_JOINER"vx_orr.cl",
+    /* VX_CL_SOURCE_DIR"" FILE_JOINER */"vx_orr.cl",
     "vx_orr",
     INIT_PROGRAMS,
     INIT_KERNELS,
@@ -402,7 +402,7 @@ vx_cl_kernel_description_t xor_kernel = {
         NULL,
         NULL,
     },
-    VX_CL_SOURCE_DIR""FILE_JOINER"vx_xor.cl",
+    /* VX_CL_SOURCE_DIR"" FILE_JOINER */"vx_xor.cl",
     "vx_xor",
     INIT_PROGRAMS,
     INIT_KERNELS,
@@ -533,7 +533,7 @@ vx_cl_kernel_description_t not_kernel = {
         NULL,
         NULL,
     },
-    VX_CL_SOURCE_DIR""FILE_JOINER"vx_not.cl",
+    /* VX_CL_SOURCE_DIR"" FILE_JOINER */"vx_not.cl",
     "vx_not",
     INIT_PROGRAMS,
     INIT_KERNELS,

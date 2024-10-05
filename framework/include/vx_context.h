@@ -154,6 +154,19 @@ public:
     } user_structs[VX_INT_MAX_USER_STRUCTS];
     /*! \brief The worker pool used to parallelize the graph*/
     vx_threadpool_t*    workers;
+#if defined(EXPERIMENTAL_USE_OPENCL)
+#define CL_MAX_PLATFORMS (1)
+#define CL_MAX_DEVICES   (2)
+#define CL_MAX_KERNELS   (50)
+    /*! \brief The array of platform ids */
+    cl_platform_id      platforms[CL_MAX_PLATFORMS];
+    /*! \brief The number of platform ids */
+    cl_uint             num_platforms;
+    cl_device_id        devices[CL_MAX_PLATFORMS][CL_MAX_DEVICES];
+    cl_uint             num_devices[CL_MAX_PLATFORMS];
+    cl_context          global[CL_MAX_PLATFORMS];
+    cl_command_queue    queues[CL_MAX_PLATFORMS][CL_MAX_DEVICES];
+#endif
     /*! \brief The immediate mode border */
     vx_border_t         imm_border;
     /*! \brief The unsupported border mode policy for immediate mode functions */
@@ -166,6 +179,10 @@ public:
     vx_enum             imm_target_enum;
     /*! \brief The immediate mode target string */
     vx_char             imm_target_string[VX_MAX_TARGET_NAME];
+#ifdef OPENVX_USE_OPENCL_INTEROP
+    cl_context opencl_context;
+    cl_command_queue opencl_command_queue;
+#endif
 };
 
 #endif /* VX_CONTEXT_H */

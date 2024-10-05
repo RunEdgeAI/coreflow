@@ -28,7 +28,7 @@
 static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_reference parameters[], vx_uint32 num)
 {
     vx_status status = VX_FAILURE;
-    vx_context context = node->base.context;
+    vx_context context = node->context;
 
     vx_cl_kernel_description_t *vxclk = vxclFindKernel(node->kernel->enumeration);
     vx_uint32 pidx, pln, didx, plidx, argidx;
@@ -146,7 +146,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         off_dim,
         work_dim,
         NULL,
-        we, writeEvents, &node->base.event);
+        we, writeEvents, &node->event);
 
     clFinish(context->queues[plidx][didx]);
 
@@ -307,7 +307,7 @@ vx_cl_kernel_description_t sobel3x3_clkernel = {
     NULL,
     NULL,
     },
-    VX_CL_SOURCE_DIR""FILE_JOINER"vx_sobel3x3.cl",
+    /* VX_CL_SOURCE_DIR"" FILE_JOINER */"vx_sobel3x3.cl",
     "vx_sobel3x3",
     INIT_PROGRAMS,
     INIT_KERNELS,

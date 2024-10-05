@@ -1,5 +1,4 @@
-/* 
-
+/*
  * Copyright (c) 2011-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <vx_interface.h>
+#include "vx_interface.h"
 #include "vx_internal.h"
 
 #if defined(__ANDROID__) || defined(__linux__) || defined(__QNX__) || defined(__CYGWIN__) || defined(__APPLE__)
