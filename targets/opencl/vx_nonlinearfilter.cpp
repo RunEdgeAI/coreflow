@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2016-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,7 +25,7 @@
 static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_reference parameters[], vx_uint32 num)
 {
     vx_status status = VX_FAILURE;
-    vx_context context = node->base.context;
+    vx_context context = node->context;
 
     vx_cl_kernel_description_t *vxclk = vxclFindKernel(node->kernel->enumeration);
     vx_uint32 pln, didx, plidx, argidx;
@@ -57,7 +56,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
     vx_enum stype = VX_TYPE_INVALID;
     vxCopyScalar(sc, &value, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     vxQueryScalar(sc, VX_SCALAR_TYPE, &stype, sizeof(stype));
-    size = ownSizeOfType(stype);
+    size = Reference::sizeOfType(stype);
     err = clSetKernelArg(kernel, argidx++, size, &value);
 
 
@@ -180,7 +179,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         off_dim,
         work_dim,
         NULL,
-        we, writeEvents, &node->base.event);
+        we, writeEvents, &node->event);
 
     clFinish(context->queues[plidx][didx]);
 
@@ -545,7 +544,7 @@ vx_cl_kernel_description_t nonlinearfilter_kernel = {
     NULL,
     NULL,
     },
-    VX_CL_SOURCE_DIR""FILE_JOINER"vx_nonlinearfilter.cl",
+    /* VX_CL_SOURCE_DIR"" FILE_JOINER */"vx_nonlinearfilter.cl",
     "vx_nonlinearfilter",
     INIT_PROGRAMS,
     INIT_KERNELS,

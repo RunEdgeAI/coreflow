@@ -28,7 +28,7 @@
 static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_reference parameters[], vx_uint32 num)
 {
     vx_status status = VX_FAILURE;
-    vx_context context = node->base.context;
+    vx_context context = node->context;
 
     vx_cl_kernel_description_t *vxclk = vxclFindKernel(node->kernel->enumeration);
     vx_uint32 pln, didx, plidx, argidx;
@@ -164,7 +164,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         off_dim,
         work_dim,
         NULL,
-        we, writeEvents, &node->base.event);
+        we, writeEvents, &node->event);
 
     clFinish(context->queues[plidx][didx]);
 
@@ -593,7 +593,7 @@ vx_cl_kernel_description_t warp_affine_kernel = {
         NULL,
         NULL,
     },
-    VX_CL_SOURCE_DIR""FILE_JOINER"vx_warp_affine.cl",
+    /* VX_CL_SOURCE_DIR"" FILE_JOINER */"vx_warp_affine.cl",
     "warp_affine",
     INIT_PROGRAMS,
     INIT_KERNELS,
@@ -614,7 +614,7 @@ vx_cl_kernel_description_t warp_perspective_kernel = {
         NULL,
         NULL,
     },
-    VX_CL_SOURCE_DIR""FILE_JOINER"vx_warp_perspective.cl",
+    /* VX_CL_SOURCE_DIR"" FILE_JOINER */"vx_warp_perspective.cl",
     "warp_perspective",
     INIT_PROGRAMS,
     INIT_KERNELS,

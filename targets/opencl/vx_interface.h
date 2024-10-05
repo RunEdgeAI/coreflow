@@ -18,7 +18,7 @@
 
 #include "vx_internal.h"
 
-#if defined(DARWIN)
+#if defined(DARWIN) || defined(__APPLE__)
 #include <OpenCL/opencl.h>
 #else
 #include <CL/cl.h>
@@ -102,6 +102,4 @@ extern vx_cl_kernel_description_t warp_affine_kernel;
 extern vx_cl_kernel_description_t warp_perspective_kernel;
 extern vx_cl_kernel_description_t convolution_kernel;
 
-#endif
-
-
+#endif /* VX_INTERFACE_H */

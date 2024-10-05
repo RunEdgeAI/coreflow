@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -66,11 +65,11 @@ static void VX_CALLBACK vxcl_platform_notifier(const char *errinfo,
     VX_PRINT(VX_ZONE_ERROR, "%s\n", errinfo);
 }
 
-vx_status vxTargetInit(vx_target_t *target)
+vx_status vxTargetInit(vx_target target)
 {
     vx_status status = VX_ERROR_NO_RESOURCES;
     cl_int err = 0;
-    vx_context context = target->base.context;
+    vx_context context = target->context;
     cl_uint p, d, k;
     char *vx_incs = getenv("VX_CL_INCLUDE_DIR");
     //char *vx_incs = "/usr/include -I/home/pi/sample-impl-opencl/include -I/home/pi/sample-impl-opencl/include/VX";
@@ -315,9 +314,8 @@ vx_status vxTargetInit(vx_target_t *target)
                                 vx_kernel_f kfunc = cl_kernels[k]->description.function;
                                 VX_PRINT(VX_ZONE_INFO, "Linked Kernel %s on target %s\n", cl_kernels[k]->kernelname, target->name);
                                 target->num_kernels++;
-                                target->base.context->num_kernels++;
-                                status = ownInitializeKernel(target->base.context,
-                                    &target->kernels[k],
+                                target->context->num_kernels++;
+                                status = target->kernels[k]->initializeKernel(
                                     cl_kernels[k]->description.enumeration,
                                     (kfunc == NULL ? vxclCallOpenCLKernel : kfunc),
                                     cl_kernels[k]->description.name,
@@ -328,10 +326,10 @@ vx_status vxTargetInit(vx_target_t *target)
                                     cl_kernels[k]->description.output_validate,
                                     cl_kernels[k]->description.initialize,
                                     cl_kernels[k]->description.deinitialize);
-                                if (ownIsKernelUnique(&target->kernels[k]) == vx_true_e) {
-                                    target->base.context->num_unique_kernels++;
+                                if (Kernel::isKernelUnique(target->kernels[k]) == vx_true_e) {
+                                    target->context->num_unique_kernels++;
                                 } else {
-                                    VX_PRINT(VX_ZONE_KERNEL, "Kernel %s is NOT unqiue\n", target->kernels[k].name);
+                                    VX_PRINT(VX_ZONE_KERNEL, "Kernel %s is NOT unqiue\n", target->kernels[k]->name);
                                 }
                             }
                         }
@@ -354,9 +352,9 @@ exit:
     return status;
 }
 
-vx_status vxTargetDeinit(vx_target_t *target)
+vx_status vxTargetDeinit(vx_target target)
 {
-    vx_context context = target->base.context;
+    vx_context context = target->context;
     if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
     {
         cl_uint p = 0, d = 0;
@@ -365,7 +363,7 @@ vx_status vxTargetDeinit(vx_target_t *target)
         {
             for (k = 0; k < num_cl_kernels; k++)
             {
-                ownDecrementReference(&target->kernels[k].base, VX_INTERNAL);
+                target->kernels[k]->decrementReference(VX_INTERNAL);
                 clReleaseKernel(cl_kernels[k]->kernels[p]);
                 clReleaseProgram(cl_kernels[k]->program[p]);
 
@@ -380,7 +378,7 @@ vx_status vxTargetDeinit(vx_target_t *target)
     return VX_SUCCESS;
 }
 
-vx_status vxTargetSupports(vx_target_t *target,
+vx_status vxTargetSupports(vx_target target,
                            vx_char targetName[VX_MAX_TARGET_NAME],
                            vx_char kernelName[VX_MAX_KERNEL_NAME],
 #if defined(EXPERIMENTAL_USE_VARIANTS)
@@ -396,7 +394,7 @@ vx_status vxTargetSupports(vx_target_t *target,
         vx_uint32 k = 0u;
         for (k = 0u; k < VX_INT_MAX_KERNELS; k++)
         {
-            if (strncmp(kernelName, target->kernels[k].name, VX_MAX_KERNEL_NAME) == 0)
+            if (strncmp(kernelName, target->kernels[k]->name, VX_MAX_KERNEL_NAME) == 0)
             {
                 status = VX_SUCCESS;
                 if (pIndex) *pIndex = k;
@@ -407,7 +405,7 @@ vx_status vxTargetSupports(vx_target_t *target,
     return status;
 }
 
-vx_action vxTargetProcess(vx_target_t *target, vx_node_t *nodes[], vx_size startIndex, vx_size numNodes)
+vx_action vxTargetProcess(vx_target target, vx_node nodes[], vx_size startIndex, vx_size numNodes)
 {
     vx_action action = VX_ACTION_CONTINUE;
     vx_status status = VX_SUCCESS;
@@ -418,7 +416,7 @@ vx_action vxTargetProcess(vx_target_t *target, vx_node_t *nodes[], vx_size start
             nodes[n]->kernel->name,
             nodes[n]->kernel->enumeration,
             n,
-            nodes[n]->base.context->targets[nodes[n]->affinity].name);
+            nodes[n]->context->targets[nodes[n]->affinity]->name);
 
         ownStartCapture(&nodes[n]->perf);
         status = nodes[n]->kernel->function((vx_node)nodes[n],
@@ -448,13 +446,13 @@ vx_action vxTargetProcess(vx_target_t *target, vx_node_t *nodes[], vx_size start
     return action;
 }
 
-vx_status vxTargetVerify(vx_target_t *target, vx_node_t *node)
+vx_status vxTargetVerify(vx_target target, vx_node node)
 {
     vx_status status = VX_SUCCESS;
     return status;
 }
 
-vx_kernel vxTargetAddKernel(vx_target_t *target,
+vx_kernel vxTargetAddKernel(vx_target target,
                             vx_char name[VX_MAX_KERNEL_NAME],
                             vx_enum enumeration,
                             vx_kernel_f func_ptr,
@@ -466,14 +464,13 @@ vx_kernel vxTargetAddKernel(vx_target_t *target,
                             vx_kernel_deinitialize_f deinitialize)
 {
     vx_uint32 k = 0u;
-    vx_kernel_t *kernel = NULL;
+    vx_kernel kernel = NULL;
     for (k = 0; k < VX_INT_MAX_KERNELS; k++)
     {
-        kernel = &(target->kernels[k]);
+        kernel = target->kernels[k];
         if (kernel->enabled == vx_false_e)
         {
-            ownInitializeKernel(target->base.context,
-                               kernel,
+            kernel->initializeKernel(
                                enumeration, func_ptr, name,
                                NULL, numParams,
                                validate, input, output, initialize, deinitialize);
@@ -523,8 +520,8 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
     gettimeofday(&start, NULL);
 
     vx_status status = VX_FAILURE;
-    vx_context context = node->base.context;
-    vx_target target = (vx_target_t *)&node->base.context->targets[node->affinity];
+    vx_context context = node->context;
+    vx_target target = (vx_target)&node->context->targets[node->affinity];
     vx_cl_kernel_description_t *vxclk = vxclFindKernel(node->kernel->enumeration);
     vx_uint32 pidx, pln, didx, plidx, argidx;
     cl_int err = 0;
@@ -555,7 +552,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                 memory = &((vx_array)ref)->memory;
                 break;
             case VX_TYPE_CONVOLUTION:
-                memory = &((vx_convolution)ref)->base.memory;
+                memory = &((vx_convolution)ref)->memory;
                 break;
             case VX_TYPE_DISTRIBUTION:
                 memory = &((vx_distribution)ref)->memory;
@@ -564,19 +561,19 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                 memory = &((vx_image)ref)->memory;
                 break;
             case VX_TYPE_LUT:
-                memory = &((vx_lut_t*)ref)->memory;
+                memory = &((vx_lut_t)ref)->memory;
                 break;
             case VX_TYPE_MATRIX:
                 memory = &((vx_matrix)ref)->memory;
                 break;
-            //case VX_TYPE_PYRAMID:
-            //    break;
+            case VX_TYPE_PYRAMID:
+               break;
             case VX_TYPE_REMAP:
                 memory = &((vx_remap)ref)->memory;
                 break;
-            //case VX_TYPE_SCALAR:
-            //case VX_TYPE_THRESHOLD:
-            //    break;
+            case VX_TYPE_SCALAR:
+            case VX_TYPE_THRESHOLD:
+               break;
         }
         if (memory) {
             for (pln = 0; pln < memory->nptrs; pln++) {
@@ -618,8 +615,8 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                     } else if (type == VX_TYPE_CONVOLUTION) {
                         vx_convolution conv = (vx_convolution)ref;
                         // columns, rows, scale
-                        err = clSetKernelArg(vxclk->kernels[plidx], argidx++, sizeof(vx_uint32), (vx_uint32 *)&conv->base.columns);
-                        err = clSetKernelArg(vxclk->kernels[plidx], argidx++, sizeof(vx_uint32), (vx_uint32 *)&conv->base.rows);
+                        err = clSetKernelArg(vxclk->kernels[plidx], argidx++, sizeof(vx_uint32), (vx_uint32 *)&conv->columns);
+                        err = clSetKernelArg(vxclk->kernels[plidx], argidx++, sizeof(vx_uint32), (vx_uint32 *)&conv->rows);
                         err = clSetKernelArg(vxclk->kernels[plidx], argidx++, sizeof(vx_uint32), (vx_uint32 *)&conv->scale);
                     }
                     err = clSetKernelArg(vxclk->kernels[plidx], argidx++, sizeof(cl_mem), &memory->hdls[pln]);
@@ -681,7 +678,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                 vx_enum stype = VX_TYPE_INVALID;
                 vxCopyScalar(sc, &value, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
                 vxQueryScalar(sc, VX_SCALAR_TYPE, &stype, sizeof(stype));
-                size = ownSizeOfType(stype);
+                size = Reference::sizeOfType(stype);
                 err = clSetKernelArg(vxclk->kernels[plidx], argidx++, size, &value);
             }
             else if (type == VX_TYPE_THRESHOLD) {
@@ -713,7 +710,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                                  off_dim,
                                  work_dim,
                                  NULL,
-                                 we, writeEvents, &node->base.event);
+                                 we, writeEvents, &node->event);
 
     CL_ERROR_MSG(err, "clEnqueueNDRangeKernel");
     /* enqueue a read on all output data */
@@ -733,7 +730,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                     memory = &((vx_array)ref)->memory;
                     break;
                 case VX_TYPE_CONVOLUTION:
-                    memory = &((vx_convolution)ref)->base.memory;
+                    memory = &((vx_convolution)ref)->memory;
                     break;
                 case VX_TYPE_DISTRIBUTION:
                     memory = &((vx_distribution)ref)->memory;
@@ -742,19 +739,19 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                     memory = &((vx_image)ref)->memory;
                     break;
                 case VX_TYPE_LUT:
-                    memory = &((vx_lut_t*)ref)->memory;
+                    memory = &((vx_lut_t)ref)->memory;
                     break;
                 case VX_TYPE_MATRIX:
                     memory = &((vx_matrix)ref)->memory;
                     break;
-                //case VX_TYPE_PYRAMID:
-                //    break;
+                case VX_TYPE_PYRAMID:
+                   break;
                 case VX_TYPE_REMAP:
                     memory = &((vx_remap)ref)->memory;
                     break;
-                //case VX_TYPE_SCALAR:
-                //case VX_TYPE_THRESHOLD:
-                //    break;
+                case VX_TYPE_SCALAR:
+                case VX_TYPE_THRESHOLD:
+                   break;
             }
             if (memory) {
                 for (pln = 0; pln < memory->nptrs; pln++) {
@@ -788,7 +785,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                                                   memory->strides[pln][VX_DIM_Y],
                                                   0,
                                                   memory->ptrs[pln],
-                                                  1, &node->base.event,
+                                                  1, &node->event,
                                                   &ref->event);
                         CL_ERROR_MSG(err, "clEnqueueReadImage");
                         VX_PRINT(VX_ZONE_INFO, "Reading Image wd={%zu,%zu}\n", work_dim[0], work_dim[1]);
