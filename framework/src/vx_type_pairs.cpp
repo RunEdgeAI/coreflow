@@ -108,4 +108,4 @@ vx_size ownMetaSizeOfType(vx_enum type)
     return size;
 }
 
-#endif
+#endif /* defined(EXPERIMENTAL_USE_DOT) || defined(OPENVX_USE_XML) */
