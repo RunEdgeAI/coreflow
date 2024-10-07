@@ -2430,7 +2430,7 @@ vx_status vx_xml_fullimport(int argc, char *argv[])
                             vx_perf_t perf;
                             graphStatus |= vxProcessGraph((vx_graph)ref);
                             vxQueryGraph((vx_graph)ref, VX_GRAPH_PERFORMANCE, &perf, sizeof(perf));
-                            printf("Graph "VX_FMT_SIZE  " avg time: %lu\n", (vx_size)ref, perf.avg);
+                            printf("Graph " VX_FMT_SIZE " avg time: %lu\n", (vx_size)ref, perf.avg);
                         }
                         vxReleaseReference(&ref);
                     }
@@ -2448,7 +2448,7 @@ vx_status vx_xml_fullimport(int argc, char *argv[])
                         vx_perf_t perf;
                         graphStatus |= vxProcessGraph((vx_graph)refs[i]);
                         vxQueryGraph((vx_graph)refs[i], VX_GRAPH_PERFORMANCE, &perf, sizeof(perf));
-                        printf("Graph "VX_FMT_SIZE  " avg time: %lu\n", (vx_size)refs[i], perf.avg);
+                        printf("Graph " VX_FMT_SIZE " avg time: %lu\n", (vx_size)refs[i], perf.avg);
                         vxReleaseReference(&refs[i]);
                     }
                 }
@@ -2463,7 +2463,7 @@ vx_status vx_xml_fullimport(int argc, char *argv[])
                         vx_perf_t perf;
                         graphStatus |= vxProcessGraph((vx_graph)refs[i]);
                         vxQueryGraph((vx_graph)refs[i], VX_GRAPH_PERFORMANCE, &perf, sizeof(perf));
-                        printf("Graph "VX_FMT_SIZE  " avg time: %lu\n", (vx_size)refs[i], perf.avg);
+                        printf("Graph " VX_FMT_SIZE " avg time: %lu\n", (vx_size)refs[i], perf.avg);
                         vxReleaseReference(&refs[i]);
                     }
                 }
@@ -2741,7 +2741,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
             vxAccessImagePatch(images[0], &rect, 0, &addr, &base, VX_WRITE_ONLY);
             for (y = 0u; y < addr.dim_y; y+=addr.step_y) {
                 for (x = 0u; x < addr.dim_x; x+=addr.step_x) {
-                    vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                    vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                     *ptr = y*addr.dim_x+x;
                 }
             }
@@ -2752,7 +2752,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
             vxAccessImagePatch(images[2], &rect, 0, &addr, &base, VX_WRITE_ONLY);
             for (y = 0u; y < addr.dim_y; y+=addr.step_y) {
                 for (x = 0u; x < addr.dim_x; x+=addr.step_x) {
-                    vx_int16 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                    vx_int16 *ptr = (vx_int16*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                     *ptr = INT16_MIN+(y*addr.dim_x+x);
                 }
             }
@@ -2763,7 +2763,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
             vxAccessImagePatch(images[3], &rect, 0, &addr, &base, VX_WRITE_ONLY);
             for (y = 0u; y < addr.dim_y; y+=addr.step_y) {
                 for (x = 0u; x < addr.dim_x; x+=addr.step_x) {
-                    vx_uint16 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                    vx_uint16 *ptr = (vx_uint16*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                     *ptr = UINT16_MAX-(y*addr.dim_x+x);
                 }
             }
@@ -2774,7 +2774,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
             vxAccessImagePatch(images[4], &rect, 0, &addr, &base, VX_WRITE_ONLY);
             for (y = 0u; y < addr.dim_y; y+=addr.step_y) {
                 for (x = 0u; x < addr.dim_x; x+=addr.step_x) {
-                    vx_int32 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                    vx_int32 *ptr = (vx_int32*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                     *ptr = INT32_MIN+(y*addr.dim_x+x);
                 }
             }
@@ -2785,7 +2785,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
             vxAccessImagePatch(images[5], &rect, 0, &addr, &base, VX_WRITE_ONLY);
             for (y = 0u; y < addr.dim_y; y+=addr.step_y) {
                 for (x = 0u; x < addr.dim_x; x+=addr.step_x) {
-                    vx_uint32 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                    vx_uint32 *ptr = (vx_uint32*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                     *ptr = INT32_MAX-(y*addr.dim_x+x);
                 }
             }
@@ -2796,7 +2796,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
             vxAccessImagePatch(images[6], &rect, 0, &addr, &base, VX_WRITE_ONLY);
             for (y = 0u; y < addr.dim_y; y+=addr.step_y) {
                 for (x = 0u; x < addr.dim_x; x+=addr.step_x) {
-                    vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                    vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                     ptr[0] = 0+(y*addr.dim_x+x);
                     ptr[1] = 1+(y*addr.dim_x+x);
                     ptr[2] = 2+(y*addr.dim_x+x);
@@ -2809,7 +2809,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
             vxAccessImagePatch(images[7], &rect, 0, &addr, &base, VX_WRITE_ONLY);
             for (y = 0u; y < addr.dim_y; y+=addr.step_y) {
                 for (x = 0u; x < addr.dim_x; x+=addr.step_x) {
-                    vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                    vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                     ptr[0] = 0+(y*addr.dim_x+x);
                     ptr[1] = 1+(y*addr.dim_x+x);
                     ptr[2] = 2+(y*addr.dim_x+x);
@@ -2825,7 +2825,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
                 vxAccessImagePatch(images[i], &rect, 0, &addr, &base, VX_WRITE_ONLY);
                 for (y = 0u; y < addr.dim_y; y+=addr.step_y) {
                     for (x = 0u; x < addr.dim_x; x+=addr.step_x) {
-                        vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                        vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                         ptr[0] = 0+(y*addr.dim_x+x);
                         ptr[1] = 1+(y*addr.dim_x+x);
                     }
@@ -2841,7 +2841,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
                     vxAccessImagePatch(images[i], &rect, p, &addr, &base, VX_WRITE_ONLY);
                     for (y = 0u; y < addr.dim_y; y+=addr.step_y) {
                         for (x = 0u; x < addr.dim_x; x+=addr.step_x) {
-                            vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                            vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                             ptr[0] = 0+(y*addr.dim_x+x);
                         }
                     }
@@ -2856,7 +2856,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
                 vxAccessImagePatch(images[i], &rect, 0, &addr, &base, VX_WRITE_ONLY);
                 for (y = 0u; y < addr.dim_y; y+=addr.step_y) {
                     for (x = 0u; x < addr.dim_x; x+=addr.step_x) {
-                        vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                        vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                         *ptr = 0+(y*addr.dim_x+x);
                     }
                 }
@@ -2866,7 +2866,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
                 //todo not sure about chroma semiplane
                 for (y = 0u; y < addr.dim_y; y+=addr.step_y) {
                     for (x = 0u; x < addr.dim_x; x+=addr.step_x) {
-                        vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                        vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                         ptr[0] = 0+(y*addr.dim_x+x);
                         ptr[1] = 1+(y*addr.dim_x+x);
                     }

@@ -92,4 +92,14 @@
  */
 #define VX_VERSION          (VX_VERSION_1_3)
 
+/* ENABLED FEATURES IN COREVX ONLY */
+#define OPENVX_USE_USER_DATA_OBJECT
+#define OPENVX_USE_IX
+// #define OPENVX_USE_XML
+// #define OPENVX_USE_OPENCL_INTEROP
+#define OPENVX_USE_TILING
+#define EXPERIMENTAL_USE_DOT
+// #define EXPERIMENTAL_USE_OPENCL
+/* ******************************* */
+
 #endif

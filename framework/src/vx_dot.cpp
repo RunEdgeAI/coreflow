@@ -13,11 +13,10 @@
  * limitations under the License.
  */
 
-#if defined(EXPERIMENTAL_USE_DOT)
-
 #include "vx_internal.h"
 #include "vx_type_pairs.h"
 
+#if defined(EXPERIMENTAL_USE_DOT)
 VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char dotfile[], vx_bool showData)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
@@ -31,7 +30,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
             vx_uint32 num_last, last_nodes[VX_INT_MAX_REF];
             vx_uint32 num_left, left_nodes[VX_INT_MAX_REF];
             vx_uint32 dep_nodes[VX_INT_MAX_REF];
-            vx_reference_t *data[VX_INT_MAX_REF];
+            vx_reference data[VX_INT_MAX_REF];
             vx_uint32 num_data = 0u;
 
             status = VX_SUCCESS;
@@ -86,7 +85,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
                     else if (data[d]->type == VX_TYPE_PYRAMID)
                     {
                         vx_pyramid pyr = (vx_pyramid)data[d];
-                        fprintf(fp, "\tD%u [shape=triangle label=\"%lfx"VX_FMT_REF"\\nPyramid\"];\n", d, pyr->scale, pyr->levels);
+                        fprintf(fp, "\tD%u [shape=triangle label=\"%lfx" VX_FMT_REF "\\nPyramid\"];\n", d, pyr->scale, pyr->levels);
                     }
                     else
                     {
