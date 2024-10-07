@@ -19,7 +19,7 @@
 #include <VX/vx_khr_nn.h>
 #ifndef VX_IX_USE_IMPORT_AS_KERNEL
 #define VX_IX_USE_IMPORT_AS_KERNEL (VX_ENUM_BASE(VX_ID_KHRONOS, VX_ENUM_IX_USE) + 0x3) /*!< \brief Graph exported as user kernel. */
-#endif
+#endif /* VX_IX_USE_IMPORT_AS_KERNEL */
 #define DEBUGPRINTF(x,...)
 //#define DEBUGPRINTF printf
 
@@ -1615,4 +1615,4 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseExportedMemory(vx_context context, c
     /* If we haven't found the pointer retval will be unchanged */
     return retval;
 }
-#endif
+#endif /* OPENVX_USE_IX */

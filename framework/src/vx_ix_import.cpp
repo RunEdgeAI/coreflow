@@ -18,7 +18,7 @@
 #include <VX/vx_khr_nn.h>
 #ifndef VX_IX_USE_IMPORT_AS_KERNEL
 #define VX_IX_USE_IMPORT_AS_KERNEL (VX_ENUM_BASE(VX_ID_KHRONOS, VX_ENUM_IX_USE) + 0x3) /*!< \brief Graph exported as user kernel. */
-#endif
+#endif /* VX_IX_USE_IMPORT_AS_KERNEL */
 VX_API_ENTRY vx_enum VX_API_CALL vxGetUserStructByName(vx_context context, const vx_char *name);
 
 /*!
@@ -1958,5 +1958,4 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportObjectsFromMemory(
     return import;
 }
 
-#endif
-
+#endif /* OPENVX_USE_IX */

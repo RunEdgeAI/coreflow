@@ -31,9 +31,11 @@
 /*! \brief The Object Type Enumeration for Imports.
  * \ingroup group_xml
  */
+#ifndef VX_TYPE_IMPORT
 enum vx_ext_import_type_e {
     VX_TYPE_IMPORT = 0x814,/*!< \brief A <tt>\ref vx_import</tt> */
 };
+#endif
 
 /*! \brief The import type enumeration.
  * \ingroup group_xml
