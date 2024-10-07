@@ -65,7 +65,6 @@
 
 #include <VX/vx.h>
 #include <VX/vx_helper.h>
-#include <VX/vx_khr_user_data_object.h>
 
 /* TODO: remove vx_compatibility.h after transition period */
 #include <VX/vx_compatibility.h>

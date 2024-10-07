@@ -74,4 +74,16 @@ public:
     vx_delay       delays[VX_INT_MAX_REF];
 };
 
+void ownClearVisitation(vx_graph graph);
+void ownClearExecution(vx_graph graph);
+void ownFindNextNodes(vx_graph graph,
+                     vx_uint32 last_nodes[VX_INT_MAX_REF], vx_uint32 numLast,
+                     vx_uint32 next_nodes[VX_INT_MAX_REF], vx_uint32 *numNext,
+                     vx_uint32 left_nodes[VX_INT_MAX_REF], vx_uint32 *numLeft);
+vx_status ownFindNodesWithReference(vx_graph graph,
+                                   vx_reference ref,
+                                   vx_uint32 refnodes[],
+                                   vx_uint32 *count,
+                                   vx_enum reftype);
+
 #endif /* VX_GRAPH_H */
