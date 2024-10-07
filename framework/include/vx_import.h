@@ -13,10 +13,12 @@
  * limitations under the License.
  */
 
-#ifndef _OPENVX_INT_IMPORT_H_
-#define _OPENVX_INT_IMPORT_H_
+#ifndef VX_IMPORT_H
+#define VX_IMPORT_H
 
 #include <VX/vx.h>
+#include <VX/vx_import.h>
+#include <VX/vx_khr_xml.h>
 
 /*!
  * \file
@@ -27,24 +29,40 @@
  * \ingroup group_internal
  * \brief The Internal Import Object API
  */
+class Import : public Reference
+{
+public:
+    Import(vx_context context, vx_reference scope);
+    ~Import();
 
 #if defined(OPENVX_USE_IX) || defined(OPENVX_USE_XML)
 
+    /*! \brief Create an import object.
+     * \param [in] context The context.
+     * \param [in] type The type of import.
+     * \param [in] count The number of references to import.
+     * \ingroup group_int_import
+     */
+    static vx_import createImportInt(vx_context context,
+                                             vx_enum type,
+                                             vx_uint32 count);
 
-/*! \brief Create an import object.
- * \param [in] context The context.
- * \param [in] type The type of import.
- * \param [in] count The number of references to import.
- * \ingroup group_int_import
- */
-vx_import ownCreateImportInt(vx_context context, vx_enum type, vx_uint32 count);
+    /*! \brief Destroys an Import and it's scoped-objects.
+     *  \ingroup group_int_import
+     */
+    void destructImport();
 
-/*! \brief Destroys an Import and it's scoped-objects.
- *  \param [in] ref The import reference object.
- *  \ingroup group_int_import
- */
-void ownDestructImport(vx_reference ref);
+#endif /* defined(OPENVX_USE_IX) || defined(OPENVX_USE_XML) */
 
-#endif
+    /*! \brief The internal representation of any import object.
+     * \ingroup group_int_import
+     */
+    /*! \brief The type of import */
+    vx_enum import_type;
+    /*! \brief The number of references in the import. */
+    vx_uint32 count;
+    /*! \brief The set of references in the import. */
+    vx_reference* refs;
+};
 
-#endif
+#endif /* VX_IMPORT_H */
