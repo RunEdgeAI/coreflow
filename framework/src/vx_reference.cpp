@@ -335,6 +335,13 @@ vx_reference Reference::createReference(vx_context context, vx_enum type, vx_ref
                 ref = static_cast<vx_reference>(spT.get());
                 break;
             }
+            case VX_TYPE_IMPORT:
+            {
+                const auto& spT = std::make_shared<Import>(context, scope);
+                (void)context->addReference(spT);
+                ref = static_cast<vx_reference>(spT.get());
+                break;
+            }
             default:
             {
                 VX_PRINT(VX_ZONE_ERROR, "Unsupported type passed 0x%x\n", type);

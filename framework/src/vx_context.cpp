@@ -15,6 +15,8 @@
  */
 #include <memory>
 
+#include <VX/vx_khr_xml.h>
+
 #include "vx_internal.h"
 #include "vx_context.h"
 
@@ -34,6 +36,9 @@ vx_char targetModules[][VX_MAX_TARGET_NAME] = {
 };
 
 const vx_char extensions[] =
+#if defined(OPENVX_USE_TILING)
+    OPENVX_KHR_TILING" "
+#endif
 #if defined(OPENVX_USE_XML)
     OPENVX_KHR_XML" "
 #endif

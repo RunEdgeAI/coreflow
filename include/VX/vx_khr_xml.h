@@ -58,7 +58,8 @@ enum vx_import_attribute_e {
  * \ingroup group_xml
  * \extends vx_reference
  */
-typedef struct _vx_import *vx_import;
+class Import;
+using vx_import = Import*;
 
 
 #ifdef __cplusplus

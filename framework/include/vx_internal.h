@@ -861,20 +861,6 @@ typedef vx_array vx_lut_t;
 #define VX_U32_THRESHOLD_FALSE_VALUE 0
 #define VX_U32_THRESHOLD_TRUE_VALUE  0xFFFFFFFF
 
-/*! \brief The internal representation of any import object.
- * \ingroup group_int_import
- */
-typedef struct _vx_import {
-    /*! \brief The internal reference object. */
-    vx_reference base;
-    /*! \brief The type of import */
-    vx_enum type;
-    /*! \brief The number of references in the import. */
-    vx_uint32 count;
-    /*! \brief The set of references in the import. */
-    vx_reference *refs;
-} vx_import_t;
-
 struct vx_type_size_t {
     vx_enum type;
     vx_size size;
@@ -932,7 +918,7 @@ static vx_type_size_t type_sizes[] = {
     {VX_TYPE_REMAP,     sizeof(vx_remap)},
     {VX_TYPE_THRESHOLD, sizeof(vx_threshold)},
 #if defined(OPENVX_USE_IX) || defined(OPENVX_USE_XML)
-    {VX_TYPE_IMPORT,    sizeof(vx_import_t)},
+    {VX_TYPE_IMPORT,    sizeof(vx_import)},
 #endif
 #if defined(OPENVX_USE_USER_DATA_OBJECT)
     {VX_TYPE_USER_DATA_OBJECT, sizeof(vx_user_data_object)},
@@ -941,7 +927,6 @@ static vx_type_size_t type_sizes[] = {
 };
 
 // PROTOTYPES FOR INTERNAL FUNCTIONS
-// #include "vx_import.h"
 #include "vx_array.h"
 #include "vx_context.h"
 #include "vx_convolution.h"
@@ -951,6 +936,7 @@ static vx_type_size_t type_sizes[] = {
 #include "vx_error.h"
 #include "vx_graph.h"
 #include "vx_image.h"
+#include "vx_import.h"
 #include "vx_kernel.h"
 #include "vx_log.h"
 #include "vx_lut.h"

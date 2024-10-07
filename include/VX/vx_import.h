@@ -51,7 +51,8 @@ IMPORT
  * by name
  * \ingroup group_import
  */
-typedef struct _vx_import *vx_import;
+class Import;
+using vx_import = Import*;
 
 /*! \brief The Object Type Enumeration for import.
  * \ingroup group_import
