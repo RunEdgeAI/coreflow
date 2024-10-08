@@ -896,7 +896,6 @@ VX_API_ENTRY vx_context VX_API_CALL vxGetContext(vx_reference reference)
     {
         VX_PRINT(VX_ZONE_ERROR, "%p is not a valid reference\n", reference);
         VX_BACKTRACE(VX_ZONE_ERROR);
-
     }
 
     return context;
