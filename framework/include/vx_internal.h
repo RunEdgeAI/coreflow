@@ -959,7 +959,7 @@ static vx_type_size_t type_sizes[] = {
 extern "C" {
 #endif
 
-// #include <vx_inlines.c>
+#include "vx_inlines.h"
 
 #if !DISABLE_ICD_COMPATIBILITY
     VX_API_ENTRY vx_context VX_API_CALL vxCreateContextFromPlatform(struct _vx_platform * platform);

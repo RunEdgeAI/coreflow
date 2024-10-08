@@ -1,5 +1,4 @@
-/* 
-
+/*
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,10 +15,10 @@
  */
 
 #include "vx_internal.h"
+#include "vx_type_pairs.h"
 
 #if defined(OPENVX_USE_XML)
 
-#include <vx_type_pairs.h>
 
 #if defined(__APPLE__)
 typedef unsigned long ulong;
@@ -27,20 +26,80 @@ typedef unsigned long ulong;
 
 #include <libxml/tree.h>
 
-#define XML_FOREACH_CHILD_TAG(child, tag, tags) \
-        for (child = (xmlFirstElementChild(child) ? \
-                      (tag=xml_match_tag(xmlFirstElementChild(child),tags,dimof(tags)),xmlFirstElementChild(child)) : \
-                      (tag=0,child)); \
-             tag && child; \
-             child = (xmlNextElementSibling(child) ? \
-                      (tag=xml_match_tag(xmlNextElementSibling(child),tags,dimof(tags)),xmlNextElementSibling(child)) : \
-                      (tag=0,child->parent)))
+typedef enum _vx_xml_tag_e {
+    UNKNOWN_TAG = 0,
+    OPENVX_TAG,
+    LIBRARY_TAG,
+    STRUCT_TAG,
+    GRAPH_TAG,
+    NODE_TAG,
+    KERNEL_TAG,
+    PARAMETER_TAG,
 
-#define XML_HAS_CHILD(child) xmlFirstElementChild(child)
+    BOOL_TAG,
+    CHAR_TAG,
+    UINT8_TAG,
+    UINT16_TAG,
+    UINT32_TAG,
+    UINT64_TAG,
+    INT8_TAG,
+    INT16_TAG,
+    INT32_TAG,
+    INT64_TAG,
+    ENUM_TAG,
+    DF_IMAGE_TAG,
+    SIZE_TAG,
+    FLOAT32_TAG,
+    FLOAT64_TAG,
+
+    KEYPOINT_TAG,
+    COORDINATES2D_TAG,
+    COORDINATES3D_TAG,
+    RECTANGLE_TAG,
+    USER_TAG,
+    ROI_TAG,
+    UNIFORM_TAG,
+
+    ARRAY_TAG,
+    CONVOLUTION_TAG,
+    DELAY_TAG,
+    DISTRIBUTION_TAG,
+    IMAGE_TAG,
+    LUT_TAG,
+    MATRIX_TAG,
+    PYRAMID_TAG,
+    REMAP_TAG,
+    SCALAR_TAG,
+    THRESHOLD_TAG,
+    OBJECT_ARRAY_TAG,
+
+    /* fields */
+    START_X_TAG,
+    START_Y_TAG,
+    END_X_TAG,
+    END_Y_TAG,
+    X_TAG,
+    Y_TAG,
+    Z_TAG,
+    STRENGTH_TAG,
+    SCALE_TAG,
+    ORIENTATION_TAG,
+    TRACKING_STATUS_TAG,
+    ERROR_TAG,
+    FREQUENCY_TAG,
+    POINT_TAG,
+    BINARY_TAG,
+    RANGE_TAG,
+    PIXELS_TAG,
+    BORDERCONST_TAG,
+
+    /* PIXEL FORMAT */
+    RGB_TAG,
+    RGBA_TAG,
+    YUV_TAG,
+} vx_xml_tag_e;
 
 #define XML_MAX_TAG_NAME (20)
-
-#define REFNUM_ERROR VX_PRINT(VX_ZONE_ERROR, "Reference number out of bounds: \"references\" tag=%d, \"reference\"=%d\n", total, refIdx); status = VX_ERROR_INVALID_FORMAT;
 
 typedef struct _xml_tag_t {
     xmlChar name[XML_MAX_TAG_NAME];
@@ -51,6 +110,89 @@ typedef struct _xml_struct_t {
     vx_uint32 label;
     vx_enum e_struct_type;
 } xml_struct_t;
+
+static xml_tag_t tags[] = {
+    {"OPENVX", OPENVX_TAG},
+    {"LIBRARY",LIBRARY_TAG},
+    {"STRUCT", STRUCT_TAG},
+    {"GRAPH",  GRAPH_TAG},
+    {"NODE",   NODE_TAG},
+    {"PARAMETER", PARAMETER_TAG},
+    {"KERNEL", KERNEL_TAG},
+
+    {"CHAR",   CHAR_TAG},
+    {"UINT8",  UINT8_TAG},
+    {"UINT16", UINT16_TAG},
+    {"UINT32", UINT32_TAG},
+    {"UINT64", UINT64_TAG},
+    {"INT8",   INT8_TAG},
+    {"INT16",  INT16_TAG},
+    {"INT32",  INT32_TAG},
+    {"INT64",  INT64_TAG},
+    {"FLOAT32",FLOAT32_TAG},
+    {"FLOAT64",FLOAT64_TAG},
+    {"BOOL",   BOOL_TAG},
+    {"ENUM",   ENUM_TAG},
+    {"SIZE",   SIZE_TAG},
+    {"DF_IMAGE", DF_IMAGE_TAG},
+
+    {"KEYPOINT", KEYPOINT_TAG},
+    {"RECTANGLE", RECTANGLE_TAG},
+    {"COORDINATES2D", COORDINATES2D_TAG},
+    {"COORDINATES3D", COORDINATES3D_TAG},
+    {"USER", USER_TAG},
+    {"ROI", ROI_TAG},
+    {"UNIFORM", UNIFORM_TAG},
+
+    {"SCALAR", SCALAR_TAG},
+    {"CONVOLUTION", CONVOLUTION_TAG},
+    {"DELAY",  DELAY_TAG},
+    {"LUT",    LUT_TAG},
+    {"DISTRIBUTION", DISTRIBUTION_TAG},
+    {"IMAGE",  IMAGE_TAG},
+    {"ARRAY",  ARRAY_TAG},
+    {"MATRIX", MATRIX_TAG},
+    {"PYRAMID",PYRAMID_TAG},
+    {"REMAP",  REMAP_TAG},
+    {"THRESHOLD", THRESHOLD_TAG},
+    {"OBJECT_ARRAY", OBJECT_ARRAY_TAG},
+
+    {"START_X", START_X_TAG},
+    {"START_Y", START_Y_TAG},
+    {"END_X",   END_X_TAG},
+    {"END_Y",   END_Y_TAG},
+    {"X",       X_TAG},
+    {"Y",       Y_TAG},
+    {"Z",       Z_TAG},
+    {"STRENGTH",STRENGTH_TAG},
+    {"SCALE",   SCALE_TAG},
+    {"ORIENTATION", ORIENTATION_TAG},
+    {"TRACKING_STATUS", TRACKING_STATUS_TAG},
+    {"ERROR",   ERROR_TAG},
+    {"FREQUENCY",FREQUENCY_TAG},
+    {"POINT",   POINT_TAG},
+    {"BINARY",  BINARY_TAG},
+    {"RANGE",   RANGE_TAG},
+    {"PIXELS",  PIXELS_TAG},
+    {"BORDERCONST",  BORDERCONST_TAG},
+
+    {"RGB",     RGB_TAG},
+    {"RGBA",    RGBA_TAG},
+    {"YUV",     YUV_TAG},
+};
+
+#define XML_FOREACH_CHILD_TAG(child, tag, tags) \
+        for (child = (xmlFirstElementChild(child) ? \
+                      (tag=(vx_xml_tag_e)xml_match_tag(xmlFirstElementChild(child),tags,dimof(tags)),xmlFirstElementChild(child)) : \
+                      (tag=UNKNOWN_TAG,child)); \
+             tag && child; \
+             child = (xmlNextElementSibling(child) ? \
+                      (tag=(vx_xml_tag_e)xml_match_tag(xmlNextElementSibling(child),tags,dimof(tags)),xmlNextElementSibling(child)) : \
+                      (tag=UNKNOWN_TAG,child->parent)))
+
+#define XML_HAS_CHILD(child) xmlFirstElementChild(child)
+
+#define REFNUM_ERROR VX_PRINT(VX_ZONE_ERROR, "Reference number out of bounds: \"references\" tag=%d, \"reference\"=%d\n", total, refIdx); status = VX_ERROR_INVALID_FORMAT;
 
 static void xml_string(xmlNodePtr cur, char out[], size_t nchar)
 {
@@ -169,7 +311,7 @@ static vx_status vxReserveReferences(vx_context context, vx_uint32 num)
     {
         if (context->reftable[r] == NULL) {
             /* 1 is used as a flag that this is reserved since it is not a valid handle */
-            context->reftable[r] = (vx_reference)1;
+            context->reftable[r] = Reference::createReference(1);
             count++;
         }
     }
@@ -187,7 +329,8 @@ static vx_status vxReleaseReferences(vx_context context, vx_uint32 num)
     vx_uint32 r, count = 0;
     for (r = 0u; (r < VX_INT_MAX_REF) && (count < num); r++)
     {
-        if (context->reftable[r] == (vx_reference)1) {
+        int* resv = (int*)context->reftable[r]->reserved;
+        if (*resv == 1) {
             /* 1 is used as a flag that this is reserved since it is not a valid handle */
             context->reftable[r] = NULL;
             count++;
@@ -202,8 +345,8 @@ static vx_status vxReleaseReferences(vx_context context, vx_uint32 num)
 /* Convert external reference to an internal reference */
 static void vxInternalizeReference(vx_reference ref)
 {
-    ownIncrementReference(ref, VX_INTERNAL);
-    ownDecrementReference(ref, VX_EXTERNAL);
+    ref->incrementReference(VX_INTERNAL);
+    ref->decrementReference(VX_EXTERNAL);
 }
 
 /* Adds the numeric label for a user struct enumeration to a local table so that it can be correlated to usage in
@@ -261,150 +404,6 @@ static vx_status vxStructGetEnum(xml_struct_t ptable[VX_INT_MAX_USER_STRUCTS], v
 
     return status;
 }
-
-
-typedef enum _vx_xml_tag_e {
-    UNKNOWN_TAG = 0,
-    OPENVX_TAG,
-    LIBRARY_TAG,
-    STRUCT_TAG,
-    GRAPH_TAG,
-    NODE_TAG,
-    KERNEL_TAG,
-    PARAMETER_TAG,
-
-    BOOL_TAG,
-    CHAR_TAG,
-    UINT8_TAG,
-    UINT16_TAG,
-    UINT32_TAG,
-    UINT64_TAG,
-    INT8_TAG,
-    INT16_TAG,
-    INT32_TAG,
-    INT64_TAG,
-    ENUM_TAG,
-    DF_IMAGE_TAG,
-    SIZE_TAG,
-    FLOAT32_TAG,
-    FLOAT64_TAG,
-
-    KEYPOINT_TAG,
-    COORDINATES2D_TAG,
-    COORDINATES3D_TAG,
-    RECTANGLE_TAG,
-    USER_TAG,
-    ROI_TAG,
-    UNIFORM_TAG,
-
-    ARRAY_TAG,
-    CONVOLUTION_TAG,
-    DELAY_TAG,
-    DISTRIBUTION_TAG,
-    IMAGE_TAG,
-    LUT_TAG,
-    MATRIX_TAG,
-    PYRAMID_TAG,
-    REMAP_TAG,
-    SCALAR_TAG,
-    THRESHOLD_TAG,
-    OBJECT_ARRAY_TAG,
-
-    /* fields */
-    START_X_TAG,
-    START_Y_TAG,
-    END_X_TAG,
-    END_Y_TAG,
-    X_TAG,
-    Y_TAG,
-    Z_TAG,
-    STRENGTH_TAG,
-    SCALE_TAG,
-    ORIENTATION_TAG,
-    TRACKING_STATUS_TAG,
-    ERROR_TAG,
-    FREQUENCY_TAG,
-    POINT_TAG,
-    BINARY_TAG,
-    RANGE_TAG,
-    PIXELS_TAG,
-    BORDERCONST_TAG,
-
-    /* PIXEL FORMAT */
-    RGB_TAG,
-    RGBA_TAG,
-    YUV_TAG,
-} vx_xml_tag_e;
-
-static xml_tag_t tags[] = {
-    {"OPENVX", OPENVX_TAG},
-    {"LIBRARY",LIBRARY_TAG},
-    {"STRUCT", STRUCT_TAG},
-    {"GRAPH",  GRAPH_TAG},
-    {"NODE",   NODE_TAG},
-    {"PARAMETER", PARAMETER_TAG},
-    {"KERNEL", KERNEL_TAG},
-
-    {"CHAR",   CHAR_TAG},
-    {"UINT8",  UINT8_TAG},
-    {"UINT16", UINT16_TAG},
-    {"UINT32", UINT32_TAG},
-    {"UINT64", UINT64_TAG},
-    {"INT8",   INT8_TAG},
-    {"INT16",  INT16_TAG},
-    {"INT32",  INT32_TAG},
-    {"INT64",  INT64_TAG},
-    {"FLOAT32",FLOAT32_TAG},
-    {"FLOAT64",FLOAT64_TAG},
-    {"BOOL",   BOOL_TAG},
-    {"ENUM",   ENUM_TAG},
-    {"SIZE",   SIZE_TAG},
-    {"DF_IMAGE", DF_IMAGE_TAG},
-
-    {"KEYPOINT", KEYPOINT_TAG},
-    {"RECTANGLE", RECTANGLE_TAG},
-    {"COORDINATES2D", COORDINATES2D_TAG},
-    {"COORDINATES3D", COORDINATES3D_TAG},
-    {"USER", USER_TAG},
-    {"ROI", ROI_TAG},
-    {"UNIFORM", UNIFORM_TAG},
-
-    {"SCALAR", SCALAR_TAG},
-    {"CONVOLUTION", CONVOLUTION_TAG},
-    {"DELAY",  DELAY_TAG},
-    {"LUT",    LUT_TAG},
-    {"DISTRIBUTION", DISTRIBUTION_TAG},
-    {"IMAGE",  IMAGE_TAG},
-    {"ARRAY",  ARRAY_TAG},
-    {"MATRIX", MATRIX_TAG},
-    {"PYRAMID",PYRAMID_TAG},
-    {"REMAP",  REMAP_TAG},
-    {"THRESHOLD", THRESHOLD_TAG},
-    {"OBJECT_ARRAY", OBJECT_ARRAY_TAG},
-
-    {"START_X", START_X_TAG},
-    {"START_Y", START_Y_TAG},
-    {"END_X",   END_X_TAG},
-    {"END_Y",   END_Y_TAG},
-    {"X",       X_TAG},
-    {"Y",       Y_TAG},
-    {"Z",       Z_TAG},
-    {"STRENGTH",STRENGTH_TAG},
-    {"SCALE",   SCALE_TAG},
-    {"ORIENTATION", ORIENTATION_TAG},
-    {"TRACKING_STATUS", TRACKING_STATUS_TAG},
-    {"ERROR",   ERROR_TAG},
-    {"FREQUENCY",FREQUENCY_TAG},
-    {"POINT",   POINT_TAG},
-    {"BINARY",  BINARY_TAG},
-    {"RANGE",   RANGE_TAG},
-    {"PIXELS",  PIXELS_TAG},
-    {"BORDERCONST",  BORDERCONST_TAG},
-
-    {"RGB",     RGB_TAG},
-    {"RGBA",    RGBA_TAG},
-    {"YUV",     YUV_TAG},
-};
 
 static vx_char refNameStr[VX_MAX_REFERENCE_NAME];
 
@@ -487,22 +486,22 @@ static vx_status vxLoadDataForImage(vx_image image, xmlNodePtr cur, vx_reference
                             vx_uint32 x = xml_prop_ulong(cur, "x");
                             vx_uint32 y = xml_prop_ulong(cur, "y");
                             if (tag == UINT8_TAG) {
-                                vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                                vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                                 ptr[0] = (vx_uint8)xml_ulong(cur);
                             } else if (tag == UINT16_TAG) {
-                                vx_uint16 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                                vx_uint16 *ptr = (vx_uint16*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                                 ptr[0] = (vx_uint16)xml_ulong(cur);
                             } else if (tag == UINT32_TAG) {
-                                vx_uint32 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                                vx_uint32 *ptr = (vx_uint32*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                                 ptr[0] = (vx_uint32)xml_ulong(cur);
                             } else if (tag == INT16_TAG) {
-                                vx_int16 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                                vx_int16 *ptr = (vx_int16*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                                 ptr[0] = (vx_int16)xml_long(cur);
                             } else if (tag == INT32_TAG) {
-                                vx_int32 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                                vx_int32 *ptr = (vx_int32*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                                 ptr[0] = (vx_int32)xml_long(cur);
                             } else if (tag == RGB_TAG) {
-                                vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                                vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                                 vx_uint32 tmp[3];
                                 vx_char values[13] = {0};
                                 xml_string(cur, values, sizeof(values));
@@ -521,7 +520,7 @@ static vx_status vxLoadDataForImage(vx_image image, xmlNodePtr cur, vx_reference
                                     sscanf(tmp, "%hhu", &ptr[2]);
                                 }
                             } else if (tag == RGBA_TAG) {
-                                vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                                vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                                 vx_uint32 tmp[4];
                                 vx_char values[17] = {0};
                                 xml_string(cur, values, sizeof(values));
@@ -543,7 +542,7 @@ static vx_status vxLoadDataForImage(vx_image image, xmlNodePtr cur, vx_reference
                                     sscanf(tmp, "%hhu", &ptr[3]);
                                 }
                             } else if (tag == YUV_TAG) {
-                                vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                                vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                                 vx_char values[8], *tmp = NULL;
                                 xml_string(cur, values, sizeof(values));
                                 tmp = strtok(values, " \t\n\r");
@@ -712,7 +711,7 @@ static vx_status vxLoadDataForArray(vx_array array, xmlNodePtr cur)
             char *string = (char *)xmlNodeListGetString(cur->doc, cur->children, 1);
             char tokens[5] = " \t\n\r";
             char *tmp = strtok(string, tokens);
-            vx_uint8 *v = calloc(array->item_size, sizeof(vx_uint8));
+            vx_uint8 *v = (vx_uint8*)calloc(array->item_size, sizeof(vx_uint8));
             vx_uint32 j = 0;
             while (tmp) {
                 sscanf(tmp, "%hhu", &v[j++]);
@@ -822,7 +821,7 @@ static vx_status vxLoadDataForPyramid(vx_pyramid pyr, xmlNodePtr cur, vx_referen
                        pyr->levels[level]->height == height) {
                         refs[refIdx] = (vx_reference)pyr->levels[level];
                         vxSetName(refs[refIdx], cur);
-                        ownIncrementReference(refs[refIdx], VX_INTERNAL);
+                        refs[refIdx]->incrementReference(VX_INTERNAL);
                     } else {
                         VX_PRINT(VX_ZONE_ERROR, "Pyramid image settings doesn't match generated pyramid image!\n");
                         return VX_ERROR_INVALID_PARAMETERS;
@@ -834,7 +833,7 @@ static vx_status vxLoadDataForPyramid(vx_pyramid pyr, xmlNodePtr cur, vx_referen
                            pyr->levels[i]->height == height) {
                             refs[refIdx] = (vx_reference)pyr->levels[i];
                             vxSetName(refs[refIdx], cur);
-                            ownIncrementReference(refs[refIdx], VX_INTERNAL);
+                            refs[refIdx]->incrementReference(VX_INTERNAL);
                             break;
                         }
                     }
@@ -1138,16 +1137,16 @@ static vx_status vxImportFromXMLImage(vx_reference ref, xmlNodePtr cur, vx_refer
 static vx_status vxImportFromXMLArray(vx_reference ref, xmlNodePtr cur, vx_reference refs[], vx_size total, vx_bool is_virtual)
 {
     vx_status status = VX_SUCCESS;
-    vx_char typename[32];
+    vx_char typeName[32];
     vx_uint32 refIdx = xml_prop_ulong(cur, "reference");
     vx_size capacity = xml_prop_ulong(cur, "capacity");
     vx_array array = 0;
     vx_enum type = VX_TYPE_INVALID;
     vx_uint32 userNum;
-    xml_prop_string(cur, "elemType", typename, sizeof(typename));
+    xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
 
-    if(ownTypeFromString(typename, &type) != VX_SUCCESS) { /* Type was not found, check if it is a user type */
-        if(sscanf(typename, "USER_STRUCT_%d", &userNum) == 1) {
+    if(ownTypeFromString(typeName, &type) != VX_SUCCESS) { /* Type was not found, check if it is a user type */
+        if(sscanf(typeName, "USER_STRUCT_%d", &userNum) == 1) {
             if(vxStructGetEnum(user_struct_table, userNum, &type) != VX_SUCCESS) {
                 return VX_ERROR_INVALID_PARAMETERS; /* INVALID type */
             }
@@ -1240,40 +1239,40 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
 
     if (doc == NULL) {
         VX_PRINT(VX_ZONE_ERROR, "Could not parse %s\n", xmlfile);
-        vxAddLogEntry(&context->base, VX_ERROR_INVALID_PARAMETERS, "Could not parse %s\n", xmlfile);
-        import = (vx_import)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+        vxAddLogEntry(context, VX_ERROR_INVALID_PARAMETERS, "Could not parse %s\n", xmlfile);
+        // import = (vx_import)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
         return import;
     }
 
-    user_struct_table = calloc(VX_INT_MAX_USER_STRUCTS, sizeof(xml_struct_t));
+    user_struct_table = (xml_struct_t*)calloc(VX_INT_MAX_USER_STRUCTS, sizeof(xml_struct_t));
     if (user_struct_table == NULL) {
         VX_PRINT(VX_ZONE_ERROR, "Calloc failed\n");
-        vxAddLogEntry(&context->base, VX_ERROR_NO_MEMORY, "Calloc failed\n");
-        import = (vx_import)ownGetErrorObject(context, VX_ERROR_NO_MEMORY);
+        vxAddLogEntry(context, VX_ERROR_NO_MEMORY, "Calloc failed\n");
+        // import = (vx_import)ownGetErrorObject(context, VX_ERROR_NO_MEMORY);
         return import;
     }
 
     if (root == NULL || xmlStrcmp(cur->name, (const xmlChar *)"openvx") != 0) {
         VX_PRINT(VX_ZONE_ERROR, "%s is not wellformed\n", xmlfile);
-        vxAddLogEntry(&context->base, VX_ERROR_INVALID_FORMAT, "%s is not wellformed\n", xmlfile);
-        import = (vx_import)ownGetErrorObject(context, VX_ERROR_INVALID_FORMAT);
+        vxAddLogEntry(context, VX_ERROR_INVALID_FORMAT, "%s is not wellformed\n", xmlfile);
+        // import = (vx_import)ownGetErrorObject(context, VX_ERROR_INVALID_FORMAT);
         goto exit;
     }
 
     total = xml_prop_ulong(cur, "references");
     if (total > VX_INT_MAX_REF) {
         VX_PRINT(VX_ZONE_ERROR, "Total references = %d too high for this implementation\n", total);
-        vxAddLogEntry(&context->base, VX_ERROR_INVALID_FORMAT, "Total references = %d too high for this implementation\n", total);
-        import = (vx_import)ownGetErrorObject(context, VX_ERROR_INVALID_FORMAT);
+        vxAddLogEntry(context, VX_ERROR_INVALID_FORMAT, "Total references = %d too high for this implementation\n", total);
+        // import = (vx_import)ownGetErrorObject(context, VX_ERROR_INVALID_FORMAT);
         goto exit;
     }
 
-    import = ownCreateImportInt(context, VX_IMPORT_TYPE_XML, total);
-    if (import == NULL || import->base.type != VX_TYPE_IMPORT) {
+    import = Import::createImportInt(context, VX_IMPORT_TYPE_XML, total);
+    if (import == NULL || import->type != VX_TYPE_IMPORT) {
         goto exit;
     }
 
-    refs = (vx_reference*)((vx_import_t *)import)->refs;
+    refs = (vx_reference*)((vx_import)import)->refs;
 
     XML_FOREACH_CHILD_TAG (cur, tag, tags) {
         if (tag == LIBRARY_TAG) {
@@ -1364,9 +1363,9 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
             vx_uint32 refIdx = xml_prop_ulong(cur, "reference");
             vx_size nullReference = 0;
             void *ptr = &nullReference;
-            vx_char typename[20];
-            xml_prop_string(cur, "elemType", typename, sizeof(typename));
-            ownTypeFromString(typename, &type);
+            vx_char typeName[20];
+            xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
+            ownTypeFromString(typeName, &type);
             if (refIdx >= total) {
                 REFNUM_ERROR;
                 goto exit_error;
@@ -1389,9 +1388,9 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
             vx_size rows = xml_prop_ulong(cur, "rows");
             vx_size cols = xml_prop_ulong(cur, "columns");
             vx_uint32 refIdx = xml_prop_ulong(cur, "reference");
-            vx_char typename[32];
-            xml_prop_string(cur, "elemType", typename, sizeof(typename));
-            ownTypeFromString(typename, &type);
+            vx_char typeName[32];
+            xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
+            ownTypeFromString(typeName, &type);
             if (refIdx >= total) {
                 REFNUM_ERROR;
                 goto exit_error;
@@ -1423,9 +1422,9 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
         } else if (tag == LUT_TAG) {
             vx_uint32 refIdx = xml_prop_ulong(cur, "reference");
             vx_size count = xml_prop_ulong(cur, "count");
-            vx_char typename[32] = "VX_TYPE_UINT8";
-            xml_prop_string(cur, "elemType", typename, sizeof(typename));
-            ownTypeFromString(typename, &type);
+            vx_char typeName[32] = "VX_TYPE_UINT8";
+            xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
+            ownTypeFromString(typeName, &type);
             if (refIdx >= total) {
                 REFNUM_ERROR;
                 goto exit_error;
@@ -1471,9 +1470,9 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
             }
         } else if (tag == THRESHOLD_TAG) {
             vx_uint32 refIdx = xml_prop_ulong(cur, "reference");
-            vx_char typename[32] = "VX_TYPE_UINT8"; // default value
-            xml_prop_string(cur, "elemType", typename, sizeof(typename));
-            ownTypeFromString(typename, &type);
+            vx_char typeName[32] = "VX_TYPE_UINT8"; // default value
+            xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
+            ownTypeFromString(typeName, &type);
             status = VX_SUCCESS;
             if (refIdx < total) {
                 vx_int32 true_value = (vx_int32)xml_prop_ulong(cur, "true_value");
@@ -1563,7 +1562,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                                        ((vx_image)internalRefs[childNum])->height == height) {
                                         refs[refIdx] = (vx_reference)internalRefs[childNum];
                                         vxSetName(refs[refIdx], cur);
-                                        ownIncrementReference(refs[refIdx], VX_INTERNAL);
+                                        refs[refIdx]->incrementReference(VX_INTERNAL);
                                     } else {
                                         status = VX_ERROR_INVALID_PARAMETERS;
                                         VX_PRINT(VX_ZONE_ERROR, "%s image settings doesn't match generated %s image!\n", objectName, objectName);
@@ -1585,13 +1584,13 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                         case ARRAY_TAG:
                         {
                             vx_size capacity = xml_prop_ulong(cur, "capacity");
-                            vx_char typename[32];
+                            vx_char typeName[32];
                             vx_enum type = VX_TYPE_INVALID;
                             vx_uint32 userNum;
-                            xml_prop_string(cur, "elemType", typename, sizeof(typename));
+                            xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
 
-                            if(ownTypeFromString(typename, &type) != VX_SUCCESS) { /* Type was not found, check if it is a user type */
-                                if(sscanf(typename, "USER_STRUCT_%d", &userNum) == 1) {
+                            if(ownTypeFromString(typeName, &type) != VX_SUCCESS) { /* Type was not found, check if it is a user type */
+                                if(sscanf(typeName, "USER_STRUCT_%d", &userNum) == 1) {
                                     if(vxStructGetEnum(user_struct_table, userNum, &type) != VX_SUCCESS) {
                                         status = VX_ERROR_INVALID_TYPE; /* INVALID type */
                                         goto exit_error;
@@ -1626,7 +1625,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                                        ((vx_array)internalRefs[childNum])->item_type == type) {
                                         refs[refIdx] = internalRefs[childNum];
                                         vxSetName(refs[refIdx], cur);
-                                        ownIncrementReference(refs[refIdx], VX_INTERNAL);
+                                        refs[refIdx]->incrementReference(VX_INTERNAL);
                                     } else {
                                         status = VX_ERROR_INVALID_PARAMETERS;
                                         VX_PRINT(VX_ZONE_ERROR, "%s array settings doesn't match generated %s array!\n", objectName, objectName);
@@ -1679,7 +1678,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                                        ((vx_pyramid)internalRefs[childNum])->scale == scale) {
                                         refs[refIdx] = internalRefs[childNum];
                                         vxSetName(refs[refIdx], cur);
-                                        ownIncrementReference(refs[refIdx], VX_INTERNAL);
+                                        refs[refIdx]->incrementReference(VX_INTERNAL);
                                     } else {
                                         status = VX_ERROR_INVALID_PARAMETERS;
                                         VX_PRINT(VX_ZONE_ERROR, "%s pyramid settings doesn't match generated %s pyramid!\n", objectName, objectName);
@@ -1702,9 +1701,9 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                         {
                             vx_size rows = xml_prop_ulong(cur, "rows");
                             vx_size cols = xml_prop_ulong(cur, "columns");
-                            vx_char typename[32];
-                            xml_prop_string(cur, "elemType", typename, sizeof(typename));
-                            ownTypeFromString(typename, &type);
+                            vx_char typeName[32];
+                            xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
+                            ownTypeFromString(typeName, &type);
                             if(childNum == 0) { /* Create delay object based on first child */
                                 vx_matrix exemplar = NULL;
                                 status = vxReserveReferences(context, count+1);
@@ -1729,7 +1728,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                                        ((vx_matrix)internalRefs[childNum])->columns == cols) {
                                         refs[refIdx] = internalRefs[childNum];
                                         vxSetName(refs[refIdx], cur);
-                                        ownIncrementReference(refs[refIdx], VX_INTERNAL);
+                                        refs[refIdx]->incrementReference(VX_INTERNAL);
                                     } else {
                                         status = VX_ERROR_INVALID_PARAMETERS;
                                         VX_PRINT(VX_ZONE_ERROR, "%s matrix settings doesn't match generated %s matrix!\n", objectName, objectName);
@@ -1751,9 +1750,9 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                         case LUT_TAG:
                         {
                             vx_size lut_count = xml_prop_ulong(cur, "count");
-                            vx_char typename[32] = "VX_TYPE_UINT8";
-                            xml_prop_string(cur, "elemType", typename, sizeof(typename));
-                            ownTypeFromString(typename, &type);
+                            vx_char typeName[32] = "VX_TYPE_UINT8";
+                            xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
+                            ownTypeFromString(typeName, &type);
                             if (lut_count == 0)
                                 lut_count = 256;
                             if(childNum == 0) { /* Create delay object based on first child */
@@ -1776,11 +1775,11 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                             if (refIdx < total)
                             {
                                 if(childNum < count) {
-                                    if(((vx_lut_t *)internalRefs[childNum])->num_items == lut_count &&
-                                       ((vx_lut_t *)internalRefs[childNum])->item_type == type) {
+                                    if(((vx_lut)internalRefs[childNum])->num_items == lut_count &&
+                                       ((vx_lut)internalRefs[childNum])->item_type == type) {
                                         refs[refIdx] = internalRefs[childNum];
                                         vxSetName(refs[refIdx], cur);
-                                        ownIncrementReference(refs[refIdx], VX_INTERNAL);
+                                        refs[refIdx]->incrementReference(VX_INTERNAL);
                                     } else {
                                         status = VX_ERROR_INVALID_PARAMETERS;
                                         VX_PRINT(VX_ZONE_ERROR, "%s lut settings doesn't match generated %s lut!\n", objectName, objectName);
@@ -1827,11 +1826,11 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                             if (refIdx < total)
                             {
                                 if(childNum < count) {
-                                    if(((vx_convolution)internalRefs[childNum])->base.rows == rows &&
-                                       ((vx_convolution)internalRefs[childNum])->base.columns == cols) {
+                                    if(((vx_convolution)internalRefs[childNum])->rows == rows &&
+                                       ((vx_convolution)internalRefs[childNum])->columns == cols) {
                                         refs[refIdx] = internalRefs[childNum];
                                         vxSetName(refs[refIdx], cur);
-                                        ownIncrementReference(refs[refIdx], VX_INTERNAL);
+                                        refs[refIdx]->incrementReference(VX_INTERNAL);
                                     } else {
                                         status = VX_ERROR_INVALID_PARAMETERS;
                                         VX_PRINT(VX_ZONE_ERROR, "%s convolution settings doesn't match generated &s convolution!\n", objectName, objectName);
@@ -1882,7 +1881,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                                        ((vx_remap)internalRefs[childNum])->dst_height == dst_height) {
                                         refs[refIdx] = internalRefs[childNum];
                                         vxSetName(refs[refIdx], cur);
-                                        ownIncrementReference(refs[refIdx], VX_INTERNAL);
+                                        refs[refIdx]->incrementReference(VX_INTERNAL);
                                     } else {
                                         status = VX_ERROR_INVALID_PARAMETERS;
                                         VX_PRINT(VX_ZONE_ERROR, "%s remap settings doesn't match generated %s remap!\n", objectName, objectName);
@@ -1931,7 +1930,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                                        ((vx_distribution)internalRefs[childNum])->offset_x == offset) {
                                         refs[refIdx] = internalRefs[childNum];
                                         vxSetName(refs[refIdx], cur);
-                                        ownIncrementReference(refs[refIdx], VX_INTERNAL);
+                                        refs[refIdx]->incrementReference(VX_INTERNAL);
                                     } else {
                                         status = VX_ERROR_INVALID_PARAMETERS;
                                         VX_PRINT(VX_ZONE_ERROR, "%s distribution settings doesn't match generated %s distribution!\n", objectName, objectName);
@@ -1952,9 +1951,9 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                         }
                         case THRESHOLD_TAG:
                         {
-                            vx_char typename[32] = "VX_TYPE_UINT8"; // default value
-                            xml_prop_string(cur, "elemType", typename, sizeof(typename));
-                            ownTypeFromString(typename, &type);
+                            vx_char typeName[32] = "VX_TYPE_UINT8"; // default value
+                            xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
+                            ownTypeFromString(typeName, &type);
                             vx_int32 true_value = (vx_int32)xml_prop_ulong(cur, "true_value");
                             vx_int32 false_value = (vx_int32)xml_prop_ulong(cur, "false_value");
                             if(childNum == 0) { /* Create delay object based on first child */
@@ -2002,7 +2001,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                                     if(((vx_threshold)internalRefs[childNum])->thresh_type == thresh_type) {
                                         refs[refIdx] = internalRefs[childNum];
                                         vxSetName(refs[refIdx], cur);
-                                        ownIncrementReference(refs[refIdx], VX_INTERNAL);
+                                        refs[refIdx]->incrementReference(VX_INTERNAL);
                                     } else {
                                         status = VX_ERROR_INVALID_PARAMETERS;
                                         VX_PRINT(VX_ZONE_ERROR, "%s threshold settings doesn't match generated %s threshold!\n", objectName, objectName);
@@ -2035,9 +2034,9 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                         }
                         case SCALAR_TAG:
                         {
-                            vx_char typename[20];
-                            xml_prop_string(cur, "elemType", typename, sizeof(typename));
-                            ownTypeFromString(typename, &type);
+                            vx_char typeName[20];
+                            xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
+                            ownTypeFromString(typeName, &type);
                             vx_size nullReference = 0;
                             void *ptr = &nullReference;
                             if(childNum == 0) { /* Create delay object based on first child */
@@ -2063,7 +2062,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                                     if(((vx_scalar)internalRefs[childNum])->data_type == type) {
                                         refs[refIdx] = internalRefs[childNum];
                                         vxSetName(refs[refIdx], cur);
-                                        ownIncrementReference(refs[refIdx], VX_INTERNAL);
+                                        refs[refIdx]->incrementReference(VX_INTERNAL);
                                     } else {
                                         status = VX_ERROR_INVALID_PARAMETERS;
                                         VX_PRINT(VX_ZONE_ERROR, "%s scalar settings doesn't match generated %s scalar!\n", objectName, objectName);
@@ -2174,8 +2173,8 @@ exit_error:
     if (status != VX_SUCCESS)
     {
         /* destroy all the references */
-        vxAddLogEntry(&context->base, status, "Failure\n");
-        import = (vx_import)ownGetErrorObject(context, status);
+        vxAddLogEntry(context, status, "Failure\n");
+        // import = (vx_import)ownGetErrorObject(context, status);
     } else {
         vx_uint32 r;
         /* scan the array for valid references */
@@ -2185,13 +2184,13 @@ exit_error:
             }
         }
     }
-    ((vx_import_t *)import)->count = counted;
+    ((vx_import)import)->count = counted;
     if( status == VX_SUCCESS && counted != total)
     {
         /* The XML file indicated that there was a different number of references than were imported */
         VX_PRINT(VX_ZONE_ERROR, "Reference count mismatch: xml \"references\" tag=%d, imported=%d\n", total, counted);
-        vxAddLogEntry(&context->base, VX_ERROR_NOT_COMPATIBLE, "Reference count mismatch: xml \"references\" tag=%d, imported=%d\n", total, counted);
-        import = (vx_import)ownGetErrorObject(context, VX_ERROR_NOT_COMPATIBLE);
+        vxAddLogEntry(context, VX_ERROR_NOT_COMPATIBLE, "Reference count mismatch: xml \"references\" tag=%d, imported=%d\n", total, counted);
+        // import = (vx_import)ownGetErrorObject(context, VX_ERROR_NOT_COMPATIBLE);
     }
 
 exit:

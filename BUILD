@@ -12,5 +12,8 @@ cc_library(
         "include",
         "framework/include"
     ],
+    linkopts = [
+        "-lxml2"
+    ],
     visibility = ["//visibility:public"],
 )

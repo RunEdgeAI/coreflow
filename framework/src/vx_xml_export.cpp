@@ -1,5 +1,4 @@
-/* 
-
+/*
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,10 +15,10 @@
  */
 
 #include "vx_internal.h"
+#include "vx_type_pairs.h"
 
 #if defined(OPENVX_USE_XML)
 
-#include <vx_type_pairs.h>
 
 #if defined(__APPLE__)
 typedef unsigned long ulong;
@@ -104,7 +103,7 @@ static void vxComputeROIStartXY(vx_image parent, vx_image roi, vx_uint32 p, vx_u
 static vx_status vxExportToXMLROI(FILE* fp, vx_reference refs[], vx_uint32 r, vx_uint32 id, vx_uint32 numrefs)
 {
     vx_status status = VX_SUCCESS;
-    vx_image_t *image = (vx_image_t *)refs[r];
+    vx_image image = (vx_image)refs[r];
     vx_char indent[10] = {0};
     vx_uint32 i, start_x, start_y;
     for (i = 0; i < (dimof(indent)-1) && i < id; i++)
@@ -125,7 +124,7 @@ static vx_status vxExportToXMLROI(FILE* fp, vx_reference refs[], vx_uint32 r, vx
         /* List ROIs, if any */
         for (r2 = 0u; r2 < numrefs; r2++)
         {
-            if ((vx_reference_t *)image == refs[r2]->scope)
+            if ((vx_reference)image == refs[r2]->scope)
             {
                 if(roiFound == 0) {
                     roiFound = 1;
@@ -146,7 +145,7 @@ static vx_status vxExportToXMLROI(FILE* fp, vx_reference refs[], vx_uint32 r, vx
 static vx_status vxExportToXMLImage(FILE* fp, vx_reference refs[], vx_uint32 r, vx_uint32 id, vx_uint32 numrefs)
 {
     vx_status status = VX_SUCCESS;
-    vx_image_t *image = (vx_image_t *)refs[r];
+    vx_image image = (vx_image)refs[r];
     vx_char indent[10] = {0};
     vx_uint32 i;
     for (i = 0; i < (dimof(indent)-1) && i < id; i++)
@@ -166,7 +165,7 @@ static vx_status vxExportToXMLImage(FILE* fp, vx_reference refs[], vx_uint32 r, 
         /* List ROIs, if any */
         for (r2 = 0u; r2 < numrefs; r2++)
         {
-            if ((vx_reference_t *)image == refs[r2]->scope)
+            if ((vx_reference)image == refs[r2]->scope)
             {
                 vxGetName(refs[r2]);
                 status |= vxExportToXMLROI(fp, refs, r2, id+1, numrefs);
@@ -187,62 +186,62 @@ static vx_status vxExportToXMLImage(FILE* fp, vx_reference refs[], vx_uint32 r, 
 
                 if (image->format == VX_DF_IMAGE_U8)
                 {
-                    vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, 0, 0, &addr);
+                    vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, 0, 0, &addr);
                     fprintf(fp, "%s\t\t<uint8>%hhu</uint8>\n",
                             indent, *ptr);
                 }
                 else if (image->format == VX_DF_IMAGE_S16)
                 {
-                    vx_int16 *ptr = vxFormatImagePatchAddress2d(base, 0, 0, &addr);
+                    vx_int16 *ptr = (vx_int16*)vxFormatImagePatchAddress2d(base, 0, 0, &addr);
                     fprintf(fp, "%s\t\t<int16>%hd</int16>\n",
                             indent, *ptr);
                 }
                 else if (image->format == VX_DF_IMAGE_U16)
                 {
-                    vx_uint16 *ptr = vxFormatImagePatchAddress2d(base, 0, 0, &addr);
+                    vx_uint16 *ptr = (vx_uint16*)vxFormatImagePatchAddress2d(base, 0, 0, &addr);
                     fprintf(fp, "%s\t\t<uint16>%hu</uint16>\n",
                             indent, *ptr);
                 }
                 else if (image->format == VX_DF_IMAGE_S32)
                 {
-                    vx_int32 *ptr = vxFormatImagePatchAddress2d(base, 0, 0, &addr);
+                    vx_int32 *ptr = (vx_int32*)vxFormatImagePatchAddress2d(base, 0, 0, &addr);
                     fprintf(fp, "%s\t\t<int32>%d</int32>\n",
                             indent, *ptr);
                 }
                 else if (image->format == VX_DF_IMAGE_U32)
                 {
-                    vx_uint32 *ptr = vxFormatImagePatchAddress2d(base, 0, 0, &addr);
+                    vx_uint32 *ptr = (vx_uint32*)vxFormatImagePatchAddress2d(base, 0, 0, &addr);
                     fprintf(fp, "%s\t\t<uint32>%u</uint32>\n",
                             indent, *ptr);
                 }
                 else if (image->format == VX_DF_IMAGE_RGB)
                 {
-                    vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, 0, 0, &addr);
+                    vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, 0, 0, &addr);
                     fprintf(fp, "%s\t\t<rgb>#%02x%02x%02x</rgb>\n",
                             indent, ptr[0], ptr[1], ptr[2]);
                 }
                 else if (image->format == VX_DF_IMAGE_RGBX)
                 {
-                    vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, 0, 0, &addr);
+                    vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, 0, 0, &addr);
                     fprintf(fp, "%s\t\t<rgba>#%02x%02x%02x%02x</rgba>\n",
                             indent, ptr[0], ptr[1], ptr[2], ptr[3]);
                 }
                 else if (image->format == VX_DF_IMAGE_UYVY )
                 {
-                    vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, 0, 0, &addr);
+                    vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, 0, 0, &addr);
                     fprintf(fp, "%s\t\t<yuv>%hhu %hhu %hhu </yuv>\n",
                             indent, ptr[1], ptr[0], ptr[2]);
                 }
                 else if (image->format == VX_DF_IMAGE_YUYV )
                 {
-                    vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, 0, 0, &addr);
+                    vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, 0, 0, &addr);
                     fprintf(fp, "%s\t\t<yuv>%hhu %hhu %hhu </yuv>\n",
                             indent, ptr[0], ptr[1], ptr[3]);
                 }
                 else if (image->format == VX_DF_IMAGE_YUV4 ||
                           image->format == VX_DF_IMAGE_IYUV)
                 {
-                    vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, 0, 0, &addr);
+                    vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, 0, 0, &addr);
                     if(p == 0) {
                         fprintf(fp, "%s\t\t<yuv>", indent);
                     }
@@ -256,7 +255,7 @@ static vx_status vxExportToXMLImage(FILE* fp, vx_reference refs[], vx_uint32 r, 
                 else if ((image->format == VX_DF_IMAGE_NV12) ||
                           (image->format == VX_DF_IMAGE_NV21))
                 {
-                    vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, 0, 0, &addr);
+                    vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, 0, 0, &addr);
                     if(p == 0)
                     {
                         fprintf(fp, "%s\t\t<yuv>%hhu ", indent, ptr[0]);
@@ -277,7 +276,7 @@ static vx_status vxExportToXMLImage(FILE* fp, vx_reference refs[], vx_uint32 r, 
             }
             fprintf(fp, "%s\t</uniform>\n", indent);
         }
-        else if (image->base.write_count > 0)
+        else if (image->write_count > 0)
         {
             vx_uint32 p, x, y;
             vx_rectangle_t rect;
@@ -301,50 +300,50 @@ static vx_status vxExportToXMLImage(FILE* fp, vx_reference refs[], vx_uint32 r, 
                             (image->format == VX_DF_IMAGE_YUV4) ||
                             (image->format == VX_DF_IMAGE_IYUV))
                         {
-                            vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                            vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                             fprintf(fp, "%s\t\t\t<uint8 x=\"%u\" y=\"%u\">%hhu</uint8>\n",
                                     indent, x, y, *ptr);
                         }
                         else if (image->format == VX_DF_IMAGE_S16)
                         {
-                            vx_int16 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                            vx_int16 *ptr = (vx_int16*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                             fprintf(fp, "%s\t\t\t<int16 x=\"%u\" y=\"%u\">%hd</int16>\n",
                                     indent, x, y, *ptr);
                         }
                         else if (image->format == VX_DF_IMAGE_U16)
                         {
-                            vx_uint16 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                            vx_uint16 *ptr = (vx_uint16*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                             fprintf(fp, "%s\t\t\t<uint16 x=\"%u\" y=\"%u\">%hu</uint16>\n",
                                     indent, x, y, *ptr);
                         }
                         else if (image->format == VX_DF_IMAGE_S32)
                         {
-                            vx_int32 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                            vx_int32 *ptr = (vx_int32*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                             fprintf(fp, "%s\t\t\t<int32 x=\"%u\" y=\"%u\">%d</int32>\n",
                                     indent, x, y, *ptr);
                         }
                         else if (image->format == VX_DF_IMAGE_U32)
                         {
-                            vx_uint32 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                            vx_uint32 *ptr = (vx_uint32*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                             fprintf(fp, "%s\t\t\t<uint32 x=\"%u\" y=\"%u\">%u</uint32>\n",
                                     indent, x, y, *ptr);
                         }
                         else if (image->format == VX_DF_IMAGE_RGB)
                         {
-                            vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                            vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                             fprintf(fp, "%s\t\t\t<rgb x=\"%u\" y=\"%u\">#%02x%02x%02x</rgb>\n",
                                     indent, x, y, ptr[0], ptr[1], ptr[2]);
                         }
                         else if (image->format == VX_DF_IMAGE_RGBX)
                         {
-                            vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                            vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                             fprintf(fp, "%s\t\t\t<rgba x=\"%u\" y=\"%u\">#%02x%02x%02x%02x</rgba>\n",
                                     indent, x, y, ptr[0], ptr[1], ptr[2], ptr[3]);
                         }
                         else if (image->format == VX_DF_IMAGE_UYVY ||
                                   image->format == VX_DF_IMAGE_YUYV)
                         {
-                            vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                            vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                             fprintf(fp, "%s\t\t\t<yuv x=\"%u\" y=\"%u\">%hhu %hhu</yuv>\n",
                                     indent, x, y, ptr[0], ptr[1]);
                         }
@@ -353,13 +352,13 @@ static vx_status vxExportToXMLImage(FILE* fp, vx_reference refs[], vx_uint32 r, 
                         {
                             if (p == 0)
                             {
-                                vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                                vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                                 fprintf(fp, "%s\t\t\t<uint8 x=\"%u\" y=\"%u\">%hhu</uint8>\n",
                                         indent, x, y, *ptr);
                             }
                             else
                             {
-                                vx_uint8 *ptr = vxFormatImagePatchAddress2d(base, x, y, &addr);
+                                vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, x, y, &addr);
                                 fprintf(fp, "%s\t\t\t<yuv x=\"%u\" y=\"%u\">%hhu %hhu</yuv>\n",
                                         indent, x, y, ptr[0], ptr[1]);
                             }
@@ -387,7 +386,7 @@ static vx_status vxExportToXMLPyramid(FILE* fp, vx_reference refs[], vx_uint32 r
         indent[i] = '\t';
     indent[i] = '\0';
 
-    fprintf(fp, "%s<pyramid reference=\"%u\" width=\"%u\" height=\"%u\" format=\"%s\" scale=\"%f\" levels=\""VX_FMT_SIZE"\"%s",
+    fprintf(fp, "%s<pyramid reference=\"%u\" width=\"%u\" height=\"%u\" format=\"%s\" scale=\"%f\" levels=\"" VX_FMT_SIZE "\"%s",
                     indent, r, pyr->width, pyr->height, vxFourCCString(pyr->format), pyr->scale, pyr->numLevels, refNameStr);
 
     if (refs[r]->is_virtual == vx_true_e)
@@ -427,7 +426,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
         indent[i] = '\t';
     indent[i] = '\0';
 
-    fprintf(fp, "%s<array reference=\"%u\" capacity=\""VX_FMT_SIZE"\" elemType=",
+    fprintf(fp, "%s<array reference=\"%u\" capacity=\"" VX_FMT_SIZE "\" elemType=",
                     indent, r, array->capacity);
 
     if(j == -1) { /* Type was not found, check if it is a user type */
@@ -682,7 +681,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
 static vx_status vxExportToXMLLut(FILE* fp, vx_reference refs[], vx_uint32 r, vx_uint32 id)
 {
     vx_status status = VX_SUCCESS;
-    vx_lut_t *lut = (vx_lut_t *)refs[r];
+    vx_lut lut = (vx_lut)refs[r];
     vx_int32 j = ownStringFromType(lut->item_type);
     vx_char indent[10] = {0};
     vx_uint32 i;
@@ -691,7 +690,7 @@ static vx_status vxExportToXMLLut(FILE* fp, vx_reference refs[], vx_uint32 r, vx
         indent[i] = '\t';
     indent[i] = '\0';
 
-    fprintf(fp, "%s<lut reference=\"%u\" count=\""VX_FMT_SIZE"\" elemType=\"%s\"%s",
+    fprintf(fp, "%s<lut reference=\"%u\" count=\"" VX_FMT_SIZE "\" elemType=\"%s\"%s",
                     indent, r, lut->num_items, type_pairs[j].name, refNameStr);
 
     if (refs[r]->is_virtual == vx_true_e) /* is not virtual in 1.0, but check anyway */
@@ -779,7 +778,7 @@ static vx_status vxExportToXMLConvolution(FILE* fp, vx_reference refs[], vx_uint
     indent[i] = '\0';
 
     fprintf(fp, "%s<convolution reference=\"%u\" rows=\"%zu\" columns=\"%zu\" scale=\"%u\"%s",
-                 indent, r, conv->base.rows, conv->base.columns, conv->scale, refNameStr);
+                 indent, r, conv->rows, conv->columns, conv->scale, refNameStr);
 
     if (refs[r]->is_virtual == vx_true_e) /* is not virtual in 1.0, but check anyway */
     {
@@ -790,14 +789,14 @@ static vx_status vxExportToXMLConvolution(FILE* fp, vx_reference refs[], vx_uint
 
         if (refs[r]->write_count > 0)
         {
-            for (ri = 0ul; ri < conv->base.rows; ri++)
+            for (ri = 0ul; ri < conv->rows; ri++)
             {
-                for (ci = 0ul; ci < conv->base.columns; ci++)
+                for (ci = 0ul; ci < conv->columns; ci++)
                 {
-                    if (conv->base.data_type == VX_TYPE_INT16)
+                    if (conv->data_type == VX_TYPE_INT16)
                     {
-                        vx_int16 *ptr = (vx_int16 *)conv->base.memory.ptrs[0];
-                        vx_int16 value = ptr[ri * conv->base.columns + ci];
+                        vx_int16 *ptr = (vx_int16 *)conv->memory.ptrs[0];
+                        vx_int16 value = ptr[ri * conv->columns + ci];
                         fprintf(fp, "%s\t<int16 row=\"%zu\" column=\"%zu\">%hd</int16>\n",
                                 indent, ri, ci, value);
                     }
@@ -836,7 +835,7 @@ static vx_status vxExportToXMLDistribution(FILE* fp, vx_reference refs[], vx_uin
         {
             for (b = 0; b < bins; b++)
             {
-                vx_int32 *ptr = ownFormatMemoryPtr(&dist->memory, 0, b, 0, 0);
+                vx_int32 *ptr = (vx_int32*)ownFormatMemoryPtr(&dist->memory, 0, b, 0, 0);
                 fprintf(fp, "%s\t<frequency bin=\"%u\">%d</frequency>\n", indent, b, *ptr);
             }
         }
@@ -935,7 +934,7 @@ static vx_status vxExportToXMLScalar(FILE* fp, vx_reference refs[], vx_uint32 r,
         indent[i] = '\t';
     indent[i] = '\0';
 
-    fprintf(fp, "%s<scalar reference=\"%u\" elemType=\"%s\"%s", 
+    fprintf(fp, "%s<scalar reference=\"%u\" elemType=\"%s\"%s",
             indent, r, type_pairs[ownStringFromType(scalar->data_type)].name, refNameStr);
 
     if (refs[r]->is_virtual == vx_true_e) /* is not virtual in 1.0, but check anyway */
@@ -1014,9 +1013,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
             VX_TYPE_CONTEXT,
             VX_TYPE_IMPORT,
     };
-    vx_reference_t **refs = NULL;
+    vx_reference* refs = NULL;
 
-    if (ownIsValidContext(context) == vx_false_e)
+    if (Context::isValidContext(context) == vx_false_e)
         return VX_ERROR_INVALID_REFERENCE;
 
     /* count the number of objects to export */
@@ -1025,8 +1024,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
         if (context->reftable[r]) {
             r1++;
             if(vxIsMemberOf(context->reftable[r]->type, skipTypes, dimof(skipTypes)) == vx_true_e ||
-               vxIsImgInVirtPyramid(context->reftable[r]) == vx_true_e  ||
-               vxIsDelayInDelay(context->reftable[r]) == vx_true_e)
+               vxIsImgInVirtPyramid(context->reftable[r].get()) == vx_true_e  ||
+               vxIsDelayInDelay(context->reftable[r].get()) == vx_true_e)
                 continue;
             numrefs++;
         }
@@ -1037,7 +1036,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
         return VX_ERROR_NOT_SUPPORTED;
 
     /* create the temp renamer */
-    refs = (vx_reference_t **)calloc(numrefs,sizeof(vx_reference));
+    refs = (vx_reference*)calloc(numrefs,sizeof(vx_reference));
     if (!refs)
         return VX_ERROR_NO_MEMORY;
     else
@@ -1049,10 +1048,10 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
             if (context->reftable[r2]) {
                 r1++;
                 if (vxIsMemberOf(context->reftable[r2]->type, skipTypes, dimof(skipTypes)) == vx_true_e ||
-                    vxIsImgInVirtPyramid(context->reftable[r2]) == vx_true_e ||
-                    vxIsDelayInDelay(context->reftable[r2]) == vx_true_e)
+                    vxIsImgInVirtPyramid(context->reftable[r2].get()) == vx_true_e ||
+                    vxIsDelayInDelay(context->reftable[r2].get()) == vx_true_e)
                     continue;
-                refs[r++] = context->reftable[r2];
+                refs[r++] = context->reftable[r2].get();
             }
             /* "r" or the index in this list is the reference "index" */
         }
@@ -1305,7 +1304,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
                     sprintf(objectName, "object_array");
                 }
 
-                fprintf(fp, "\t<%s reference=\"%u\" count=\""VX_FMT_SIZE"\"%s>\n", objectName, r, totalCount, refNameStr);
+                fprintf(fp, "\t<%s reference=\"%u\" count=\"" VX_FMT_SIZE "\"%s>\n", objectName, r, totalCount, refNameStr);
 
                 for (count = 0u; count < totalCount; count++)
                 {
@@ -1369,4 +1368,4 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
     return status;
 }
 
-#endif
+#endif /* defined(OPENVX_USE_XML) */

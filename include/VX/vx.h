@@ -98,6 +98,7 @@
 // #define OPENVX_USE_XML
 // #define OPENVX_USE_OPENCL_INTEROP
 #define OPENVX_USE_TILING
+// #define OPENVX_CONFORMANCE_NNEF_IMPORT
 #define EXPERIMENTAL_USE_DOT
 // #define EXPERIMENTAL_USE_OPENCL
 /* ******************************* */

@@ -1,5 +1,4 @@
-/* 
-
+/*
  * Copyright (c) 2011-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _VX_INLINES_C_
-#define _VX_INLINES_C_
+#ifndef VX_INLINES_H
+#define VX_INLINES_H
 
 #include <VX/vx.h>
 #include "vx_internal.h"
@@ -36,4 +35,4 @@ static VX_INLINE void *ownFormatMemoryPtr(vx_memory_t *memory,
     return ptr;
 }
 
-#endif
+#endif /* VX_INLINES_H */
