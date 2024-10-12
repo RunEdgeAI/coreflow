@@ -66,30 +66,89 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
                 {
                     vx_int32 i = ownStringFromType(data[d]->type);
                     if (data[d] == nullptr) continue;
-                    if (data[d]->type == VX_TYPE_IMAGE)
+
+                    switch (data[d]->type)
                     {
-                        vx_image image = (vx_image)data[d];
-                        vx_char fcc[5];
-                        strncpy(fcc, (char *)&image->format, 4);
-                        fcc[4] = '\0';
-                        fprintf(fp, "\tD%u [shape=box label=\"%ux%u\\n%4s\"];\n", d, image->width, image->height, fcc);
-                    }
-                    else if (data[d]->type == VX_TYPE_ARRAY)
-                    {
-                        vx_array arr = (vx_array)data[d];
-                        if (arr->item_type == VX_TYPE_CHAR || arr->item_size == sizeof(char))
-                            fprintf(fp, "\tD%u [shape=box label=\"\\\"%s\\\"\"];\n", d, arr->memory.ptrs[0]);
-                        else
+                        case VX_TYPE_IMAGE:
+                        {
+                            vx_image image = (vx_image)data[d];
+                            vx_char fcc[5];
+                            strncpy(fcc, (char *)&image->format, 4);
+                            fcc[4] = '\0';
+                            fprintf(fp, "\tD%u [shape=box label=\"Image\\n%ux%u\\n%4s\"];\n", d, image->width, image->height, fcc);
+                            break;
+                        }
+                        case VX_TYPE_ARRAY:
+                        {
+                            vx_array arr = (vx_array)data[d];
+                            fprintf(fp, "\tD%u [shape=box label=\"Array\\n%s\\nItems: %zu\"];\n", d, type_pairs[i].name, arr->capacity);
+                            break;
+                        }
+                        case VX_TYPE_PYRAMID:
+                        {
+                            vx_pyramid pyr = (vx_pyramid)data[d];
+                            fprintf(fp, "\tD%u [shape=triangle label=\"Pyramid\\n%lfx" VX_FMT_REF "\\nLevels: %zu\"];\n", d, pyr->scale, pyr->levels);
+                            break;
+                        }
+                        case VX_TYPE_SCALAR:
+                        {
+                            vx_scalar scalar = (vx_scalar)data[d];
+                            fprintf(fp, "\tD%u [shape=box label=\"Scalar\\n%s\"];\n", d, type_pairs[i].name);
+                            break;
+                        }
+                        case VX_TYPE_MATRIX:
+                        {
+                            vx_matrix matrix = (vx_matrix)data[d];
+                            fprintf(fp, "\tD%u [shape=box label=\"Matrix\\n%zux%zu\"];\n", d, matrix->columns, matrix->rows);
+                            break;
+                        }
+                        case VX_TYPE_CONVOLUTION:
+                        {
+                            vx_convolution conv = (vx_convolution)data[d];
+                            fprintf(fp, "\tD%u [shape=box label=\"Convolution\\n%zux%zu\"];\n", d, conv->columns, conv->rows);
+                            break;
+                        }
+                        case VX_TYPE_DISTRIBUTION:
+                        {
+                            vx_distribution dist = (vx_distribution)data[d];
+                            vx_size bins = 0;
+                            vx_status bin_status = vxQueryDistribution(dist, VX_DISTRIBUTION_BINS, &bins, sizeof(bins));
+                            if (bin_status == VX_SUCCESS)
+                            {
+                                fprintf(fp, "\tD%u [shape=box label=\"Distribution\\nBins: %zu\"];\n", d, bins);
+                            }
+                            else
+                            {
+                                fprintf(fp, "\tD%u [shape=box label=\"Distribution\"];\n", d);
+                            }
+                        }
+                        case VX_TYPE_LUT:
+                        {
+                            vx_lut lut = (vx_lut)data[d];
+                            fprintf(fp, "\tD%u [shape=box label=\"LUT\\nCount: %zu\"];\n", d, lut->num_items);
+                            break;
+                        }
+                        case VX_TYPE_THRESHOLD:
+                        {
+                            vx_threshold thresh = (vx_threshold)data[d];
+                            fprintf(fp, "\tD%u [shape=box label=\"Threshold\\nType: %d\"];\n", d, thresh->thresh_type);
+                            break;
+                        }
+                        case VX_TYPE_TENSOR:
+                        {
+                            vx_tensor tensor = (vx_tensor)data[d];
+                            fprintf(fp, "\tD%u [shape=box label=\"Tensor\\nRank: %zu\"];\n", d, tensor->number_of_dimensions);
+                            break;
+                        }
+                        case VX_TYPE_OBJECT_ARRAY:
+                        {
+                            vx_object_array obj_array = (vx_object_array)data[d];
+                            fprintf(fp, "\tD%u [shape=box label=\"Object Array\\nCount: %zu\"];\n", d, obj_array->num_items);
+                            break;
+                        }
+                        default:
                             fprintf(fp, "\tD%u [shape=box label=\"%s\"];\n", d, type_pairs[i].name);
-                    }
-                    else if (data[d]->type == VX_TYPE_PYRAMID)
-                    {
-                        vx_pyramid pyr = (vx_pyramid)data[d];
-                        fprintf(fp, "\tD%u [shape=triangle label=\"%lfx" VX_FMT_REF "\\nPyramid\"];\n", d, pyr->scale, pyr->levels);
-                    }
-                    else
-                    {
-                        fprintf(fp, "\tD%u [shape=box label=\"%s\"];\n", d, type_pairs[i].name);
+                            break;
                     }
                 }
             }
