@@ -15,7 +15,10 @@
 #include "vx_internal.h"
 #include "vx_import.h"
 
-Import::Import(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_IMPORT, scope)
+Import::Import(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_IMPORT, scope),
+import_type(),
+count(0),
+refs(nullptr)
 {
 
 }
@@ -54,7 +57,10 @@ void Import::destructImport()
     vx_uint32 i = 0;
     for (i = 0; i < count; i++)
     {
-        refs[i]->releaseReference(refs[i]->type, VX_INTERNAL, nullptr);
+        if (refs && refs[i])
+        {
+            refs[i]->releaseReference(refs[i]->type, VX_INTERNAL, nullptr);
+        }
     }
     if (refs)
     {
@@ -158,7 +164,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseImport(vx_import* import)
     if (import != nullptr)
     {
         vx_import this_import = *import;
-        if (Reference::isValidReference((vx_reference)this_import, VX_TYPE_IMAGE) == vx_true_e)
+        if (Reference::isValidReference(this_import, VX_TYPE_IMPORT) == vx_true_e)
         {
             status = this_import->releaseReference(VX_TYPE_IMPORT, VX_EXTERNAL, nullptr);
         }

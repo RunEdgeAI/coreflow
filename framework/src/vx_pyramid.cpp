@@ -33,9 +33,13 @@ void ownDestructPyramid(vx_reference ref)
     vx_uint32 i = 0;
     for (i = 0; i < pyramid->numLevels; i++)
     {
-        pyramid->levels[i]->releaseReference(VX_TYPE_IMAGE, VX_INTERNAL, nullptr);
+        if (pyramid->levels[i])
+        {
+            pyramid->levels[i]->releaseReference(VX_TYPE_IMAGE, VX_INTERNAL, nullptr);
+        }
     }
     free(pyramid->levels);
+    pyramid->levels = nullptr;
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleasePyramid(vx_pyramid* pyr)
@@ -61,7 +65,7 @@ vx_status ownInitPyramid(vx_pyramid pyramid,
     {
         pyramid->numLevels = levels;
         pyramid->scale = scale;
-        pyramid->levels = (vx_image *)calloc(levels, sizeof(Image));
+        pyramid->levels = (vx_image *)calloc(levels, sizeof(vx_image));
     }
 
     /* these could be "virtual" values or hard values */
@@ -138,10 +142,12 @@ static vx_pyramid vxCreatePyramidInt(vx_context context,
     vx_pyramid pyramid = nullptr;
 
     if (Context::isValidContext(context) == vx_false_e)
+    {
         /* Context is invalid, we can't get any error object,
          * we then simply return nullptr as it is handled by vxGetStatus
          */
         return nullptr;
+    }
 
     if ((scale != VX_SCALE_PYRAMID_HALF) &&
         (scale != VX_SCALE_PYRAMID_ORB))
@@ -217,7 +223,8 @@ VX_API_ENTRY vx_pyramid VX_API_CALL vxCreatePyramid(vx_context context, vx_size 
         {
             // pyr = (vx_pyramid)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
         }
-        else {
+        else
+        {
             pyr = (vx_pyramid)vxCreatePyramidInt(context,
                                                  levels, scale, width, height, format,
                                                  vx_false_e);
