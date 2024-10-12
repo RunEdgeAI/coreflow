@@ -21,9 +21,15 @@
 #define vxIsValidDelay(d) ((d) && Reference::isValidReference((vx_reference)(d), VX_TYPE_DELAY))
 #define vxIsValidGraph(g) ((g) && Reference::isValidReference((vx_reference)(g), VX_TYPE_GRAPH))
 
-Delay::Delay(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_DELAY, scope)
+Delay::Delay(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_DELAY, scope),
+count(0),
+index(0),
+type(VX_TYPE_DELAY),
+set(nullptr),
+refs(nullptr),
+pyr(nullptr)
 {
-    this->type = VX_TYPE_DELAY;
+
 }
 
 vx_bool Delay::addAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i)
@@ -395,7 +401,7 @@ VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
                     pyrdelay->count = count;
                     for (i = 0; i < count; i++)
                     {
-                        // pyrdelay->refs[i] = (vx_reference)vxGetPyramidLevel((vx_pyramid)delay->refs[i], (vx_uint32)j);
+                        pyrdelay->refs[i] = (vx_reference)vxGetPyramidLevel((vx_pyramid)delay->refs[i], (vx_uint32)j);
                         /* set the object as a delay element */
                         pyrdelay->refs[i]->initReferenceForDelay(pyrdelay, (vx_int32)i);
                         /* change the counting from external to internal */

@@ -17,7 +17,16 @@
 #include "vx_internal.h"
 #include "vx_threshold.h"
 
-Threshold::Threshold(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_THRESHOLD, scope)
+Threshold::Threshold(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_THRESHOLD, scope),
+thresh_type(),
+data_type(),
+value(),
+lower(),
+upper(),
+true_value(),
+false_value(),
+input_format(),
+output_format()
 {
 
 }

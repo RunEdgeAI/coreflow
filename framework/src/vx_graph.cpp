@@ -673,7 +673,18 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryGraph(vx_graph graph, vx_enum attribut
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseGraph(vx_graph *g)
 {
-    return (*(vx_reference*)g)->releaseReference(VX_TYPE_GRAPH, VX_EXTERNAL, nullptr);
+    vx_status status = VX_FAILURE;
+
+    if (nullptr != g)
+    {
+        vx_graph graph = *(g);
+        if (Reference::isValidReference(graph, VX_TYPE_GRAPH) == vx_true_e)
+        {
+            status = graph->releaseReference(VX_TYPE_GRAPH, VX_EXTERNAL, nullptr);
+        }
+    }
+
+    return status;
 }
 
 /* Do a topological in-place sort of the nodes in list, with current

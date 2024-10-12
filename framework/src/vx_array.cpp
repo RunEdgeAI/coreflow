@@ -741,8 +741,19 @@ VX_API_ENTRY vx_array VX_API_CALL vxCreateVirtualArray(vx_graph graph, vx_enum i
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseArray(vx_array *a)
 {
+    vx_status status = VX_FAILURE;
+
     /* nullptr means standard destructor */
-    return (*(a))->releaseReference(VX_TYPE_ARRAY, VX_EXTERNAL, nullptr);
+    if (nullptr != a)
+    {
+        vx_array arr = *(a);
+        if (Reference::isValidReference(arr, VX_TYPE_ARRAY) == vx_true_e)
+        {
+            status = arr->releaseReference(VX_TYPE_ARRAY, VX_EXTERNAL, nullptr);
+        }
+    }
+
+    return status;
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxQueryArray(vx_array arr, vx_enum attribute, void *ptr, vx_size size)

@@ -39,11 +39,20 @@ void ownReleaseThresholdInt(vx_threshold* threshold);
 class Threshold : public Reference
 {
 public:
+    /**
+     * @brief Construct a new Threshold object
+     *
+     * @param context
+     * @param scope
+     */
     Threshold(vx_context context, vx_reference scope);
+
+    /**
+     * @brief Destroy the Threshold object
+     *
+     */
     ~Threshold();
 
-
-    vx_reference base;
     /*! \brief From \ref vx_threshold_type_e */
     vx_enum thresh_type;
     /*! \brief From \ref vx_type_e */
