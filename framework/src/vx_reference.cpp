@@ -532,8 +532,6 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseReference(vx_reference* ref_ptr)
         }
     }
 
-    status |= ref->releaseReference(ref->type, VX_BOTH, nullptr);
-
     return status;
 }
 

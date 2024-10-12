@@ -55,16 +55,16 @@ static vx_status graph_kernel_validate(vx_node node, const vx_reference paramete
     }
     else
     {
-        vx_graph graph = (vx_graph)node->kernel->base.scope;    /* get the graph */
+        vx_graph graph = (vx_graph)node->kernel->scope;    /* get the graph */
         vx_uint32 p;                                            /* for parameter enumeration */
         node->kernel->attributes.localDataSize = 1;             /* For recursion detection */
         /* Set all parameters to graph */
-        status = vxGetStatus(node->kernel->base.scope);
+        status = vxGetStatus(node->kernel->scope);
         if (status)
         {
             DEBUGPRINTF("Graph is not valid: status = %d\n", status);
         }
-        else if (VX_TYPE_GRAPH != node->kernel->base.scope->type)
+        else if (VX_TYPE_GRAPH != node->kernel->scope->type)
         {
             DEBUGPRINTF("Graph reference is valid but not a graph\n");
         }
@@ -119,7 +119,7 @@ static vx_status graph_kernel_function(vx_node node, const vx_reference *paramet
     DEBUGPRINTF("Graph kernel function\n");
     /* Set all parameters to the graph, and execute it */
     vx_status status = VX_SUCCESS;
-    vx_graph graph = (vx_graph)node->kernel->base.scope;    /* get the graph */
+    vx_graph graph = (vx_graph)node->kernel->scope;    /* get the graph */
     vx_uint32 p;                                            /* for parameter enumeration */
     /* Set all parameters to graph */
     for (p = 0; p < num && VX_SUCCESS == status; ++p)
@@ -141,12 +141,12 @@ static vx_kernel createGraphKernel(vx_context context, vx_graph graph)
     vx_enum kernel_enum;
     vx_uint32 p = 0;
     vx_status status = vxAllocateUserKernelId(context, &kernel_enum);
-    vx_kernel kernel = vxAddUserKernel(context, graph->base.name, kernel_enum, (vx_kernel_f)graph_kernel_function, graph->numParams,
+    vx_kernel kernel = vxAddUserKernel(context, graph->name, kernel_enum, (vx_kernel_f)graph_kernel_function, graph->numParams,
                                        (vx_kernel_validate_f)graph_kernel_validate, (vx_kernel_initialize_f)graph_kernel_init, (vx_kernel_deinitialize_f)graph_kernel_deinit);
-    DEBUGPRINTF("Graph kernel creation, name = %s, number of parameters = %u\n", graph->base.name, graph->numParams);
+    DEBUGPRINTF("Graph kernel creation, name = %s, number of parameters = %u\n", graph->name, graph->numParams);
     if (VX_SUCCESS == vxGetStatus((vx_reference)kernel))
     {
-        kernel->base.scope = (vx_reference)graph;       /* The crucial (and sneaky!) bit. */
+        kernel->scope = (vx_reference)graph;       /* The crucial (and sneaky!) bit. */
         for (p = 0; p < graph->numParams && VX_SUCCESS == status; ++p)
         {
             vx_parameter parameter = vxGetGraphParameterByIndex(graph, p);
@@ -706,9 +706,9 @@ static vx_status importThreshold(vx_context context, const vx_uint8 *ptr, vx_ref
     status = VX_ERROR_NOT_SUPPORTED;
     if (NULL == ref_table[n])
     {
-        vx_threshold threshold = (vx_threshold)ownCreateReference(context, VX_TYPE_THRESHOLD, VX_EXTERNAL, &context->base);
+        vx_threshold threshold = (vx_threshold)Reference::createReference(context, VX_TYPE_THRESHOLD, VX_EXTERNAL, context);
         status = vxGetStatus((vx_reference)threshold);
-        if (VX_SUCCESS == status && threshold->base.type == VX_TYPE_THRESHOLD)
+        if (VX_SUCCESS == status && threshold->type == VX_TYPE_THRESHOLD)
         {
             threshold->thresh_type = thresh_type;
             threshold->data_type = data_type;
@@ -723,8 +723,8 @@ static vx_status importThreshold(vx_context context, const vx_uint8 *ptr, vx_ref
             {
                 if (checkIndex(ptr, header.scope))
                 {
-                    threshold->base.scope = ref_table[header.scope];
-                    threshold->base.is_virtual = vx_true_e;
+                    threshold->scope = ref_table[header.scope];
+                    threshold->is_virtual = vx_true_e;
                 }
                 else
                     status = VX_ERROR_INVALID_SCOPE;
@@ -852,8 +852,8 @@ static vx_status importConvolution(vx_context context, const vx_uint8 *ptr, vx_r
     {
         vx_convolution convolution = (vx_convolution)ref_table[n];
         if (VX_TYPE_CONVOLUTION != ref_table[n]->type ||
-            convolution->base.columns != columns ||
-            convolution->base.rows != rows ||
+            convolution->columns != columns ||
+            convolution->rows != rows ||
             convolution->scale != scale)
         {
             status = VX_ERROR_INVALID_PARAMETERS;
@@ -862,7 +862,7 @@ static vx_status importConvolution(vx_context context, const vx_uint8 *ptr, vx_r
     if (VX_SUCCESS == status && size)
     {   /* read data */
         vx_convolution convolution = (vx_convolution)ref_table[n];
-        importBytes(&header, convolution->base.memory.ptrs[0], size);
+        importBytes(&header, convolution->memory.ptrs[0], size);
     }
     return header.curptr ? status : VX_FAILURE;
 }
@@ -1934,13 +1934,13 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportObjectsFromMemory(
         if (VX_SUCCESS == status)
         {
             vx_uint32 i;
-            import = ownCreateImportInt(context, VX_IMPORT_TYPE_BINARY, numrefs);
-            if (import && VX_TYPE_IMPORT == import->base.type && import->refs)
+            import->createImportInt(context, VX_IMPORT_TYPE_BINARY, numrefs);
+            if (import && VX_TYPE_IMPORT == import->type && import->refs)
             {
                 for (i = 0; i < numrefs; ++i)
                 {
                     refs[i] = ref_table[i];
-                    ownIncrementReference(refs[i], VX_INTERNAL);
+                    refs[i]->incrementReference(VX_INTERNAL);
                     import->refs[i] = refs[i];
                 }
                 /* Now clean up other references */
@@ -1953,7 +1953,8 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportObjectsFromMemory(
     }
     if (VX_SUCCESS != status)
     {
-        import = (vx_import)ownGetErrorObject(context, status);
+        import = nullptr;
+        // import = (vx_import)ownGetErrorObject(context, status);
     }
     return import;
 }

@@ -6,6 +6,7 @@ filegroup(
         "*.rgb",
         "*.yuv",
         "*.pgm",
+        "*.xml"
     ]),
     visibility = ["//visibility:public"],
 )

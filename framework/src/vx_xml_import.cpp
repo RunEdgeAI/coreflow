@@ -206,7 +206,7 @@ static ulong xml_ulong(xmlNodePtr cur)
     xmlChar *string = xmlNodeListGetString(cur->doc, cur->children, 1);
     ulong value = 0ul;
     if (string)
-        value = strtoul((const char *)string, NULL, 10);
+        value = strtoul((const char *)string, nullptr, 10);
     free(string);
     return value;
 }
@@ -216,7 +216,7 @@ static ulong xml_long(xmlNodePtr cur)
     xmlChar *string = xmlNodeListGetString(cur->doc, cur->children, 1);
     long value = 0l;
     if (string)
-        value = strtol((const char *)string, NULL, 10);
+        value = strtol((const char *)string, nullptr, 10);
     free(string);
     return value;
 }
@@ -246,7 +246,7 @@ static ulong xml_prop_ulong(xmlNodePtr cur, char prop[])
     xmlChar *string = xmlGetProp(cur, (const xmlChar *)prop);
     ulong value = 0ul;
     if (string)
-        value = strtoul((const char *)string, NULL, 10);
+        value = strtoul((const char *)string, nullptr, 10);
     free(string);
     return value;
 }
@@ -305,18 +305,7 @@ static int32_t xml_match_tag(xmlNodePtr cur, xml_tag_t tags[], size_t num_tags)
  * (this is for convenience, not functionality) */
 static vx_status vxReserveReferences(vx_context context, vx_uint32 num)
 {
-    vx_status status = VX_FAILURE;
-    vx_uint32 r, count = 0;
-    for (r = 0u; (r < VX_INT_MAX_REF) && (count < num); r++)
-    {
-        if (context->reftable[r] == NULL) {
-            /* 1 is used as a flag that this is reserved since it is not a valid handle */
-            context->reftable[r] = Reference::createReference(1);
-            count++;
-        }
-    }
-    if (count == num)
-        status = VX_SUCCESS;
+    vx_status status = VX_SUCCESS;
 
     return status;
 }
@@ -325,19 +314,7 @@ static vx_status vxReserveReferences(vx_context context, vx_uint32 num)
  * the ref table so that the delay object can then be created in these spaces */
 static vx_status vxReleaseReferences(vx_context context, vx_uint32 num)
 {
-    vx_status status = VX_FAILURE;
-    vx_uint32 r, count = 0;
-    for (r = 0u; (r < VX_INT_MAX_REF) && (count < num); r++)
-    {
-        int* resv = (int*)context->reftable[r]->reserved;
-        if (*resv == 1) {
-            /* 1 is used as a flag that this is reserved since it is not a valid handle */
-            context->reftable[r] = NULL;
-            count++;
-        }
-    }
-    if (count == num)
-        status = VX_SUCCESS;
+    vx_status status = VX_SUCCESS;
 
     return status;
 }
@@ -375,7 +352,7 @@ static vx_status vxStructSetEnum(xml_struct_t ptable[VX_INT_MAX_USER_STRUCTS], v
 
 static vx_reference* getRefsFromParent(vx_reference ref, vx_int32 type)
 {
-    vx_reference *refList = NULL;
+    vx_reference *refList = nullptr;
     if(type == VX_TYPE_DELAY) {
         refList =  (vx_reference*)((vx_delay)ref)->refs;
     } else if(type == VX_TYPE_OBJECT_ARRAY) {
@@ -417,7 +394,7 @@ static void vxSetName(vx_reference ref, xmlNodePtr cur)
     }
 }
 
-static xml_struct_t *user_struct_table = NULL;
+static xml_struct_t *user_struct_table = nullptr;
 
 static vx_status vxImportFromXMLRoi(vx_image parent, xmlNodePtr cur, vx_reference refs[], vx_size total)
 {
@@ -478,7 +455,7 @@ static vx_status vxLoadDataForImage(vx_image image, xmlNodePtr cur, vx_reference
                 } else if (tag == END_Y_TAG) {
                     rect.end_y = xml_ulong(cur);
                 } else if (tag == PIXELS_TAG) {
-                    void *base = NULL;
+                    void *base = nullptr;
                     vx_imagepatch_addressing_t addr = {0};
                     status |= vxAccessImagePatch(image, &rect, pIdx, &addr, &base, VX_WRITE_ONLY);
                     if (status == VX_SUCCESS) {
@@ -511,12 +488,12 @@ static vx_status vxLoadDataForImage(vx_image image, xmlNodePtr cur, vx_reference
                                     ptr[1] = (vx_uint8)tmp[1];
                                     ptr[2] = (vx_uint8)tmp[2];
                                 } else {
-                                    vx_char *tmp = NULL;
+                                    vx_char *tmp = nullptr;
                                     tmp = strtok(values, " \t\n\r");
                                     sscanf(tmp, "%hhu", &ptr[0]);
-                                    tmp = strtok(NULL, " \t\n\r");
+                                    tmp = strtok(nullptr, " \t\n\r");
                                     sscanf(tmp, "%hhu", &ptr[1]);
-                                    tmp = strtok(NULL, " \t\n\r");
+                                    tmp = strtok(nullptr, " \t\n\r");
                                     sscanf(tmp, "%hhu", &ptr[2]);
                                 }
                             } else if (tag == RGBA_TAG) {
@@ -531,23 +508,23 @@ static vx_status vxLoadDataForImage(vx_image image, xmlNodePtr cur, vx_reference
                                     ptr[2] = (vx_uint8)tmp[2];
                                     ptr[3] = (vx_uint8)tmp[3];
                                 } else {
-                                    vx_char *tmp = NULL;
+                                    vx_char *tmp = nullptr;
                                     tmp = strtok(values, " \t\n\r");
                                     sscanf(tmp, "%hhu", &ptr[0]);
-                                    tmp = strtok(NULL, " \t\n\r");
+                                    tmp = strtok(nullptr, " \t\n\r");
                                     sscanf(tmp, "%hhu", &ptr[1]);
-                                    tmp = strtok(NULL, " \t\n\r");
+                                    tmp = strtok(nullptr, " \t\n\r");
                                     sscanf(tmp, "%hhu", &ptr[2]);
-                                    tmp = strtok(NULL, " \t\n\r");
+                                    tmp = strtok(nullptr, " \t\n\r");
                                     sscanf(tmp, "%hhu", &ptr[3]);
                                 }
                             } else if (tag == YUV_TAG) {
                                 vx_uint8 *ptr = (vx_uint8*)vxFormatImagePatchAddress2d(base, x, y, &addr);
-                                vx_char values[8], *tmp = NULL;
+                                vx_char values[8], *tmp = nullptr;
                                 xml_string(cur, values, sizeof(values));
                                 tmp = strtok(values, " \t\n\r");
                                 sscanf(tmp, "%hhu", &ptr[0]);
-                                tmp = strtok(NULL, " \t\n\r");
+                                tmp = strtok(nullptr, " \t\n\r");
                                 sscanf(tmp, "%hhu", &ptr[1]);
                             }
                         }
@@ -595,12 +572,12 @@ static vx_status vxLoadDataForUniformImage(xmlNodePtr cur, vx_pixel_value_t *ima
                         ptr[1] = (vx_uint8)tmp[1];
                         ptr[2] = (vx_uint8)tmp[2];
                     } else {
-                        vx_char *tmp = NULL;
+                        vx_char *tmp = nullptr;
                         tmp = strtok(values, " \t\n\r");
                         sscanf(tmp, "%hhu", &ptr[0]);
-                        tmp = strtok(NULL, " \t\n\r");
+                        tmp = strtok(nullptr, " \t\n\r");
                         sscanf(tmp, "%hhu", &ptr[1]);
-                        tmp = strtok(NULL, " \t\n\r");
+                        tmp = strtok(nullptr, " \t\n\r");
                         sscanf(tmp, "%hhu", &ptr[2]);
                     }
                 } else if (tag == RGBA_TAG) {
@@ -615,25 +592,25 @@ static vx_status vxLoadDataForUniformImage(xmlNodePtr cur, vx_pixel_value_t *ima
                         ptr[2] = (vx_uint8)tmp[2];
                         ptr[3] = (vx_uint8)tmp[3];
                     } else {
-                        vx_char *tmp = NULL;
+                        vx_char *tmp = nullptr;
                         tmp = strtok(values, " \t\n\r");
                         sscanf(tmp, "%hhu", &ptr[0]);
-                        tmp = strtok(NULL, " \t\n\r");
+                        tmp = strtok(nullptr, " \t\n\r");
                         sscanf(tmp, "%hhu", &ptr[1]);
-                        tmp = strtok(NULL, " \t\n\r");
+                        tmp = strtok(nullptr, " \t\n\r");
                         sscanf(tmp, "%hhu", &ptr[2]);
-                        tmp = strtok(NULL, " \t\n\r");
+                        tmp = strtok(nullptr, " \t\n\r");
                         sscanf(tmp, "%hhu", &ptr[3]);
                     }
                 } else if (tag == YUV_TAG) {
                     vx_uint8 *ptr = (vx_uint8*)image_data;
-                    vx_char values[13] = {0}, *tmp = NULL;
+                    vx_char values[13] = {0}, *tmp = nullptr;
                     xml_string(cur, values, sizeof(values));
                     tmp = strtok(values, " \t\n\r");
                     sscanf(tmp, "%hhu", &ptr[0]);
-                    tmp = strtok(NULL, " \t\n\r");
+                    tmp = strtok(nullptr, " \t\n\r");
                     sscanf(tmp, "%hhu", &ptr[1]);
-                    tmp = strtok(NULL, " \t\n\r");
+                    tmp = strtok(nullptr, " \t\n\r");
                     sscanf(tmp, "%hhu", &ptr[2]);
                 }
             }
@@ -715,7 +692,7 @@ static vx_status vxLoadDataForArray(vx_array array, xmlNodePtr cur)
             vx_uint32 j = 0;
             while (tmp) {
                 sscanf(tmp, "%hhu", &v[j++]);
-                tmp = strtok(NULL, tokens);
+                tmp = strtok(nullptr, tokens);
             }
             status |= vxAddArrayItems(array, 1, v, array->item_size);
             free(v);
@@ -789,7 +766,7 @@ static vx_status vxLoadDataForArray(vx_array array, xmlNodePtr cur)
                     }
                     status |= vxAddArrayItems(array, 1, &v, array->item_size);
                 }
-                tmp = strtok(NULL, tokens);
+                tmp = strtok(nullptr, tokens);
             }
             free(string);
         }
@@ -811,7 +788,7 @@ static vx_status vxLoadDataForPyramid(vx_pyramid pyr, xmlNodePtr cur, vx_referen
             {
                 xmlChar *string = xmlGetProp(cur, (const xmlChar *)"level");
                 if (string)
-                    level = strtoul((const char *)string, NULL, 10);
+                    level = strtoul((const char *)string, nullptr, 10);
                 free(string);
             }
             if (refIdx < total)
@@ -902,7 +879,7 @@ static vx_status vxLoadDataForLut(vx_lut lut, xmlNodePtr cur, vx_enum type, vx_s
     vx_xml_tag_e tag = UNKNOWN_TAG;
 
     if (XML_HAS_CHILD(cur)) {
-        void *ptr = NULL;
+        void *ptr = nullptr;
         if( (status = vxAccessLUT(lut, &ptr, VX_WRITE_ONLY)) == VX_SUCCESS)
         {
             XML_FOREACH_CHILD_TAG (cur, tag, tags) {
@@ -984,7 +961,7 @@ static vx_status vxLoadDataForDistribution(vx_distribution dist, xmlNodePtr cur,
     if (XML_HAS_CHILD(cur))
     {
         vx_map_id map_id = 0;
-        void *ptr = NULL;
+        void *ptr = nullptr;
         if ((status = vxMapDistribution(dist, &map_id, &ptr, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST, 0)) == VX_SUCCESS) {
             XML_FOREACH_CHILD_TAG (cur, tag, tags) {
                 if (tag == FREQUENCY_TAG) {
@@ -1191,7 +1168,7 @@ static vx_status vxImportFromXMLPyramid(vx_reference ref, xmlNodePtr cur, vx_ref
     vx_float32 scale  = xml_prop_float(cur, "scale");
     vx_size levels = xml_prop_ulong(cur, "levels");
     vx_df_image format = VX_DF_IMAGE_VIRT;
-    vx_pyramid pyr = NULL;
+    vx_pyramid pyr = nullptr;
     xml_prop_string(cur, "format", (vx_char *)&format, 4);
 
     if (is_virtual == vx_false_e && format == VX_DF_IMAGE_VIRT)
@@ -1234,10 +1211,10 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
     vx_xml_tag_e tag = UNKNOWN_TAG;
     vx_size total = 0ul, counted = 0ul;
     vx_enum type = VX_TYPE_INVALID;
-    vx_reference *refs = NULL;
-    vx_import import = NULL;
+    vx_reference *refs = nullptr;
+    vx_import import = nullptr;
 
-    if (doc == NULL) {
+    if (doc == nullptr) {
         VX_PRINT(VX_ZONE_ERROR, "Could not parse %s\n", xmlfile);
         vxAddLogEntry(context, VX_ERROR_INVALID_PARAMETERS, "Could not parse %s\n", xmlfile);
         // import = (vx_import)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
@@ -1245,14 +1222,14 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
     }
 
     user_struct_table = (xml_struct_t*)calloc(VX_INT_MAX_USER_STRUCTS, sizeof(xml_struct_t));
-    if (user_struct_table == NULL) {
+    if (user_struct_table == nullptr) {
         VX_PRINT(VX_ZONE_ERROR, "Calloc failed\n");
         vxAddLogEntry(context, VX_ERROR_NO_MEMORY, "Calloc failed\n");
         // import = (vx_import)ownGetErrorObject(context, VX_ERROR_NO_MEMORY);
         return import;
     }
 
-    if (root == NULL || xmlStrcmp(cur->name, (const xmlChar *)"openvx") != 0) {
+    if (root == nullptr || xmlStrcmp(cur->name, (const xmlChar *)"openvx") != 0) {
         VX_PRINT(VX_ZONE_ERROR, "%s is not wellformed\n", xmlfile);
         vxAddLogEntry(context, VX_ERROR_INVALID_FORMAT, "%s is not wellformed\n", xmlfile);
         // import = (vx_import)ownGetErrorObject(context, VX_ERROR_INVALID_FORMAT);
@@ -1268,7 +1245,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
     }
 
     import = Import::createImportInt(context, VX_IMPORT_TYPE_XML, total);
-    if (import == NULL || import->type != VX_TYPE_IMPORT) {
+    if (import == nullptr || import->type != VX_TYPE_IMPORT) {
         goto exit;
     }
 
@@ -1361,8 +1338,8 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
             }
         } else if (tag == SCALAR_TAG) {
             vx_uint32 refIdx = xml_prop_ulong(cur, "reference");
-            vx_size nullReference = 0;
-            void *ptr = &nullReference;
+            vx_size nullptrReference = 0;
+            void *ptr = &nullptrReference;
             vx_char typeName[20];
             xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
             ownTypeFromString(typeName, &type);
@@ -1508,7 +1485,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
             char objectName[16];
             vx_int32 parentType;
             vx_reference parentReference;
-            vx_reference *internalRefs = NULL;
+            vx_reference *internalRefs = nullptr;
             vx_uint32 refIdx = xml_prop_ulong(cur, "reference");
             vx_uint32 count = xml_prop_ulong(cur, "count");
             vx_uint32 childNum = 0;
@@ -1537,7 +1514,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                             vx_uint32 width = xml_prop_ulong(cur,"width");
                             vx_uint32 height = xml_prop_ulong(cur,"height");
                             if(childNum == 0) { /* Create parent object based on first child */
-                                vx_image exemplar = NULL;
+                                vx_image exemplar = nullptr;
                                 vx_df_image format = VX_DF_IMAGE_VIRT;
                                 xml_prop_string(cur, "format", (vx_char *)&format, 4);
                                 status = vxReserveReferences(context, count+1);
@@ -1602,7 +1579,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                             }
 
                             if(childNum == 0) { /* Create delay object based on first child */
-                                vx_array exemplar = NULL;
+                                vx_array exemplar = nullptr;
                                 status = vxReserveReferences(context, count+1);
                                 exemplar = vxCreateArray(context, type, capacity);
                                 status |= vxReleaseReferences(context, count+1);
@@ -1653,7 +1630,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                             vx_df_image format = VX_DF_IMAGE_VIRT;
                             xml_prop_string(cur, "format", (vx_char *)&format, 4);
                             if(childNum == 0) { /* Create delay object based on first child */
-                                vx_pyramid exemplar = NULL;
+                                vx_pyramid exemplar = nullptr;
                                 status = vxReserveReferences(context, count*(levels+1)+1);
                                 exemplar = vxCreatePyramid(context, levels, scale, width, height, format);
                                 status |= vxReleaseReferences(context, count*(levels+1)+1);
@@ -1705,7 +1682,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                             xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
                             ownTypeFromString(typeName, &type);
                             if(childNum == 0) { /* Create delay object based on first child */
-                                vx_matrix exemplar = NULL;
+                                vx_matrix exemplar = nullptr;
                                 status = vxReserveReferences(context, count+1);
                                 exemplar = vxCreateMatrix(context, type, cols, rows);
                                 status |= vxReleaseReferences(context, count+1);
@@ -1756,7 +1733,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                             if (lut_count == 0)
                                 lut_count = 256;
                             if(childNum == 0) { /* Create delay object based on first child */
-                                vx_lut exemplar = NULL;
+                                vx_lut exemplar = nullptr;
                                 status = vxReserveReferences(context, count+1);
                                 exemplar = vxCreateLUT(context, type, lut_count);
                                 status |= vxReleaseReferences(context, count+1);
@@ -1804,7 +1781,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                             vx_size cols = xml_prop_ulong(cur, "columns");
                             vx_uint32 scale = xml_prop_ulong(cur, "scale");
                             if(childNum == 0) { /* Create delay object based on first child */
-                                vx_convolution exemplar = NULL;
+                                vx_convolution exemplar = nullptr;
                                 status = vxReserveReferences(context, count+1);
                                 exemplar = vxCreateConvolution(context, cols, rows);
                                 status |= vxReleaseReferences(context, count+1);
@@ -1856,7 +1833,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                             vx_uint32 dst_width = xml_prop_ulong(cur, "dst_width");
                             vx_uint32 dst_height = xml_prop_ulong(cur, "dst_height");
                             if(childNum == 0) { /* Create delay object based on first child */
-                                vx_remap exemplar = NULL;
+                                vx_remap exemplar = nullptr;
                                 status = vxReserveReferences(context, count+1);
                                 exemplar = vxCreateRemap(context, src_width, src_height, dst_width, dst_height);
                                 status |= vxReleaseReferences(context, count+1);
@@ -1906,7 +1883,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                             vx_uint32 range = xml_prop_ulong(cur, "range");
                             vx_int32 offset = xml_prop_ulong(cur, "offset");
                             if(childNum == 0) { /* Create delay object based on first child */
-                                vx_distribution exemplar = NULL;
+                                vx_distribution exemplar = nullptr;
                                 status = vxReserveReferences(context, count+1);
                                 exemplar = vxCreateDistribution(context, bins, offset, range);
                                 status |= vxReleaseReferences(context, count+1);
@@ -1957,7 +1934,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                             vx_int32 true_value = (vx_int32)xml_prop_ulong(cur, "true_value");
                             vx_int32 false_value = (vx_int32)xml_prop_ulong(cur, "false_value");
                             if(childNum == 0) { /* Create delay object based on first child */
-                                vx_threshold exemplar = NULL;
+                                vx_threshold exemplar = nullptr;
                                 status = vxReserveReferences(context, count+1);
                                 XML_FOREACH_CHILD_TAG (cur, tag, tags) {
                                     if (tag == BINARY_TAG) {
@@ -2037,10 +2014,10 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                             vx_char typeName[20];
                             xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
                             ownTypeFromString(typeName, &type);
-                            vx_size nullReference = 0;
-                            void *ptr = &nullReference;
+                            vx_size nullptrReference = 0;
+                            void *ptr = &nullptrReference;
                             if(childNum == 0) { /* Create delay object based on first child */
-                                vx_scalar exemplar = NULL;
+                                vx_scalar exemplar = nullptr;
                                 status = vxReserveReferences(context, count+1);
                                 exemplar = vxCreateScalar(context, type, ptr);
                                 status |= vxReleaseReferences(context, count+1);
@@ -2201,4 +2178,4 @@ exit:
     return import;
 }
 
-#endif
+#endif /* defined(OPENVX_USE_XML) */

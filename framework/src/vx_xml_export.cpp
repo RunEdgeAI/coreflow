@@ -87,8 +87,9 @@ static void vxGetName(vx_reference ref)
 {
     refNameStr[0] = 0;
 
-    if(ref->name[0]) {
-        sprintf(refNameStr, " name=\"%s\" ", ref->name);
+    if (ref->name[0])
+    {
+        snprintf(refNameStr, sizeof(refNameStr), " name=\"%s\"", ref->name);
     }
 }
 
@@ -894,14 +895,43 @@ static vx_status vxExportToXMLThreshold(FILE* fp, vx_reference refs[], vx_uint32
     vx_threshold thresh = (vx_threshold)refs[r];
     vx_int32 j = ownStringFromType(thresh->data_type);
     vx_char indent[10] = {0};
+    vx_int32 true_value = 0, false_value = 0;
     vx_uint32 i;
+
+    // Access the correct union member based on data type
+    switch(thresh->data_type)
+    {
+        case VX_TYPE_UINT8:
+            true_value = thresh->true_value.U8;
+            false_value = thresh->false_value.U8;
+            break;
+        case VX_TYPE_INT16:
+            true_value = thresh->true_value.S16;
+            false_value = thresh->false_value.S16;
+            break;
+        case VX_TYPE_UINT16:
+            true_value = thresh->true_value.U16;
+            false_value = thresh->false_value.U16;
+            break;
+        case VX_TYPE_INT32:
+            true_value = thresh->true_value.S32;
+            false_value = thresh->false_value.S32;
+            break;
+        case VX_TYPE_UINT32:
+            true_value = thresh->true_value.U32;
+            false_value = thresh->false_value.U32;
+            break;
+        default:
+            status = VX_ERROR_INVALID_TYPE;
+            return status;
+    }
 
     for (i = 0; i < (dimof(indent)-1) && i < id; i++)
         indent[i] = '\t';
     indent[i] = '\0';
 
     fprintf(fp, "%s<threshold reference=\"%u\" elemType=\"%s\" true_value=\"%d\" false_value=\"%d\"%s",
-                 indent, r, type_pairs[j].name, thresh->true_value, thresh->false_value, refNameStr);
+                 indent, r, type_pairs[j].name, true_value, false_value, refNameStr);
 
     if (refs[r]->is_virtual == vx_true_e) /* is not virtual in 1.0, but check anyway */
     {
@@ -1063,9 +1093,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
     {
         status = VX_SUCCESS;
         fprintf(fp, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                    "<openvx xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+                    "<openvx xmlns:xsi=\"https://www.w3.org/TR/xmlschema-1\"\n"
                     "        xmlns=\"https://www.khronos.org/registry/vx/schema\"\n"
-                    "        xsi:schemaLocation=\"https://www.khronos.org/registry/vx/schema openvx-1-1.xsd\"\n"
+                    "        xsi:schemaLocation=\"https://registry.khronos.org/OpenVX/schema/openvx-1-1.xsd\"\n"
                     "        references=\"%u\">\n", numrefs);
 
         for (r = 0u; r < context->num_modules; r++)
