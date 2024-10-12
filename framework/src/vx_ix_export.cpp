@@ -332,7 +332,7 @@ static vx_size putInTable(VXBinExportRefTable *ref_table, const vx_reference new
                     vx_enum kernel_use = VX_IX_USE_NO_EXPORT_VALUES;
                     if (VX_IX_USE_NO_EXPORT_VALUES != ref_table[index].use &&
                         n->kernel->user_kernel &&
-                        VX_TYPE_GRAPH == n->kernel->base.scope->type)
+                        VX_TYPE_GRAPH == n->kernel->scope->type)
                     {
                         kernel_use = VX_IX_USE_EXPORT_VALUES;
                     }
@@ -420,7 +420,7 @@ static vx_size putInTable(VXBinExportRefTable *ref_table, const vx_reference new
             else if (VX_TYPE_OBJECT_ARRAY == newref->scope->type &&
                      VX_TYPE_IMAGE == newref->type &&
                      ((vx_image)newref)->parent &&
-                     VX_TYPE_TENSOR == ((vx_image)newref)->parent->base.type)
+                     VX_TYPE_TENSOR == ((vx_image)newref)->parent->type)
             {
                 actual_numrefs = putInTable(ref_table, newref->scope, actual_numrefs, ref_table[index].use);
                 actual_numrefs = putInTable(ref_table, (vx_reference)(((vx_image)newref)->parent), actual_numrefs, ref_table[index].use);
@@ -666,7 +666,7 @@ static vx_status exportImage(VXBinExport *xport, const vx_size n, int calcSize)
 {
     vx_image image = (vx_image)xport->ref_table[n].ref;
     vx_status status = exportObjectHeader(xport, n, calcSize);                        /* Export common information */
-    if (VX_TYPE_IMAGE == image->base.scope->type)
+    if (VX_TYPE_IMAGE == image->scope->type)
     {
         /* Image is an ROI or image from channel. If parent has same
         number of channels, we assume ROI, otherwise we assume
@@ -702,7 +702,7 @@ static vx_status exportImage(VXBinExport *xport, const vx_size n, int calcSize)
         }
         /* And that's all we do for image from ROI or channel */
     }
-    else if (image->parent && VX_TYPE_TENSOR == image->parent->base.type)
+    else if (image->parent && VX_TYPE_TENSOR == image->parent->type)
     {
         /* object array of images from tensor
             Notice that scope index (of the object array) has already been exported
@@ -768,7 +768,7 @@ static vx_status exportImage(VXBinExport *xport, const vx_size n, int calcSize)
         /* Now we have to output the data, but only if use == VX_IX_USE_EXPORT_VALUES
             and not virtual
         */
-        if (VX_IX_USE_EXPORT_VALUES == xport->ref_table[n].use && !image->base.is_virtual)
+        if (VX_IX_USE_EXPORT_VALUES == xport->ref_table[n].use && !image->is_virtual)
         {
             status |= exportVxUint32(xport, 1U, calcSize);
             vx_rectangle_t rect;
@@ -821,7 +821,7 @@ static vx_status exportLUT(VXBinExport *xport, const vx_size i, int calcSize)
     status |= exportVxEnum(xport, lut->item_type, calcSize);
     status |= exportVxUint32(xport, lut->offset, calcSize);
     if (VX_IX_USE_EXPORT_VALUES == xport->ref_table[i].use &&
-        vx_false_e == lut->base.is_virtual && lut->memory.ptrs[0])
+        vx_false_e == lut->is_virtual && lut->memory.ptrs[0])
     {
         vx_uint32 size = lut->num_items * lut->item_size;
         status |= exportVxUint32(xport, size, calcSize);                        		/* Size of data following */
@@ -844,7 +844,7 @@ static vx_status exportDistribution(VXBinExport *xport, const vx_size i, int cal
     status |= exportVxInt32(xport, dist->offset_x, calcSize);
     status |= exportVxUint32(xport, dist->range_x, calcSize);
     if (VX_IX_USE_EXPORT_VALUES == xport->ref_table[i].use &&
-        vx_false_e == dist->base.is_virtual && dist->memory.ptrs[0])
+        vx_false_e == dist->is_virtual && dist->memory.ptrs[0])
     {
         vx_uint32 size = bins * sizeof(vx_uint32);
         status |= exportVxUint32(xport, size, calcSize);                        /* Size of data following */
@@ -883,7 +883,7 @@ static vx_status exportMatrix(VXBinExport *xport, const vx_size i, int calcSize)
     status |= exportVxCoordinates2dT(xport, &mat->origin, calcSize);
     status |= exportVxEnum(xport, mat->pattern, calcSize);
     if (VX_IX_USE_EXPORT_VALUES == xport->ref_table[i].use &&
-        vx_false_e == mat->base.is_virtual && mat->memory.ptrs[0])
+        vx_false_e == mat->is_virtual && mat->memory.ptrs[0])
     {
         vx_uint32 size = mat->columns * mat->rows;
         if (VX_TYPE_FLOAT32 == mat->data_type)       /* can only be int32, float32, or uint8 */
@@ -905,15 +905,15 @@ static vx_status exportConvolution(VXBinExport *xport, const vx_size i, int calc
     vx_status status = VX_SUCCESS;
     vx_convolution conv = (vx_convolution)xport->ref_table[i].ref;
     status = exportObjectHeader(xport, i, calcSize);
-    status |= exportVxUint32(xport, (vx_uint32)conv->base.columns, calcSize);
-    status |= exportVxUint32(xport, (vx_uint32)conv->base.rows, calcSize);
+    status |= exportVxUint32(xport, (vx_uint32)conv->columns, calcSize);
+    status |= exportVxUint32(xport, (vx_uint32)conv->rows, calcSize);
     status |= exportVxUint32(xport, conv->scale, calcSize);
     if (VX_IX_USE_EXPORT_VALUES == xport->ref_table[i].use &&
-        vx_false_e == conv->base.base.is_virtual && conv->base.memory.ptrs[0])
+        vx_false_e == conv->is_virtual && conv->memory.ptrs[0])
     {
-        vx_uint32 size = conv->base.columns * conv->base.rows + sizeof(vx_int16);   /* only type supported is int16 */
+        vx_uint32 size = conv->columns * conv->rows + sizeof(vx_int16);   /* only type supported is int16 */
         status |= exportVxUint32(xport, size, calcSize);                            /* Size of data following */
-        status |= exportBytes(xport, conv->base.memory.ptrs[0], size, calcSize);  /* Export the data */
+        status |= exportBytes(xport, conv->memory.ptrs[0], size, calcSize);  /* Export the data */
     }
     else
     {
@@ -933,9 +933,9 @@ static vx_status exportScalar(VXBinExport *xport, const vx_size i, int calcSize)
     {
         for (vx_uint32 ix = 0; ix < VX_INT_MAX_USER_STRUCTS; ++ix)
         {
-            if (scalar->base.context->user_structs[ix].type == scalar->data_type)
+            if (scalar->context->user_structs[ix].type == scalar->data_type)
             {
-                item_size = scalar->base.context->user_structs[ix].size;
+                item_size = scalar->context->user_structs[ix].size;
                 break;
             }
         }
@@ -947,13 +947,13 @@ static vx_status exportScalar(VXBinExport *xport, const vx_size i, int calcSize)
         VX_TYPE_USER_STRUCT_END >= scalar->data_type)
     {
         int ix = scalar->data_type - VX_TYPE_USER_STRUCT_START;
-        if (scalar->base.context->user_structs[ix].name[0])     /* Zero length name not allowed */
-            status |= exportBytes(xport, &scalar->base.context->user_structs[ix].name, VX_MAX_STRUCT_NAME, calcSize);
+        if (scalar->context->user_structs[ix].name[0])     /* Zero length name not allowed */
+            status |= exportBytes(xport, &scalar->context->user_structs[ix].name, VX_MAX_STRUCT_NAME, calcSize);
         else
             status = VX_ERROR_INVALID_TYPE;
     }
     if (VX_IX_USE_EXPORT_VALUES == xport->ref_table[i].use &&
-        vx_false_e == scalar->base.is_virtual)
+        vx_false_e == scalar->is_virtual)
     {
         void * data = malloc(item_size);
         status |= exportVxUint32(xport, item_size, calcSize);                       /* Size of data following */
@@ -981,13 +981,13 @@ static vx_status exportArray(VXBinExport *xport, const vx_size i, int calcSize)
         VX_TYPE_USER_STRUCT_END >= arr->item_type)
     {
         int ix = arr->item_type - VX_TYPE_USER_STRUCT_START;
-        if (arr->base.context->user_structs[ix].name[0])     /* Zero length name not allowed */
-            status |= exportBytes(xport, &arr->base.context->user_structs[ix].name, VX_MAX_STRUCT_NAME, calcSize);
+        if (arr->context->user_structs[ix].name[0])     /* Zero length name not allowed */
+            status |= exportBytes(xport, &arr->context->user_structs[ix].name, VX_MAX_STRUCT_NAME, calcSize);
         else
             status = VX_ERROR_INVALID_TYPE;
     }
     if (VX_IX_USE_EXPORT_VALUES == xport->ref_table[i].use &&
-        vx_false_e == arr->base.is_virtual && arr->memory.ptrs[0])
+        vx_false_e == arr->is_virtual && arr->memory.ptrs[0])
     {
         vx_uint32 size = arr->num_items * arr->item_size;
         status |= exportVxUint32(xport, size, calcSize);                        /* Size of data following */
@@ -1010,7 +1010,7 @@ static vx_status exportRemap(VXBinExport *xport, const vx_size i, int calcSize)
     status |= exportVxUint32(xport, remap->dst_width, calcSize);
     status |= exportVxUint32(xport, remap->dst_height, calcSize);
     if (VX_IX_USE_EXPORT_VALUES == xport->ref_table[i].use &&
-        vx_false_e == remap->base.is_virtual && remap->memory.ptrs[0])
+        vx_false_e == remap->is_virtual && remap->memory.ptrs[0])
     {
         vx_uint32 size = remap->dst_width * remap->dst_height * sizeof(vx_float32) * 2;
         status |= exportVxUint32(xport, size, calcSize);                        /* Size of data following */
@@ -1032,7 +1032,7 @@ static vx_status exportTensor(VXBinExport *xport, const vx_size i, int calcSize)
     status |= exportVxUint32(xport, tensor->number_of_dimensions, calcSize);
     status |= exportVxEnum(xport, tensor->data_type, calcSize);
     status |= exportVxUint8(xport, tensor->fixed_point_position, calcSize);
-    if (VX_TYPE_TENSOR == tensor->base.scope->type)
+    if (VX_TYPE_TENSOR == tensor->scope->type)
     {
         /* export offset of this tensor's memory address from that of its parent */
         status |= exportVxUint32(xport, (vx_uint8 *)tensor->parent->addr - (vx_uint8 *)tensor->addr, calcSize);
@@ -1054,9 +1054,9 @@ static vx_status exportTensor(VXBinExport *xport, const vx_size i, int calcSize)
     if (VX_SUCCESS == status)
     {
         if (VX_IX_USE_EXPORT_VALUES == xport->ref_table[i].use &&
-            vx_false_e == tensor->base.is_virtual &&
+            vx_false_e == tensor->is_virtual &&
             NULL != tensor->addr &&
-            VX_TYPE_TENSOR != tensor->base.scope->type)
+            VX_TYPE_TENSOR != tensor->scope->type)
         {
             vx_uint32 size = tensor->dimensions[tensor->number_of_dimensions - 1] *
                              tensor->stride[tensor->number_of_dimensions - 1];
@@ -1110,7 +1110,7 @@ static vx_status exportGraph(VXBinExport *xport,vx_size i, int calcSize)
     of the kernel will be the name of the reference to the graph and it must not have
     a zero length */
     if (VX_IX_USE_IMPORT_AS_KERNEL == xport->ref_table[i].use &&
-        0 == g->base.name[0])
+        0 == g->name[0])
         status = VX_FAILURE;
     status |= exportObjectHeader(xport, i, calcSize);
     DEBUGPRINTF("Exporting graph with %u parameters\n", g->numParams);
@@ -1203,7 +1203,7 @@ static vx_status exportObjectArray(VXBinExport *xport, vx_size i, int calcSize)
     /* Look for the specical case of an object array of images whose parent is a tensor */
     if (VX_TYPE_IMAGE == object_array->items[0]->type &&
         ((vx_image)object_array->items[0])->parent &&
-        VX_TYPE_TENSOR == ((vx_image)object_array->items[0])->parent->base.type)
+        VX_TYPE_TENSOR == ((vx_image)object_array->items[0])->parent->type)
     {
         status |= exportVxEnum(xport, VX_TYPE_TENSOR, calcSize);    /* Indicate type of parent */
         /* we need to output the information required to recreate the object array:
@@ -1225,7 +1225,7 @@ static vx_status exportObjectArray(VXBinExport *xport, vx_size i, int calcSize)
             vx_image image1 = (vx_image)object_array->items[1];
             stride = (image1->memory.ptrs[0] - image0->memory.ptrs[0])/image0->memory.strides[0][2];
         }
-        status |= exportVxUint32(xport, indexOf(xport, &(tensor->base)), calcSize);
+        status |= exportVxUint32(xport, indexOf(xport, &(tensor)), calcSize);
         status |= exportVxUint32(xport, stride, calcSize);
         status |= exportVxUint32(xport, rect.start_x, calcSize);
         status |= exportVxUint32(xport, rect.start_y, calcSize);

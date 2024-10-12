@@ -2372,7 +2372,7 @@ vx_status vx_xml_fullimport(int argc, char *argv[])
 {
     vx_status status = VX_FAILURE;
     vx_context context = 0;
-    char filename[256] = "test.xml";
+    char filename[256] = "./tests/raw/test.xml";
     context = vxCreateContext();
     if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
     {
