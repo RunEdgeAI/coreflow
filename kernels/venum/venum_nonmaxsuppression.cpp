@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,13 +34,13 @@ static void nonMaxSuppression_U8(vx_uint8* src,
 {
     vx_uint32 radius = (vx_uint32)windowSize >> 1;
     const vx_uint32 W16 = ((srcWidth - radius) >> 4) << 4;
-    const vx_uint32 W8 = ((srcWidth - radius) >> 3) << 3;  
+    const vx_uint32 W8 = ((srcWidth - radius) >> 3) << 3;
     vx_uint8 *maskCurr = NULL;
     vx_uint8 *maskLeftTop = NULL;
     vx_uint32 x, y;
     uint8x16_t vOne16 = vdupq_n_u8(1);
     uint8x8_t vOne8 = vdup_n_u8(1);
-    
+
     for (y = radius; y < srcHeight - radius; y++)
     {
         vx_uint8 *srcCurr = src + y * srcStride + radius;
@@ -55,7 +54,7 @@ static void nonMaxSuppression_U8(vx_uint8* src,
 
         for (x = radius; x < W16; x += 16)
         {
-            uint8x16_t vSrcCurr = vld1q_u8(srcCurr); 
+            uint8x16_t vSrcCurr = vld1q_u8(srcCurr);
             uint8x16_t vDstCurr = vld1q_u8(dstCurr);
             uint8x16_t vMaskCurr = vdupq_n_u8(0);
             if (maskCurr)
@@ -68,7 +67,7 @@ static void nonMaxSuppression_U8(vx_uint8* src,
             for (vx_uint32 j = 0; j < windowSize; j++)
             {
                 for (vx_uint32 i = 0; i < windowSize; i++)
-                {   
+                {
                     if (j == radius && i == radius)
                         continue;
                     else
@@ -79,10 +78,10 @@ static void nonMaxSuppression_U8(vx_uint8* src,
                             uint8x16_t vMaskNeighborCurr = vld1q_u8(maskLeftTop + j * maskStride + i);
                             vMaskNeighborCurr = vsubq_u8(vOne16, vorrq_u8(vMaskNeighborCurr, vMaskCurr));
                             vNeighborCurr = vmulq_u8(vNeighborCurr, vMaskNeighborCurr);
-                        }                                      
+                        }
                         vTempResult = (j < radius || (j == radius && i < radius)) ? vcgeq_u8(vSrcCurr, vNeighborCurr) : vcgtq_u8(vSrcCurr, vNeighborCurr);
                         vFlag = vmulq_u8(vFlag, vTempResult);
-                    }                 
+                    }
                 }
             }
             vDstCurr = vmulq_u8(vFlag, vSrcCurr);
@@ -93,7 +92,7 @@ static void nonMaxSuppression_U8(vx_uint8* src,
             if (mask)
             {
                 maskCurr += 16;
-                maskLeftTop += 16;                
+                maskLeftTop += 16;
             }
         }
         for (; x < W8; x += 8)
@@ -139,35 +138,35 @@ static void nonMaxSuppression_U8(vx_uint8* src,
                 maskCurr += 8;
                 maskLeftTop += 8;
             }
-        }        
+        }
         for (;x < srcWidth - radius; x++)
         {
             vx_uint8 maskValue = 0;
-            if (mask != NULL) 
+            if (mask != NULL)
             {
                 maskValue = *maskCurr;
             }
-            else 
+            else
             {
                 maskValue = 0;
             }
             vx_uint8 srcVal = *srcCurr;
-            if (maskValue != 0) 
+            if (maskValue != 0)
             {
                 *dstCurr = srcVal;
             }
-            else 
+            else
             {
                 vx_uint8 flag = 1;
-                for (vx_uint32 j = 0; j < windowSize; j++) 
+                for (vx_uint32 j = 0; j < windowSize; j++)
                 {
-                    for (vx_uint32 i = 0; i < windowSize; i++) 
+                    for (vx_uint32 i = 0; i < windowSize; i++)
                     {
-                        if (mask != NULL) 
+                        if (mask != NULL)
                         {
                             maskValue = *(maskLeftTop + j * maskStride + i);
                         }
-                        else 
+                        else
                         {
                             maskValue = 0;
                         }
@@ -181,7 +180,7 @@ static void nonMaxSuppression_U8(vx_uint8* src,
                             break;
                         }
                     }
-                    if (flag == 0) 
+                    if (flag == 0)
                     {
                         break;
                     }
@@ -214,7 +213,7 @@ vx_status vxNonMaxSuppression_U8(vx_image input, vx_image mask, vx_scalar win_si
     void *src_base = NULL;
     void *mask_base = NULL;
     void *dst_base = NULL;
-    
+
     vx_imagepatch_addressing_t src_addr = VX_IMAGEPATCH_ADDR_INIT;
     vx_imagepatch_addressing_t dst_addr = VX_IMAGEPATCH_ADDR_INIT;
     vx_imagepatch_addressing_t mask_addr = VX_IMAGEPATCH_ADDR_INIT;
@@ -238,7 +237,7 @@ vx_status vxNonMaxSuppression_U8(vx_image input, vx_image mask, vx_scalar win_si
     width = dst_addr.dim_x;
     height = dst_addr.dim_y;
     vx_int32 wsize = 0;
-    status |= vxCopyScalar(win_size, &wsize, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);    
+    status |= vxCopyScalar(win_size, &wsize, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     if (format == VX_DF_IMAGE_U8)
     {
         nonMaxSuppression_U8((vx_uint8*)src_base,
@@ -274,19 +273,19 @@ vx_status vxNonMaxSuppression_U8(vx_image input, vx_image mask, vx_scalar win_si
                 vx_int16 *val_p = (vx_int16 *)((vx_uint8 *)src_base + y*src_addr.stride_y + x*src_addr.stride_x);
                 vx_int16 *dest = (vx_int16 *)((vx_uint8 *)dst_base + y*dst_addr.stride_y + x*dst_addr.stride_x);
                 int16x8_t src_val_16x8 = vld1q_s16(val_p);
-                
-                int16x8_t dst_16x8; 
+
+                int16x8_t dst_16x8;
                 uint8x8_t t_8x8 = vdup_n_u8(0);
                 uint8x8_t maskequal0_8x8_o = vceq_u8(_mask_8x8_o, vdup_n_u8(0));
                 dst_16x8 = vbslq_s16(vmovl_u8(maskequal0_8x8_o), dst_16x8, src_val_16x8);
                 t_8x8 = vbsl_u8(maskequal0_8x8_o, t_8x8, vdup_n_u8(1));
-                
+
                 for (vx_int32 j = -border; j <= border; j++)
                 {
                     for (vx_int32 i = -border; i <= border; i++)
                     {
-                        vx_int16 *neighbor = (vx_int16 *)((vx_uint8 *)src_base 
-                            + (y + j)*src_addr.stride_y 
+                        vx_int16 *neighbor = (vx_int16 *)((vx_uint8 *)src_base
+                            + (y + j)*src_addr.stride_y
                             + (x + i)*src_addr.stride_x);
                         int16x8_t neighbor_val_16x8 = vld1q_s16(neighbor);
                         uint8x8_t _mask_8x8_i;
@@ -300,7 +299,7 @@ vx_status vxNonMaxSuppression_U8(vx_image input, vx_image mask, vx_scalar win_si
                         {
                             _mask_8x8_i = vdup_n_u8(0);
                         }
-                        
+
                         uint8x8_t maskequal0_8x8_i = vceq_u8(_mask_8x8_i, vdup_n_u8(0));//(*_mask == 0)
                         uint16x8_t j1 = vdupq_n_u16(0);
                         if(j < 0 || (j == 0 && i <= 0))
@@ -314,7 +313,7 @@ vx_status vxNonMaxSuppression_U8(vx_image input, vx_image mask, vx_scalar win_si
                         }
                         uint16x8_t srcltval = vcltq_s16(src_val_16x8, neighbor_val_16x8);//<
                         uint16x8_t srclqval = vcleq_s16(src_val_16x8, neighbor_val_16x8);//<=
-                        
+
                         uint16x8_t result_16x8 = vandq_u16(vmovl_u8(maskequal0_8x8_i),
                             vorrq_u16(vandq_u16(j1, srcltval),vandq_u16(j2,srclqval)));
                         if(vgetq_lane_u16(result_16x8, 0) != 0 && vget_lane_u8(t_8x8, 0) ==0)
@@ -326,7 +325,7 @@ vx_status vxNonMaxSuppression_U8(vx_image input, vx_image mask, vx_scalar win_si
                         {
                             dst_16x8 = vsetq_lane_s16(vgetq_lane_s16(src_val_16x8, 0), dst_16x8, 0);
                         }
-                    
+
                         if(vgetq_lane_u16(result_16x8, 1) != 0 && vget_lane_u8(t_8x8, 1) ==0)
                         {
                             dst_16x8 = vsetq_lane_s16(INT16_MIN, dst_16x8, 1);
@@ -336,7 +335,7 @@ vx_status vxNonMaxSuppression_U8(vx_image input, vx_image mask, vx_scalar win_si
                         {
                             dst_16x8 = vsetq_lane_s16(vgetq_lane_s16(src_val_16x8, 1), dst_16x8, 1);
                         }
-                        
+
                         if(vgetq_lane_u16(result_16x8, 2) != 0 && vget_lane_u8(t_8x8, 2) ==0)
                         {
                             dst_16x8 = vsetq_lane_s16(INT16_MIN, dst_16x8, 2);
@@ -346,7 +345,7 @@ vx_status vxNonMaxSuppression_U8(vx_image input, vx_image mask, vx_scalar win_si
                         {
                             dst_16x8 = vsetq_lane_s16(vgetq_lane_s16(src_val_16x8, 2), dst_16x8, 2);
                         }
-                        
+
                         if(vgetq_lane_u16(result_16x8, 3) != 0 && vget_lane_u8(t_8x8, 3) ==0)
                         {
                             dst_16x8 = vsetq_lane_s16(INT16_MIN, dst_16x8, 3);
@@ -356,7 +355,7 @@ vx_status vxNonMaxSuppression_U8(vx_image input, vx_image mask, vx_scalar win_si
                         {
                             dst_16x8 = vsetq_lane_s16(vgetq_lane_s16(src_val_16x8, 3), dst_16x8, 3);
                         }
-                        
+
                         if(vgetq_lane_u16(result_16x8, 4) != 0 && vget_lane_u8(t_8x8, 4) ==0)
                         {
                             dst_16x8 = vsetq_lane_s16(INT16_MIN, dst_16x8, 4);
@@ -366,7 +365,7 @@ vx_status vxNonMaxSuppression_U8(vx_image input, vx_image mask, vx_scalar win_si
                         {
                             dst_16x8 = vsetq_lane_s16(vgetq_lane_s16(src_val_16x8, 4), dst_16x8, 4);
                         }
-                        
+
                         if(vgetq_lane_u16(result_16x8, 5) != 0 && vget_lane_u8(t_8x8, 5) ==0)
                         {
                             dst_16x8 = vsetq_lane_s16(INT16_MIN, dst_16x8, 5);
@@ -376,7 +375,7 @@ vx_status vxNonMaxSuppression_U8(vx_image input, vx_image mask, vx_scalar win_si
                         {
                             dst_16x8 = vsetq_lane_s16(vgetq_lane_s16(src_val_16x8, 5), dst_16x8, 5);
                         }
-                        
+
                         if(vgetq_lane_u16(result_16x8, 6) != 0 && vget_lane_u8(t_8x8, 6) ==0)
                         {
                             dst_16x8 = vsetq_lane_s16(INT16_MIN, dst_16x8, 6);
@@ -386,7 +385,7 @@ vx_status vxNonMaxSuppression_U8(vx_image input, vx_image mask, vx_scalar win_si
                         {
                             dst_16x8 = vsetq_lane_s16(vgetq_lane_s16(src_val_16x8, 6), dst_16x8, 6);
                         }
-                        
+
                         if(vgetq_lane_u16(result_16x8, 7) != 0 && vget_lane_u8(t_8x8, 7) ==0)
                         {
                             dst_16x8 = vsetq_lane_s16(INT16_MIN, dst_16x8, 7);
@@ -425,8 +424,8 @@ vx_status vxNonMaxSuppression_U8(vx_image input, vx_image mask, vx_scalar win_si
                     {
                         for (vx_int32 i = -border; i <= border; i++)
                         {
-                            vx_int16 *neighbor = (vx_int16 *)((vx_uint8 *)src_base 
-                                + (y + j)*src_addr.stride_y 
+                            vx_int16 *neighbor = (vx_int16 *)((vx_uint8 *)src_base
+                                + (y + j)*src_addr.stride_y
                                 + (x + i)*src_addr.stride_x);
                             if (mask != NULL)
                             {
@@ -437,8 +436,8 @@ vx_status vxNonMaxSuppression_U8(vx_image input, vx_image mask, vx_scalar win_si
                                 _mask = &mask_data;
                             }
                             vx_int16 neighbor_val = *neighbor;
-                            if ((*_mask == 0) && 
-                                (((j < 0 || (j == 0 && i <= 0)) && (src_val < neighbor_val)) 
+                            if ((*_mask == 0) &&
+                                (((j < 0 || (j == 0 && i <= 0)) && (src_val < neighbor_val))
                                     || ((j > 0 || (j == 0 && i > 0)) && (src_val <= neighbor_val))))
                             {
                                 *dest = INT16_MIN;

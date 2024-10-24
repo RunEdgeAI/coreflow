@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -339,7 +338,7 @@ static vx_status bilateralFilter_8u(void* src, vx_size* src_strides, vx_size* di
                             v_g = v_r = v_b = vsetq_lane_f32(bordermode->constant_value.U8, v_b, 0);
                         }
                     }
-                            
+
                     if (neighbor_x1 < 0 || neighbor_y < 0)
                     {
                         if (border_mode == VX_BORDER_MODE_CONSTANT)
@@ -713,7 +712,7 @@ static vx_status bilateralFilter_s16(void* src, vx_size* src_strides, vx_size* d
                             v_g = v_r = v_b = vsetq_lane_f32(bordermode->constant_value.S16, v_b, 0);
                         }
                     }
-                            
+
                     if (neighbor_x1 < 0 || neighbor_y < 0)
                     {
                         if (border_mode == VX_BORDER_MODE_CONSTANT)

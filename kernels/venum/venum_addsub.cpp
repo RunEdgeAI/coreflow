@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -735,7 +734,7 @@ vx_status vxSubtraction(vx_image in0, vx_image in1, vx_scalar policy_param, vx_i
     status |= vxCopyScalar(policy_param, &overflow_policy, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     width = src_addr[0].dim_x;
     height = src_addr[0].dim_y;
- 
+
     if (in0_format == VX_DF_IMAGE_U8 && in1_format == VX_DF_IMAGE_U8 && out_format == VX_DF_IMAGE_U8)
     {
         /* Finally, overflow-check as per the target type and pol*/

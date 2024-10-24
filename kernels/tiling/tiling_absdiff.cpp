@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +19,7 @@
 
 void AbsDiff_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void * VX_RESTRICT tile_memory, vx_size tile_memory_size)
 {
-    vx_uint32 y, x;    
+    vx_uint32 y, x;
     vx_tile_ex_t *in_1 = (vx_tile_ex_t *)parameters[0];
     vx_tile_ex_t *in_2 = (vx_tile_ex_t *)parameters[1];
     vx_tile_ex_t *out = (vx_tile_ex_t *)parameters[2];
@@ -174,12 +173,12 @@ void AbsDiff_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void 
 
 void AbsDiff_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT], void * VX_RESTRICT tile_memory, vx_size tile_memory_size)
 {
-    vx_uint32 y, x;    
+    vx_uint32 y, x;
     vx_tile_ex_t *in_1 = (vx_tile_ex_t *)parameters[0];
     vx_tile_ex_t *in_2 = (vx_tile_ex_t *)parameters[1];
     vx_tile_ex_t *out = (vx_tile_ex_t *)parameters[2];
     vx_uint32 ty = out->tile_y;
-    vx_uint32 tx = out->tile_x;    
+    vx_uint32 tx = out->tile_x;
     if (ty == 0 && tx == 0)
     {
         ABSDIFF_FLEXIBLE(0, 0, vxTileHeight(out, 0), vxTileWidth(out, 0), in_1->tile_x, in_2->tile_x, out->tile_x)

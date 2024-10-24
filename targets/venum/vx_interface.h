@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -68,7 +67,7 @@ extern vx_kernel_description_t channelextract_kernel;
 extern vx_kernel_description_t histogram_kernel;
 extern vx_kernel_description_t magnitude_kernel;
 extern vx_kernel_description_t optpyrlk_kernel;
-extern vx_kernel_description_t tensor_transpose_kernel; 
+extern vx_kernel_description_t tensor_transpose_kernel;
 extern vx_kernel_description_t tensor_matrix_multiply_kernel;
 extern vx_kernel_description_t halfscale_gaussian_kernel;
 extern vx_kernel_description_t hogcells_kernel;

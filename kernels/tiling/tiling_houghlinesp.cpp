@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,7 +22,7 @@
 #include <string.h>
 
 #define VX_PI   3.1415926535897932384626433832795
-static vx_uint64 state = 0xffffffff; 
+static vx_uint64 state = 0xffffffff;
 
 vx_int32 vxRound(vx_float64 value)
 {
@@ -113,16 +112,16 @@ void HoughLinesP_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
     vx_tile_array_t *param_hough_lines_array = (vx_tile_array_t *)parameters[1];
     vx_tile_array_t *lines_array = (vx_tile_array_t *)parameters[2];
     vx_size *num_lines = (vx_size *)parameters[3];
-    
+
     if (in->image.format != VX_DF_IMAGE_U8)
     {
         return;
     }
-    
+
     vx_uint32 low_height = in->tile_y;
-    vx_uint32 height_tiling = in->tile_y + in->tile_block.height;    
+    vx_uint32 height_tiling = in->tile_y + in->tile_block.height;
     vx_uint32 low_width = in->tile_x;
-    vx_uint32 width_tiling = in->tile_x + in->tile_block.width;    
+    vx_uint32 width_tiling = in->tile_x + in->tile_block.width;
     if ((in->image.height - height_tiling) <  in->tile_block.height  && (in->image.width - width_tiling) < in->tile_block.width)
     {
         vx_coordinates2d_t pt;
@@ -145,7 +144,7 @@ void HoughLinesP_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
         vx_array mask = vxCreateArray(context_houghlines_internal, VX_TYPE_UINT8, width * height);
         vx_array trigtab = vxCreateArray(context_houghlines_internal, VX_TYPE_FLOAT32, numangle * 2);
         vx_array nzloc = vxCreateArray(context_houghlines_internal, VX_TYPE_COORDINATES2D, width * height);
-     
+
         vx_size accum_stride = 0;
         void *accum_ptr = NULL;
         vx_map_id accum_map_id;
@@ -175,7 +174,7 @@ void HoughLinesP_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
         vx_int32 nzcount = 0;
         vx_size lines_num = 0;
 
-        // stage 1. collect non-zero image points  
+        // stage 1. collect non-zero image points
         for (pt.y = 0; pt.y < height; pt.y++)
         {
             const vx_uint8 *data = (vx_uint8 *)in->base[0] + pt.y*in->addr[0].stride_y;
@@ -452,7 +451,7 @@ void HoughLinesP_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT
     {
         return;
     }
-    
+
     vx_coordinates2d_t pt;
     vx_uint8* buf = malloc(param_hough_lines_array->item_size*sizeof(vx_uint8));
     void *param_hough_lines_array_ptr;
@@ -473,7 +472,7 @@ void HoughLinesP_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT
     vx_array mask = vxCreateArray(context_houghlines_internal, VX_TYPE_UINT8, width * height);
     vx_array trigtab = vxCreateArray(context_houghlines_internal, VX_TYPE_FLOAT32, numangle * 2);
     vx_array nzloc = vxCreateArray(context_houghlines_internal, VX_TYPE_COORDINATES2D, width * height);
- 
+
     vx_size accum_stride = 0;
     void *accum_ptr = NULL;
     vx_map_id accum_map_id;
@@ -508,10 +507,10 @@ void HoughLinesP_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT
     vx_uint32 tx = in->tile_x;
     if (ty == 0 && tx == 0)
     {
-        for (pt.y = 0; pt.y < vxTileHeight(in, 0); pt.y++) 
+        for (pt.y = 0; pt.y < vxTileHeight(in, 0); pt.y++)
         {
             const vx_uint8 *data = (vx_uint8 *)in->base[0] + pt.y*in->addr[0].stride_y;
-            for (pt.x = 0; pt.x < vxTileWidth(in, 0); pt.x++) 
+            for (pt.x = 0; pt.x < vxTileWidth(in, 0); pt.x++)
             {
                 vx_uint8 mdata_in = 0;
                 vx_bool pxl_is_valid = vx_false_e, pxl_is_non_zero = vx_false_e;
@@ -532,14 +531,14 @@ void HoughLinesP_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT
                 }
                 vxAddArrayItems(mask, 1, &mdata_in, sizeof(vx_uint8));
             }
-        }        
+        }
     }
     else
     {
         for (pt.y = 0; pt.y < ty; pt.y++)
         {
             const vx_uint8 *data = (vx_uint8 *)in->base[0] + pt.y*in->addr[0].stride_y;
-            for (pt.x = tx; pt.x < vxTileWidth(in, 0); pt.x++) 
+            for (pt.x = tx; pt.x < vxTileWidth(in, 0); pt.x++)
             {
                 vx_uint8 mdata_in = 0;
                 if (data[pt.x])
@@ -554,7 +553,7 @@ void HoughLinesP_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT
         for (pt.y = ty; pt.y < vxTileHeight(in, 0); pt.y++)
         {
             const vx_uint8 *data = (vx_uint8 *)in->base[0] + pt.y*in->addr[0].stride_y;
-            for (pt.x = 0; pt.x < vxTileWidth(in, 0); pt.x++) 
+            for (pt.x = 0; pt.x < vxTileWidth(in, 0); pt.x++)
             {
                 vx_uint8 mdata_in = 0;
                 if (data[pt.x])
@@ -566,7 +565,7 @@ void HoughLinesP_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT
                 vxAddArrayItems(mask, 1, &mdata_in, sizeof(vx_uint8));
             }
         }
-        
+
     }
 
     vx_size nzloc_stride = 0;

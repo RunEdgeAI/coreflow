@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -231,7 +230,7 @@ vx_status vxChannelCombine(vx_image inputs[4], vx_image output)
             vxMapImagePatch(output, &rect, p, &map_id_dst, &dst_addr, &base_dst_ptr, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST, 0);
 
             procYUV4orIYUV(base_src_ptr, &src_addr, base_dst_ptr, &dst_addr);
-            
+
             vxUnmapImagePatch(output, map_id_dst);
             vxUnmapImagePatch(inputs[p], map_id_p);
         }
@@ -443,7 +442,7 @@ static vx_status vxCopyPlaneToImage(vx_image src,
                     vx_uint8 *srcp13 = srcyP + src_addr.stride_x*((src_addr.scale_x *((x+13)* VX_SCALE_UNITY / src_addr.scale_x * x_subsampling))/VX_SCALE_UNITY);
                     vx_uint8 *srcp14 = srcyP + src_addr.stride_x*((src_addr.scale_x *((x+14)* VX_SCALE_UNITY / src_addr.scale_x * x_subsampling))/VX_SCALE_UNITY);
                     vx_uint8 *srcp15 = srcyP + src_addr.stride_x*((src_addr.scale_x *((x+15)* VX_SCALE_UNITY / src_addr.scale_x * x_subsampling))/VX_SCALE_UNITY);
-                    
+
                     uint8x16_t src8x16;
                     src8x16 = vsetq_lane_u8(srcp[src_component], src8x16, 0);
                     src8x16 = vsetq_lane_u8(srcp1[src_component], src8x16, 1);
@@ -460,8 +459,8 @@ static vx_status vxCopyPlaneToImage(vx_image src,
                     src8x16 = vsetq_lane_u8(srcp12[src_component], src8x16, 12);
                     src8x16 = vsetq_lane_u8(srcp13[src_component], src8x16, 13);
                     src8x16 = vsetq_lane_u8(srcp14[src_component], src8x16, 14);
-                    src8x16 = vsetq_lane_u8(srcp15[src_component], src8x16, 15);                   
-                    vx_uint8 *dstp = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);                    
+                    src8x16 = vsetq_lane_u8(srcp15[src_component], src8x16, 15);
+                    vx_uint8 *dstp = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     vst1q_u8 (dstp, src8x16);
                 }
                 for (; x < dst_addr.dim_x; x++)
