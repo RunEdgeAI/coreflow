@@ -29,13 +29,6 @@
  * \brief The Internal Distribution API.
  */
 
-/*! \brief Destroys a distribution.
- * \param [in] ref The generic handle to the object.
- * \ingroup group_int_distribution
- */
-void ownDestructDistribution(vx_reference ref);
-
-
  /*! \brief A Distribution.
   * \ingroup group_int_distribution
   */
@@ -55,6 +48,11 @@ public:
      *
      */
     ~Distribution();
+
+    /*! \brief Destroys a distribution.
+     * \ingroup group_int_distribution
+     */
+    void destructDistribution();
 
     /*! \brief Memory layout */
     vx_memory_t memory;

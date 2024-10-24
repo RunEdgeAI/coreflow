@@ -47,7 +47,13 @@ public:
      * @brief Destroy the Parameter object
      *
      */
-    ~Parameter() = default;
+    ~Parameter();
+
+    /**
+     * @brief Destruct the Parameter object
+     *
+     */
+    void destructParameter();
 
     static vx_bool isValidDirection(vx_enum dir);
 

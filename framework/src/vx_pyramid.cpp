@@ -24,36 +24,28 @@ Pyramid::Pyramid(vx_context context, vx_reference scope) : Reference(context, VX
 
 Pyramid::~Pyramid()
 {
-
+    destructPyramid();
 }
 
-void ownDestructPyramid(vx_reference ref)
+void Pyramid::destructPyramid()
 {
-    vx_pyramid pyramid = (vx_pyramid)ref;
     vx_uint32 i = 0;
-    for (i = 0; i < pyramid->numLevels; i++)
+    for (i = 0; i < numLevels; i++)
     {
-        if (pyramid->levels[i])
+        if (levels[i])
         {
-            pyramid->levels[i]->releaseReference(VX_TYPE_IMAGE, VX_INTERNAL, nullptr);
+            levels[i]->releaseReference(VX_TYPE_IMAGE, VX_INTERNAL, nullptr);
         }
     }
-    free(pyramid->levels);
-    pyramid->levels = nullptr;
+    free(levels);
+    levels = nullptr;
 }
 
-VX_API_ENTRY vx_status VX_API_CALL vxReleasePyramid(vx_pyramid* pyr)
-{
-    vx_reference ref = *pyr;
-    return ref->releaseReference(VX_TYPE_PYRAMID, VX_EXTERNAL, nullptr);
-}
-
-vx_status ownInitPyramid(vx_pyramid pyramid,
-                        vx_size levels,
-                        vx_float32 scale,
-                        vx_uint32 width,
-                        vx_uint32 height,
-                        vx_df_image format)
+vx_status Pyramid::initPyramid(vx_size numLevels,
+                               vx_float32 scale,
+                               vx_uint32 width,
+                               vx_uint32 height,
+                               vx_df_image format)
 {
     const vx_float32 c_orbscale[4] = {
         0.5f, VX_SCALE_PYRAMID_ORB, VX_SCALE_PYRAMID_ORB * VX_SCALE_PYRAMID_ORB, VX_SCALE_PYRAMID_ORB * VX_SCALE_PYRAMID_ORB * VX_SCALE_PYRAMID_ORB
@@ -61,41 +53,41 @@ vx_status ownInitPyramid(vx_pyramid pyramid,
     vx_status status = VX_SUCCESS;
 
     /* very first init will come in here */
-    if (pyramid->levels == nullptr)
+    if (levels == nullptr)
     {
-        pyramid->numLevels = levels;
-        pyramid->scale = scale;
-        pyramid->levels = (vx_image *)calloc(levels, sizeof(vx_image));
+        this->numLevels = numLevels;
+        this->scale = scale;
+        this->levels = (vx_image *)calloc(numLevels, sizeof(vx_image));
     }
 
     /* these could be "virtual" values or hard values */
-    pyramid->width = width;
-    pyramid->height = height;
-    pyramid->format = format;
+    this->width = width;
+    this->height = height;
+    this->format = format;
 
-    if (pyramid->levels)
+    if (levels)
     {
-        if (pyramid->width != 0 && pyramid->height != 0 && format != VX_DF_IMAGE_VIRT)
+        if (width != 0 && height != 0 && format != VX_DF_IMAGE_VIRT)
         {
             vx_int32 i;
-            vx_uint32 w = pyramid->width;
-            vx_uint32 h = pyramid->height;
-            vx_uint32 ref_w = pyramid->width;
-            vx_uint32 ref_h = pyramid->height;
+            vx_uint32 w = width;
+            vx_uint32 h = height;
+            vx_uint32 ref_w = width;
+            vx_uint32 ref_h = height;
 
-            for (i = 0; i < (vx_int32)pyramid->numLevels; i++)
+            for (i = 0; i < (vx_int32)numLevels; i++)
             {
-                vx_context c = (vx_context)pyramid->context;
-                if (pyramid->levels[i] == 0)
+                vx_context c = (vx_context)context;
+                if (levels[i] == 0)
                 {
-                    pyramid->levels[i] = vxCreateImage(c, w, h, format);
+                    levels[i] = vxCreateImage(c, w, h, format);
 
                     /* increment the internal counter on the image, not the external one */
-                    pyramid->levels[i]->incrementReference(VX_INTERNAL);
-                    pyramid->levels[i]->decrementReference(VX_EXTERNAL);
+                    levels[i]->incrementReference(VX_INTERNAL);
+                    levels[i]->decrementReference(VX_EXTERNAL);
 
                     /* remember that the scope of the image is the pyramid */
-                    pyramid->levels[i]->scope = (vx_reference)pyramid;
+                    levels[i]->scope = (vx_reference)this;
 
                     if (VX_SCALE_PYRAMID_ORB == scale)
                     {
@@ -169,7 +161,7 @@ static vx_pyramid vxCreatePyramidInt(vx_context context,
         {
             vx_status status;
             pyramid->is_virtual = is_virtual;
-            status = ownInitPyramid(pyramid, levels, scale, width, height, format);
+            status = pyramid->initPyramid(levels, scale, width, height, format);
             if (status != VX_SUCCESS)
             {
                 vxAddLogEntry((vx_reference)pyramid, status, "Failed to initialize pyramid\n");
@@ -316,4 +308,10 @@ VX_API_ENTRY vx_image VX_API_CALL vxGetPyramidLevel(vx_pyramid pyramid, vx_uint3
         }
     }
     return image;
+}
+
+VX_API_ENTRY vx_status VX_API_CALL vxReleasePyramid(vx_pyramid* pyr)
+{
+    vx_reference ref = *pyr;
+    return ref->releaseReference(VX_TYPE_PYRAMID, VX_EXTERNAL, nullptr);
 }

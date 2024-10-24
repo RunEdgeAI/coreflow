@@ -1242,7 +1242,7 @@ static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint
         /* check to see if the pyramid is virtual */
         if (vref == (vx_reference*)&pyramid)
         {
-            ownInitPyramid(pyramid,
+            pyramid->initPyramid(
                 meta->dim.pyramid.levels,
                 meta->dim.pyramid.scale,
                 meta->dim.pyramid.width,

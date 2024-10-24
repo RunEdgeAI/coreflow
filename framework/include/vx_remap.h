@@ -28,12 +28,6 @@
  * \brief The Internal Remap API
  */
 
-/*! \brief Destroys a remap object
- * \param [in] ref The reference to destroy.
- * \ingroup group_int_remap
- */
-void ownDestructRemap(vx_reference ref);
-
 /*! \brief A remap is a 2D image of float32 pairs.
  * \ingroup group_int_remap
  */
@@ -53,6 +47,12 @@ public:
      *
      */
     ~Remap();
+
+    /**
+     * @brief Destroys a remap object
+     *
+     */
+    void destructRemap();
 
     /*! \brief The memory layout */
     vx_memory_t memory;

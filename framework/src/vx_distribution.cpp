@@ -24,7 +24,12 @@ Distribution::Distribution(vx_context context, vx_reference scope) : Reference(c
 
 Distribution::~Distribution()
 {
+    destructDistribution();
+}
 
+void Distribution::destructDistribution()
+{
+    ownFreeMemory(context, &memory);
 }
 
 VX_API_ENTRY vx_distribution VX_API_CALL vxCreateDistribution(vx_context context, vx_size numBins, vx_int32 offset, vx_uint32 range)
@@ -79,22 +84,16 @@ VX_API_ENTRY vx_distribution VX_API_CALL vxCreateVirtualDistribution( vx_graph g
     return distribution;
 }
 
-void ownDestructDistribution(vx_reference ref)
-{
-    vx_distribution distribution = (vx_distribution)ref;
-    ownFreeMemory(distribution->context, &distribution->memory);
-}
-
 vx_status vxReleaseDistributionInt(vx_distribution* distribution)
 {
     vx_reference ref = *distribution;
-    return ref->releaseReference(VX_TYPE_DISTRIBUTION, VX_INTERNAL, &ownDestructDistribution);
+    return ref->releaseReference(VX_TYPE_DISTRIBUTION, VX_INTERNAL, nullptr);
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseDistribution(vx_distribution *d)
 {
     vx_reference ref = *d;
-    return ref->releaseReference(VX_TYPE_DISTRIBUTION, VX_EXTERNAL, &ownDestructDistribution);
+    return ref->releaseReference(VX_TYPE_DISTRIBUTION, VX_EXTERNAL, nullptr);
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxQueryDistribution(vx_distribution distribution, vx_enum attribute, void *ptr, vx_size size)
@@ -495,4 +494,3 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapDistribution(vx_distribution distribut
 
     return status;
 }
-

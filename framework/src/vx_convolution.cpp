@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,13 +24,12 @@ Convolution::Convolution(vx_context context, vx_reference scope) : Matrix(contex
 
 Convolution::~Convolution()
 {
-
+    destructConvolution();
 }
 
-void ownDestructConvolution(vx_reference ref)
+void Convolution::destructConvolution()
 {
-    vx_convolution convolution = (vx_convolution)ref;
-    ownFreeMemory(convolution->context, &convolution->memory);
+    ownFreeMemory(context, &memory);
 }
 
 static VX_INLINE int isodd(size_t a)
