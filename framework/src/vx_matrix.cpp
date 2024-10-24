@@ -29,7 +29,7 @@ Matrix::Matrix(vx_context context, vx_type_e type, vx_reference scope) : Referen
 
 Matrix::~Matrix()
 {
-
+    destructMatrix();
 }
 
 void Matrix::destructMatrix()

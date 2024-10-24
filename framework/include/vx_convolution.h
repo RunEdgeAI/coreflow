@@ -30,11 +30,6 @@
  * \brief The Internal Convolution API.
  */
 
-/*! \brief Destroys a convolution.
- * \ingroup group_int_convolution
- */
-void ownDestructConvolution(vx_reference ref);
-
 /*! \brief A convolution is a special type of matrix (MxM)
  * \ingroup group_int_convolution
  */
@@ -54,6 +49,11 @@ public:
      *
      */
     ~Convolution();
+
+    /*! \brief Destroys a convolution.
+     * \ingroup group_int_convolution
+     */
+    void destructConvolution();
 
     /*!< \brief The Scale Factor. */
     vx_uint32 scale;

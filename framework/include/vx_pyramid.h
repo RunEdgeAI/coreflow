@@ -29,35 +29,39 @@
  * \brief The Internal Pyramid API.
  */
 
-/*! \brief Releases a pyramid with internal references.
- * \param [in] pyramid The pyramid to release.
- * \ingroup group_int_pyramid
- */
-void ownReleasePyramidInt(vx_pyramid pyramid);
-
-/*! \brief Initializes the internals of a pyramid structure
- * \ingroup group_int_pyramid
- */
-vx_status ownInitPyramid(vx_pyramid pyramid,
-                        vx_size levels,
-                        vx_float32 scale,
-                        vx_uint32 width,
-                        vx_uint32 height,
-                        vx_df_image format);
-
-/*! \brief Destroys a pyrmid object.
- * \ingroup group_int_pyramid
- */
-void ownDestructPyramid(vx_reference ref);
-
 /*! \brief A pyramid object. Contains a set of scaled images.
  * \ingroup group_int_pyramid
  */
 class Pyramid : public Reference
 {
 public:
+    /**
+     * @brief Construct a new Pyramid object
+     *
+     * @param context
+     * @param scope
+     */
     Pyramid(vx_context context, vx_reference scope);
+
+    /**
+     * @brief Destroy the Pyramid object
+     *
+     */
     ~Pyramid();
+
+    /*! \brief Initializes the internals of a pyramid structure
+     * \ingroup group_int_pyramid
+     */
+    vx_status initPyramid(vx_size levels,
+                          vx_float32 scale,
+                          vx_uint32 width,
+                          vx_uint32 height,
+                          vx_df_image format);
+
+    /*! \brief Destroys a pyrmid object.
+     * \ingroup group_int_pyramid
+     */
+    void destructPyramid();
 
     /*! \brief Number of levels in the pyramid */
     vx_size numLevels;

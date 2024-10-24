@@ -22,6 +22,11 @@ Parameter::Parameter(vx_context context, vx_reference ref) : Reference(context, 
 
 }
 
+Parameter::~Parameter()
+{
+    destructParameter();
+}
+
 vx_bool Parameter::isValidDirection(vx_enum dir)
 {
     if ((dir == VX_INPUT) || (dir == VX_OUTPUT)) /* Bidirectional is not valid for user kernels */
@@ -58,6 +63,26 @@ vx_bool Parameter::isValidState(vx_enum state)
     else
     {
         return vx_false_e;
+    }
+}
+
+void Parameter::destructParameter()
+{
+    if (node)
+    {
+        if (Reference::isValidReference(reinterpret_cast<vx_reference>(node), VX_TYPE_NODE) == vx_true_e)
+        {
+            vx_node node = (vx_node)node;
+            node->releaseReference(VX_TYPE_NODE, VX_INTERNAL, nullptr);
+        }
+    }
+    if (kernel)
+    {
+        if (Reference::isValidReference(reinterpret_cast<vx_reference>(kernel), VX_TYPE_KERNEL) == vx_true_e)
+        {
+            vx_kernel kernel = (vx_kernel)kernel;
+            kernel->releaseReference(VX_TYPE_KERNEL, VX_INTERNAL, nullptr);
+        }
     }
 }
 
@@ -133,25 +158,6 @@ VX_API_ENTRY vx_parameter VX_API_CALL vxGetParameterByIndex(vx_node node, vx_uin
     }
     VX_PRINT(VX_ZONE_API, "%s: returning %p\n", __FUNCTION__, param);
     return param;
-}
-
-void ownDestructParameter(vx_reference ref)
-{
-    vx_parameter param = (vx_parameter)ref;
-    if (param->node) {
-        if (Reference::isValidReference(reinterpret_cast<vx_reference>(param->node), VX_TYPE_NODE) == vx_true_e)
-        {
-            vx_node node = (vx_node)param->node;
-            node->releaseReference(VX_TYPE_NODE, VX_INTERNAL, nullptr);
-        }
-    }
-    if (param->kernel) {
-        if (Reference::isValidReference(reinterpret_cast<vx_reference>(param->kernel), VX_TYPE_KERNEL) == vx_true_e)
-        {
-            vx_kernel kernel = (vx_kernel)param->kernel;
-            kernel->releaseReference(VX_TYPE_KERNEL, VX_INTERNAL, nullptr);
-        }
-    }
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseParameter(vx_parameter* param)

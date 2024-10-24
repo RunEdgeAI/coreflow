@@ -24,7 +24,12 @@ Remap::Remap(vx_context context, vx_reference scope) : Reference(context, VX_TYP
 
 Remap::~Remap()
 {
+    destructRemap();
+}
 
+void Remap::destructRemap()
+{
+    ownFreeMemory(context, &memory);
 }
 
 VX_API_ENTRY vx_remap VX_API_CALL vxCreateRemap(vx_context context,
@@ -61,12 +66,6 @@ VX_API_ENTRY vx_remap VX_API_CALL vxCreateRemap(vx_context context,
     }
 
     return remap;
-}
-
-void ownDestructRemap(vx_reference ref)
-{
-    vx_remap remap = (vx_remap)ref;
-    ownFreeMemory(remap->context, &remap->memory);
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseRemap(vx_remap* r)
