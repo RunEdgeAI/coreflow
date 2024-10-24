@@ -337,7 +337,7 @@ vx_status VX_CALLBACK own_fread_image_validator(vx_node node, const vx_reference
                                 }
                                 else if (strcmp(ext, ".bw") == 0)
                                 {
-                                    vx_char shortname[256] = { 0 };
+                                    vx_char shortname[257] = { 0 };
                                     vx_char fmt[5] = { 0 };
                                     vx_int32 cbps = 0;
                                     sscanf(filename, "%256[a-zA-Z]_%ux%u_%4[A-Z0-9]_%db.bw", shortname, &width, &height, fmt, &cbps);
@@ -348,7 +348,7 @@ vx_status VX_CALLBACK own_fread_image_validator(vx_node node, const vx_reference
                                 }
                                 else if (strcmp(ext, ".yuv") == 0)
                                 {
-                                    vx_char shortname[256] = { 0 };
+                                    vx_char shortname[257] = { 0 };
                                     vx_char fmt[5] = { 0 };
                                     vx_int32 cbps = 0;
                                     sscanf(filename, "%256[a-zA-Z]_%ux%u_%4[A-Z0-9]_%db.bw", shortname, &width, &height, fmt, &cbps);
@@ -371,7 +371,7 @@ vx_status VX_CALLBACK own_fread_image_validator(vx_node node, const vx_reference
                                 }
                                 else if (strcmp(ext, ".rgb") == 0)
                                 {
-                                    vx_char shortname[256] = { 0 };
+                                    vx_char shortname[257] = { 0 };
                                     vx_char fmt[5] = { 0 };
                                     vx_int32 cbps = 0;
                                     sscanf(filename, "%256[a-zA-Z]_%ux%u_%4[A-Z0-9]_%db.rgb", shortname, &width, &height, fmt, &cbps);

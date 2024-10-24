@@ -241,7 +241,7 @@ static double xml_double(xmlNodePtr cur)
     return value;
 }
 
-static ulong xml_prop_ulong(xmlNodePtr cur, char prop[])
+static ulong xml_prop_ulong(xmlNodePtr cur, const char prop[])
 {
     xmlChar *string = xmlGetProp(cur, (const xmlChar *)prop);
     ulong value = 0ul;
@@ -251,7 +251,7 @@ static ulong xml_prop_ulong(xmlNodePtr cur, char prop[])
     return value;
 }
 
-static float xml_prop_float(xmlNodePtr cur, char prop[])
+static float xml_prop_float(xmlNodePtr cur, const char prop[])
 {
     xmlChar *string = xmlGetProp(cur, (const xmlChar *)prop);
     float value = 0.0f;
@@ -261,7 +261,7 @@ static float xml_prop_float(xmlNodePtr cur, char prop[])
     return value;
 }
 /*
-static double xml_prop_double(xmlNodePtr cur, char prop[])
+static double xml_prop_double(xmlNodePtr cur, const char prop[])
 {
     xmlChar *string = xmlGetProp(cur, (const xmlChar *)prop);
     double value = 0.0f;
@@ -271,7 +271,7 @@ static double xml_prop_double(xmlNodePtr cur, char prop[])
     return value;
 }
 */
-static void xml_prop_string(xmlNodePtr cur, char prop[], char out[], size_t nchar)
+static void xml_prop_string(xmlNodePtr cur, const char prop[], char out[], size_t nchar)
 {
     xmlChar *string = xmlGetProp(cur, (const xmlChar *)prop);
     if (string) {

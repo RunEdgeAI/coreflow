@@ -433,7 +433,7 @@ vx_threadpool_t *ownCreateThreadpool(vx_uint32 numThreads,
                     ownInitPerf(&pool_worker->perf);
                     ownStartCapture(&pool_worker->perf); /* capture the launch latency */
                 }
-                // pool_worker->handle = ownCreateThread(&vxWorkerThreadpool, pool_worker);
+                pool_worker->handle = ownCreateThread(&vxWorkerThreadpool, pool_worker);
             }
         }
     }
