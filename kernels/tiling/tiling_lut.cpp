@@ -1,5 +1,4 @@
 /*
-
 * Copyright (c) 2012-2017 The Khronos Group Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -193,14 +192,14 @@ void TableLookup_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT
     {
         if (type == VX_TYPE_UINT8)
         {
-            vx_uint8 *src_base = in->base[0] + in->tile_x;                             
-            vx_uint8 *dst_base = out->base[0] + out->tile_x;                           
+            vx_uint8 *src_base = in->base[0] + in->tile_x;
+            vx_uint8 *dst_base = out->base[0] + out->tile_x;
             TABLELOOKUP(vx_uint8, low_y, high_y, low_x, high_x, 1)
         }
         else if (type == VX_TYPE_INT16)
         {
-            vx_int16 *src_base = (vx_int16 *)in->base[0] + in->tile_x;                             
-            vx_int16 *dst_base = (vx_int16 *)out->base[0] + out->tile_x;                           
+            vx_int16 *src_base = (vx_int16 *)in->base[0] + in->tile_x;
+            vx_int16 *dst_base = (vx_int16 *)out->base[0] + out->tile_x;
             TABLELOOKUP(vx_int16, low_y, high_y, low_x, high_x, 2)
         }
     }

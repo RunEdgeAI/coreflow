@@ -721,7 +721,7 @@ static vx_status vxLoadDataForArray(vx_array array, xmlNodePtr cur)
                     status |= vxAddArrayItems(array, 1, &v, array->item_size);
                 } else if (tag == UINT64_TAG) {
                     vx_uint64 v;
-                    sscanf(tmp, "%lu", &v);
+                    sscanf(tmp, "%llu", &v);
                     status |= vxAddArrayItems(array, 1, &v, array->item_size);
                 } else if (tag == INT8_TAG) {
                     vx_int8 v;
@@ -737,7 +737,7 @@ static vx_status vxLoadDataForArray(vx_array array, xmlNodePtr cur)
                     status |= vxAddArrayItems(array, 1, &v, array->item_size);
                 } else if (tag == INT64_TAG) {
                     vx_int64 v;
-                    sscanf(tmp, "%ld", &v);
+                    sscanf(tmp, "%lld", &v);
                     status |= vxAddArrayItems(array, 1, &v, array->item_size);
                 } else if (tag == FLOAT32_TAG) {
                     vx_float32 v;
@@ -1018,7 +1018,7 @@ static vx_status vxLoadDataForScalar(vx_scalar scalar, xmlNodePtr cur)
         } else if (tag == UINT64_TAG) {
             vx_uint64 v = 0u;
             xml_string(cur, value, sizeof(value));
-            sscanf(value, "%lu", &v);
+            sscanf(value, "%llu", &v);
             vxCopyScalar(scalar, &v, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
         } else if (tag == INT8_TAG) {
             vx_int8 v = 0u;
@@ -1038,7 +1038,7 @@ static vx_status vxLoadDataForScalar(vx_scalar scalar, xmlNodePtr cur)
         } else if (tag == INT64_TAG) {
             vx_int64 v = 0u;
             xml_string(cur, value, sizeof(value));
-            sscanf(value, "%ld", &v);
+            sscanf(value, "%lld", &v);
             vxCopyScalar(scalar, &v, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
         } else if (tag == SIZE_TAG) {
             vx_size v = xml_ulong(cur);
@@ -1497,13 +1497,13 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
             {
                 parentType = VX_TYPE_DELAY;
                 createFn = (createFunction)(&vxCreateDelay);
-                sprintf(objectName, "delay");
+                snprintf(objectName, sizeof(objectName), "delay");
             }
             else
             {
                 parentType = VX_TYPE_OBJECT_ARRAY;
                 createFn = (createFunction)(&vxCreateObjectArray);
-                sprintf(objectName, "object_array");
+                snprintf(objectName, sizeof(objectName), "object_array");
             }
 
             if (refIdx < total) {

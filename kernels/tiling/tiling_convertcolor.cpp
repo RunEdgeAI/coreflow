@@ -1,5 +1,4 @@
 /*
-
 * Copyright (c) 2012-2017 The Khronos Group Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -130,24 +129,24 @@ static void rgb2yuv_bt709_neon(vx_float32 *arrfr, vx_float32 *arrfg, vx_float32 
     float32x4_t fg32x4 = vld1q_f32(arrfg);
     float32x4_t fb32x4 = vld1q_f32(arrfb);
 
-    float32x4_t fy32x4 = vdupq_n_f32(0.0f);               
-    fy32x4 = vmlaq_n_f32(fy32x4, fr32x4, 0.2126f); 
-    fy32x4 = vmlaq_n_f32(fy32x4, fg32x4, 0.7152f); 
-    fy32x4 = vmlaq_n_f32(fy32x4, fb32x4, 0.0722f); 
+    float32x4_t fy32x4 = vdupq_n_f32(0.0f);
+    fy32x4 = vmlaq_n_f32(fy32x4, fr32x4, 0.2126f);
+    fy32x4 = vmlaq_n_f32(fy32x4, fg32x4, 0.7152f);
+    fy32x4 = vmlaq_n_f32(fy32x4, fb32x4, 0.0722f);
 
     float32x4_t fu32x4 =  vdupq_n_f32(0.0f);
-    fu32x4 = vmlaq_n_f32(fu32x4, fr32x4, -0.1146f); 
-    fu32x4 = vmlaq_n_f32(fu32x4, fg32x4, -0.3854f); 
-    fu32x4 = vmlaq_n_f32(fu32x4, fb32x4, 0.5000f); 
+    fu32x4 = vmlaq_n_f32(fu32x4, fr32x4, -0.1146f);
+    fu32x4 = vmlaq_n_f32(fu32x4, fg32x4, -0.3854f);
+    fu32x4 = vmlaq_n_f32(fu32x4, fb32x4, 0.5000f);
 
     float32x4_t fv32x4 = vdupq_n_f32(0.0f);
-    fv32x4 = vmlaq_n_f32(fv32x4, fr32x4, 0.5000f); 
-    fv32x4 = vmlaq_n_f32(fv32x4, fg32x4, -0.4542f); 
-    fv32x4 = vmlaq_n_f32(fv32x4, fb32x4, -0.0458f); 
+    fv32x4 = vmlaq_n_f32(fv32x4, fr32x4, 0.5000f);
+    fv32x4 = vmlaq_n_f32(fv32x4, fg32x4, -0.4542f);
+    fv32x4 = vmlaq_n_f32(fv32x4, fb32x4, -0.0458f);
 
-    int32x4_t iy32x4 = vcvtq_s32_f32(fy32x4); 
+    int32x4_t iy32x4 = vcvtq_s32_f32(fy32x4);
 
-    int32x4_t icoeff32x4 = vdupq_n_s32(128);                    
+    int32x4_t icoeff32x4 = vdupq_n_s32(128);
     int32x4_t iu32x4 = vcvtq_s32_f32(fu32x4);
     iu32x4 = vaddq_s32(iu32x4, icoeff32x4);
 
@@ -155,7 +154,7 @@ static void rgb2yuv_bt709_neon(vx_float32 *arrfr, vx_float32 *arrfg, vx_float32 
     iv32x4 = vaddq_s32(iv32x4, icoeff32x4);
 
     int16x4_t vqmovn_s32 (int32x4_t __a);
-    uint16x4_t vreinterpret_u16_s16 (int16x4_t __a); 
+    uint16x4_t vreinterpret_u16_s16 (int16x4_t __a);
     uint8x8_t vqmovn_u16 (uint16x8_t __a);
 
     y[0][0] = usat8(vgetq_lane_s32(iy32x4, 0));
@@ -191,26 +190,26 @@ static void yuv2rgb_bt601_neon(vx_uint8 **y, vx_uint8 cb, vx_uint8 cr,
     float32x4_t fu32x4 = vld1q_f32(fu);
     float32x4_t fv32x4 = vld1q_f32(fv);
 
-    float32x4_t fr32x4 = vdupq_n_f32(0.0f);               
+    float32x4_t fr32x4 = vdupq_n_f32(0.0f);
     fr32x4 = vaddq_f32(fr32x4, fy32x4);
-    fr32x4 = vmlaq_n_f32(fr32x4, fu32x4, 0.000f); 
-    fr32x4 = vmlaq_n_f32(fr32x4, fv32x4, 1.403f); 
+    fr32x4 = vmlaq_n_f32(fr32x4, fu32x4, 0.000f);
+    fr32x4 = vmlaq_n_f32(fr32x4, fv32x4, 1.403f);
 
-    float32x4_t fg32x4 = vdupq_n_f32(0.0f);               
+    float32x4_t fg32x4 = vdupq_n_f32(0.0f);
     fg32x4 = vaddq_f32(fg32x4, fy32x4);
-    fg32x4 = vmlaq_n_f32(fg32x4, fu32x4, -0.344f); 
-    fg32x4 = vmlaq_n_f32(fg32x4, fv32x4, -0.714f); 
+    fg32x4 = vmlaq_n_f32(fg32x4, fu32x4, -0.344f);
+    fg32x4 = vmlaq_n_f32(fg32x4, fv32x4, -0.714f);
 
-    float32x4_t fb32x4 = vdupq_n_f32(0.0f);               
+    float32x4_t fb32x4 = vdupq_n_f32(0.0f);
     fb32x4 = vaddq_f32(fb32x4, fy32x4);
-    fb32x4 = vmlaq_n_f32(fb32x4, fu32x4, 1.773f); 
-    fb32x4 = vmlaq_n_f32(fb32x4, fv32x4, 0.000f); 
+    fb32x4 = vmlaq_n_f32(fb32x4, fu32x4, 1.773f);
+    fb32x4 = vmlaq_n_f32(fb32x4, fv32x4, 0.000f);
 
-    int32x4_t ir32x4 = vcvtq_s32_f32(fr32x4); 
+    int32x4_t ir32x4 = vcvtq_s32_f32(fr32x4);
     int32x4_t ig32x4 = vcvtq_s32_f32(fg32x4);
     int32x4_t ib32x4 = vcvtq_s32_f32(fb32x4);
 
-    vx_int32 arr32[12]; 
+    vx_int32 arr32[12];
     vst1q_s32(arr32,  ir32x4);
     vst1q_s32(arr32+4, ig32x4);
     vst1q_s32(arr32+8, ib32x4);
@@ -239,12 +238,12 @@ static void yuv2rgb_bt709_neon(vx_uint8 **y, vx_uint8 cb, vx_uint8 cr,
     float32x4_t fu32x4 = vld1q_f32(fu);
     float32x4_t fv32x4 = vld1q_f32(fv);
 
-    float32x4_t fr32x4 = vdupq_n_f32(0.0f);               
+    float32x4_t fr32x4 = vdupq_n_f32(0.0f);
     fr32x4 = vaddq_f32(fr32x4, fy32x4);
-    fr32x4 = vmlaq_n_f32(fr32x4, fu32x4, 0.000f); 
-    fr32x4 = vmlaq_n_f32(fr32x4, fv32x4, 1.5748f); 
+    fr32x4 = vmlaq_n_f32(fr32x4, fu32x4, 0.000f);
+    fr32x4 = vmlaq_n_f32(fr32x4, fv32x4, 1.5748f);
 
-    float32x4_t fg32x4 = vdupq_n_f32(0.0f);               
+    float32x4_t fg32x4 = vdupq_n_f32(0.0f);
     fg32x4 = vaddq_f32(fg32x4, fy32x4);
     fg32x4 = vmlaq_n_f32(fg32x4, fu32x4, -0.1873f);
     fg32x4 = vmlaq_n_f32(fg32x4, fv32x4,  -0.4681f);
@@ -254,11 +253,11 @@ static void yuv2rgb_bt709_neon(vx_uint8 **y, vx_uint8 cb, vx_uint8 cr,
     fb32x4 = vmlaq_n_f32(fb32x4, fu32x4, 1.8556f);
     fb32x4 = vmlaq_n_f32(fb32x4, fv32x4, 0.000f);
 
-    int32x4_t ir32x4 = vcvtq_s32_f32(fr32x4); 
+    int32x4_t ir32x4 = vcvtq_s32_f32(fr32x4);
     int32x4_t ig32x4 = vcvtq_s32_f32(fg32x4);
     int32x4_t ib32x4 = vcvtq_s32_f32(fb32x4);
 
-    vx_int32 arr32[12]; 
+    vx_int32 arr32[12];
     vst1q_s32(arr32, ir32x4);
     vst1q_s32(arr32 + 4, ig32x4);
     vst1q_s32(arr32+8, ib32x4);
@@ -287,35 +286,35 @@ static void yuv2yuv_601to709_neon(vx_uint8 *y0, vx_uint8 *cb0, vx_uint8 *cr0,
     float32x4_t fcb032x4 = vld1q_f32(fcb0);
     float32x4_t fcr032x4 = vld1q_f32(fcr0);
 
-    float32x4_t fy132x4 = vdupq_n_f32(0.0f);               
-    fy132x4 = vmlaq_n_f32(fy132x4, fy032x4, 1.0090); 
-    fy132x4 = vmlaq_n_f32(fy132x4, fcb032x4, -0.11826430); 
-    fy132x4 = vmlaq_n_f32(fy132x4, fcr032x4, -0.2000311); 
+    float32x4_t fy132x4 = vdupq_n_f32(0.0f);
+    fy132x4 = vmlaq_n_f32(fy132x4, fy032x4, 1.0090);
+    fy132x4 = vmlaq_n_f32(fy132x4, fcb032x4, -0.11826430);
+    fy132x4 = vmlaq_n_f32(fy132x4, fcr032x4, -0.2000311);
 
-    float32x4_t fcb132x4 = vdupq_n_f32(0.0f);               
-    fcb132x4 = vmlaq_n_f32(fcb132x4, fy032x4, 0.0000); 
-    fcb132x4 = vmlaq_n_f32(fcb132x4, fcb032x4, 1.01911200); 
-    fcb132x4 = vmlaq_n_f32(fcb132x4, fcr032x4, 0.1146035); 
+    float32x4_t fcb132x4 = vdupq_n_f32(0.0f);
+    fcb132x4 = vmlaq_n_f32(fcb132x4, fy032x4, 0.0000);
+    fcb132x4 = vmlaq_n_f32(fcb132x4, fcb032x4, 1.01911200);
+    fcb132x4 = vmlaq_n_f32(fcb132x4, fcr032x4, 0.1146035);
 
-    float32x4_t fcr132x4 = vdupq_n_f32(0.0f);               
-    fcr132x4 = vmlaq_n_f32(fcr132x4, fy032x4, 0.0001); 
-    fcr132x4 = vmlaq_n_f32(fcr132x4, fcb032x4, 0.07534570); 
-    fcr132x4 = vmlaq_n_f32(fcr132x4, fcr032x4,  1.0290932); 
+    float32x4_t fcr132x4 = vdupq_n_f32(0.0f);
+    fcr132x4 = vmlaq_n_f32(fcr132x4, fy032x4, 0.0001);
+    fcr132x4 = vmlaq_n_f32(fcr132x4, fcb032x4, 0.07534570);
+    fcr132x4 = vmlaq_n_f32(fcr132x4, fcr032x4,  1.0290932);
 
-    int32x4_t iy32x4 = vcvtq_s32_f32(fy132x4); 
-    int32x4_t icb32x4 = vcvtq_s32_f32(fcb132x4); 
-    int32x4_t icr32x4 = vcvtq_s32_f32(fcr132x4); 
+    int32x4_t iy32x4 = vcvtq_s32_f32(fy132x4);
+    int32x4_t icb32x4 = vcvtq_s32_f32(fcb132x4);
+    int32x4_t icr32x4 = vcvtq_s32_f32(fcr132x4);
 
-    vx_int32 arr32[12]; 
+    vx_int32 arr32[12];
     vst1q_s32(arr32,  iy32x4);
     vst1q_s32(arr32+4, icb32x4);
     vst1q_s32(arr32+8, icr32x4);
 
-    for(vx_uint8 i = 0; i < 4; i++) 
+    for(vx_uint8 i = 0; i < 4; i++)
     {
-        y1[i]  = usat8(arr32[i]); 
+        y1[i]  = usat8(arr32[i]);
         cb1[2*i] = usat8(arr32[4 + i]);
-        cr1[2*i+1] = usat8(arr32[8 + i]); 
+        cr1[2*i+1] = usat8(arr32[8 + i]);
     }
 }
 
@@ -488,7 +487,7 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
                 for (y = low_y; y < high_y; y++)
                 {
                     for (x = low_x; x < high_x; x += 8)
-                    { 
+                    {
                         vx_uint8 *srcP0 = (vx_uint8 *)src_base[0] + y * srcP0StrideY + x * srcP0StrideX;
                         vx_uint8 *dstP0 = (vx_uint8 *)dst_base[0] + y * dstP0StrideY + x * dstP0StrideX;
 
@@ -500,7 +499,7 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
                         d.val[2] = s.val[2];
                         d.val[3] = vdup_n_u8(255);
 
-                        vst4_u8(dstP0, d); 
+                        vst4_u8(dstP0, d);
                     }
                 }
             }
@@ -510,7 +509,7 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
             vx_uint8 cb[4];
             vx_uint8 cr[4];
             vx_uint8 *rgb[4];
-            vx_uint8 *luma[4]; 
+            vx_uint8 *luma[4];
             vx_uint8 *cbcr;
 
             for (y = low_y; y < high_y; y += 2)
@@ -528,7 +527,7 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
                     luma[3] = (vx_uint8 *)dst_base[0] + (y+1) * dstP0StrideY + (x+1) * dstP0StrideX;
 
                     cbcr = (vx_uint8 *)dst_base[1] + dstP1StrideY * (y >> 1) + dstP1StrideX * (x >> 1);
-           
+
                     vx_float32 arrfr[4] = { (vx_float32)rgb[0][0], (vx_float32)rgb[1][0], (vx_float32)rgb[2][0], (vx_float32)rgb[3][0] };
                     vx_float32 arrfg[4] = { (vx_float32)rgb[0][1], (vx_float32)rgb[1][1], (vx_float32)rgb[2][1], (vx_float32)rgb[3][1] };
                     vx_float32 arrfb[4] = { (vx_float32)rgb[0][2], (vx_float32)rgb[1][2], (vx_float32)rgb[2][2], (vx_float32)rgb[3][2] };
@@ -545,7 +544,7 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
             vx_uint8 cb[4];
             vx_uint8 cr[4];
             vx_uint8 *rgb[4];
-            vx_uint8 *luma[4]; 
+            vx_uint8 *luma[4];
             vx_uint8 *u[4];
             vx_uint8 *v[4];
             for (y = low_y; y < high_y; y++)
@@ -579,13 +578,13 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
                     rgb2yuv_bt709_neon(arrfr, arrfg, arrfb, luma, &cb[0], &cr[0]);
 
                     *u[0] = cb[0];
-                    *u[1] = cb[1]; 
-                    *u[2] = cb[2]; 
+                    *u[1] = cb[1];
+                    *u[2] = cb[2];
                     *u[3] = cb[3];
 
                     *v[0] = cr[0];
-                    *v[1] = cr[1]; 
-                    *v[2] = cr[2]; 
+                    *v[1] = cr[1];
+                    *v[2] = cr[2];
                     *v[3] = cr[3];
                 }
             }
@@ -595,7 +594,7 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
             vx_uint8 cb[4];
             vx_uint8 cr[4];
             vx_uint8 *rgb[4];
-            vx_uint8 *luma[4]; 
+            vx_uint8 *luma[4];
             vx_uint8 *cbp;
             vx_uint8 *crp;
             for (y = low_y; y < high_y; y += 2)
@@ -634,7 +633,7 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
         if ((dst_format == VX_DF_IMAGE_RGB) || (dst_format == VX_DF_IMAGE_RGBX))
         {
             vx_uint8 *rgb[4];
-            vx_uint8 *luma[4]; 
+            vx_uint8 *luma[4];
             vx_uint8 *crcb;
             for (y = low_y; y < high_y; y += 2)
             {
@@ -659,12 +658,12 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
                         rgb[2][3] = 255;
                         rgb[3][3] = 255;
 
-                    } 
+                    }
                     if (src_space == VX_COLOR_SPACE_BT601_525 || src_space == VX_COLOR_SPACE_BT601_625)
                     {
                         yuv2rgb_bt601_neon(luma, crcb[u_pix], crcb[v_pix], rgb, rgb, rgb);
                     }
-                    else 
+                    else
                     {
                         yuv2rgb_bt709_neon(luma, crcb[u_pix], crcb[v_pix], rgb, rgb, rgb);
                     }
@@ -696,7 +695,7 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
                     vx_uint8 *srcP0 = (vx_uint8 *)src_base[0] + y * srcP0StrideY + x * srcP0StrideX;
                     vx_uint8 *dstP0 = (vx_uint8 *)dst_base[0] + y * dstP0StrideY + x * dstP0StrideX;
 
-                    uint8x8_t lumaV8 = vld1_u8(srcP0); 
+                    uint8x8_t lumaV8 = vld1_u8(srcP0);
                     vst1_u8(dstP0, lumaV8);
                 }
             }
@@ -731,7 +730,7 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
                     cr[3][0] = crcb[v_pix];
 
                 }
-            }    
+            }
         }
         else if (dst_format == VX_DF_IMAGE_IYUV)
         {
@@ -742,7 +741,7 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
                     vx_uint8 *srcP0 = (vx_uint8 *)src_base[0] + y * srcP0StrideY + x * srcP0StrideX;
                     vx_uint8 *dstP0 = (vx_uint8 *)dst_base[0] + y * dstP0StrideY + x * dstP0StrideX;
 
-                    uint8x8_t lumaV8 = vld1_u8(srcP0); 
+                    uint8x8_t lumaV8 = vld1_u8(srcP0);
                     vst1_u8(dstP0, lumaV8);
                 }
             }
@@ -775,10 +774,10 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
                     cb[2][0] = crcb[2][u_pix];
                     cb[3][0] = crcb[3][u_pix];
 
-                    cr[0][0] = crcb[0][v_pix];   
-                    cr[1][0] = crcb[1][v_pix];   
-                    cr[2][0] = crcb[2][v_pix];   
-                    cr[3][0] = crcb[3][v_pix];   
+                    cr[0][0] = crcb[0][v_pix];
+                    cr[1][0] = crcb[1][v_pix];
+                    cr[2][0] = crcb[2][v_pix];
+                    cr[3][0] = crcb[3][v_pix];
                 }
             }
         }
@@ -928,7 +927,7 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
             for (y = low_y; y < high_y; y += 2)
             {
                 vx_uint8 *src0 = (vx_uint8 *)src_base[0] + y * srcP0StrideY;
-                vx_uint8 *src1 = (vx_uint8 *)src_base[0] + (y + 1) * srcP0StrideY; 
+                vx_uint8 *src1 = (vx_uint8 *)src_base[0] + (y + 1) * srcP0StrideY;
                 vx_uint8 *luma = (vx_uint8 *)dst_base[0] + y * dstP0StrideY;
                 vx_uint8 *luma1 = (vx_uint8 *)dst_base[0] + (y + 1) * dstP0StrideY;
                 vx_uint8 *cb = (vx_uint8 *)dst_base[1] + (y >> 1) * dstP1StrideY;
@@ -1036,7 +1035,7 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
                         }
                     }
                 }
-            } 
+            }
         }
         else if (dst_format == VX_DF_IMAGE_NV12)
         {
@@ -1103,7 +1102,7 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
             for (y = low_y; y < high_y; y += 2)
             {
                 vx_uint8 *src0 = (vx_uint8 *)src_base[0] + y * srcP0StrideY;
-                vx_uint8 *src1 = (vx_uint8 *)src_base[0] + (y + 1) * srcP0StrideY; 
+                vx_uint8 *src1 = (vx_uint8 *)src_base[0] + (y + 1) * srcP0StrideY;
                 vx_uint8 *luma = (vx_uint8 *)dst_base[0] + y * dstP0StrideY;
                 vx_uint8 *luma1 = (vx_uint8 *)dst_base[0] + (y + 1) * dstP0StrideY;
                 vx_uint8 *cb = (vx_uint8 *)dst_base[1] + (y >> 1) * dstP1StrideY;
@@ -1585,7 +1584,7 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
                 yuv2rgb_bt709(uyvy[3], uyvy[0], uyvy[2], &rgb[3], &rgb[4], &rgb[5]);               \
             }                                                                                      \
         }                                                                                          \
-    }   
+    }
 
 
 #define UYVY_RGBX(low_y, high_y, low_x)                                                            \

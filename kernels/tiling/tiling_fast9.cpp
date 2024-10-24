@@ -1,5 +1,4 @@
 /*
-
 * Copyright (c) 2012-2017 The Khronos Group Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -428,7 +427,7 @@ static void fast9CornersPerRow(uint8x8_t *pvPrv, uint8x8_t *pvCur, uint8x8_t *pv
     }
 }
 
-static vx_uint8 indexes[PERMUTATIONS][9] = 
+static vx_uint8 indexes[PERMUTATIONS][9] =
 {
     { 0, 1, 2, 3, 4, 5, 6, 7, 8 },
     { 15, 0, 1, 2, 3, 4, 5, 6, 7 },
@@ -449,7 +448,7 @@ static vx_uint8 indexes[PERMUTATIONS][9] =
 };
 
 /* offsets from "p" */
-static vx_int32 offsets[16][2] = 
+static vx_int32 offsets[16][2] =
 {
     { 0, -3 },
     { 1, -3 },

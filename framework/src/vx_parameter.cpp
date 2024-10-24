@@ -72,7 +72,6 @@ void Parameter::destructParameter()
     {
         if (Reference::isValidReference(reinterpret_cast<vx_reference>(node), VX_TYPE_NODE) == vx_true_e)
         {
-            vx_node node = (vx_node)node;
             node->releaseReference(VX_TYPE_NODE, VX_INTERNAL, nullptr);
         }
     }
@@ -80,7 +79,6 @@ void Parameter::destructParameter()
     {
         if (Reference::isValidReference(reinterpret_cast<vx_reference>(kernel), VX_TYPE_KERNEL) == vx_true_e)
         {
-            vx_kernel kernel = (vx_kernel)kernel;
             kernel->releaseReference(VX_TYPE_KERNEL, VX_INTERNAL, nullptr);
         }
     }

@@ -1,5 +1,4 @@
 /*
-
 * Copyright (c) 2012-2017 The Khronos Group Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -60,7 +59,7 @@ void Threshold_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], voi
             for (y = low_y; y < high_y; y++)
             {
                 const vx_int16 *src_ptr = (vx_int16 *)src_base + y * in->addr->stride_y / 2;
-                vx_uint8 *dst_ptr = (vx_uint8 *)dst_base + y * out->addr->stride_y;  
+                vx_uint8 *dst_ptr = (vx_uint8 *)dst_base + y * out->addr->stride_y;
 
                 for (x = 0; x < out->tile_block.width; x += 8)
                 {
@@ -303,7 +302,7 @@ void Threshold_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT],
     }
     else
     {
-        void *src_base = in->base[0];                                                           
+        void *src_base = in->base[0];
         void *dst_base = out->base[0];
         high_y = in->rect.end_y - in->rect.start_y;
         high_x = in->rect.end_x - in->rect.start_x;

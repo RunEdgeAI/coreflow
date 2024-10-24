@@ -1,5 +1,4 @@
 /*
-
 * Copyright (c) 2012-2017 The Khronos Group Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -62,7 +61,7 @@ void Erode3x3_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void
             const uint8x16_t top_data = vld1q_u8(top_src);
             const uint8x16_t mid_data = vld1q_u8(mid_src);
             const uint8x16_t bot_data = vld1q_u8(bot_src);
-            
+
             uint8x8_t p0 = vget_low_u8(top_data);
             uint8x8_t p1 = vext_u8(vget_low_u8(top_data), vget_high_u8(top_data), 1);
             uint8x8_t p2 = vext_u8(vget_low_u8(top_data), vget_high_u8(top_data), 2);
@@ -82,8 +81,8 @@ void Erode3x3_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void
             opt_min(&p0, &p7);
             opt_min(&p0, &p8);
 
-            vst1_u8(dst, p0);       
-            
+            vst1_u8(dst, p0);
+
             top_src+=8;
             mid_src+=8;
             bot_src+=8;
@@ -181,7 +180,7 @@ static vx_uint8 max_op(vx_uint8 a, vx_uint8 b) {
                                                                                                            \
             *dst_ptr = (*dst_ptr & ~(1 << (xShftd % 8))) | (m << (xShftd % 8));                            \
         }                                                                                                  \
-    }                                                                                                      
+    }
 
 
 void Erode3x3_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT], void * VX_RESTRICT tile_memory, vx_size tile_memory_size)
@@ -249,7 +248,7 @@ void Dilate3x3_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], voi
             const uint8x16_t top_data = vld1q_u8(top_src);
             const uint8x16_t mid_data = vld1q_u8(mid_src);
             const uint8x16_t bot_data = vld1q_u8(bot_src);
-            
+
             uint8x8_t p0 = vget_low_u8(top_data);
             uint8x8_t p1 = vext_u8(vget_low_u8(top_data), vget_high_u8(top_data), 1);
             uint8x8_t p2 = vext_u8(vget_low_u8(top_data), vget_high_u8(top_data), 2);

@@ -1,5 +1,4 @@
 /*
-
 * Copyright (c) 2012-2017 The Khronos Group Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -543,7 +542,7 @@ static void filter_cross_3x3(vx_tile_ex_t *in, vx_tile_ex_t *out, vx_enum functi
             filter_cross_3x3_neon(src, dst, low_x, high_x, function);
         }
     }
-    else 
+    else
     {
         if (low_y == 0)
         {
@@ -1261,15 +1260,15 @@ void NonLinearFilter_image_tiling_flexible(void * VX_RESTRICT parameters[VX_REST
     }
     else
     {
-        void *src_base = in->base[0];                                                           
-        void *dst_base = out->base[0];    
-        vx_uint32 shift_x_u1 = in->rect.start_x % 8;                                                         
-        high_x = high_x - shift_x_u1;                                                                  
-                                         
+        void *src_base = in->base[0];
+        void *dst_base = out->base[0];
+        vx_uint32 shift_x_u1 = in->rect.start_x % 8;
+        high_x = high_x - shift_x_u1;
+
         low_x  += (vx_uint32)rx0;
         low_y  += (vx_uint32)ry0;
         high_x -= (vx_uint32)rx1;
-        high_y -= (vx_uint32)ry1;                                                      
+        high_y -= (vx_uint32)ry1;
         for (y = low_y; y < high_y; y++)
         {
             for (x = low_x; x < high_x; x++)

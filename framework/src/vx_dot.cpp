@@ -87,13 +87,47 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
                         case VX_TYPE_PYRAMID:
                         {
                             vx_pyramid pyr = (vx_pyramid)data[d];
-                            fprintf(fp, "\tD%u [shape=triangle label=\"Pyramid\\n%lfx" VX_FMT_REF "\\nLevels: %zu\"];\n", d, pyr->scale, pyr->levels);
+                            fprintf(fp, "\tD%u [shape=triangle label=\"Pyramid\\n%lfx" VX_FMT_REF "\\nLevels: %zu\"];\n",
+                                    d, pyr->scale, pyr->levels, pyr->numLevels);
                             break;
                         }
                         case VX_TYPE_SCALAR:
                         {
                             vx_scalar scalar = (vx_scalar)data[d];
-                            fprintf(fp, "\tD%u [shape=box label=\"Scalar\\n%s\"];\n", d, type_pairs[i].name);
+                            vx_enum scalar_type;
+                            vxQueryScalar(scalar, VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type));
+                            char value_str[64];
+                            switch (scalar_type) {
+                                case VX_TYPE_CHAR:
+                                {
+                                    vx_char value;
+                                    vxCopyScalar(scalar, &value, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
+                                    snprintf(value_str, sizeof(value_str), "%c", value);
+                                    break;
+                                }
+                                case VX_TYPE_INT8:
+                                case VX_TYPE_UINT8:
+                                case VX_TYPE_INT16:
+                                case VX_TYPE_UINT16:
+                                case VX_TYPE_INT32:
+                                case VX_TYPE_UINT32:
+                                {
+                                    vx_int32 value;
+                                    vxCopyScalar(scalar, &value, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
+                                    snprintf(value_str, sizeof(value_str), "%d", value);
+                                    break;
+                                }
+                                case VX_TYPE_FLOAT32:
+                                {
+                                    vx_float32 value;
+                                    vxCopyScalar(scalar, &value, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
+                                    snprintf(value_str, sizeof(value_str), "%.2f", value);
+                                    break;
+                                }
+                                default:
+                                    snprintf(value_str, sizeof(value_str), "Unknown");
+                            }
+                            fprintf(fp, "\tD%u [shape=box label=\"Scalar\\n%s\\nValue: %s\"];\n", d, type_pairs[i].name, value_str);
                             break;
                         }
                         case VX_TYPE_MATRIX:
@@ -137,7 +171,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
                         case VX_TYPE_TENSOR:
                         {
                             vx_tensor tensor = (vx_tensor)data[d];
-                            fprintf(fp, "\tD%u [shape=box label=\"Tensor\\nRank: %zu\"];\n", d, tensor->number_of_dimensions);
+                            fprintf(fp, "\tD%u [shape=box label=\"Tensor\\nRank: %u\"];\n", d, tensor->number_of_dimensions);
                             break;
                         }
                         case VX_TYPE_OBJECT_ARRAY:

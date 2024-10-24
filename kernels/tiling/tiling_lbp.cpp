@@ -1,5 +1,4 @@
 /*
-
 * Copyright (c) 2012-2017 The Khronos Group Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -557,7 +556,7 @@ vx_uint8 vx_lbp_u(vx_uint8 *g, vx_uint8 gc)
             vx_uint8 *dst_ptr = vxFormatImagePatchAddress2d(dst_base, x, y, out->addr);         \
             *dst_ptr = sum;                                                                     \
         }                                                                                       \
-    }                                                                                           
+    }
 
 
 #define LBPSTANDARD_5x5(low_y, high_y, low_x, high_x)                                           \
@@ -584,7 +583,7 @@ vx_uint8 vx_lbp_u(vx_uint8 *g, vx_uint8 gc)
             vx_uint8 *dst_ptr = vxFormatImagePatchAddress2d(dst_base, x, y, out->addr);         \
             *dst_ptr = sum;                                                                     \
         }                                                                                       \
-    }                                                                                           
+    }
 
 static void vxLBPStandard_tiling_flexible(vx_tile_ex_t *in, vx_int8 ksize, vx_tile_ex_t *out)
 {

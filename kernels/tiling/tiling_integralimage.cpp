@@ -1,5 +1,4 @@
 /*
-
 * Copyright (c) 2012-2017 The Khronos Group Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,8 +43,8 @@ void IntegralImage_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT],
             for (x = low_x; x < high_x; x += 16)
             {
                 const uint8x16_t input_pixels = vld1q_u8(pixels_ptr);
-                
-                const uint16x8x2_t temp = 
+
+                const uint16x8x2_t temp =
                 {
                     {
                         vmovl_u8(vget_low_u8(input_pixels)),
@@ -53,7 +52,7 @@ void IntegralImage_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT],
                     }
                 };
 
-                uint32x4x4_t pixels = 
+                uint32x4x4_t pixels =
                 {
                     {
                         vmovl_u16(vget_low_u16(temp.val[0])),
@@ -102,8 +101,8 @@ void IntegralImage_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT],
             for (x = low_x; x < high_x; x += 16)
             {
                 const uint8x16_t input_pixels = vld1q_u8(pixels_ptr);
-                
-                const uint16x8x2_t temp = 
+
+                const uint16x8x2_t temp =
                 {
                     {
                         vmovl_u8(vget_low_u8(input_pixels)),
@@ -111,7 +110,7 @@ void IntegralImage_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT],
                     }
                 };
 
-                uint32x4x4_t pixels = 
+                uint32x4x4_t pixels =
                 {
                     {
                         vmovl_u16(vget_low_u16(temp.val[0])),
@@ -185,7 +184,7 @@ void IntegralImage_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT],
             for (x = low_x; x < high_x; x++)                                                    \
                 sums[x] = pixels[x] + sums[x - 1] + prev_sums[x] - prev_sums[x - 1];            \
         }                                                                                       \
-    }               
+    }
 
 void IntegralImage_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT], void * VX_RESTRICT tile_memory, vx_size tile_memory_size)
 {
