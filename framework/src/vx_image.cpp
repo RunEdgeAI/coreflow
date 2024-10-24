@@ -663,14 +663,14 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromROI(vx_image image, const vx_
             rect->end_x > image->width ||
             rect->end_y > image->height)
         {
-            vx_context context = vxGetContext((vx_reference)image);
+            // vx_context context = vxGetContext((vx_reference)image);
             // subimage = (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
         }
         else if (image->format == VX_DF_IMAGE_U1 && (rect->start_x % 8) != 0)
         {
             VX_PRINT(VX_ZONE_ERROR, "Attempted to create U1 image from ROI not starting at a byte boundary in the"
                      "parent image. U1 subimages must start on byte boundaries in the parent image.\n");
-            vx_context context = vxGetContext((vx_reference)image);
+            // vx_context context = vxGetContext((vx_reference)image);
             // subimage = (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
         }
         else
@@ -762,16 +762,15 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromROI(vx_image image, const vx_
             }
             else
             {
-                vx_context context;
                 VX_PRINT(VX_ZONE_ERROR, "Parent image failed to allocate!\n");
-                context = vxGetContext((vx_reference)image);
+                // vx_context context = vxGetContext((vx_reference)image);
                 // subimage = (vx_image)ownGetErrorObject(context, VX_ERROR_NO_MEMORY);
             }
         }
     }
     else
     {
-        vx_context context = vxGetContext((vx_reference)image);
+        // vx_context context = vxGetContext((vx_reference)image);
         // subimage = (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
     }
 
@@ -797,7 +796,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromChannel(vx_image image, vx_en
                         VX_DF_IMAGE_NV12 != image->format &&
                         VX_DF_IMAGE_NV21 != image->format)
                     {
-                        vx_context context = vxGetContext((vx_reference)image);
+                        // vx_context context = vxGetContext((vx_reference)image);
                         // subimage = (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
                         return subimage;
                     }
@@ -810,7 +809,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromChannel(vx_image image, vx_en
                     if (VX_DF_IMAGE_YUV4 != image->format &&
                         VX_DF_IMAGE_IYUV != image->format)
                     {
-                        vx_context context = vxGetContext((vx_reference)image);
+                        // vx_context context = vxGetContext((vx_reference)image);
                         // subimage = (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
                         return subimage;
                     }
@@ -819,7 +818,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromChannel(vx_image image, vx_en
 
                 default:
                 {
-                    vx_context context = vxGetContext((vx_reference)image);
+                    // vx_context context = vxGetContext((vx_reference)image);
                     // subimage = (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
                     return subimage;
                 }
@@ -958,15 +957,14 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromChannel(vx_image image, vx_en
         }
         else
         {
-            vx_context context;
             VX_PRINT(VX_ZONE_ERROR, "Parent image failed to allocate!\n");
-            context = vxGetContext((vx_reference)image);
+            // vx_context context = vxGetContext((vx_reference)image);
             // subimage = (vx_image)ownGetErrorObject(context, VX_ERROR_NO_MEMORY);
         }
     }
     else
     {
-        vx_context context = vxGetContext((vx_reference)subimage);
+        // vx_context context = vxGetContext((vx_reference)subimage);
         // subimage = (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
     }
 

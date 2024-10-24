@@ -895,43 +895,14 @@ static vx_status vxExportToXMLThreshold(FILE* fp, vx_reference refs[], vx_uint32
     vx_threshold thresh = (vx_threshold)refs[r];
     vx_int32 j = ownStringFromType(thresh->data_type);
     vx_char indent[10] = {0};
-    vx_int32 true_value = 0, false_value = 0;
     vx_uint32 i;
-
-    // Access the correct union member based on data type
-    switch(thresh->data_type)
-    {
-        case VX_TYPE_UINT8:
-            true_value = thresh->true_value.U8;
-            false_value = thresh->false_value.U8;
-            break;
-        case VX_TYPE_INT16:
-            true_value = thresh->true_value.S16;
-            false_value = thresh->false_value.S16;
-            break;
-        case VX_TYPE_UINT16:
-            true_value = thresh->true_value.U16;
-            false_value = thresh->false_value.U16;
-            break;
-        case VX_TYPE_INT32:
-            true_value = thresh->true_value.S32;
-            false_value = thresh->false_value.S32;
-            break;
-        case VX_TYPE_UINT32:
-            true_value = thresh->true_value.U32;
-            false_value = thresh->false_value.U32;
-            break;
-        default:
-            status = VX_ERROR_INVALID_TYPE;
-            return status;
-    }
 
     for (i = 0; i < (dimof(indent)-1) && i < id; i++)
         indent[i] = '\t';
     indent[i] = '\0';
 
-    fprintf(fp, "%s<threshold reference=\"%u\" elemType=\"%s\" true_value=\"%d\" false_value=\"%d\"%s",
-                 indent, r, type_pairs[j].name, true_value, false_value, refNameStr);
+    fprintf(fp, "%s<threshold reference=\"%u\" elemType=\"%s\"%s",
+                 indent, r, type_pairs[j].name, refNameStr);
 
     if (refs[r]->is_virtual == vx_true_e) /* is not virtual in 1.0, but check anyway */
     {
@@ -942,11 +913,56 @@ static vx_status vxExportToXMLThreshold(FILE* fp, vx_reference refs[], vx_uint32
 
         if (thresh->thresh_type == VX_THRESHOLD_TYPE_RANGE)
         {
-            fprintf(fp, "%s\t<range lower=\"%d\" upper=\"%d\" />\n", indent, thresh->lower, thresh->upper);
+            fprintf(fp, "%s\t<range ", indent);
+            switch(thresh->data_type)
+            {
+                case VX_TYPE_UINT8:
+                    fprintf(fp, "lower=\"%u\" upper=\"%u\"", thresh->lower.U8, thresh->upper.U8);
+                    break;
+                case VX_TYPE_INT16:
+                    fprintf(fp, "lower=\"%d\" upper=\"%d\"", thresh->lower.S16, thresh->upper.S16);
+                    break;
+                case VX_TYPE_UINT16:
+                    fprintf(fp, "lower=\"%u\" upper=\"%u\"", thresh->lower.U16, thresh->upper.U16);
+                    break;
+                case VX_TYPE_INT32:
+                    fprintf(fp, "lower=\"%d\" upper=\"%d\"", thresh->lower.S32, thresh->upper.S32);
+                    break;
+                case VX_TYPE_UINT32:
+                    fprintf(fp, "lower=\"%u\" upper=\"%u\"", thresh->lower.U32, thresh->upper.U32);
+                    break;
+                default:
+                    // Handle unexpected types or add more cases as needed
+                    fprintf(fp, "lower=\"ERROR\" upper=\"ERROR\"");
+                    status = VX_ERROR_INVALID_TYPE;
+            }
+            fprintf(fp, " />\n");
         }
         else if (thresh->thresh_type == VX_THRESHOLD_TYPE_BINARY)
         {
-            fprintf(fp, "%s\t<binary>%d</binary>\n", indent, thresh->value);
+            fprintf(fp, "%s\t<binary>", indent);
+            switch(thresh->data_type)
+            {
+                case VX_TYPE_UINT8:
+                    fprintf(fp, "%u", thresh->value.U8);
+                    break;
+                case VX_TYPE_INT16:
+                    fprintf(fp, "%d", thresh->value.S16);
+                    break;
+                case VX_TYPE_UINT16:
+                    fprintf(fp, "%u", thresh->value.U16);
+                    break;
+                case VX_TYPE_INT32:
+                    fprintf(fp, "%d", thresh->value.S32);
+                    break;
+                case VX_TYPE_UINT32:
+                    fprintf(fp, "%u", thresh->value.U32);
+                    break;
+                default:
+                    fprintf(fp, "ERROR");
+                    status = VX_ERROR_INVALID_TYPE;
+            }
+            fprintf(fp, "</binary>\n");
         }
         fprintf(fp, "%s</threshold>\n", indent);
     }
