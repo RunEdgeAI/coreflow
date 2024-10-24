@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,13 +35,13 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
     vx_uint32 tx = out->tile_x;
     vx_df_image format = in->image.format;
     vx_int32 border = *wsize / 2;
-    
+
     vx_uint32 low_height = out->tile_y;
     vx_uint32 height = out->tile_y + out->tile_block.height;
-    
+
     vx_uint32 low_width = out->tile_x;
     vx_uint32 width = out->tile_x + out->tile_block.width;
-    
+
     if(low_height == 0)
     {
         low_height = low_height + border;
@@ -77,7 +76,7 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
             }
             for (x = low_width; x < width; x += 16)
             {
-                uint8x16_t vSrcCurr = vld1q_u8(srcCurr); 
+                uint8x16_t vSrcCurr = vld1q_u8(srcCurr);
                 uint8x16_t vDstCurr = vld1q_u8(dstCurr);
                 uint8x16_t vMaskCurr = vdupq_n_u8(0);
                 if (maskCurr)
@@ -90,7 +89,7 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
                 for (vx_uint32 j = 0; j < *wsize; j++)
                 {
                     for (vx_uint32 i = 0; i < *wsize; i++)
-                    {   
+                    {
                         if (j == border && i == border)
                             continue;
                         else
@@ -101,10 +100,10 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
                                 uint8x16_t vMaskNeighborCurr = vld1q_u8(maskLeftTop + j * mask->addr[0].stride_y + i);
                                 vMaskNeighborCurr = vsubq_u8(vOne16, vorrq_u8(vMaskNeighborCurr, vMaskCurr));
                                 vNeighborCurr = vmulq_u8(vNeighborCurr, vMaskNeighborCurr);
-                            }                                      
+                            }
                             vTempResult = (j < border || (j == border && i < border)) ? vcgeq_u8(vSrcCurr, vNeighborCurr) : vcgtq_u8(vSrcCurr, vNeighborCurr);
                             vFlag = vmulq_u8(vFlag, vTempResult);
-                        }                 
+                        }
                     }
                 }
                 vDstCurr = vmulq_u8(vFlag, vSrcCurr);
@@ -115,7 +114,7 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
                 if (mask->is_Null == 0)  //mask is not NULL
                 {
                     maskCurr += 16;
-                    maskLeftTop += 16;                
+                    maskLeftTop += 16;
                 }
             }
         }
@@ -142,19 +141,19 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
                 vx_int16 *val_p = (vx_int16 *)((vx_uint8 *)in->base[0] + y*in->addr[0].stride_y + x*in->addr[0].stride_x);
                 vx_int16 *dest = (vx_int16 *)((vx_uint8 *)out->base[0] + y*out->addr[0].stride_y + x*out->addr[0].stride_x);
                 int16x8_t src_val_16x8 = vld1q_s16(val_p);
-                
-                int16x8_t dst_16x8; 
+
+                int16x8_t dst_16x8;
                 uint8x8_t t_8x8 = vdup_n_u8(0);
                 uint8x8_t maskequal0_8x8_o = vceq_u8(_mask_8x8_o, vdup_n_u8(0));
                 dst_16x8 = vbslq_s16(vmovl_u8(maskequal0_8x8_o), dst_16x8, src_val_16x8);
                 t_8x8 = vbsl_u8(maskequal0_8x8_o, t_8x8, vdup_n_u8(1));
-                
+
                 for (vx_int32 j = -border; j <= border; j++)
                 {
                     for (vx_int32 i = -border; i <= border; i++)
                     {
-                        vx_int16 *neighbor = (vx_int16 *)((vx_uint8 *)in->base[0] 
-                            + (y + j)*in->addr[0].stride_y 
+                        vx_int16 *neighbor = (vx_int16 *)((vx_uint8 *)in->base[0]
+                            + (y + j)*in->addr[0].stride_y
                             + (x + i)*in->addr[0].stride_x);
                         int16x8_t neighbor_val_16x8 = vld1q_s16(neighbor);
                         uint8x8_t _mask_8x8_i;
@@ -168,7 +167,7 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
                         {
                             _mask_8x8_i = vdup_n_u8(0);
                         }
-                        
+
                         uint8x8_t maskequal0_8x8_i = vceq_u8(_mask_8x8_i, vdup_n_u8(0));//(*_mask == 0)
                         uint16x8_t j1 = vdupq_n_u16(0);
                         if(j < 0 || (j == 0 && i <= 0))
@@ -182,7 +181,7 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
                         }
                         uint16x8_t srcltval = vcltq_s16(src_val_16x8, neighbor_val_16x8);//<
                         uint16x8_t srclqval = vcleq_s16(src_val_16x8, neighbor_val_16x8);//<=
-                        
+
                         uint16x8_t result_16x8 = vandq_u16(vmovl_u8(maskequal0_8x8_i),
                             vorrq_u16(vandq_u16(j1, srcltval),vandq_u16(j2,srclqval)));
                         if(vgetq_lane_u16(result_16x8, 0) != 0 && vget_lane_u8(t_8x8, 0) ==0)
@@ -194,7 +193,7 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
                         {
                             dst_16x8 = vsetq_lane_s16(vgetq_lane_s16(src_val_16x8, 0), dst_16x8, 0);
                         }
-                    
+
                         if(vgetq_lane_u16(result_16x8, 1) != 0 && vget_lane_u8(t_8x8, 1) ==0)
                         {
                             dst_16x8 = vsetq_lane_s16(INT16_MIN, dst_16x8, 1);
@@ -204,7 +203,7 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
                         {
                             dst_16x8 = vsetq_lane_s16(vgetq_lane_s16(src_val_16x8, 1), dst_16x8, 1);
                         }
-                        
+
                         if(vgetq_lane_u16(result_16x8, 2) != 0 && vget_lane_u8(t_8x8, 2) ==0)
                         {
                             dst_16x8 = vsetq_lane_s16(INT16_MIN, dst_16x8, 2);
@@ -214,7 +213,7 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
                         {
                             dst_16x8 = vsetq_lane_s16(vgetq_lane_s16(src_val_16x8, 2), dst_16x8, 2);
                         }
-                        
+
                         if(vgetq_lane_u16(result_16x8, 3) != 0 && vget_lane_u8(t_8x8, 3) ==0)
                         {
                             dst_16x8 = vsetq_lane_s16(INT16_MIN, dst_16x8, 3);
@@ -224,7 +223,7 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
                         {
                             dst_16x8 = vsetq_lane_s16(vgetq_lane_s16(src_val_16x8, 3), dst_16x8, 3);
                         }
-                        
+
                         if(vgetq_lane_u16(result_16x8, 4) != 0 && vget_lane_u8(t_8x8, 4) ==0)
                         {
                             dst_16x8 = vsetq_lane_s16(INT16_MIN, dst_16x8, 4);
@@ -234,7 +233,7 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
                         {
                             dst_16x8 = vsetq_lane_s16(vgetq_lane_s16(src_val_16x8, 4), dst_16x8, 4);
                         }
-                        
+
                         if(vgetq_lane_u16(result_16x8, 5) != 0 && vget_lane_u8(t_8x8, 5) ==0)
                         {
                             dst_16x8 = vsetq_lane_s16(INT16_MIN, dst_16x8, 5);
@@ -244,7 +243,7 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
                         {
                             dst_16x8 = vsetq_lane_s16(vgetq_lane_s16(src_val_16x8, 5), dst_16x8, 5);
                         }
-                        
+
                         if(vgetq_lane_u16(result_16x8, 6) != 0 && vget_lane_u8(t_8x8, 6) ==0)
                         {
                             dst_16x8 = vsetq_lane_s16(INT16_MIN, dst_16x8, 6);
@@ -254,7 +253,7 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
                         {
                             dst_16x8 = vsetq_lane_s16(vgetq_lane_s16(src_val_16x8, 6), dst_16x8, 6);
                         }
-                        
+
                         if(vgetq_lane_u16(result_16x8, 7) != 0 && vget_lane_u8(t_8x8, 7) ==0)
                         {
                             dst_16x8 = vsetq_lane_s16(INT16_MIN, dst_16x8, 7);
@@ -357,7 +356,7 @@ void NonMaxSuppression_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RE
     vx_uint32 tx = out->tile_x;
     vx_df_image format = in->image.format;
     vx_int32 border = *wsize / 2;
-    
+
     if (mask->is_U1 == 0)
     {
         if (ty == 0 && tx == 0)
@@ -372,13 +371,13 @@ void NonMaxSuppression_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RE
     }
     else
     {
-        void *src_base = in->base[0];           
-        void *mask_base = mask->base[0];                                                   
-        void *dst_base = out->base[0];    
+        void *src_base = in->base[0];
+        void *mask_base = mask->base[0];
+        void *dst_base = out->base[0];
         vx_int32 shift_x_u1 = in->rect.start_x % 8;
 
-        vx_uint32 width = vxTileWidth(out, 0);                            
-        vx_uint32 height = vxTileHeight(out, 0);  
+        vx_uint32 width = vxTileWidth(out, 0);
+        vx_uint32 height = vxTileHeight(out, 0);
 
         for (vx_int32 x = border; x < (width - border); x++)
         {

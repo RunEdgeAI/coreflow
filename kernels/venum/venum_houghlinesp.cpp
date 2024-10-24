@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +20,7 @@
 #include <stdlib.h>
 
 #define VX_PI   3.1415926535897932384626433832795
-static vx_uint64 state = 0xffffffff; 
+static vx_uint64 state = 0xffffffff;
 
 vx_int32 vxRound(vx_float64 value)
 {
@@ -86,7 +85,7 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
         status = VX_FAILURE;
         return status;
     }
-    
+
     vx_coordinates2d_t pt;
     vx_size param_hough_lines_array_stride = 0;
     void *param_hough_lines_array_ptr = NULL;
@@ -106,7 +105,7 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
     status = vxGetValidRegionImage(img, &src_rect);
     vx_map_id map_id_src = 0;
     status |= vxMapImagePatch(img, &src_rect, 0, &map_id_src, &src_addr, (void **)&src_base, VX_READ_AND_WRITE, VX_MEMORY_TYPE_HOST, 0);
-    
+
     width = src_addr.dim_x;
     height = src_addr.dim_y;
     int numangle = VX_PI/param_hough_lines->theta;
@@ -117,27 +116,27 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
     vx_array mask = vxCreateArray(context_houghlines_internal, VX_TYPE_UINT8, width * height);
     vx_array trigtab = vxCreateArray(context_houghlines_internal, VX_TYPE_FLOAT32, numangle * 2);
     vx_array nzloc = vxCreateArray(context_houghlines_internal, VX_TYPE_COORDINATES2D, width * height);
- 
+
     vx_size accum_stride = 0;
     void *accum_ptr = NULL;
     vx_map_id accum_map_id;
     vx_int32* num_in_p = calloc(numrho * numangle, sizeof(vx_int32));
     vxAddArrayItems(accum, numrho * numangle, num_in_p, sizeof(vx_int32));
     free(num_in_p);
-    
+
     vxMapArrayRange(accum, 0, numrho * numangle, &accum_map_id, &accum_stride, &accum_ptr, VX_READ_AND_WRITE, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
-    vx_int32 *accum_p = (vx_int32 *)accum_ptr;    
+    vx_int32 *accum_p = (vx_int32 *)accum_ptr;
     vx_float32* cosin_p = calloc(2*numangle, sizeof(vx_float32));
     for (int n = 0; n < numangle; n++)
     {
         vx_float32 cos_v = (vx_float32)(cos((vx_float64)n * (param_hough_lines->theta)) * irho);
         vx_float32 sin_v = (vx_float32)(sin((vx_float64)n * (param_hough_lines->theta)) * irho);
         *(cosin_p+2*n) = cos_v;
-        *(cosin_p+2*n+1) = sin_v;       
+        *(cosin_p+2*n+1) = sin_v;
     }
     vxAddArrayItems(trigtab, 2*numangle, cosin_p, sizeof(vx_float32));
     free(cosin_p);
-    
+
     vx_size trigtab_stride = 0;
     void *trigtab_ptr = NULL;
     vx_map_id trigtab_map_id;
@@ -167,7 +166,7 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
                 coordinates2d_arr[tmpindex] = pt;
                 tmpindex++;
                 nzcount++;
-            } 
+            }
             pt.x = pt.x+1;
             if(vgetq_lane_u8(res_8x16, 1) != 0)
             {
@@ -175,7 +174,7 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
                 coordinates2d_arr[tmpindex] = pt;
                 tmpindex++;
                 nzcount++;
-            } 
+            }
             pt.x = pt.x+1;
             if(vgetq_lane_u8(res_8x16, 2) != 0)
             {
@@ -184,14 +183,14 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
                 tmpindex++;
                 nzcount++;
             }
-            pt.x = pt.x+1; 
+            pt.x = pt.x+1;
             if(vgetq_lane_u8(res_8x16, 3) != 0)
             {
                 *(mdata_in_p+pt.x) = 1;
                 coordinates2d_arr[tmpindex] = pt;
                 tmpindex++;
                 nzcount++;
-            } 
+            }
             pt.x = pt.x+1;
             if(vgetq_lane_u8(res_8x16, 4) != 0)
             {
@@ -199,7 +198,7 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
                 coordinates2d_arr[tmpindex] = pt;
                 tmpindex++;
                 nzcount++;
-            } 
+            }
             pt.x = pt.x+1;
             if(vgetq_lane_u8(res_8x16, 5) != 0)
             {
@@ -207,7 +206,7 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
                 coordinates2d_arr[tmpindex] = pt;
                 tmpindex++;
                 nzcount++;
-            } 
+            }
             pt.x = pt.x+1;
             if(vgetq_lane_u8(res_8x16, 6) != 0)
             {
@@ -215,7 +214,7 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
                 coordinates2d_arr[tmpindex] = pt;
                 tmpindex++;
                 nzcount++;
-            } 
+            }
             pt.x = pt.x+1;
             if(vgetq_lane_u8(res_8x16, 7) != 0)
             {
@@ -224,14 +223,14 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
                 tmpindex++;
                 nzcount++;
             }
-            pt.x = pt.x+1; 
+            pt.x = pt.x+1;
             if(vgetq_lane_u8(res_8x16, 8) != 0)
             {
                 *(mdata_in_p+pt.x) = 1;
                 coordinates2d_arr[tmpindex] = pt;
                 tmpindex++;
                 nzcount++;
-            } 
+            }
             pt.x = pt.x+1;
             if(vgetq_lane_u8(res_8x16, 9) != 0)
             {
@@ -239,7 +238,7 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
                 coordinates2d_arr[tmpindex] = pt;
                 tmpindex++;
                 nzcount++;
-            } 
+            }
             pt.x = pt.x+1;
             if(vgetq_lane_u8(res_8x16, 10) != 0)
             {
@@ -247,7 +246,7 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
                 coordinates2d_arr[tmpindex] = pt;
                 tmpindex++;
                 nzcount++;
-            } 
+            }
             pt.x = pt.x+1;
             if(vgetq_lane_u8(res_8x16, 11) != 0)
             {
@@ -255,7 +254,7 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
                 coordinates2d_arr[tmpindex] = pt;
                 tmpindex++;
                 nzcount++;
-            } 
+            }
             pt.x = pt.x+1;
             if(vgetq_lane_u8(res_8x16, 12) != 0)
             {
@@ -263,7 +262,7 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
                 coordinates2d_arr[tmpindex] = pt;
                 tmpindex++;
                 nzcount++;
-            } 
+            }
             pt.x = pt.x+1;
             if(vgetq_lane_u8(res_8x16, 13) != 0)
             {
@@ -271,7 +270,7 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
                 coordinates2d_arr[tmpindex] = pt;
                 tmpindex++;
                 nzcount++;
-            } 
+            }
             pt.x = pt.x+1;
             if(vgetq_lane_u8(res_8x16, 14) != 0)
             {
@@ -279,7 +278,7 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
                 coordinates2d_arr[tmpindex] = pt;
                 tmpindex++;
                 nzcount++;
-            } 
+            }
             pt.x = pt.x+1;
             if(vgetq_lane_u8(res_8x16, 15) != 0)
             {
@@ -287,7 +286,7 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
                 coordinates2d_arr[tmpindex] = pt;
                 tmpindex++;
                 nzcount++;
-            } 
+            }
             pt.x = pt.x+1;
             data+=16;
         }
@@ -306,7 +305,7 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
         vxAddArrayItems(mask, width, mdata_in_p, sizeof(vx_uint8));
         free(mdata_in_p);
     }
-  
+
     vx_size nzloc_stride = 0;
     void *nzloc_ptr = NULL;
     vx_map_id nzloc_map_id;
@@ -319,10 +318,10 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
     vx_coordinates2d_t *nzloc_p = (vx_coordinates2d_t *)nzloc_ptr;
 
     vx_uint8* mdata0 = mask_p;
-    
-    // stage 2. process all the points in random order    
+
+    // stage 2. process all the points in random order
     vx_line2d_t *linesp = calloc(nzcount, sizeof(vx_line2d_t));
-    
+
     vx_int32 roiw3 = numangle >= 3 ? numangle - 3 : 0;
     float32x4_t r_f32x4;
     int32x4_t r_s32x4;
@@ -341,10 +340,10 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
         // check if it has been excluded already (i.e. belongs to some other line)
         if (!mdata0[i*width + j])
             continue;
-        
+
         vx_coordinates2d_t line_end[2];
         vx_float32 a, b;
-        vx_int32* adata = accum_p;    
+        vx_int32* adata = accum_p;
         vx_int32 good_line;
         const vx_int32 shift = 16;
 
@@ -546,7 +545,7 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
     }
     vxAddArrayItems(lines_array, lines_num, linesp, sizeof(vx_line2d_t));
     free(linesp);
-    
+
     vxCopyScalar(num_lines, &lines_num, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     status |= vxUnmapArrayRange(accum, accum_map_id);
     status |= vxUnmapArrayRange(mask, mask_map_id);
