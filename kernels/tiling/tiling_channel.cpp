@@ -1,5 +1,4 @@
 /*
-
 * Copyright (c) 2012-2017 The Khronos Group Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -117,7 +116,7 @@ void ChannelCombine_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT]
             {
                 for (y = low_y; y < high_y; y += out->addr[p].step_y)
                 {
-                    ptr_in = (vx_uint8 *)base_src_ptrs[p] + ((y * in[p]->addr->step_y / out->addr[p].step_y) * 
+                    ptr_in = (vx_uint8 *)base_src_ptrs[p] + ((y * in[p]->addr->step_y / out->addr[p].step_y) *
                              in[p]->addr->scale_y / VX_SCALE_UNITY) * in[p]->addr->stride_y;
                     ptr_out = (vx_uint8 *)base_dst_ptr[p] + (y * out->addr[p].scale_y / VX_SCALE_UNITY) * out->addr[p].stride_y;
 
@@ -153,9 +152,9 @@ void ChannelCombine_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT]
             vx_uint32 wCnt = ((high_x >> 1) >> 3) << 3;
             for (y = low_y; y < high_y; y += out->addr[1].step_y)
             {
-                vx_uint8 *ptr_src0 = (vx_uint8 *)base_src_ptrs[1] + in[1]->addr->stride_y * 
+                vx_uint8 *ptr_src0 = (vx_uint8 *)base_src_ptrs[1] + in[1]->addr->stride_y *
                                      ((y * in[1]->addr->step_y / out->addr[1].step_y) * in[1]->addr->scale_y / VX_SCALE_UNITY);
-                vx_uint8 *ptr_src1 = (vx_uint8 *)base_src_ptrs[2] + in[2]->addr->stride_y * 
+                vx_uint8 *ptr_src1 = (vx_uint8 *)base_src_ptrs[2] + in[2]->addr->stride_y *
                                      ((y * in[1]->addr->step_y / out->addr[1].step_y) * in[2]->addr->scale_y / VX_SCALE_UNITY);
                 vx_uint8 *ptr_dst = (vx_uint8 *)base_dst_ptr[1] + out->addr[1].stride_y * (y *out->addr[1].scale_y / VX_SCALE_UNITY);
                 for (x = low_x; x < wCnt; x += 8)
@@ -173,11 +172,11 @@ void ChannelCombine_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT]
         int yidx = (format == VX_DF_IMAGE_UYVY) ? 1 : 0;
         for (y = low_y; y < high_y; y += out->addr[0].step_y)
         {
-            vx_uint8 *ptr_src0 = (vx_uint8 *)base_src_ptrs[0] + in[0]->addr->stride_y * 
+            vx_uint8 *ptr_src0 = (vx_uint8 *)base_src_ptrs[0] + in[0]->addr->stride_y *
                                  ((y * in[0]->addr->step_y / out->addr->step_y) * in[0]->addr->scale_y / VX_SCALE_UNITY);
-            vx_uint8 *ptr_src1 = (vx_uint8 *)base_src_ptrs[1] + in[1]->addr->stride_y * 
+            vx_uint8 *ptr_src1 = (vx_uint8 *)base_src_ptrs[1] + in[1]->addr->stride_y *
                                  ((y * in[1]->addr->step_y / out->addr->step_y) * in[1]->addr->scale_y / VX_SCALE_UNITY);
-            vx_uint8 *ptr_src2 = (vx_uint8 *)base_src_ptrs[2] + in[2]->addr->stride_y * 
+            vx_uint8 *ptr_src2 = (vx_uint8 *)base_src_ptrs[2] + in[2]->addr->stride_y *
                                  ((y * in[1]->addr->step_y / out->addr->step_y) * in[2]->addr->scale_y / VX_SCALE_UNITY);
             vx_uint8 *ptr_dst = (vx_uint8 *)base_dst_ptr[0] + out->addr[0].stride_y * y;
             for (x = low_x; x < high_x; x += 16)
@@ -267,7 +266,7 @@ void ChannelCombine_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT]
             dst[1 - vidx] = *src0;                                                                                                 \
             dst[vidx] = *src1;                                                                                                     \
         }                                                                                                                          \
-    }                   
+    }
 
 
 #define YUYV(low_y, high_y, low_x)                                                                                                  \

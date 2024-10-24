@@ -226,7 +226,7 @@ static vx_status vxNearestScaling(vx_image src_image, vx_image dst_image, const 
     status |= vxCommitImagePatch(src_image, NULL, 0, &src_addr, src_base);
     status |= vxCommitImagePatch(dst_image, &dst_rect, 0, &dst_addr, dst_base);
 
-    return VX_SUCCESS;
+    return status;
 }
 
 static vx_status vxBilinearScaling(vx_image src_image, vx_image dst_image, const vx_border_t *borders)
@@ -340,7 +340,7 @@ static vx_status vxBilinearScaling(vx_image src_image, vx_image dst_image, const
     status |= vxCommitImagePatch(src_image, NULL, 0, &src_addr, src_base);
     status |= vxCommitImagePatch(dst_image, &dst_rect, 0, &dst_addr, dst_base);
 
-    return VX_SUCCESS;
+    return status;
 }
 
 #if AREA_SCALE_ENABLE

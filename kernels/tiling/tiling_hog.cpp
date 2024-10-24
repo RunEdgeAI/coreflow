@@ -1,5 +1,4 @@
 /*
-
 * Copyright (c) 2012-2017 The Khronos Group Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,12 +37,12 @@ void HogCells_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void
     vx_float32 magnitude;
     vx_int8 bin;
     float num_div_360 = (float)(*num_orientations) / 360.0f;
-    vx_int32 num_cellw = (vx_int32)floor(((vx_float64)in->image.width) / ((vx_float64)(*cell_w)));    
+    vx_int32 num_cellw = (vx_int32)floor(((vx_float64)in->image.width) / ((vx_float64)(*cell_w)));
     vx_uint32 low_height = in->tile_y;
-    vx_uint32 height = in->tile_y + in->tile_block.height;    
+    vx_uint32 height = in->tile_y + in->tile_block.height;
     vx_uint32 low_width = in->tile_x;
     vx_uint32 width = in->tile_x + in->tile_block.width;
-    
+
     vx_float32 gx_0, gx_1, gx_2, gx_3;
     vx_float32 gy_0, gy_1, gy_2, gy_3;
     float32x4_t magnitude_f32x4;
@@ -55,34 +54,34 @@ void HogCells_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void
     int32x4_t num_orientations_s32x4 = vdupq_n_s32((*num_orientations));
     int32x4_t num_cellw_s32x4 = vdupq_n_s32(num_cellw);
     float32_t pi_3_14 = 180 / 3.14159265;
-    
-    for (vx_int32 j = low_height; j < height; j++) 
-    {        
+
+    for (vx_int32 j = low_height; j < height; j++)
+    {
         int32x4_t celly_s32x4 = vdupq_n_s32(j/(*cell_h));
         vx_int32 y1 = j - 1 < 0 ? 0 : j - 1;
         vx_int32 y2 = j + 1 >= in->image.height ? in->image.height - 1 : j + 1;
         vx_uint8 *src_base_y = (vx_uint8 *)in->base[0] + j*in->addr[0].stride_y;
         vx_uint8 *src_base_y_y1 = (vx_uint8 *)in->base[0] + y1*in->addr[0].stride_y;
-        vx_uint8 *src_base_y_y2 = (vx_uint8 *)in->base[0] + y2*in->addr[0].stride_y;        
-        for (int i = low_width; i < width; i+=4) 
-        {            
+        vx_uint8 *src_base_y_y2 = (vx_uint8 *)in->base[0] + y2*in->addr[0].stride_y;
+        for (int i = low_width; i < width; i+=4)
+        {
             vx_int32 x1 = i - 1 < 0 ? 0 : i - 1;
             vx_int32 x2 = i + 1 >= in->image.width ? in->image.width - 1 : i + 1;
-            gx_0 = *(src_base_y + x2) - *(src_base_y + x1);                     
+            gx_0 = *(src_base_y + x2) - *(src_base_y + x1);
             x1 = i < 0 ? 0 : i;
             x2 = i + 2 >= in->image.width ? in->image.width - 1 : i+2;
-            gx_1 = *(src_base_y + x2) - *(src_base_y + x1);            
+            gx_1 = *(src_base_y + x2) - *(src_base_y + x1);
             x1 = i + 1 < 0 ? 0 : i + 1;
             x2 = i+3 >= in->image.width ? in->image.width - 1 : i+3;
-            gx_2 = *(src_base_y + x2) - *(src_base_y + x1);             
+            gx_2 = *(src_base_y + x2) - *(src_base_y + x1);
             x1 = i+2 < 0 ? 0 : i+2;
             x2 = i+4 >= in->image.width ? in->image.width - 1 : i+4;
-            gx_3 = *(src_base_y + x2) - *(src_base_y + x1); 
+            gx_3 = *(src_base_y + x2) - *(src_base_y + x1);
             gy_0 = *(src_base_y_y2 + i) - *(src_base_y_y1 + i);
             gy_1 = *(src_base_y_y2 + i + 1) - *(src_base_y_y1 + i + 1);
             gy_2 = *(src_base_y_y2 + i + 2) - *(src_base_y_y1 + i + 2);
             gy_3 = *(src_base_y_y2 + i + 3) - *(src_base_y_y1 + i + 3);
-                        
+
             //calculating mag and orientation
             magnitude_f32x4 = vsetq_lane_f32(sqrtf(gx_0*gx_0 + gy_0*gy_0) / cell_wxh, magnitude_f32x4, 0);
             magnitude_f32x4 = vsetq_lane_f32(sqrtf(gx_1*gx_1 + gy_1*gy_1) / cell_wxh, magnitude_f32x4, 1);
@@ -91,11 +90,11 @@ void HogCells_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void
             orientation_f32x4 = vsetq_lane_f32(fmod(atan2f(gy_0, gx_0) * pi_3_14, 360), orientation_f32x4, 0);
             orientation_f32x4 = vsetq_lane_f32(fmod(atan2f(gy_1, gx_1) * pi_3_14, 360), orientation_f32x4, 1);
             orientation_f32x4 = vsetq_lane_f32(fmod(atan2f(gy_2, gx_2) * pi_3_14, 360), orientation_f32x4, 2);
-            orientation_f32x4 = vsetq_lane_f32(fmod(atan2f(gy_3, gx_3) * pi_3_14, 360), orientation_f32x4, 3);            
+            orientation_f32x4 = vsetq_lane_f32(fmod(atan2f(gy_3, gx_3) * pi_3_14, 360), orientation_f32x4, 3);
             uint32x4_t lt0 = vcltq_f32(orientation_f32x4, vdupq_n_f32(0.0));
             float32x4_t orientation_f32x4_360 = vaddq_f32(orientation_f32x4, vdupq_n_f32(360.0));
             orientation_f32x4 = vbslq_f32(lt0, orientation_f32x4_360, orientation_f32x4);
-            
+
             //calculating bin.
             int32x4_t bin_s32x4 = vcvtq_s32_f32(vmulq_f32(orientation_f32x4, num_div_360_f32x4));
 
@@ -105,23 +104,23 @@ void HogCells_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void
             cellx_s32x4 = vsetq_lane_s32((i+3)/(*cell_w), cellx_s32x4, 3);
             int32x4_t magnitudes_index_s32x4 = vaddq_s32(vmulq_s32(celly_s32x4, num_cellw_s32x4), cellx_s32x4);
             int32x4_t bins_index_s32x4 = vaddq_s32(vmulq_s32(magnitudes_index_s32x4, num_orientations_s32x4), bin_s32x4);
-            
+
             void *mag_ptr = (vx_int8 *)magnitudes_data + vgetq_lane_s32(magnitudes_index_s32x4, 0)*2;
-            *(vx_int16 *)(mag_ptr) = *(vx_int16 *)(mag_ptr) + vgetq_lane_f32(magnitude_f32x4, 0);            
+            *(vx_int16 *)(mag_ptr) = *(vx_int16 *)(mag_ptr) + vgetq_lane_f32(magnitude_f32x4, 0);
             mag_ptr = (vx_int8 *)magnitudes_data + vgetq_lane_s32(magnitudes_index_s32x4, 1)*2;
-            *(vx_int16 *)(mag_ptr) = *(vx_int16 *)(mag_ptr) + vgetq_lane_f32(magnitude_f32x4, 1);            
+            *(vx_int16 *)(mag_ptr) = *(vx_int16 *)(mag_ptr) + vgetq_lane_f32(magnitude_f32x4, 1);
             mag_ptr = (vx_int8 *)magnitudes_data + vgetq_lane_s32(magnitudes_index_s32x4, 2)*2;
-            *(vx_int16 *)(mag_ptr) = *(vx_int16 *)(mag_ptr) + vgetq_lane_f32(magnitude_f32x4, 2);            
+            *(vx_int16 *)(mag_ptr) = *(vx_int16 *)(mag_ptr) + vgetq_lane_f32(magnitude_f32x4, 2);
             mag_ptr = (vx_int8 *)magnitudes_data + vgetq_lane_s32(magnitudes_index_s32x4, 3)*2;
             *(vx_int16 *)(mag_ptr) = *(vx_int16 *)(mag_ptr) + vgetq_lane_f32(magnitude_f32x4, 3);
             vx_int16 *bins_ptr = (vx_int16 *)bins_data + vgetq_lane_s32(bins_index_s32x4, 0);
-            *bins_ptr = *bins_ptr + vgetq_lane_f32(magnitude_f32x4, 0);            
+            *bins_ptr = *bins_ptr + vgetq_lane_f32(magnitude_f32x4, 0);
             bins_ptr = (vx_int16 *)bins_data + vgetq_lane_s32(bins_index_s32x4, 1);
-            *bins_ptr = *bins_ptr + vgetq_lane_f32(magnitude_f32x4, 1);            
+            *bins_ptr = *bins_ptr + vgetq_lane_f32(magnitude_f32x4, 1);
             bins_ptr = (vx_int16 *)bins_data + vgetq_lane_s32(bins_index_s32x4, 2);
-            *bins_ptr = *bins_ptr + vgetq_lane_f32(magnitude_f32x4, 2);            
+            *bins_ptr = *bins_ptr + vgetq_lane_f32(magnitude_f32x4, 2);
             bins_ptr = (vx_int16 *)bins_data + vgetq_lane_s32(bins_index_s32x4, 3);
-            *bins_ptr = *bins_ptr + vgetq_lane_f32(magnitude_f32x4, 3);            
+            *bins_ptr = *bins_ptr + vgetq_lane_f32(magnitude_f32x4, 3);
         }
     }
 }
@@ -180,7 +179,7 @@ void HogCells_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT], 
     vx_uint32 tx = in->tile_x;
     if (ty == 0 && tx == 0)
     {
-        HOGCELLS_SCALING(0, 0, vxTileHeight(in, 0), vxTileWidth(in, 0), in->tile_x)     
+        HOGCELLS_SCALING(0, 0, vxTileHeight(in, 0), vxTileWidth(in, 0), in->tile_x)
     }
     else
     {
@@ -220,7 +219,7 @@ void HogFeatures_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
         vx_int16 *ptr_src = (vx_int16 *)magnitudes_data;
         vx_int8 *ptr_bins = (vx_int8 *)bins_data;
         vx_int16 *ptr_dst = (vx_int16 *)features_data;
-        vx_int32 num_bins_s32 = hog_params_t->num_bins;            
+        vx_int32 num_bins_s32 = hog_params_t->num_bins;
         vx_int32 roiw4 = num_blockW * num_bins_s32 >= 3*num_bins_s32 ? num_blockW * num_bins_s32 : 0;
 
         for (y = 0; y < num_blockH; y++)
@@ -242,23 +241,23 @@ void HogFeatures_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
                 int16x4_t value1_s16x4;
                 int16x4_t value2_s16x4;
                 int16x4_t value3_s16x4;
-                int16x4_t value4_s16x4;                
+                int16x4_t value4_s16x4;
                 value1_s16x4 = vset_lane_s16(src_r1[vgetq_lane_s32(bidx_s32x4, 0)], value1_s16x4, 0);
                 value1_s16x4 = vset_lane_s16(src_r1[vgetq_lane_s32(bidx_s32x4, 1)], value1_s16x4, 1);
                 value1_s16x4 = vset_lane_s16(src_r1[vgetq_lane_s32(bidx_s32x4, 2)], value1_s16x4, 2);
-           
+
                 value2_s16x4 = vset_lane_s16(src_r1[vgetq_lane_s32(bidx_s32x4, 0) + 1], value2_s16x4, 0);
                 value2_s16x4 = vset_lane_s16(src_r1[vgetq_lane_s32(bidx_s32x4, 1) + 1], value2_s16x4, 1);
                 value2_s16x4 = vset_lane_s16(src_r1[vgetq_lane_s32(bidx_s32x4, 2) + 1], value2_s16x4, 2);
-             
+
                 value3_s16x4 = vset_lane_s16(src_r2[vgetq_lane_s32(bidx_s32x4, 0)], value3_s16x4, 0);
                 value3_s16x4 = vset_lane_s16(src_r2[vgetq_lane_s32(bidx_s32x4, 1)], value3_s16x4, 1);
                 value3_s16x4 = vset_lane_s16(src_r2[vgetq_lane_s32(bidx_s32x4, 2)], value3_s16x4, 2);
-              
+
                 value4_s16x4 = vset_lane_s16(src_r2[vgetq_lane_s32(bidx_s32x4, 0) + 1], value4_s16x4, 0);
                 value4_s16x4 = vset_lane_s16(src_r2[vgetq_lane_s32(bidx_s32x4, 1) + 1], value4_s16x4, 1);
                 value4_s16x4 = vset_lane_s16(src_r2[vgetq_lane_s32(bidx_s32x4, 2) + 1], value4_s16x4, 2);
- 
+
                 sum_f32x4 = vcvtq_f32_s32(vmovl_s16(vadd_s16(vadd_s16(vmul_s16(value1_s16x4, value1_s16x4), vmul_s16(value2_s16x4, value2_s16x4)),
                     vadd_s16(vmul_s16(value3_s16x4, value3_s16x4), vmul_s16(value4_s16x4, value4_s16x4)))));
 
@@ -277,7 +276,7 @@ void HogFeatures_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
                     hist += min((vx_int16)bins4[k] * scale, hog_params_t->threshold);
                     dst[k] += hist;
                 }
-                
+
                 scale = 1.f / sqrtf(vgetq_lane_f32(sum_f32x4, 1) + 0.00000000000001f);
                 bins1 = bins_r1 + (x + 0 + num_bins_s32);
                 bins2 = bins_r1 + (x + 1 + num_bins_s32);
@@ -293,7 +292,7 @@ void HogFeatures_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
                     hist += min((vx_int16)bins4[k] * scale, hog_params_t->threshold);
                     dst[k] += hist;
                 }
-                
+
                 scale = 1.f / sqrtf(vgetq_lane_f32(sum_f32x4, 2) + 0.00000000000001f);
                 bins1 = bins_r1 + (x + 0 + 2*num_bins_s32);
                 bins2 = bins_r1 + (x + 1 + 2*num_bins_s32);
@@ -309,7 +308,7 @@ void HogFeatures_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
                     hist += min((vx_int16)bins4[k] * scale, hog_params_t->threshold);
                     dst[k] += hist;
                 }
-                
+
                 scale = 1.f / sqrtf(vgetq_lane_f32(sum_f32x4, 3) + 0.00000000000001f);
                 bins1 = bins_r1 + (x + 0 + 3*num_bins_s32);
                 bins2 = bins_r1 + (x + 1 + 3*num_bins_s32);

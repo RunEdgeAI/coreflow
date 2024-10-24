@@ -1,5 +1,4 @@
 /*
-
 * Copyright (c) 2012-2017 The Khronos Group Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -361,7 +360,7 @@ void WarpPerspective_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT
     if (*type == VX_INTERPOLATION_NEAREST_NEIGHBOR)
     {
         vx_int32 _map[BLOCK_SIZE * BLOCK_SIZE + 16];
-        vx_int32 * map = alignPtr(_map, 16); 
+        vx_int32 * map = alignPtr(_map, 16);
 
         int32x4_t v_m1_4 = vdupq_n_s32(-1);
         float32x4_t v_zero4 = vdupq_n_f32(0.0f);

@@ -1,5 +1,4 @@
 /*
-
 * Copyright (c) 2012-2017 The Khronos Group Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,17 +29,17 @@ void ConvertDepth_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
     vx_uint32 low_y = out->tile_y;
     vx_uint32 high_y = out->tile_y + out->tile_block.height;
 
-    if (in->image.format == VX_DF_IMAGE_U8 && out->image.format == VX_DF_IMAGE_S16) 
+    if (in->image.format == VX_DF_IMAGE_U8 && out->image.format == VX_DF_IMAGE_S16)
     {
-        vx_uint8 *src_base = in->base[0] + in->tile_x;                                      
-        vx_int16 *dst_base = (vx_int16 *)out->base[0] + out->tile_x;   
-     
+        vx_uint8 *src_base = in->base[0] + in->tile_x;
+        vx_int16 *dst_base = (vx_int16 *)out->base[0] + out->tile_x;
+
         int16x8_t sh=vdupq_n_s16(*shift);
 
-        for (y = low_y; y < high_y; y++)                
+        for (y = low_y; y < high_y; y++)
         {
-            vx_uint8* srcp = (vx_uint8 *)src_base + y * in->addr->stride_y;                  
-            vx_int16* dstp = (vx_int16 *)dst_base + y * out->addr->stride_y / 2;             
+            vx_uint8* srcp = (vx_uint8 *)src_base + y * in->addr->stride_y;
+            vx_int16* dstp = (vx_int16 *)dst_base + y * out->addr->stride_y / 2;
             for (x = 0; x < out->tile_block.width; x += 16)
             {
                 uint8x16_t v_src = vld1q_u8(srcp);
@@ -53,19 +52,19 @@ void ConvertDepth_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
                 srcp+=16;
                 dstp+=16;
             }
-        } 
+        }
     }
-    else if (in->image.format == VX_DF_IMAGE_S16 && out->image.format == VX_DF_IMAGE_U8)    
-    {                                                                                       
-        vx_int16 *src_base = (vx_int16 *)in->base[0] + in->tile_x;                          
-        vx_uint8 *dst_base = out->base[0] + out->tile_x;    
+    else if (in->image.format == VX_DF_IMAGE_S16 && out->image.format == VX_DF_IMAGE_U8)
+    {
+        vx_int16 *src_base = (vx_int16 *)in->base[0] + in->tile_x;
+        vx_uint8 *dst_base = out->base[0] + out->tile_x;
 
         int16x8_t sh=vdupq_n_s16(-(*shift));
 
-        for (y = low_y; y < high_y; y++)                
+        for (y = low_y; y < high_y; y++)
         {
-            vx_int16* srcp = (vx_int16 *)src_base + y * in->addr->stride_y / 2;                  
-            vx_uint8* dstp = (vx_uint8 *)dst_base + y * out->addr->stride_y;             
+            vx_int16* srcp = (vx_int16 *)src_base + y * in->addr->stride_y / 2;
+            vx_uint8* dstp = (vx_uint8 *)dst_base + y * out->addr->stride_y;
             for (x = 0; x < out->tile_block.width; x += 16)
             {
                 int16x8_t v_src0 = vld1q_s16(srcp);
@@ -92,8 +91,8 @@ void ConvertDepth_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
                 srcp+=16;
                 dstp+=16;
             }
-        } 
-    }                                
+        }
+    }
 }
 
 

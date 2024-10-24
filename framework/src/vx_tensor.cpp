@@ -321,7 +321,7 @@ VX_API_ENTRY vx_object_array VX_API_CALL vxCreateImageObjectArrayFromTensor(vx_t
                         addr.step_y = addr.dim_x;
                         addr.stride_x = (vx_uint32) Reference::sizeOfType(tensor->data_type);
                         addr.stride_y = (vx_uint32)(tensor->dimensions[0] * Reference::sizeOfType(tensor->data_type));
-                        vx_image exemplar = vxCreateImage(tensor->context, addr.dim_x, addr.dim_y, image_format);
+
 						if (vxGetStatus((vx_reference)images) == VX_SUCCESS && images->type == VX_TYPE_OBJECT_ARRAY)
                         {
 							int i;
@@ -815,7 +815,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyTensorPatch(vx_tensor tensor, vx_size n
         }
     }
 
-    if (VX_SUCCESS == status && tensor->number_of_dimensions < number_of_dimensions || number_of_dimensions ==0)
+    if ((VX_SUCCESS == status) &&
+        ((tensor->number_of_dimensions < number_of_dimensions) || (number_of_dimensions == 0)))
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid number of patch dimensions\n");
         status = VX_ERROR_INVALID_PARAMETERS;
@@ -884,7 +885,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyTensorPatch(vx_tensor tensor, vx_size n
     }
 #endif
     }
-exit:
+
     VX_PRINT(VX_ZONE_API, "returned %d\n", status);
     return status;
 }

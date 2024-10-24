@@ -43,32 +43,29 @@ Kernel::Kernel(vx_context context,
             vx_uint32 numParams,
             vx_reference scope) : Reference(context, VX_TYPE_KERNEL, context)
 {
-    vx_kernel kernel = (vx_kernel)Reference::createReference(context, VX_TYPE_KERNEL, VX_INTERNAL, context);
+    /* setup the kernel meta-data */
+    strncpy(this->name, name, VX_MAX_KERNEL_NAME - 1);
+    this->function = function;
+    enumeration = kenum;
+    signature.num_parameters = numParams;
+    attributes.borders.mode = VX_BORDER_UNDEFINED;
+    if (signature.num_parameters <= VX_INT_MAX_PARAMS)
     {
-        /* setup the kernel meta-data */
-        strncpy(this->name, name, VX_MAX_KERNEL_NAME - 1);
-        this->function = function;
-        enumeration = kenum;
-        signature.num_parameters = numParams;
-        attributes.borders.mode = VX_BORDER_UNDEFINED;
-        if (signature.num_parameters <= VX_INT_MAX_PARAMS)
+        vx_uint32 p = 0;
+        if (parameters != nullptr)
         {
-            vx_uint32 p = 0;
-            if (parameters != nullptr)
+            for (p = 0; p < numParams; p++)
             {
-                for (p = 0; p < numParams; p++)
-                {
-                    signature.directions[p] = parameters[p].direction;
-                    signature.types[p] = parameters[p].data_type;
-                    /* Initialize to nullptr, kernel import function can create meta format for each param if it is called */
-                    signature.meta_formats[p] = nullptr;
-                }
+                signature.directions[p] = parameters[p].direction;
+                signature.types[p] = parameters[p].data_type;
+                /* Initialize to nullptr, kernel import function can create meta format for each param if it is called */
+                signature.meta_formats[p] = nullptr;
             }
         }
-        else
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Invalid num parameters on kernel signature! Max supported [%d]", VX_INT_MAX_PARAMS);
-        }
+    }
+    else
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid num parameters on kernel signature! Max supported [%d]", VX_INT_MAX_PARAMS);
     }
 }
 

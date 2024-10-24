@@ -640,7 +640,6 @@ vx_status Array::unmapArrayRange(vx_map_id map_id)
 
     VX_PRINT(VX_ZONE_ARRAY, "UnmapArrayRange from " VX_FMT_REF "\n", this);
 
-    vx_context context = context;
     vx_memory_map_t* map = &context->memory_maps[map_id];
     if (map->used && map->ref == (vx_reference)this)
     {

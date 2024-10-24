@@ -1,5 +1,4 @@
 /*
-
 * Copyright (c) 2012-2017 The Khronos Group Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -85,7 +84,7 @@ void Sobel3x3_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void
 
             for (x = 0; x < grad_x->tile_block.width; x += 8)
             {
-                SOBEL3x3_VALUE           
+                SOBEL3x3_VALUE
                 //top left
                 int16x8_t out_x = vnegq_s16(top_s16.val[0]);
                 //top right
@@ -133,7 +132,7 @@ void Sobel3x3_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void
 
             for (x = 0; x < grad_y->tile_block.width; x += 8)
             {
-                SOBEL3x3_VALUE           
+                SOBEL3x3_VALUE
                 //top left
                 int16x8_t out_y = vnegq_s16(top_s16.val[0]);
                 //top mid
@@ -175,7 +174,7 @@ void Sobel3x3_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void
                                                                                     \
                 vxImagePixel(vx_int16, grad_x, 0, x, y, 0, 0) = (vx_int16)value;    \
             }                                                                       \
-        }                                                                           
+        }
 
 #define SOBEL3x3_Y(low_y, high_y, low_x, high_x)                                    \
         for (y = low_y; y < high_y; y++)                                            \
@@ -193,7 +192,7 @@ void Sobel3x3_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void
                                                                                     \
                 vxImagePixel(vx_int16, grad_y, 0, x, y, 0, 0) = (vx_int16)value;    \
             }                                                                       \
-        }                                                                           
+        }
 
 
 void Sobel3x3_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT], void * VX_RESTRICT tile_memory, vx_size tile_memory_size)
@@ -206,10 +205,10 @@ void Sobel3x3_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT], 
 
     if (grad_x)
     {
-        vx_uint32 low_y = grad_x->tile_y;                                           
-        vx_uint32 high_y = vxTileHeight(grad_x, 0);                                 
-        vx_uint32 low_x = grad_x->tile_x;                                           
-        vx_uint32 high_x = vxTileWidth(grad_x, 0);                                  
+        vx_uint32 low_y = grad_x->tile_y;
+        vx_uint32 high_y = vxTileHeight(grad_x, 0);
+        vx_uint32 low_x = grad_x->tile_x;
+        vx_uint32 high_x = vxTileWidth(grad_x, 0);
         if (low_y == 0 && low_x == 0)
         {
             SOBEL3x3_X(low_y + 1, high_y - 1, low_x + 1, high_x - 1)

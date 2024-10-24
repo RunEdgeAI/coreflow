@@ -333,7 +333,7 @@ static vx_status replicateConvolve(vx_image src, vx_convolution conv, vx_image d
 
             if (dst_format == VX_DF_IMAGE_U8)
             {
-                vx_uint8 *dstp = (vx_uint8*)(dst_base, x, y, &dst_addr);
+                vx_uint8 *dstp = (vx_uint8*)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                 if (value < 0) *dstp = 0;
                 else if (value > UINT8_MAX) *dstp = UINT8_MAX;
                 else *dstp = value;

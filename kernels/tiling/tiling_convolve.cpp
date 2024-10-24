@@ -1,5 +1,4 @@
 /*
-
 * Copyright (c) 2012-2017 The Khronos Group Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -2331,8 +2330,8 @@ void Convolve_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void
 }
 
 
-static void vxReadRectangle_flexible(const void *base, const vx_imagepatch_addressing_t *addr, 
-                            vx_df_image type, vx_uint32 center_x, vx_uint32 center_y, 
+static void vxReadRectangle_flexible(const void *base, const vx_imagepatch_addressing_t *addr,
+                            vx_df_image type, vx_uint32 center_x, vx_uint32 center_y,
                             vx_uint32 radius_x, vx_uint32 radius_y, void *destination, vx_border_t borders)
 {
     vx_int32 width = (vx_int32)addr->dim_x, height = (vx_int32)addr->dim_y;

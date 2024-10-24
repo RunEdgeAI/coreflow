@@ -369,7 +369,7 @@ static vx_status LKTracker(
 
     vxReleaseContext(&context_lk_internal);
 
-    return VX_SUCCESS;
+    return status;
 }
 
 
