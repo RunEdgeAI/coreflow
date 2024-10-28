@@ -15,6 +15,7 @@ cc_library(
     includes = [
         ".",
         "//framework/include",
+        "//kernels/utils",
         "//kernels/venum",
     ],
     deps = [
