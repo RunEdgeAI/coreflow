@@ -548,21 +548,34 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetNodeAttribute(vx_node node, vx_enum attr
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseNode(vx_node* node)
 {
-    return (*(vx_reference *)node)->releaseReference(VX_TYPE_NODE, VX_EXTERNAL, nullptr);
+    vx_status status =  VX_ERROR_INVALID_REFERENCE;
+    if (nullptr != node)
+    {
+        vx_node n = *node;
+        if (vx_true_e == Reference::isValidReference(reinterpret_cast<vx_reference>(n), VX_TYPE_NODE))
+        {
+            status = n->releaseReference(VX_TYPE_NODE, VX_EXTERNAL, nullptr);
+        }
+    }
+    return status;
 }
 
-VX_API_ENTRY vx_status VX_API_CALL vxRemoveNode(vx_node node)
+VX_API_ENTRY vx_status VX_API_CALL vxRemoveNode(vx_node* node)
 {
     vx_status status =  VX_ERROR_INVALID_REFERENCE;
-    if (node && Reference::isValidReference(reinterpret_cast<vx_reference>(node), VX_TYPE_NODE))
+    if (nullptr != node)
     {
-        status = node->removeNode();
-        if (status == VX_SUCCESS)
+        vx_node n = *node;
+        if (vx_true_e == Reference::isValidReference(reinterpret_cast<vx_reference>(n), VX_TYPE_NODE))
         {
-            status = node->releaseReference(VX_TYPE_NODE, VX_EXTERNAL, nullptr);
+            status = n->removeNode();
             if (status == VX_SUCCESS)
             {
-                node = nullptr;
+                status = n->releaseReference(VX_TYPE_NODE, VX_EXTERNAL, nullptr);
+                if (status == VX_SUCCESS)
+                {
+                    *node = nullptr;
+                }
             }
         }
     }
