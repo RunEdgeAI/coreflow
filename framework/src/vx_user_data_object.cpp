@@ -26,9 +26,11 @@
 /*==============================================================================
 User Data Object HELPER FUNCTIONS
 =============================================================================*/
-UserDataObject::UserDataObject(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_USER_DATA_OBJECT, scope)
+UserDataObject::UserDataObject(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_USER_DATA_OBJECT, scope),
+memory(),
+size(0),
+type_name()
 {
-
 }
 
 vx_bool UserDataObject::allocateUserDataObject()
@@ -100,6 +102,8 @@ VX_API_ENTRY vx_user_data_object VX_API_CALL vxCreateUserDataObject(
 
             if(status != (vx_status)VX_SUCCESS)
             {
+                user_data_object = nullptr;
+                VX_PRINT(VX_ZONE_ERROR, "Failed to create user data object with error: %d\n", status);
                 // user_data_object = (vx_user_data_object)ownGetErrorObject(
                 //     context, (vx_status)VX_ERROR_INVALID_PARAMETERS);
             }
