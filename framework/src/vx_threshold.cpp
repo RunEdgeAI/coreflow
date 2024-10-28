@@ -65,8 +65,18 @@ static vx_bool vxIsValidThresholdDataType(vx_enum data_type)
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseThreshold(vx_threshold* t)
 {
-    vx_reference ref = *t;
-    return ref->releaseReference(VX_TYPE_THRESHOLD, VX_EXTERNAL, nullptr);
+    vx_status status = VX_ERROR_INVALID_REFERENCE;
+
+    if (nullptr != t)
+    {
+        vx_threshold ref = *t;
+        if (vx_true_e == Reference::isValidReference(ref, VX_TYPE_THRESHOLD))
+        {
+            status = ref->releaseReference(VX_TYPE_THRESHOLD, VX_EXTERNAL, nullptr);
+        }
+    }
+
+    return status;
 }
 
 VX_API_ENTRY vx_threshold VX_API_CALL vxCreateThreshold(vx_context context, vx_enum thresh_type, vx_enum data_type)

@@ -312,6 +312,16 @@ VX_API_ENTRY vx_image VX_API_CALL vxGetPyramidLevel(vx_pyramid pyramid, vx_uint3
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleasePyramid(vx_pyramid* pyr)
 {
-    vx_reference ref = *pyr;
-    return ref->releaseReference(VX_TYPE_PYRAMID, VX_EXTERNAL, nullptr);
+    vx_status status = VX_ERROR_INVALID_REFERENCE;
+
+    if (nullptr != pyr)
+    {
+        vx_reference ref = *pyr;
+        if (vx_true_e == Reference::isValidReference(ref, VX_TYPE_PYRAMID))
+        {
+            status = ref->releaseReference(VX_TYPE_PYRAMID, VX_EXTERNAL, nullptr);
+        }
+    }
+
+    return status;
 }

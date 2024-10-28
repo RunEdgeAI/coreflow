@@ -86,14 +86,34 @@ VX_API_ENTRY vx_distribution VX_API_CALL vxCreateVirtualDistribution( vx_graph g
 
 vx_status vxReleaseDistributionInt(vx_distribution* distribution)
 {
-    vx_reference ref = *distribution;
-    return ref->releaseReference(VX_TYPE_DISTRIBUTION, VX_INTERNAL, nullptr);
+    vx_status status = VX_ERROR_INVALID_REFERENCE;
+
+    if (nullptr != distribution)
+    {
+        vx_reference ref = *distribution;
+        if (vx_true_e == Reference::isValidReference(ref, VX_TYPE_DISTRIBUTION))
+        {
+            status = ref->releaseReference(VX_TYPE_DISTRIBUTION, VX_INTERNAL, nullptr);
+        }
+    }
+
+    return status;
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseDistribution(vx_distribution *d)
 {
-    vx_reference ref = *d;
-    return ref->releaseReference(VX_TYPE_DISTRIBUTION, VX_EXTERNAL, nullptr);
+    vx_status status = VX_ERROR_INVALID_REFERENCE;
+
+    if (nullptr != d)
+    {
+        vx_reference ref = *d;
+        if (vx_true_e == Reference::isValidReference(ref, VX_TYPE_DISTRIBUTION))
+        {
+            status = ref->releaseReference(VX_TYPE_DISTRIBUTION, VX_EXTERNAL, nullptr);
+        }
+    }
+
+    return status;
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxQueryDistribution(vx_distribution distribution, vx_enum attribute, void *ptr, vx_size size)

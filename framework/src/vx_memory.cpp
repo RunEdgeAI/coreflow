@@ -117,7 +117,9 @@ void ownPrintMemory(vx_memory_t *mem)
     {
         vx_bool gotlock = ownSemTryWait(&mem->locks[p]);
         if (gotlock == vx_true_e)
+        {
             ownSemPost(&mem->locks[p]);
+        }
         VX_PRINT(VX_ZONE_INFO, "ptr[%u]=%p %s stride_x_bits[%u]=%u\n", p, mem->ptrs[p],
                 (gotlock==vx_true_e?"UNLOCKED":"LOCKED"), p, mem->stride_x_bits[p]);
         for (d = 0; d < mem->ndims; d++)

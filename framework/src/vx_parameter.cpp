@@ -171,7 +171,6 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseParameter(vx_parameter* param)
         }
     }
 
-    VX_PRINT(VX_ZONE_API, "%s returned %d\n", __FUNCTION__, status);
     return status;
 }
 

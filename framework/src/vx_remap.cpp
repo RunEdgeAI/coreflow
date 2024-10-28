@@ -70,8 +70,18 @@ VX_API_ENTRY vx_remap VX_API_CALL vxCreateRemap(vx_context context,
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseRemap(vx_remap* r)
 {
-    vx_reference ref = *r;
-    return ref->releaseReference(VX_TYPE_REMAP, VX_EXTERNAL, nullptr);
+    vx_status status = VX_ERROR_INVALID_REFERENCE;
+
+    if (nullptr != r)
+    {
+        vx_reference ref = *r;
+        if (vx_true_e == Reference::isValidReference(ref, VX_TYPE_REMAP))
+        {
+            status = ref->releaseReference(VX_TYPE_REMAP, VX_EXTERNAL, nullptr);
+        }
+    }
+
+    return status;
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxQueryRemap(vx_remap remap, vx_enum attribute, void *ptr, vx_size size)

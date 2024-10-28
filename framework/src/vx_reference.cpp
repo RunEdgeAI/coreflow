@@ -409,8 +409,9 @@ vx_status Reference::releaseReference(vx_enum type,
                 if (type == static_objects[d])
                     break;
             }
+            // not found in list
             if (d == dimof(static_objects))
-            { // not found in list
+            {
                 // free(ref);
             }
         }

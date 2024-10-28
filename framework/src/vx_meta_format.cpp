@@ -814,6 +814,5 @@ vx_status vxReleaseMetaFormat(vx_meta_format* pmeta)
         }
     }
 
-    VX_PRINT(VX_ZONE_API, "%s returned %d\n", __FUNCTION__, status);
     return status;
 }
