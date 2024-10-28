@@ -74,8 +74,8 @@ vx_status vxCopy(vx_reference input, vx_reference output)
                     status |= vxMapImagePatch((vx_image)output, &rect, p, &dst_map_id, &dst_addr, &dst, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
                     for (y = 0; y < src_addr.dim_y && status == VX_SUCCESS; y += src_addr.step_y)
                     {
-                        vx_uint8* srcp = vxFormatImagePatchAddress2d(src, 0, y, &src_addr);
-                        vx_uint8* dstp = vxFormatImagePatchAddress2d(dst, 0, y, &dst_addr);
+                        vx_uint8* srcp = (vx_uint8*)vxFormatImagePatchAddress2d(src, 0, y, &src_addr);
+                        vx_uint8* dstp = (vx_uint8*)vxFormatImagePatchAddress2d(dst, 0, y, &dst_addr);
                         len = (src_addr.stride_x * src_addr.dim_x * src_addr.scale_x) / VX_SCALE_UNITY;
                         memcpy(dstp, srcp, len);
                     }
@@ -458,8 +458,8 @@ vx_status vxCopy(vx_reference input, vx_reference output)
                 status |= vxQueryTensor(tensor_output, VX_TENSOR_DATA_TYPE, &output_data_type, sizeof(output_data_type));
                 status |= vxQueryTensor(tensor_input, VX_TENSOR_FIXED_POINT_POSITION, &input_fixed_point_pos, sizeof(input_fixed_point_pos));
                 status |= vxQueryTensor(tensor_output, VX_TENSOR_FIXED_POINT_POSITION, &output_fixed_point_pos, sizeof(output_fixed_point_pos));
-                input_dims = malloc(input_dims_num * sizeof(vx_size));
-                output_dims = malloc(output_dims_num * sizeof(vx_size));
+                input_dims = (vx_size*)malloc(input_dims_num * sizeof(vx_size));
+                output_dims = (vx_size*)malloc(output_dims_num * sizeof(vx_size));
                 status |= vxQueryTensor(tensor_input, VX_TENSOR_DIMS, input_dims, input_dims_num * sizeof(vx_size));
                 status |= vxQueryTensor(tensor_output, VX_TENSOR_DIMS, output_dims, output_dims_num * sizeof(vx_size));
                 if(status != VX_SUCCESS)
@@ -495,8 +495,8 @@ vx_status vxCopy(vx_reference input, vx_reference output)
                     status = VX_ERROR_INVALID_TYPE;
                     break;
                 }
-                vx_size * strides = malloc(sizeof(vx_size) * input_dims_num);
-                vx_size * start = malloc(input_dims_num * sizeof(vx_size));
+                vx_size * strides = (vx_size*)malloc(sizeof(vx_size) * input_dims_num);
+                vx_size * start = (vx_size*)malloc(input_dims_num * sizeof(vx_size));
                 for(vx_size i = 0; i < input_dims_num; i++)
                 {
                     start[i] = 0;
