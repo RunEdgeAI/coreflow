@@ -75,7 +75,7 @@ VX_API_ENTRY vx_user_data_object VX_API_CALL vxCreateUserDataObject(
 
                 if (type_name != nullptr)
                 {
-                    strncpy(user_data_object->type_name, type_name,VX_MAX_REFERENCE_NAME);
+                    strncpy(user_data_object->type_name, type_name, VX_MAX_REFERENCE_NAME);
                 }
 
                 user_data_object->memory.nptrs = 1;
@@ -100,8 +100,8 @@ VX_API_ENTRY vx_user_data_object VX_API_CALL vxCreateUserDataObject(
 
             if(status != (vx_status)VX_SUCCESS)
             {
-    //             user_data_object = (vx_user_data_object)ownGetErrorObject(
-    //                 context, (vx_status)VX_ERROR_INVALID_PARAMETERS);
+                // user_data_object = (vx_user_data_object)ownGetErrorObject(
+                //     context, (vx_status)VX_ERROR_INVALID_PARAMETERS);
             }
         }
     }
@@ -111,8 +111,18 @@ VX_API_ENTRY vx_user_data_object VX_API_CALL vxCreateUserDataObject(
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseUserDataObject(vx_user_data_object *user_data_object)
 {
-    return (*(vx_reference*)user_data_object)->releaseReference(
-        VX_TYPE_USER_DATA_OBJECT, VX_EXTERNAL, nullptr);
+    vx_status status = VX_ERROR_INVALID_REFERENCE;
+
+    if (nullptr != user_data_object)
+    {
+        vx_user_data_object obj = *user_data_object;
+        if (vx_true_e == Reference::isValidReference(obj, VX_TYPE_USER_DATA_OBJECT))
+        {
+            status = obj->releaseReference(VX_TYPE_USER_DATA_OBJECT, VX_EXTERNAL, nullptr);
+        }
+    }
+
+    return status;
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxQueryUserDataObject (
@@ -357,6 +367,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapUserDataObject(vx_user_data_object use
                 }
                 else
                 {
+                    // Log the error if semaphore wait fails
+                    VX_PRINT(VX_ZONE_ERROR, "Failed to acquire semaphore lock\n");
                     status = VX_ERROR_NO_RESOURCES;
                 }
             }

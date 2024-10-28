@@ -497,6 +497,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseKernel(vx_kernel *kernel)
         status = VX_ERROR_INVALID_REFERENCE;
         VX_PRINT(VX_ZONE_ERROR, "Invalid Reference!\n");
     }
+    VX_PRINT(VX_ZONE_API, "%s returned %d\n", __FUNCTION__, status);
     return status;
 }
 

@@ -673,7 +673,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryGraph(vx_graph graph, vx_enum attribut
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseGraph(vx_graph *g)
 {
-    vx_status status = VX_FAILURE;
+    vx_status status = VX_ERROR_INVALID_REFERENCE;
 
     if (nullptr != g)
     {
@@ -1798,7 +1798,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
         VX_PRINT(VX_ZONE_GRAPH,"User Kernel Preprocess Phase! (%d)\n", status);
         VX_PRINT(VX_ZONE_GRAPH,"###########################\n");
 
-        for (n = 0; n <graph->numNodes; n++)
+        for (n = 0; n < graph->numNodes; n++)
         {
             vx_node node = graph->nodes[n];
             if (node->kernel->user_kernel)

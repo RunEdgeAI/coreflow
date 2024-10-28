@@ -63,7 +63,6 @@ Context::Context() : Reference(nullptr, VX_TYPE_CONTEXT, nullptr)
 
 Context::~Context()
 {
-
     vx_uint32 r;
     for (r = 0; r < VX_INT_MAX_REF; r++)
     {
@@ -276,9 +275,23 @@ vx_bool Context::addReference(const std::shared_ptr<Reference>& ref)
 
 vx_bool Context::removeReference(vx_reference ref)
 {
-    vx_bool ret = vx_true_e;
+    vx_bool ret = vx_false_e;
 
-
+    ownSemWait(&lock);
+    // vx_uint32 r;
+    // for (r = 0; r < VX_INT_MAX_REF; r++)
+    // {
+    //     if (reftable[r].get() == ref)
+    //     {
+    //         reftable[r].reset();
+    //         reftable[r] = nullptr;
+    //         ref = nullptr;
+    //         num_references--;
+    //         ownSemPost(&lock);
+            ret = vx_true_e;
+    //     }
+    // }
+    ownSemPost(&lock);
     return ret;
 }
 

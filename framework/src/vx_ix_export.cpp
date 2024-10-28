@@ -12,11 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifdef OPENVX_USE_IX
+#include <cstdlib>
 
-#include <vx_internal.h>
-#include <stdio.h>
 #include <VX/vx_khr_nn.h>
+
+#include "vx_internal.h"
+
+#ifdef OPENVX_USE_IX
 #ifndef VX_IX_USE_IMPORT_AS_KERNEL
 #define VX_IX_USE_IMPORT_AS_KERNEL (VX_ENUM_BASE(VX_ID_KHRONOS, VX_ENUM_IX_USE) + 0x3) /*!< \brief Graph exported as user kernel. */
 #endif /* VX_IX_USE_IMPORT_AS_KERNEL */
@@ -623,7 +625,7 @@ static vx_status exportSinglePixel(VXBinExport *xport, void * base, vx_uint32 p,
             break;
         case VX_DF_IMAGE_UYVY:  /* single plane, export 3 bytes for YUV mapping UY0VY1 -> YUV*/
             {
-                vx_uint8 *pix = vxFormatImagePatchAddress2d(base, 0, 0, addr);
+                vx_uint8 *pix = (vx_uint8*)vxFormatImagePatchAddress2d(base, 0, 0, addr);
                 status = exportVxUint8(xport, pix[1], calcSize);
                 status |= exportVxUint8(xport, pix[0], calcSize);
                 status |= exportVxUint8(xport, pix[2], calcSize);
@@ -631,7 +633,7 @@ static vx_status exportSinglePixel(VXBinExport *xport, void * base, vx_uint32 p,
             break;
         case VX_DF_IMAGE_YUYV:  /* single plane, export 3 bytes for YUV mapping Y0UY1V to YUV */
             {
-                vx_uint8 *pix = vxFormatImagePatchAddress2d(base, 0, 0, addr);
+                vx_uint8 *pix = (vx_uint8*)vxFormatImagePatchAddress2d(base, 0, 0, addr);
                 status = exportVxUint8(xport, pix[0], calcSize);
                 status |= exportVxUint8(xport, pix[1], calcSize);
                 status |= exportVxUint8(xport, pix[3], calcSize);
@@ -640,7 +642,7 @@ static vx_status exportSinglePixel(VXBinExport *xport, void * base, vx_uint32 p,
         case VX_DF_IMAGE_NV12:  /* export 1 byte from 1st plane (Y) and 2 from second */
         case VX_DF_IMAGE_NV21:  /* second plane UV order is different for the two formats */
             {
-                vx_uint8 *pix = vxFormatImagePatchAddress2d(base, 0, 0, addr);
+                vx_uint8 *pix = (vx_uint8*)vxFormatImagePatchAddress2d(base, 0, 0, addr);
                 if (0 == p)
                     status = exportVxUint8(xport, pix[0], calcSize);     /* Y */
                 else if (VX_DF_IMAGE_NV12 == format)
@@ -815,7 +817,7 @@ static vx_status exportImage(VXBinExport *xport, const vx_size n, int calcSize)
 static vx_status exportLUT(VXBinExport *xport, const vx_size i, int calcSize)
 {
     vx_status status = VX_SUCCESS;
-    vx_lut_t *lut = (vx_lut_t *)xport->ref_table[i].ref;
+    vx_lut_t lut = (vx_lut_t)xport->ref_table[i].ref;
     status = exportObjectHeader(xport, i, calcSize);
     status |= exportVxUint32(xport, (vx_uint32)lut->num_items, calcSize);
     status |= exportVxEnum(xport, lut->item_type, calcSize);
@@ -928,7 +930,7 @@ static vx_status exportScalar(VXBinExport *xport, const vx_size i, int calcSize)
      */
     vx_status status = VX_SUCCESS;
     vx_scalar scalar = (vx_scalar)xport->ref_table[i].ref;
-    vx_uint32 item_size = ownSizeOfType(scalar->data_type);
+    vx_uint32 item_size = Reference::sizeOfType(scalar->data_type);
     if (item_size == 0ul)
     {
         for (vx_uint32 ix = 0; ix < VX_INT_MAX_USER_STRUCTS; ++ix)
@@ -1214,7 +1216,7 @@ static vx_status exportObjectArray(VXBinExport *xport, vx_size i, int calcSize)
         vx_image image0 = (vx_image)object_array->items[0];
         vx_tensor tensor = (vx_tensor)image0->parent;
         /* Calculate the start_x and start_y from the memory pointer */
-        div_t divmod = div((int64_t)image0->memory.ptrs[0] - (int64_t)tensor->addr, image0->memory.strides[0][1]);
+        ldiv_t divmod = std::div((long)image0->memory.ptrs[0] - (long)tensor->addr, (long)image0->memory.strides[0][1]);
         rect.start_y = divmod.quot;
         rect.start_x = divmod.rem / (image0->memory.strides[0][1] / tensor->dimensions[0]);
         rect.end_y = rect.start_y + image0->height;
@@ -1225,7 +1227,7 @@ static vx_status exportObjectArray(VXBinExport *xport, vx_size i, int calcSize)
             vx_image image1 = (vx_image)object_array->items[1];
             stride = (image1->memory.ptrs[0] - image0->memory.ptrs[0])/image0->memory.strides[0][2];
         }
-        status |= exportVxUint32(xport, indexOf(xport, &(tensor)), calcSize);
+        status |= exportVxUint32(xport, indexOf(xport, tensor), calcSize);
         status |= exportVxUint32(xport, stride, calcSize);
         status |= exportVxUint32(xport, rect.start_x, calcSize);
         status |= exportVxUint32(xport, rect.start_y, calcSize);

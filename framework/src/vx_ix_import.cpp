@@ -12,10 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifdef OPENVX_USE_IX
-
-#include <vx_internal.h>
 #include <VX/vx_khr_nn.h>
+
+#include "vx_internal.h"
+
+#ifdef OPENVX_USE_IX
 #ifndef VX_IX_USE_IMPORT_AS_KERNEL
 #define VX_IX_USE_IMPORT_AS_KERNEL (VX_ENUM_BASE(VX_ID_KHRONOS, VX_ENUM_IX_USE) + 0x3) /*!< \brief Graph exported as user kernel. */
 #endif /* VX_IX_USE_IMPORT_AS_KERNEL */
@@ -39,8 +40,8 @@ This implementation requires that the exporting and importing implementations ha
 This implementation does not support exports originating from previous versions!
 
 */
-#define DEBUGPRINTF(x,...)
-//#define DEBUGPRINTF printf
+// #define DEBUGPRINTF(x,...)
+#define DEBUGPRINTF printf
 
 /* User kernel that calls a graph */
 static vx_status graph_kernel_validate(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[])
@@ -604,7 +605,7 @@ static vx_status importLUT(vx_context context, const vx_uint8 *ptr, vx_reference
     }
     else /* Just check meta-data */
     {
-        vx_lut_t *lut = (vx_lut_t *)ref_table[n];
+        vx_lut_t lut = (vx_lut_t)ref_table[n];
         if (VX_TYPE_LUT != ref_table[n]->type ||
             lut->num_items != num_items ||
             lut->offset != offset ||
@@ -615,7 +616,7 @@ static vx_status importLUT(vx_context context, const vx_uint8 *ptr, vx_reference
     }
     if (VX_SUCCESS == status && size)
     {   /* read data */
-        vx_lut_t *lut = (vx_lut_t *)ref_table[n];
+        vx_lut_t lut = (vx_lut_t)ref_table[n];
         importBytes(&header, lut->memory.ptrs[0], size);
     }
     return header.curptr ? status : VX_FAILURE;
@@ -924,7 +925,7 @@ static vx_status importScalar(vx_context context, const vx_uint8 *ptr, vx_refere
     }
     if (VX_SUCCESS == status && size)
     {
-        vx_uint8 *data = malloc(size);
+        vx_uint8 *data = (vx_uint8*)malloc(size);
         if (data)
         {
             importBytes(&header, data, size);
@@ -1934,7 +1935,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportObjectsFromMemory(
         if (VX_SUCCESS == status)
         {
             vx_uint32 i;
-            import->createImportInt(context, VX_IMPORT_TYPE_BINARY, numrefs);
+            import = Import::createImportInt(context, VX_IMPORT_TYPE_BINARY, numrefs);
             if (import && VX_TYPE_IMPORT == import->type && import->refs)
             {
                 for (i = 0; i < numrefs; ++i)
