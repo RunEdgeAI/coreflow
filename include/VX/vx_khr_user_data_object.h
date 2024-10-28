@@ -34,9 +34,13 @@ extern "C" {
 /*! \brief The User Data Object. User Data Object is a strongly-typed container for other data structures.
  * \ingroup group_user_data_object
  */
+#ifdef  __cplusplus
 class UserDataObject;
 using vx_user_data_object = UserDataObject*;
-
+#else
+struct UserDataObject;
+typedef struct UserDataObject* vx_user_data_object;
+#endif
 
 /*! \brief The object type enumeration for user data object.
  * \ingroup group_user_data_object
