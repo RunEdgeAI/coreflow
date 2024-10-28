@@ -175,8 +175,11 @@ vx_status Kernel::deinitializeKernel()
 {
     vx_status status = VX_SUCCESS;
 
-    VX_PRINT(VX_ZONE_KERNEL, "Releasing kernel " VX_FMT_REF "\n", (void *)this);
-    status = releaseReference(VX_TYPE_KERNEL, VX_INTERNAL, nullptr);
+    if (internal_count)
+    {
+        VX_PRINT(VX_ZONE_KERNEL, "Releasing kernel " VX_FMT_REF "\n", (void *)this);
+        status = releaseReference(VX_TYPE_KERNEL, VX_INTERNAL, nullptr);
+    }
 
     return status;
 }
@@ -479,25 +482,23 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxGetKernelByEnum(vx_context context, vx_enum
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseKernel(vx_kernel *kernel)
 {
-    vx_status status = VX_SUCCESS;
-    if (kernel && Reference::isValidReference(reinterpret_cast<vx_reference>(*kernel), VX_TYPE_KERNEL) == vx_true_e)
+    vx_status status = VX_ERROR_INVALID_REFERENCE;
+    if (nullptr != kernel)
     {
-        VX_PRINT(VX_ZONE_KERNEL, "Releasing kernel " VX_FMT_REF "\n", (void *)*kernel);
-
-        /* deinitialize kernel object */
-        if ((*kernel)->kernel_object_deinitialize != nullptr)
+        vx_kernel ref = *kernel;
+        if (vx_true_e == Reference::isValidReference(ref, VX_TYPE_KERNEL) == vx_true_e)
         {
-            (*kernel)->kernel_object_deinitialize(*kernel);
-        }
+            VX_PRINT(VX_ZONE_KERNEL, "Releasing kernel " VX_FMT_REF "\n", (void *)ref);
 
-        (*(kernel))->releaseReference(VX_TYPE_KERNEL, VX_EXTERNAL, nullptr);
+            /* deinitialize kernel object */
+            if (ref->kernel_object_deinitialize != nullptr)
+            {
+                ref->kernel_object_deinitialize(ref);
+            }
+
+            status = ref->releaseReference(VX_TYPE_KERNEL, VX_EXTERNAL, nullptr);
+        }
     }
-    else
-    {
-        status = VX_ERROR_INVALID_REFERENCE;
-        VX_PRINT(VX_ZONE_ERROR, "Invalid Reference!\n");
-    }
-    VX_PRINT(VX_ZONE_API, "%s returned %d\n", __FUNCTION__, status);
     return status;
 }
 
