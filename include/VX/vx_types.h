@@ -142,8 +142,13 @@ typedef double   vx_float64;
  * error may be returned from the API.
  * \ingroup group_reference
  */
+#ifdef __cplusplus
 class Reference;
 using vx_reference = Reference*;
+#else
+struct Reference;
+typedef struct Reference* vx_reference;
+#endif
 
 /*! \brief Sets the standard enumeration type size to be a fixed quantity.
  * \details All enumerable fields must use this type as the container to
@@ -173,16 +178,25 @@ typedef uintptr_t vx_map_id;
  * \ingroup group_scalar
  * \extends vx_reference
  */
+#ifdef __cplusplus
 class Scalar;
 using vx_scalar = Scalar*;
+#else
+struct Scalar;
+typedef struct Scalar* vx_scalar;
+#endif
 
 /*! \brief An opaque reference to an image.
  * \see vxCreateImage
  * \ingroup group_image
  * \extends vx_reference
  */
+#ifdef __cplusplus
 class Image;
 using vx_image = Image*;
+#else
+typedef struct Image* vx_image;
+#endif
 
 /*! \brief An opaque reference to the descriptor of a kernel.
  * \see vxGetKernelByName
@@ -190,40 +204,59 @@ using vx_image = Image*;
  * \ingroup group_kernel
  * \extends vx_reference
  */
+#ifdef __cplusplus
 class Kernel;
 using vx_kernel = Kernel*;
+#else
+typedef struct Kernel* vx_kernel;
+#endif
 
 /*! \brief An opaque reference to a single parameter.
  * \see vxGetParameterByIndex
  * \ingroup group_parameter
  * \extends vx_reference
  */
+#ifdef __cplusplus
 class Parameter;
 using vx_parameter = Parameter*;
+#else
+typedef struct Parameter* vx_parameter;
+#endif
 
 /*! \brief An opaque reference to a kernel node.
  * \see vxCreateGenericNode
  * \ingroup group_node
  * \extends vx_reference
  */
+#ifdef __cplusplus
 class Node;
 using vx_node = Node*;
-
+#else
+typedef struct Node* vx_node;
+#endif
 /*! \brief An opaque reference to a graph
  * \see vxCreateGraph
  * \ingroup group_graph
  * \extends vx_reference
  */
+#ifdef __cplusplus
 class Graph;
 using vx_graph = Graph*;
+#else
+typedef struct Graph* vx_graph;
+#endif
 
 /*! \brief An opaque reference to the implementation context.
  * \see vxCreateContext
  * \ingroup group_context
  * \extends vx_reference
  */
+#ifdef __cplusplus
 class Context;
 using vx_context = Context*;
+#else
+typedef struct Context* vx_context;
+#endif
 
 /*! \brief The delay object. This is like a ring buffer of objects that is
  * maintained by the OpenVX implementation.
@@ -231,78 +264,122 @@ using vx_context = Context*;
  * \extends vx_reference
  * \ingroup group_delay
  */
+#ifdef __cplusplus
 class Delay;
 using vx_delay = Delay*;
+#else
+typedef struct Delay* vx_delay;
+#endif
 
 /*! \brief The Look-Up Table (LUT) Object.
  * \extends vx_reference
  * \ingroup group_lut
  */
+#ifdef __cplusplus
 class Array;
 using vx_lut = Array*;
+#else
+typedef struct Array* vx_lut;
+#endif
 
 /*! \brief The Distribution object. This has a user-defined number of bins over
  * a user-defined range (within a uint32_t range).
  * \extends vx_reference
  * \ingroup group_distribution
  */
+#ifdef __cplusplus
 class Distribution;
 using vx_distribution = Distribution*;
+#else
+typedef struct Distribution* vx_distribution;
+#endif
 
 /*! \brief The Matrix Object. An MxN matrix of some unit type.
  * \extends vx_reference
  * \ingroup group_matrix
  */
+#ifdef __cplusplus
 class Matrix;
 using vx_matrix = Matrix*;
+#else
+typedef struct Matrix* vx_matrix;
+#endif
 
 /*! \brief The Image Pyramid object. A set of scaled images.
  * \extends vx_reference
  * \ingroup group_pyramid
  */
+#ifdef __cplusplus
 class Pyramid;
 using vx_pyramid = Pyramid*;
+#else
+typedef struct Pyramid* vx_pyramid;
+#endif
 
 /*! \brief The Threshold Object. A thresholding object contains the types and
  * limit values of the thresholding required.
  * \extends vx_reference
  * \ingroup group_threshold
  */
+#ifdef __cplusplus
 class Threshold;
 using vx_threshold = Threshold*;
+#else
+typedef struct Threshold* vx_threshold;
+#endif
 
 /*! \brief The Convolution Object. A user-defined convolution kernel of MxM elements.
  * \extends vx_reference
  * \ingroup group_convolution
  */
+#ifdef __cplusplus
 class Convolution;
 using vx_convolution = Convolution*;
+#else
+typedef struct Convolution* vx_convolution;
+#endif
 
 /*! \brief The remap table Object. A remap table contains per-pixel mapping of
  * output pixels to input pixels.
  * \ingroup group_remap
  */
+#ifdef __cplusplus
 class Remap;
 using vx_remap = Remap*;
+#else
+typedef struct Remap* vx_remap;
+#endif
 
 /*! \brief The Array Object. Array is a strongly-typed container for other data structures.
  * \ingroup group_array
  */
+#ifdef __cplusplus
 using vx_array = Array*;
+#else
+typedef struct Array* vx_array;
+#endif
 
 /*! \brief The ObjectArray Object. ObjectArray is a strongly-typed container of OpenVX data-objects.
  * \ingroup group_object_array
  */
+#ifdef __cplusplus
 class ObjectArray;
 using vx_object_array = ObjectArray*;
+#else
+typedef struct ObjectArray* vx_object_array;
+#endif
 
  /*! \brief The multidimensional data object (Tensor).
  * \see vxCreateTensor
  * \ingroup group_object_tensor
  * \extends vx_reference
  */
+#ifdef __cplusplus
 class Tensor;
 using vx_tensor = Tensor*;
+#else
+typedef struct Tensor* vx_tensor;
+#endif
 
 /*! \brief A Boolean value.
  * This allows 0 to be FALSE, as it is in C, and any non-zero to be TRUE.
@@ -338,8 +415,12 @@ typedef vx_enum vx_bool;
  * creation time.
  * \ingroup group_user_kernels
  */
+#ifdef __cplusplus
 class MetaFormat;
 using vx_meta_format = MetaFormat*;
+#else
+typedef struct MetaFormat* vx_meta_format;
+#endif
 
 /*! \brief The type enumeration lists all the known types in OpenVX.
  * \ingroup group_basic_features

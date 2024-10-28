@@ -51,8 +51,13 @@ IMPORT
  * by name
  * \ingroup group_import
  */
+#ifdef __cplusplus
 class Import;
 using vx_import = Import*;
+#else
+struct Import;
+typedef struct Import* vx_import;
+#endif
 
 /*! \brief The Object Type Enumeration for import.
  * \ingroup group_import
