@@ -1,6 +1,4 @@
 
-
-
 cc_library(
     name = "tiling",
     srcs = glob([
