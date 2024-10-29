@@ -96,8 +96,8 @@ Context::~Context()
         vx_reference ref = reftable[r].get();
         if (ref)
         {
-            printf("ref removed: ");
-            Reference::printReference(ref); // For debugging
+            // printf("ref removed: ");
+            // Reference::printReference(ref); // For debugging
             reftable[r].reset();
             reftable[r] = nullptr;
             num_references--;

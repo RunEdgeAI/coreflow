@@ -386,16 +386,16 @@ vx_status Reference::releaseReference(vx_enum type,
             vx_uint32 d = 0u;
             vx_destructor_f destructor = special_destructor;
 
-            if (context->removeReference(this) == vx_false_e)
-            {
-                status = VX_ERROR_INVALID_REFERENCE;
-                return status;
-            }
-
             /* if there is a destructor, call it. */
             if (destructor)
             {
                 destructor(this);
+            }
+
+            if (context->removeReference(this) == vx_false_e)
+            {
+                status = VX_ERROR_INVALID_REFERENCE;
+                return status;
             }
 
             VX_PRINT(VX_ZONE_REFERENCE, ">>>> Reference count was zero, destructed object " VX_FMT_REF "\n", this);

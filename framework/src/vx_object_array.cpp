@@ -21,9 +21,11 @@
  PRIVATE INTERFACE
  =============================================================================*/
 
-ObjectArray::ObjectArray(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_OBJECT_ARRAY, scope)
+ObjectArray::ObjectArray(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_OBJECT_ARRAY, scope),
+items(),
+num_items(0),
+item_type()
 {
-
 }
 
 ObjectArray::~ObjectArray()
@@ -318,6 +320,7 @@ vx_object_array ObjectArray::createObjectArray(vx_reference scope, vx_reference 
         if (arr->initObjectArray(exemplar, count) != VX_SUCCESS)
         {
             arr->releaseReference(VX_TYPE_OBJECT_ARRAY, VX_EXTERNAL, nullptr);
+            arr = nullptr;
             // arr = (vx_object_array)ownGetErrorObject(context, VX_ERROR_NO_MEMORY);
         }
     }
