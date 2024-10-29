@@ -1741,7 +1741,7 @@ static vx_bool postprocess_output(vx_graph graph, vx_uint32 n, vx_uint32 p, vx_r
             for (vx_uint32 i = 0; i < meta->dim.object_array.num_items; i++)
             {
                 vx_reference item = vxGetObjectArrayItem(objarr, i);
-                vx_reference itemref = vxGetObjectArrayItem((vx_object_array)vref, i);
+                vx_reference itemref = vxGetObjectArrayItem((vx_object_array)*vref, i);
 
                 if (!postprocess_output_data_type(graph, n, p, &item, &itemref, meta, status, num_errors))
                 {
