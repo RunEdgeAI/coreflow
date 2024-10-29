@@ -975,8 +975,11 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromHandle(vx_context context, vx
 {
     vx_image image = 0;
 
-    // if (ownIsValidImport(memory_type) == vx_false_e)
+    if (Context::isValidImport(memory_type) == vx_false_e)
+    {
+        return image;
         // return (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+    }
 
     image = vxCreateImage(context, addrs[0].dim_x, addrs[0].dim_y, color);
 

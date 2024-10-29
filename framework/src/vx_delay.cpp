@@ -239,8 +239,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseDelay(vx_delay* d)
 }
 
 VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
-                              vx_reference exemplar,
-                              vx_size count)
+                                                vx_reference exemplar,
+                                                vx_size count)
 {
     vx_delay delay = nullptr;
     vx_uint32 t = 0u;
@@ -260,12 +260,12 @@ VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
 
     if (Context::isValidContext(context) == vx_false_e)
     {
-        return 0;
+        return delay;
     }
 
     if (Reference::isValidReference(exemplar) == vx_false_e)
     {
-        return 0;
+        return delay;
         // return (vx_delay)ownGetErrorObject(context, VX_ERROR_INVALID_REFERENCE);
     }
 
@@ -275,6 +275,7 @@ VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
         {
             VX_PRINT(VX_ZONE_ERROR, "Attempted to create delay of invalid object type!\n");
             vxAddLogEntry((vx_reference)context, VX_ERROR_INVALID_REFERENCE, "Attempted to create delay of invalid object type!\n");
+            return delay;
             // return (vx_delay)ownGetErrorObject(context, VX_ERROR_INVALID_REFERENCE);
         }
     }

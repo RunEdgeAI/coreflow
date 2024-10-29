@@ -56,6 +56,8 @@ public:
 
     static vx_bool isValidType(vx_enum type);
 
+    static vx_bool isValidImport(vx_enum type);
+
     vx_status loadTarget(const vx_char* targetName);
 
     vx_status unloadTarget(const vx_char* targetName);

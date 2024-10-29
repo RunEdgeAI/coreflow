@@ -57,7 +57,34 @@ static vx_sem_t global_lock;
 /*****************************************************************************/
 // INTERNAL CONTEXT APIS
 /*****************************************************************************/
-Context::Context() : Reference(nullptr, VX_TYPE_CONTEXT, nullptr)
+Context::Context() : Reference(nullptr, VX_TYPE_CONTEXT, nullptr),
+p_global_lock(nullptr),
+reftable(),
+num_references(0),
+modules(),
+num_modules(0),
+proc(),
+num_kernels(0),
+num_unique_kernels(0),
+num_targets(0),
+targets(),
+priority_targets(),
+log_callback(nullptr),
+log_lock(),
+log_enabled(vx_false_e),
+log_reentrant(vx_false_e),
+perf_enabled(vx_true_e),
+accessors(),
+memory_maps_lock(),
+memory_maps(),
+user_structs(),
+workers(nullptr),
+imm_border(),
+imm_border_policy(),
+next_dynamic_user_kernel_id(0),
+next_dynamic_user_library_id(0),
+imm_target_enum(),
+imm_target_string()
 {
 }
 
@@ -129,6 +156,29 @@ VX_INT_API vx_bool Context::isValidType(vx_enum type)
     }
 
     return ret; /* otherwise, not a valid type */
+}
+
+VX_INT_API vx_bool Context::isValidImport(vx_enum type)
+{
+    vx_bool ret = vx_false_e;
+    switch(type)
+    {
+        case VX_MEMORY_TYPE_HOST:
+            ret = vx_true_e;
+            break;
+#ifdef OPENVX_USE_OPENCL_INTEROP
+        case VX_MEMORY_TYPE_OPENCL_BUFFER:
+            if (single_context && single_context->opencl_context) {
+                ret = vx_true_e;
+            }
+            break;
+#endif
+        case VX_MEMORY_TYPE_NONE:
+        default:
+            ret = vx_false_e;
+            break;
+    }
+    return ret;
 }
 
 vx_status Context::loadTarget(const vx_char* targetName)
@@ -278,19 +328,24 @@ vx_bool Context::removeReference(vx_reference ref)
     vx_bool ret = vx_false_e;
 
     ownSemWait(&lock);
-    // vx_uint32 r;
-    // for (r = 0; r < VX_INT_MAX_REF; r++)
-    // {
-    //     if (reftable[r].get() == ref)
-    //     {
-    //         reftable[r].reset();
-    //         reftable[r] = nullptr;
-    //         ref = nullptr;
-    //         num_references--;
-    //         ownSemPost(&lock);
+    for (vx_uint32 r = 0; r < VX_INT_MAX_REF; r++)
+    {
+        if (reftable[r].get() == ref)
+        {
+            if (0u == ref->totalReferenceCount() &&
+                1u == reftable[r].use_count())
+            {
+                VX_PRINT(VX_ZONE_LOG, "Removing: \n");
+                Reference::printReference(ref); // For debugging
+                // reftable[r] = nullptr;
+            }
+            ref = nullptr;
+            num_references--;
+            ownSemPost(&lock);
             ret = vx_true_e;
-    //     }
-    // }
+            break;
+        }
+    }
     ownSemPost(&lock);
     return ret;
 }
