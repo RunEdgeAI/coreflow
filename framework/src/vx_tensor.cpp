@@ -127,18 +127,22 @@ VX_API_ENTRY vx_tensor VX_API_CALL vxCreateTensor(
     //TODO: add unlikely() for err checks
 
     if (Context::isValidContext(context) == vx_false_e)
+    {
         //TODO: check, do we not need to set the err here
         return tensor;
+    }
 
     if (number_of_dims < 1)
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid dimensions for the tensor.\n");
+        return tensor;
         // return (vx_tensor)ownGetErrorObject((vx_context)context, VX_ERROR_INVALID_DIMENSION);
     }
 
     if (!validFormat(data_type, fixed_point_position))
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid format for the tensor.\n");
+        return tensor;
         // return (vx_tensor)ownGetErrorObject((vx_context)context, VX_ERROR_INVALID_TYPE);
     }
 
@@ -171,22 +175,26 @@ VX_API_ENTRY vx_tensor VX_API_CALL vxCreateTensorFromHandle(vx_context context, 
     if (number_of_dims < 1)
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid dimensions for the tensor.\n");
+        return tensor;
         // return (vx_tensor)ownGetErrorObject((vx_context)context, VX_ERROR_INVALID_DIMENSION);
     }
 
     if (!validFormat(data_type, fixed_point_position))
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid format for the tensor.\n");
+        return tensor;
         // return (vx_tensor)ownGetErrorObject((vx_context)context, VX_ERROR_INVALID_TYPE);
     }
 
-    // if (ownIsValidImport(memory_type) == vx_false_e)
+    if (Context::isValidImport(memory_type) == vx_false_e)
     {
+        return tensor;
         // return (vx_tensor)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
     }
 
     if (stride[0] != Reference::sizeOfType(data_type))
     {
+        return tensor;
         // return (vx_tensor)ownGetErrorObject(context, VX_ERROR_INVALID_VALUE);
     }
 
