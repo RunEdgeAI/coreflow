@@ -18,7 +18,6 @@ cc_library(
         "//targets/extras:extras",
     ],
     copts = [
-        "-DEXPERIMENTAL_USE_OPENCL",
         "-DCL_VERSION_1_2"
     ],
     linkopts = [

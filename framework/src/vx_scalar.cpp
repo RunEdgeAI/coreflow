@@ -351,7 +351,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyScalar(vx_scalar scalar, void* user_ptr
         {
             return VX_ERROR_INVALID_PARAMETERS;
         }
-        user_ptr = clEnqueueMapBuffer(scalar->base.context->opencl_command_queue,
+        user_ptr = clEnqueueMapBuffer(scalar->context->opencl_command_queue,
             opencl_buf, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, size,
             0, nullptr, nullptr, &cerr);
         VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyScalar: clEnqueueMapBuffer(%p,%d) => %p (%d)\n",
@@ -377,9 +377,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyScalar(vx_scalar scalar, void* user_ptr
 #ifdef OPENVX_USE_OPENCL_INTEROP
     if (user_mem_type_given == VX_MEMORY_TYPE_OPENCL_BUFFER)
     {
-        clEnqueueUnmapMemObject(scalar->base.context->opencl_command_queue,
+        clEnqueueUnmapMemObject(scalar->context->opencl_command_queue,
             (cl_mem)user_ptr_given, user_ptr, 0, nullptr, nullptr);
-        clFinish(scalar->base.context->opencl_command_queue);
+        clFinish(scalar->context->opencl_command_queue);
     }
 #endif
 
