@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifdef OPENVX_CONFORMANCE_NNEF_IMPORT
-
 #include "cnnef.h"
 #include "vx_kernel.h"
+
+#ifdef OPENVX_CONFORMANCE_NNEF_IMPORT
 
 #define MAXLEN 512
 
@@ -96,7 +96,7 @@ static vx_status VX_CALLBACK vxNNEFDeinitializer(vx_node node, const vx_referenc
 
     for (i = 0; i < num; i++)
     {
-        ownReleaseMetaFormat(&meta[i]);
+        vxReleaseMetaFormat(&meta[i]);
     }
     // destroy NNEF graph in node
     nnef_graph_release(node->attributes.localDataPtr);
@@ -269,7 +269,6 @@ static vx_kernel CreateNNEFKernel(vx_context context, vx_int32 input_num, vx_int
 static vx_status vxSetMetaFormatNNEF(void *nnef_graph, vx_meta_format meta, const vx_char * tensor_name)
 {
     vx_status status = VX_SUCCESS;
-    vx_int32 i = 0;
 
     vx_uint8 fixed_point_pos_out = 0;
     const vx_char *tensor_type_name = NULL;
@@ -345,7 +344,7 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxImportKernelFromURL(vx_context context, con
     nnef_graph_input_names(nnef_graph, inputs);
     nnef_graph_output_names(nnef_graph, outputs);
 
-    sprintf(kernel_name, "nnef.import.%d", counter++);
+    snprintf(kernel_name, MAXLEN, "nnef.import.%d", counter++);
 
     kernel = CreateNNEFKernel(context, input_num, output_num, kernel_name);
 
@@ -357,7 +356,7 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxImportKernelFromURL(vx_context context, con
 
     for (i = 0; i < num; i++)
     {
-        meta[i] = ownCreateMetaFormat(context);
+        meta[i] = vxCreateMetaFormat(context);
         meta[i]->type = VX_TYPE_TENSOR;
     }
 

@@ -21,5 +21,8 @@ cc_library(
     linkopts = [
         "-lxml2"
     ],
+    deps = [
+        "//kernels/NNEF-Tools/parser/cpp:nnef"
+    ],
     visibility = ["//visibility:public"],
 )
