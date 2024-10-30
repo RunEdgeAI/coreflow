@@ -1,5 +1,5 @@
 # vscode files
-**/.vscode/**
+**/.vscode
 
 # Prerequisites
 *.d
@@ -37,3 +37,15 @@
 # Bazel ignores
 **/bazel-*
 MODULE.bazel*
+
+# Python files
+**/.venv
+**/*.pyc
+**/__pycache__
+**/.idea
+**/dist
+**/build
+**/nnef.egg-info
+**/nnef_tools.egg-info
+**/_models
+**/out
