@@ -317,7 +317,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyRemapPatch(vx_remap remap,
                                                     vx_enum usage,
                                                     vx_enum user_mem_type)
 {
-    vx_status status = VX_FAILURE;
+    vx_status status = VX_SUCCESS;
     vx_uint32 start_x = rect ? rect->start_x : 0u;
     vx_uint32 start_y = rect ? rect->start_y : 0u;
     vx_uint32 end_x = rect ? rect->end_x : 0u;
@@ -330,134 +330,124 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyRemapPatch(vx_remap remap,
          (rect == nullptr) || (remap == nullptr) || (user_ptr == nullptr) )
     {
         status = VX_ERROR_INVALID_PARAMETERS;
-        goto exit;
     }
 
     /* more bad parameters */
-    if( (user_stride_y < sizeof(vx_coordinates2df_t)*(rect->end_x - rect->start_x)) ||
-        (user_coordinate_type != VX_TYPE_COORDINATES2DF))
+    if ( VX_SUCCESS == status &&
+        ((user_stride_y < sizeof(vx_coordinates2df_t)*(rect->end_x - rect->start_x)) ||
+        (user_coordinate_type != VX_TYPE_COORDINATES2DF)))
     {
         status = VX_ERROR_INVALID_PARAMETERS;
-        goto exit;
     }
 
     /* more bad parameters */
-    if (user_mem_type != VX_MEMORY_TYPE_HOST && user_mem_type != VX_MEMORY_TYPE_NONE)
+    if (VX_SUCCESS == status &&
+        user_mem_type != VX_MEMORY_TYPE_HOST && user_mem_type != VX_MEMORY_TYPE_NONE)
     {
         status = VX_ERROR_INVALID_PARAMETERS;
-        goto exit;
     }
 
     /* bad references */
-    if ( ownIsValidRemap(remap) == vx_false_e )
+    if (VX_SUCCESS == status &&
+        ownIsValidRemap(remap) == vx_false_e )
     {
         status = VX_ERROR_INVALID_REFERENCE;
-        goto exit;
     }
 
     /* determine if virtual before checking for memory */
-    if (remap->is_virtual == vx_true_e)
+    if (VX_SUCCESS == status &&
+        remap->is_virtual == vx_true_e)
     {
         if (remap->is_accessible == vx_false_e)
         {
             /* User tried to access a "virtual" remap. */
             VX_PRINT(VX_ZONE_ERROR, "Can not access a virtual remap\n");
             status = VX_ERROR_OPTIMIZED_AWAY;
-            goto exit;
         }
         /* framework trying to access a virtual remap, this is ok. */
     }
 
     /* more bad parameters */
-    if (zero_area == vx_false_e &&
+    if (VX_SUCCESS == status &&
+        zero_area == vx_false_e &&
         ((0 >= remap->memory.nptrs) ||
          (start_x >= end_x) ||
          (start_y >= end_y)))
     {
         status = VX_ERROR_INVALID_PARAMETERS;
-        goto exit;
     }
 
-#ifdef OPENVX_USE_OPENCL_INTEROP
-    void * user_ptr_given = user_ptr;
-    vx_enum user_mem_type_given = user_mem_type;
-    if (user_mem_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
+    if (VX_SUCCESS == status)
     {
-        // get ptr from OpenCL buffer for HOST
-        size_t size = 0;
-        cl_mem opencl_buf = (cl_mem)user_ptr;
-        cl_int cerr = clGetMemObjectInfo(opencl_buf, CL_MEM_SIZE, sizeof(size_t), &size, nullptr);
-        VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyRemap: clGetMemObjectInfo(%p) => (%d)\n",
-            opencl_buf, cerr);
-        if (cerr != CL_SUCCESS)
+#ifdef OPENVX_USE_OPENCL_INTEROP
+        void * user_ptr_given = user_ptr;
+        vx_enum user_mem_type_given = user_mem_type;
+        if (user_mem_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
         {
-            return VX_ERROR_INVALID_PARAMETERS;
+            // get ptr from OpenCL buffer for HOST
+            size_t size = 0;
+            cl_mem opencl_buf = (cl_mem)user_ptr;
+            cl_int cerr = clGetMemObjectInfo(opencl_buf, CL_MEM_SIZE, sizeof(size_t), &size, nullptr);
+            VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyRemap: clGetMemObjectInfo(%p) => (%d)\n",
+                opencl_buf, cerr);
+            if (cerr != CL_SUCCESS)
+            {
+                return VX_ERROR_INVALID_PARAMETERS;
+            }
+            user_ptr = clEnqueueMapBuffer(remap->context->opencl_command_queue,
+                opencl_buf, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, size,
+                0, nullptr, nullptr, &cerr);
+            VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyRemap: clEnqueueMapBuffer(%p,%d) => %p (%d)\n",
+                opencl_buf, (int)size, user_ptr, cerr);
+            if (cerr != CL_SUCCESS)
+            {
+                return VX_ERROR_INVALID_PARAMETERS;
+            }
+            user_mem_type = VX_MEMORY_TYPE_HOST;
         }
-        user_ptr = clEnqueueMapBuffer(remap->context->opencl_command_queue,
-            opencl_buf, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, size,
-            0, nullptr, nullptr, &cerr);
-        VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyRemap: clEnqueueMapBuffer(%p,%d) => %p (%d)\n",
-            opencl_buf, (int)size, user_ptr, cerr);
-        if (cerr != CL_SUCCESS)
-        {
-            return VX_ERROR_INVALID_PARAMETERS;
-        }
-        user_mem_type = VX_MEMORY_TYPE_HOST;
-    }
 #endif
 
-    if (usage == VX_READ_ONLY)
-    {
-        /* Copy from remap (READ) mode */
-        vx_coordinates2df_t *ptr = (vx_coordinates2df_t*)user_ptr;
-        vx_uint32 i;
-        vx_uint32 j;
-        for (i = start_y; i < end_y; i++)
+        if (usage == VX_READ_ONLY)
         {
-            for (j = start_x; j < end_x; j++)
+            /* Copy from remap (READ) mode */
+            vx_coordinates2df_t *ptr = (vx_coordinates2df_t*)user_ptr;
+            vx_uint32 i;
+            vx_uint32 j;
+            for (i = start_y; i < end_y; i++)
             {
-                vx_coordinates2df_t *coord_ptr = &(ptr[i * stride + j]);
-                status = vxGetCoordValue(remap, j, i, &coord_ptr->x, &coord_ptr->y);
-                if(status != VX_SUCCESS)
+                for (j = start_x; j < end_x; j++)
                 {
-                    goto exit;
+                    vx_coordinates2df_t *coord_ptr = &(ptr[i * stride + j]);
+                    status = vxGetCoordValue(remap, j, i, &coord_ptr->x, &coord_ptr->y);
                 }
-
             }
         }
-    }
-    else
-    {
-        /* Copy to remap (WRITE) mode */
-        vx_coordinates2df_t *ptr = (vx_coordinates2df_t*)user_ptr;
-        vx_uint32 i;
-        vx_uint32 j;
-        for (i = start_y; i < end_y; i++)
+        else
         {
-            for (j = start_x; j < end_x; j++)
+            /* Copy to remap (WRITE) mode */
+            vx_coordinates2df_t *ptr = (vx_coordinates2df_t*)user_ptr;
+            vx_uint32 i;
+            vx_uint32 j;
+            for (i = start_y; i < end_y; i++)
             {
-                vx_coordinates2df_t *coord_ptr = &(ptr[i * stride + j]);
-                status = vxSetCoordValue(remap, j, i, coord_ptr->x, coord_ptr->y);
-                if(status != VX_SUCCESS)
+                for (j = start_x; j < end_x; j++)
                 {
-                    goto exit;
+                    vx_coordinates2df_t *coord_ptr = &(ptr[i * stride + j]);
+                    status = vxSetCoordValue(remap, j, i, coord_ptr->x, coord_ptr->y);
                 }
-
             }
         }
-    }
-    status = VX_SUCCESS;
 
 #ifdef OPENVX_USE_OPENCL_INTEROP
-    if (user_mem_type_given == VX_MEMORY_TYPE_OPENCL_BUFFER)
-    {
-        clEnqueueUnmapMemObject(remap->context->opencl_command_queue,
-            (cl_mem)user_ptr_given, user_ptr, 0, nullptr, nullptr);
-        clFinish(remap->context->opencl_command_queue);
-    }
+        if (VX_SUCCESS == status &&
+            user_mem_type_given == VX_MEMORY_TYPE_OPENCL_BUFFER)
+        {
+            clEnqueueUnmapMemObject(remap->context->opencl_command_queue,
+                (cl_mem)user_ptr_given, user_ptr, 0, nullptr, nullptr);
+            clFinish(remap->context->opencl_command_queue);
+        }
 #endif
-
-exit:
+    }
 
     VX_PRINT(VX_ZONE_API, "returned %d\n", status);
     return status;
@@ -484,44 +474,43 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapRemapPatch(vx_remap remap,
     if ( (rect == nullptr) || (map_id == nullptr) || (remap == nullptr) || (ptr == nullptr) )
     {
         status = VX_ERROR_INVALID_PARAMETERS;
-        goto exit;
     }
 
     /* more bad parameters */
-    if(coordinate_type != VX_TYPE_COORDINATES2DF)
+    if (VX_SUCCESS == status &&
+        coordinate_type != VX_TYPE_COORDINATES2DF)
     {
         status = VX_ERROR_INVALID_PARAMETERS;
-        goto exit;
     }
 
     /* bad references */
-    if (ownIsValidRemap(remap) == vx_false_e)
+    if (VX_SUCCESS == status &&
+        ownIsValidRemap(remap) == vx_false_e)
     {
         status = VX_ERROR_INVALID_REFERENCE;
-        goto exit;
     }
 
     /* determine if virtual before checking for memory */
-    if (remap->is_virtual == vx_true_e)
+    if (VX_SUCCESS == status &&
+        remap->is_virtual == vx_true_e)
     {
         if (remap->is_accessible == vx_false_e)
         {
             /* User tried to access a "virtual" remap. */
             VX_PRINT(VX_ZONE_ERROR, "Can not access a virtual remap\n");
             status = VX_ERROR_OPTIMIZED_AWAY;
-            goto exit;
         }
         /* framework trying to access a virtual remap, this is ok. */
     }
 
     /* more bad parameters */
-    if (zero_area == vx_false_e &&
+    if (VX_SUCCESS == status &&
+        zero_area == vx_false_e &&
         ((0 >= remap->memory.nptrs) ||
         (start_x >= end_x) ||
         (start_y >= end_y)))
     {
         status = VX_ERROR_INVALID_PARAMETERS;
-        goto exit;
     }
 
 #ifdef OPENVX_USE_OPENCL_INTEROP
@@ -563,23 +552,19 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapRemapPatch(vx_remap remap,
                         {
                             vx_coordinates2df_t *coord_ptr = &(buf_ptr[i * stride + j]);
                             status = vxGetCoordValue(remap, j, i, &coord_ptr->x, &coord_ptr->y);
-                            if(status != VX_SUCCESS)
-                            {
-                                goto exit;
-                            }
                         }
                     }
 
-                    *ptr = buf;
-                    remap->incrementReference(VX_EXTERNAL);
+                    if (VX_SUCCESS == status)
+                    {
+                        *ptr = buf;
+                        remap->incrementReference(VX_EXTERNAL);
+                    }
                     ownSemPost(&remap->memory.locks[0]);
-
-                    status = VX_SUCCESS;
                 }
                 else
                 {
                     status = VX_ERROR_NO_RESOURCES;
-                    goto exit;
                 }
             }
             else
@@ -588,42 +573,39 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapRemapPatch(vx_remap remap,
                 *stride_y = user_stride_y;
                 *ptr = buf;
                 remap->incrementReference(VX_EXTERNAL);
-                status = VX_SUCCESS;
             }
         }
         else
         {
             status = VX_FAILURE;
-            goto exit;
         }
-    }
 
 #ifdef OPENVX_USE_OPENCL_INTEROP
-    if ((status == VX_SUCCESS) && remap->context->opencl_context &&
-        (mem_type_requested == VX_MEMORY_TYPE_OPENCL_BUFFER) &&
-        (size > 0) && ptr && *ptr)
-    {
-        /* create OpenCL buffer using the host allocated pointer */
-        cl_int cerr = 0;
-        cl_mem opencl_buf = clCreateBuffer(remap->context->opencl_context,
-            CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-            size, *ptr, &cerr);
-        VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxMapRemap: clCreateBuffer(%u) => %p (%d)\n",
-            (vx_uint32)size, opencl_buf, cerr);
-        if (cerr == CL_SUCCESS)
+        if ((status == VX_SUCCESS) &&
+            remap->context->opencl_context &&
+            (mem_type_requested == VX_MEMORY_TYPE_OPENCL_BUFFER) &&
+            (size > 0) && ptr && *ptr)
         {
-            remap->context->memory_maps[*map_id].opencl_buf = opencl_buf;
-            *ptr = opencl_buf;
+            /* create OpenCL buffer using the host allocated pointer */
+            cl_int cerr = 0;
+            cl_mem opencl_buf = clCreateBuffer(remap->context->opencl_context,
+                CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
+                size, *ptr, &cerr);
+            VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxMapRemap: clCreateBuffer(%u) => %p (%d)\n",
+                (vx_uint32)size, opencl_buf, cerr);
+            if (cerr == CL_SUCCESS)
+            {
+                remap->context->memory_maps[*map_id].opencl_buf = opencl_buf;
+                *ptr = opencl_buf;
+            }
+            else
+            {
+                status = VX_FAILURE;
+            }
         }
-        else
-        {
-            status = VX_FAILURE;
-        }
+#endif
     }
 
-#endif
-
-exit:
     VX_PRINT(VX_ZONE_API, "return %d\n", status);
     return status;
 }

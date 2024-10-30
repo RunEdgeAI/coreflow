@@ -929,7 +929,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyArrayRange(vx_array arr, vx_size start,
         {
             return VX_ERROR_INVALID_PARAMETERS;
         }
-        ptr = clEnqueueMapBuffer(context->opencl_command_queue,
+        ptr = clEnqueueMapBuffer(arr->context->opencl_command_queue,
             opencl_buf, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, size,
             0, nullptr, nullptr, &cerr);
         VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyArrayRange: clEnqueueMapBuffer(%p,%d) => %p (%d)\n",
@@ -947,9 +947,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyArrayRange(vx_array arr, vx_size start,
 #ifdef OPENVX_USE_OPENCL_INTEROP
     if (mem_type_given == VX_MEMORY_TYPE_OPENCL_BUFFER)
     {
-        clEnqueueUnmapMemObject(context->opencl_command_queue,
+        clEnqueueUnmapMemObject(arr->context->opencl_command_queue,
             (cl_mem)ptr_given, ptr, 0, nullptr, nullptr);
-        clFinish(context->opencl_command_queue);
+        clFinish(arr->context->opencl_command_queue);
     }
 #endif
 
@@ -979,20 +979,20 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapArrayRange(vx_array arr, vx_size start, 
 
 #ifdef OPENVX_USE_OPENCL_INTEROP
     vx_size size = (end - start) * *stride;
-    if ((status == VX_SUCCESS) && context->opencl_context &&
+    if ((status == VX_SUCCESS) && arr->context->opencl_context &&
         (mem_type_requested == VX_MEMORY_TYPE_OPENCL_BUFFER) &&
         (size > 0) && ptr && *ptr)
     {
         /* create OpenCL buffer using the host allocated pointer */
         cl_int cerr = 0;
-        cl_mem opencl_buf = clCreateBuffer(context->opencl_context,
+        cl_mem opencl_buf = clCreateBuffer(arr->context->opencl_context,
             CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
             size, *ptr, &cerr);
         VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxMapArrayRange: clCreateBuffer(%u) => %p (%d)\n",
             (vx_uint32)size, opencl_buf, cerr);
         if (cerr == CL_SUCCESS)
         {
-            context->memory_maps[*map_id].opencl_buf = opencl_buf;
+            arr->context->memory_maps[*map_id].opencl_buf = opencl_buf;
             *ptr = opencl_buf;
         }
         else
@@ -1016,18 +1016,18 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapArrayRange(vx_array arr, vx_map_id map
     }
 
 #ifdef OPENVX_USE_OPENCL_INTEROP
-    if (context->opencl_context &&
-        context->memory_maps[map_id].opencl_buf &&
-        context->memory_maps[map_id].ptr)
+    if (arr->context->opencl_context &&
+        arr->context->memory_maps[map_id].opencl_buf &&
+        arr->context->memory_maps[map_id].ptr)
     {
-        clEnqueueUnmapMemObject(context->opencl_command_queue,
-            context->memory_maps[map_id].opencl_buf,
-            context->memory_maps[map_id].ptr, 0, nullptr, nullptr);
-        clFinish(context->opencl_command_queue);
-        cl_int cerr = clReleaseMemObject(context->memory_maps[map_id].opencl_buf);
+        clEnqueueUnmapMemObject(arr->context->opencl_command_queue,
+            arr->context->memory_maps[map_id].opencl_buf,
+            arr->context->memory_maps[map_id].ptr, 0, nullptr, nullptr);
+        clFinish(arr->context->opencl_command_queue);
+        cl_int cerr = clReleaseMemObject(arr->context->memory_maps[map_id].opencl_buf);
         VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxUnmapArrayRange: clReleaseMemObject(%p) => (%d)\n",
-            context->memory_maps[map_id].opencl_buf, cerr);
-        context->memory_maps[map_id].opencl_buf = nullptr;
+            arr->context->memory_maps[map_id].opencl_buf, cerr);
+        arr->context->memory_maps[map_id].opencl_buf = nullptr;
     }
 #endif
 

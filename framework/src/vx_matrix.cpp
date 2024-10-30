@@ -365,7 +365,7 @@ vx_status VX_API_CALL vxCopyMatrix(vx_matrix matrix, void *ptr, vx_enum usage, v
                 {
                     return VX_ERROR_INVALID_PARAMETERS;
                 }
-                ptr = clEnqueueMapBuffer(matrix.context->opencl_command_queue,
+                ptr = clEnqueueMapBuffer(matrix->context->opencl_command_queue,
                     opencl_buf, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, size,
                     0, nullptr, nullptr, &cerr);
                 VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyMatrix: clEnqueueMapBuffer(%p,%d) => %p (%d)\n",
@@ -412,9 +412,9 @@ vx_status VX_API_CALL vxCopyMatrix(vx_matrix matrix, void *ptr, vx_enum usage, v
 #ifdef OPENVX_USE_OPENCL_INTEROP
             if (mem_type_given == VX_MEMORY_TYPE_OPENCL_BUFFER)
             {
-                clEnqueueUnmapMemObject(matrix.context->opencl_command_queue,
+                clEnqueueUnmapMemObject(matrix->context->opencl_command_queue,
                     (cl_mem)ptr_given, ptr, 0, nullptr, nullptr);
-                clFinish(matrix.context->opencl_command_queue);
+                clFinish(matrix->context->opencl_command_queue);
             }
 #endif
         }
