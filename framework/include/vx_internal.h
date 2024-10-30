@@ -240,15 +240,15 @@
 
 #if defined(_WIN32) && !defined(__GNUC__)
 #define VX_INLINE _inline
-//#define VX_FMT_TIME   "%I64d"    // Show the perf stats in seconds.
+// #define VX_FMT_TIME   "%I64d"    // Show the perf stats in seconds.
 #define VX_FMT_TIME   "%.3Lf"    // Show the perf stats in milliseconds.
 #else
 #define VX_INLINE inline
 #if (defined(__x86_64) || defined(__amd64)) && !defined(__APPLE__) // 64 bit
-//#define VX_FMT_TIME   "%lu"      // Show the perf stats in seconds.
+// #define VX_FMT_TIME   "%lu"      // Show the perf stats in seconds.
 #define VX_FMT_TIME   "%.3f"     // Show the perf stats in milliseconds.
 #else
-//#define VX_FMT_TIME    "%llu"    // Show the perf stats in seconds.
+// #define VX_FMT_TIME    "%llu"    // Show the perf stats in seconds.
 #define VX_FMT_TIME   "%.3f"     // Show the perf stats in milliseconds.
 #endif
 #endif
@@ -310,12 +310,12 @@ typedef void *vx_symbol_t;
 /*! A MacOSX semaphore wrapper.
  * \ingroup group_int_osal
  */
-typedef struct _vx_sem_t
+typedef struct vx_sem_t
 {
     pthread_cond_t cond;
     pthread_mutex_t mutex;
     int count;
-} vx_sem_t;
+};
 #else
 /*! A POSIX semaphore wrapper
  * \ingroup group_int_osal
@@ -333,13 +333,13 @@ typedef void * (*pthread_f )(void *);
 /*! A POSIX event type
  * \ingroup group_int_osal
  */
-typedef struct _vx_internal_event_t {
+typedef struct vx_internal_event_t {
     vx_bool             autoreset;   /*!< Indicates whether the event will auto-reset after signalling */
     vx_bool             set;         /*!< The current event value */
     pthread_cond_t     cond;        /*!< The PThread Condition */
     pthread_condattr_t attr;        /*!< The PThread Condition Attribute */
     pthread_mutex_t    mutex;       /*!< The PThread Mutex */
-} vx_internal_event_t;
+};
 
 #define FILE_JOINER "/"
 #elif defined(_WIN32) || defined(UNDER_CE)
@@ -380,16 +380,16 @@ typedef void (*vx_destructor_f)(vx_reference ref);
 /*! \brief The data object for queues.
  * \ingroup group_int_osal
  */
-typedef struct _vx_value_set_t {
+typedef struct vx_value_set_t {
     vx_value_t v1;
     vx_value_t v2;
     vx_value_t v3;
-} vx_value_set_t;
+};
 
 /*! \brief The queue object.
  * \ingroup group_int_osal
  */
-typedef struct _vx_queue_t {
+typedef struct vx_queue_t {
     vx_value_set_t *data[VX_INT_MAX_QUEUE_DEPTH];
     vx_int32 start_index;
     vx_int32 end_index;
@@ -397,21 +397,21 @@ typedef struct _vx_queue_t {
     vx_internal_event_t readEvent;
     vx_internal_event_t writeEvent;
     vx_bool popped;
-} vx_queue_t;
+};
 
 /*! \brief The processor structure which contains the graph queue.
  * \ingroup group_int_context
  */
-typedef struct _vx_processor_t {
+typedef struct vx_processor_t {
     vx_queue_t input;
     vx_queue_t output;
     vx_thread_t thread;
     vx_bool running;
-} vx_processor_t;
+};
 
 // forward declarations
-struct _vx_threadpool_t;
-struct _vx_threadpool_worker_t;
+struct vx_threadpool_t;
+struct vx_threadpool_worker_t;
 class Target;
 using vx_target = Target*;
 
@@ -421,12 +421,12 @@ using vx_target = Target*;
  * error.
  * \ingroup group_threadpools
  */
-typedef vx_bool (*vx_threadpool_f)(struct _vx_threadpool_worker_t *worker);
+typedef vx_bool (*vx_threadpool_f)(struct vx_threadpool_worker_t *worker);
 
 /*! \brief The structure given to each threadpool worker during execution.
  * \ingroup group_int_osal
  */
-typedef struct _vx_threadpool_worker_t {
+typedef struct vx_threadpool_worker_t {
     /*! \brief The work queue */
     vx_queue_t *queue;
     /*! \brief The handle to the worker thread */
@@ -442,15 +442,15 @@ typedef struct _vx_threadpool_worker_t {
     /*! \brief The data information from the client */
     vx_value_set_t *data;
     /*! \brief Pointer to the top level structure. */
-    struct _vx_threadpool_t *pool;
+    struct vx_threadpool_t *pool;
     /*! \brief Performance capture variable. */
     vx_perf_t perf;
-} vx_threadpool_worker_t;
+};
 
 /*! \brief The threadpool tracking structure
  * \ingroup group_int_osal
  */
-typedef struct _vx_threadpool_t {
+typedef struct vx_threadpool_t {
     /*! \brief The number of threads in the pool */
     uint32_t numWorkers;
     /*! \brief The maximum number of threads in the queue */
@@ -467,43 +467,43 @@ typedef struct _vx_threadpool_t {
     vx_sem_t sem;
     /*! \brief The event which indicates that all work is completed */
     vx_internal_event_t completed;
-} vx_threadpool_t;
+};
 
 /*! \brief The work item to distribute across the threadpools
  * \ingroup group_int_osal
  */
-typedef struct _vx_work_t {
+typedef struct vx_work_t {
     /*! \brief The target to execute on */
     vx_target target;
     /*! \brief The node to execute */
     vx_node node;
     /*! \brief The resulting action */
     vx_enum action;
-} vx_work_t;
+};
 
 /*! \brief An internal enum for notating which sort of reference type we need.
  * \ingroup group_int_type
  */
-typedef enum _vx_reftype_e {
+typedef enum vx_reftype_e {
     VX_INTERNAL = 1,
     VX_EXTERNAL = 2,
     VX_BOTH = 3,
-} vx_reftype_e;
+};
 
 /*! \brief The internal representation of the error object.
  * \ingroup group_int_error
  */
-typedef struct _vx_error {
+typedef struct vx_error_t {
     /*! \brief The "base" reference object. */
     vx_reference base;
     /*! \brief The specific error code contained in this object. */
     vx_status status;
-} vx_error_t;
+};
 
 /*! \brief The internal representation of the attributes associated with a run-time parameter.
  * \ingroup group_int_kernel
  */
-typedef struct _vx_signature_t {
+typedef struct vx_signature_t {
     /*! \brief The array of directions */
     vx_enum        directions[VX_INT_MAX_PARAMS];
     /*! \brief The array of types */
@@ -515,12 +515,12 @@ typedef struct _vx_signature_t {
     /*! \brief The array of meta_formats (if applicable) */
     vx_meta_format meta_formats[VX_INT_MAX_PARAMS];
 
-} vx_signature_t;
+};
 
 /*! \brief The kernel attributes structure.
  * \ingroup group_int_kernel
  */
-typedef struct _vx_kernel_attr_t {
+typedef struct vx_kernel_attr_t {
     /*! \brief The local data size for this kernel */
     vx_size       localDataSize;
     /*! \brief The local data pointer for this kernel */
@@ -536,7 +536,7 @@ typedef struct _vx_kernel_attr_t {
 #ifdef OPENVX_USE_OPENCL_INTEROP
     vx_bool opencl_access;
 #endif
-} vx_kernel_attr_t;
+};
 
 /*!
 * \brief The pointer to the kernel object deinitializer.
@@ -624,7 +624,7 @@ typedef vx_kernel (*vx_target_addkernel_f)(vx_target target,
 /*! \brief The structure which holds all the target interface function pointers.
  * \ingroup group_int_target
  */
-typedef struct _vx_target_funcs_t {
+typedef struct vx_target_funcs_t {
     /*! \brief Target initialization function */
     vx_target_init_f     init;
     /*! \brief Target deinitialization function */
@@ -637,7 +637,7 @@ typedef struct _vx_target_funcs_t {
     vx_target_verify_f   verify;
     /*! \brief Target function to add a kernel */
     vx_target_addkernel_f addkernel;
-} vx_target_funcs_t;
+};
 
 enum vx_ext_target_type_e {
     VX_TYPE_TARGET = 0x816,/*!< \brief A <tt>\ref vx_target</tt> */
@@ -673,7 +673,7 @@ enum vx_target_priority_e {
 /*! \brief The tracking structure for a module.
  * \ingroup group_int_context
  */
-typedef struct _vx_module_t {
+typedef struct vx_module_t {
     /*! \brief The name of the module. */
     vx_char             name[VX_INT_MAX_PATH];
     /*! \brief The module handle */
@@ -682,12 +682,12 @@ typedef struct _vx_module_t {
     vx_uint32 ref_count;
     /*! \brief The module lock which is used to protect access to "in-fly" data. */
     vx_sem_t lock;
-} vx_module_t;
+};
 
 /*! \brief The framework's internal-external memory tracking structure.
  * \ingroup group_int_context.
  */
-typedef struct _vx_external_t {
+typedef struct vx_external_t {
     /*! \brief The pointer associated with the reference. */
     void *ptr;
     /*! \brief The reference being accessed */
@@ -700,9 +700,9 @@ typedef struct _vx_external_t {
     vx_bool used;
     /*! \brief Extra data attached to the accessor */
     void *extra_data;
-} vx_external_t;
+};
 
-typedef union _vx_memory_map_extra
+typedef union vx_memory_map_extra
 {
     struct
     {
@@ -722,12 +722,12 @@ typedef union _vx_memory_map_extra
         vx_size stride[VX_MAX_TENSOR_DIMENSIONS];
         vx_size number_of_dims;
     } tensor_data;
-} vx_memory_map_extra;
+};
 
 /*! \brief The framework's mapping memory tracking structure.
  * \ingroup group_int_context.
  */
-typedef struct _vx_memory_map_t
+typedef struct vx_memory_map_t
 {
     /*! \brief Indicates if this entry is being used */
     vx_bool used;
@@ -746,12 +746,12 @@ typedef struct _vx_memory_map_t
 #ifdef OPENVX_USE_OPENCL_INTEROP
     cl_mem opencl_buf;
 #endif
-} vx_memory_map_t;
+};
 
 /*! \brief A data structure used to track the various costs which could being optimized.
  *
  */
-typedef struct _vx_cost_factors_t {
+typedef struct vx_cost_factors_t {
     /*! \brief [computed] A measure of the bandwidth due to processing data */
     vx_size  bandwidth;
     /*! \brief [estimate] The power factor */
@@ -760,7 +760,7 @@ typedef struct _vx_cost_factors_t {
     vx_float32 cycles_per_unit;
     /*! \brief [estimate] The overhead latency due to IPC, etc. */
     vx_uint64 overhead;
-} vx_cost_factors_t;
+};
 
 /*! \brief The dimensions enumeration, also stride enumerations.
  * \ingroup group_int_image
@@ -796,7 +796,7 @@ enum vx_bounds_e {
 /*! \brief The raw definition of memory layout.
  * \ingroup group_int_memory
  */
-typedef struct _vx_memory_t {
+typedef struct vx_memory_t {
     /*! \brief Determines if this memory was allocated by the system */
     vx_bool        allocated;
     /*! \brief The number of pointers in the array */
@@ -830,16 +830,16 @@ typedef struct _vx_memory_t {
     /*! \brief This describes the image format (if it is an image) */
     cl_image_format cl_format;
 #endif
-} vx_memory_t;
+};
 
 /*! \brief The internal representation of the delay parameters as a list.
  * \ingroup group_int_delay
  */
-typedef struct _vx_delay_param_t {
-    struct _vx_delay_param_t *next;
+typedef struct vx_delay_param_t {
+    struct vx_delay_param_t *next;
     vx_node node;
     vx_uint32 index;
-} vx_delay_param_t;
+};
 
 /*! \brief A LUT is a specific type of array.
  * \ingroup group_int_lut
