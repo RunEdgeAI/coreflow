@@ -1,5 +1,4 @@
-/* 
-
+/*
  * Copyright (c) 2012-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,7 +35,7 @@ void Addition_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void
         vx_int16 *src1p_16 = (vx_int16 *)in_2->base[0] + in_2->tile_x + y * in_2->addr->stride_y / 2;
         vx_int16 *dstp_16 = (vx_int16 *)out->base[0] + out->tile_x + y * out->addr->stride_y / 2;
         for (x = 0; x < out->tile_block.width; x += 8)
-        {            
+        {
             int32x4_t src01;
             int32x4_t src02;
             int32x4_t src11;
@@ -69,7 +68,7 @@ void Addition_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void
                 src01 = tmp32x4_int_s16.val[0];
                 src02 = tmp32x4_int_s16.val[1];
                 src0p_16 += 8;
-            }            
+            }
             if(in_2->image.format == VX_DF_IMAGE_U8)
             {
                 uint8x8_t in01_8x8_data = vld1_u8((vx_uint8*)src1p);
@@ -109,10 +108,10 @@ void Addition_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void
             vx_int32 tmp5 = vgetq_lane_s32(unscaled_unconverted_result2, 1);
             vx_int32 tmp6 = vgetq_lane_s32(unscaled_unconverted_result2, 2);
             vx_int32 tmp7 = vgetq_lane_s32(unscaled_unconverted_result2, 3);
-               
+
             vx_int32 i;
             for(i = 0; i < 8; i++)
-            {   
+            {
                 vx_int32 int_typed_result;
                 if(i == 0)
                   int_typed_result = tmp0;
@@ -142,7 +141,7 @@ void Addition_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void
                         else
                             final_result_value = int_typed_result;
                     }
-                    else 
+                    else
                     {
                         if (int_typed_result > INT16_MAX)
                             final_result_value = INT16_MAX;
@@ -152,7 +151,7 @@ void Addition_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void
                             final_result_value = int_typed_result;
                     }
                 }
-                else 
+                else
                 {
                     final_result_value = (out->image.format == VX_DF_IMAGE_U8) ?
                         (vx_uint8)int_typed_result : (vx_int16)int_typed_result;
@@ -237,7 +236,7 @@ void Addition_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void
                 dstp_16++;                                                                                  \
             }                                                                                               \
         }                                                                                                   \
-    }                                                                                                   
+    }
 
 
 void Addition_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT], void * VX_RESTRICT tile_memory, vx_size tile_memory_size)
@@ -247,7 +246,7 @@ void Addition_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT], 
     vx_tile_ex_t *in_2 = (vx_tile_ex_t *)parameters[1];
     vx_enum *overflow_policy = (vx_enum*)parameters[2];
     vx_tile_ex_t *out = (vx_tile_ex_t *)parameters[3];
-    
+
     vx_uint32 ty = out->tile_y;
     vx_uint32 tx = out->tile_x;
     vx_uint8 op_mode = 0;
@@ -280,7 +279,7 @@ void Subtraction_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
         vx_int16 *src1p_16 = (vx_int16 *)in_2->base[0] + in_2->tile_x + y * in_2->addr->stride_y / 2;
         vx_int16 *dstp_16 = (vx_int16 *)out->base[0] + out->tile_x + y * out->addr->stride_y / 2;
         for (x = 0; x < out->tile_block.width; x += 8)
-        {            
+        {
             int32x4_t src01;
             int32x4_t src02;
             int32x4_t src11;
@@ -313,7 +312,7 @@ void Subtraction_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
                 src01 = tmp32x4_int_s16.val[0];
                 src02 = tmp32x4_int_s16.val[1];
                 src0p_16 += 8;
-            }            
+            }
             if(in_2->image.format == VX_DF_IMAGE_U8)
             {
                 uint8x8_t in01_8x8_data = vld1_u8((vx_uint8*)src1p);
@@ -353,10 +352,10 @@ void Subtraction_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
             vx_int32 tmp5 = vgetq_lane_s32(unscaled_unconverted_result2, 1);
             vx_int32 tmp6 = vgetq_lane_s32(unscaled_unconverted_result2, 2);
             vx_int32 tmp7 = vgetq_lane_s32(unscaled_unconverted_result2, 3);
-               
+
             vx_int32 i;
             for(i = 0; i < 8; i++)
-            {   
+            {
                 vx_int32 int_typed_result;
                 if(i == 0)
                   int_typed_result = tmp0;
@@ -386,7 +385,7 @@ void Subtraction_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
                         else
                             final_result_value = int_typed_result;
                     }
-                    else 
+                    else
                     {
                         if (int_typed_result > INT16_MAX)
                             final_result_value = INT16_MAX;
@@ -396,7 +395,7 @@ void Subtraction_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
                             final_result_value = int_typed_result;
                     }
                 }
-                else 
+                else
                 {
                     final_result_value = (out->image.format == VX_DF_IMAGE_U8) ?
                         (vx_uint8)int_typed_result : (vx_int16)int_typed_result;
@@ -424,13 +423,13 @@ void Subtraction_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT
     vx_tile_ex_t *in_2 = (vx_tile_ex_t *)parameters[1];
     vx_enum *overflow_policy = (vx_enum*)parameters[2];
     vx_tile_ex_t *out = (vx_tile_ex_t *)parameters[3];
-    
+
     vx_uint32 ty = out->tile_y;
     vx_uint32 tx = out->tile_x;
     vx_uint8 op_mode = 1;
     if (ty == 0 && tx == 0)
     {
-        ADD_SUB_FLEXIBLE(0, 0, vxTileHeight(out, 0), vxTileWidth(out, 0), op_mode, in_1->tile_x, in_2->tile_x, out->tile_x)     
+        ADD_SUB_FLEXIBLE(0, 0, vxTileHeight(out, 0), vxTileWidth(out, 0), op_mode, in_1->tile_x, in_2->tile_x, out->tile_x)
     }
     else
     {
