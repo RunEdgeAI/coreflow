@@ -25,7 +25,7 @@
  * \brief The internal meta format implementation
  * \author Erik Rainey <erik.rainey@gmail.com>
  *
- * \defgroup group_int_meta_format The Meta-Format API
+ * \defgroup group_int_meta_format Internal Meta-Format API
  * \ingroup group_internal
  * \brief The Internal Meta Format API
  */
