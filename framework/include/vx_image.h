@@ -40,14 +40,15 @@ public:
     /**
      * @brief Construct a new Image object
      *
-     * @param context
-     * @param ref
+     * @param context   The context associated with this obj
+     * @param ref       The parent ref of this obj
+     * @ingroup group_int_image
      */
     Image(vx_context context, vx_reference ref);
 
     /**
      * @brief Destroy the Image object
-     *
+     * @ingroup group_int_image
      */
     ~Image() = default;
 
@@ -57,6 +58,17 @@ public:
      */
     static vx_bool isValidImage(vx_image image);
 
+    /**
+     * @brief Create a Image object
+     *
+     * @param[in] context       context to associate image to
+     * @param[in] width         width of image
+     * @param[in] height        height of image
+     * @param[in] color         format / color of image
+     * @param[in] is_virtual    indicate of object is virtual or not
+     * @return vx_image
+     * @ingroup group_int_image
+     */
     static vx_image createImage(vx_context context,
                                    vx_uint32 width,
                                    vx_uint32 height,

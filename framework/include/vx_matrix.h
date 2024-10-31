@@ -37,23 +37,25 @@ public:
     /**
      * @brief Construct a new Matrix object
      *
-     * @param context
-     * @param scope
+     * @param context   The context associated with this obj
+     * @param scope     The parent ref of this obj
+     * @ingroup group_int_matrix
      */
     Matrix(vx_context context, vx_reference scope);
 
     /**
      * @brief Construct a new Matrix object
      *
-     * @param context
-     * @param type
-     * @param scope
+     * @param context   The context associated with this obj
+     * @param type      The data type of matrix
+     * @param scope     The parent ref of this obj
+     * @ingroup group_int_matrix
      */
     Matrix(vx_context context, vx_type_e type, vx_reference scope);
 
     /**
      * @brief Destroy the Matrix object
-     *
+     * @ingroup group_int_matrix
      */
     ~Matrix();
 

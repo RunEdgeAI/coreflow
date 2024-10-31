@@ -37,8 +37,14 @@ vx_bool ownFreeMemory(vx_context context, vx_memory_t *memory);
  */
 vx_bool ownAllocateMemory(vx_context context, vx_memory_t *memory);
 
+/*! \brief Print info of memory block.
+ * \ingroup group_int_memory
+ */
 void ownPrintMemory(vx_memory_t *mem);
 
+/*! \brief Compute size of memory block.
+ * \ingroup group_int_memory
+ */
 vx_size ownComputeMemorySize(vx_memory_t *memory, vx_uint32 p);
 
 #endif /* VX_MEMORY_H */

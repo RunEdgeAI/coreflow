@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef _OPENVX_INT_type_pairs_H_
-#define _OPENVX_INT_type_pairs_H_
+#ifndef VX_TYPE_PAIRS_H
+#define VX_TYPE_PAIRS_H
 
 #include <stdint.h>
 #include <VX/vx.h>
@@ -22,22 +22,32 @@
 /*! \brief The enum string structure
  * \ingroup group_int_type_pairs
  */
-typedef struct _vx_enum_string_t {
+typedef struct vx_enum_string_t {
     /*! \brief The data type enumeration */
     vx_enum type;
     /*! \brief A character string to hold the name of the data type enum */
     vx_char name[64];
     /*! \brief Value of how many nibbles the data type uses */
     uintmax_t nibbles;
-} vx_enum_string_t;
+};
 
 extern vx_enum_string_t type_pairs[];
 
+/*! \brief Fetch index of string in type pairs list
+ * \ingroup group_int_type_pairs
+ */
 vx_int32 ownStringFromType(vx_enum type);
 
 #if defined (OPENVX_USE_XML)
+/*! \brief Get enum of type given string
+ * \ingroup group_int_type_pairs
+ */
 vx_status ownTypeFromString(char *string, vx_enum *type);
-vx_size ownMetaSizeOfType(vx_enum type);
-#endif
 
-#endif
+/*! \brief Get meta size of type given enum
+ * \ingroup group_int_type_pairs
+ */
+vx_size ownMetaSizeOfType(vx_enum type);
+#endif /* defined (OPENVX_USE_XML) */
+
+#endif /* VX_TYPE_PAIRS_H */

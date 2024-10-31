@@ -38,14 +38,15 @@ public:
     /**
      * @brief Construct a new Distribution object
      *
-     * @param context
-     * @param scope
+     * @param context   The context associated with this obj
+     * @param scope     The parent ref of this obj
+     * @ingroup group_int_distribution
      */
     Distribution(vx_context context, vx_reference scope);
 
     /**
      * @brief Destroy the Distribution object
-     *
+     * @ingroup group_int_distribution
      */
     ~Distribution();
 

@@ -36,7 +36,19 @@
 class Graph : public Reference
 {
 public:
+    /**
+     * @brief Construct a new Graph object
+     *
+     * @param context   The context associated with this graph
+     * @param scope     Parent reference of this graph
+     * @ingroup group_int_graph
+     */
     Graph(vx_context context, vx_reference scope);
+
+    /**
+     * @brief Destroy the Graph object
+     * @ingroup group_int_graph
+     */
     ~Graph() = default;
 
     /*! \brief The array of all nodes in this graph */
@@ -74,12 +86,46 @@ public:
     vx_delay       delays[VX_INT_MAX_REF];
 };
 
+/*! \brief Clears visited flag.
+ * \param [in] graph The graph to clear.
+ * \ingroup group_int_graph
+ */
 void ownClearVisitation(vx_graph graph);
+
+/*! \brief Clears execution flag.
+ * \param [in] graph The graph to clear.
+ * \ingroup group_int_graph
+ */
 void ownClearExecution(vx_graph graph);
+
+/*! \brief Given a set of last nodes, this function will determine the next
+ * set of nodes which are capable of being run. Nodes which are encountered but
+ * can't be run will be placed in the left nodes list.
+ * \param [in] graph The graph structure.
+ * \param [in] last_nodes The last list of nodes executed.
+ * \param [in] numLast The number of nodes in the last_nodes list which are valid.
+ * \param [out] next_nodes The list of nodes next to be executed.
+ * \param [in] numNext The number of nodes in the next_nodes list which are valid.
+ * \param [out] left_nodes The list of nodes which are next, but can't be executed.
+ * \param [in] numLeft The number of nodes in the left_nodes list which are valid.
+ * \ingroup group_int_graph
+ */
 void ownFindNextNodes(vx_graph graph,
                      vx_uint32 last_nodes[VX_INT_MAX_REF], vx_uint32 numLast,
                      vx_uint32 next_nodes[VX_INT_MAX_REF], vx_uint32 *numNext,
                      vx_uint32 left_nodes[VX_INT_MAX_REF], vx_uint32 *numLeft);
+
+/**
+ * @brief Find nodes using this reference as input or output parameter
+ *
+ * @param graph     The graph to traverse
+ * @param ref       The reference to search for
+ * @param refnodes  The nodes to search within
+ * @param count     Count of nodes found using ref
+ * @param reftype   The reference type
+ * @return vx_status
+ * @ingroup group_int_graph
+ */
 vx_status ownFindNodesWithReference(vx_graph graph,
                                    vx_reference ref,
                                    vx_uint32 refnodes[],

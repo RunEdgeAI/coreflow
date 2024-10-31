@@ -37,20 +37,21 @@ public:
     /**
      * @brief Construct a new Remap object
      *
-     * @param context
-     * @param scope
+     * @param context   The context associated with this obj
+     * @param scope     The parent ref of this obj
+     * @ingroup group_int_remap
      */
     Remap(vx_context context, vx_reference scope);
 
     /**
      * @brief Destroy the Remap object
-     *
+     * @ingroup group_int_remap
      */
     ~Remap();
 
     /**
-     * @brief Destroys a remap object
-     *
+     * @brief Function to destroy a remap object
+     * @ingroup group_int_remap
      */
     void destructRemap();
 

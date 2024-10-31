@@ -33,34 +33,75 @@ public:
     /**
      * @brief Construct a new Reference object
      *
-     * @param context
-     * @param type
-     * @param scope
+     * @param context   The context associated with this obj
+     * @param type      The type of this ref
+     * @param scope     The parent ref of this obj
+     * @ingroup group_int_reference
      */
     Reference(vx_context context, vx_enum type, vx_reference scope);
 
     /**
      * @brief Destroy the vx reference object
-     *
+     * @ingroup group_int_reference
      */
     ~Reference() = default;
 
+    /*! \brief Used to create a reference.
+     * \note This does not add the reference to the system context yet.
+     * \param [in] context The system context.
+     * \param [in] type The \ref vx_type_e type desired.
+     * \ingroup group_int_reference
+     */
     static vx_reference createReference(vx_context context, vx_enum type, vx_reftype_e refType, vx_reference scope);
 
+    /*! \brief Prints the values of a reference.
+     * \param [in] ref The reference to print.
+     * \ingroup group_int_reference
+     */
     static void printReference(vx_reference ref);
 
+    /*! \brief Used to validate everything but vx_context, vx_image and vx_buffer.
+     * \param [in] ref The reference to validate.
+     * \ingroup group_implementation
+     */
     static vx_bool isValidReference(vx_reference ref);
 
+    /*! \brief Used to validate everything but vx_context, vx_image and vx_buffer.
+     * \param [in] ref The reference to validate.
+     * \param [in] type The \ref vx_type_e to check for.
+     * \ingroup group_implementation
+     */
     static vx_bool isValidReference(vx_reference ref, vx_enum type);
 
+    /*! \brief Returns the number of bytes in the internal structure for a given type.
+     * \ingroup group_int_reference
+     */
     static vx_size sizeOfType(vx_enum type);
 
+    /*! \brief Increments the ref count.
+     * \param [in] refType The reference type to increment.
+     * \ingroup group_int_reference
+     */
     vx_uint32 incrementReference(vx_reftype_e refType);
 
+    /*! \brief Decrements the ref count.
+     * \param [in] refType The reference type to decrement.
+     * \ingroup group_int_reference
+     */
     vx_uint32 decrementReference(vx_reftype_e refType);
 
+    /*! \brief Returns the total reference count of the object.
+     * \ingroup group_int_reference
+     */
     vx_uint32 totalReferenceCount();
 
+    /*! \brief Used to destroy a reference.
+     * \param [in] ref The reference to release.
+     * \param [in] type The \ref vx_type_e to check against.
+     * \param [in] internal If true, the internal count is decremented, else the external
+     * \param [in] special_destructor The a special function to call after the total count has reached zero, if NULL, a default destructor is used.
+     * \ingroup group_int_reference
+     */
     vx_status releaseReference(vx_enum type,
                                vx_reftype_e reftype,
                                vx_destructor_f special_destructor);

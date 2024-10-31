@@ -61,21 +61,34 @@ public:
     /**
      * @brief Construct a new Node object
      *
-     * @param context
-     * @param scope
+     * @param context   The context associated with this obj
+     * @param scope     The parent ref of this obj
+     * @ingroup group_int_node
      */
     Node(vx_context context, vx_reference scope);
 
     /**
      * @brief Destroy the Node object
-     *
+     * @ingroup group_int_node
      */
     ~Node();
 
+    /*! \brief Node parameter setter, no check.
+     * \ingroup group_int_node
+     */
     void setParameter(vx_uint32 index, vx_reference value);
 
+    /*! \brief Used to completely destroy a node.
+     * \ingroup group_int_node
+     */
     void destructNode();
 
+    /*! \brief Used to remove a node from a graph.
+     * \ingroup group_int_node
+     * \return A <tt>\ref vx_status_e</tt> enumeration.
+     * \retval VX_SUCCESS No errors.
+     * \retval VX_ERROR_INVALID_REFERENCE If *n is not a <tt>\ref vx_node</tt>.
+     */
     vx_status removeNode();
 
     /*! \brief The pointer to the kernel structure */

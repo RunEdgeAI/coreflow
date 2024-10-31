@@ -38,19 +38,31 @@ public:
     /**
      * @brief Construct a new Scalar object
      *
-     * @param context
-     * @param scope
+     * @param context   The context associated with this obj
+     * @param scope     The parent ref of this obj
+     * @ingroup group_int_scalar
      */
     Scalar(vx_context context, vx_reference scope);
 
     /**
      * @brief Destroy the Scalar object
-     *
+     * @ingroup group_int_scalar
      */
     ~Scalar();
 
+    /**
+     * @brief   Allocate memory for scalar obj
+     *
+     * @param size      size of bytes to alloc
+     * @return void*    pointer to allocated memory
+     * @ingroup group_int_scalar
+     */
     void* allocateScalarMemory(vx_size size);
 
+    /**
+     * @brief Function to destroy scalar obj
+     * @ingroup group_int_scalar
+     */
     void destructScalar();
 
     /*! \brief The atomic type of the scalar */

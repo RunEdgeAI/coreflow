@@ -42,28 +42,61 @@ class Context : public Reference
 public:
     /**
      * @brief Construct a new Context object
-     *
+     * @ingroup group_int_context
      */
     Context();
 
     /**
      * @brief Destroy the Context object
-     *
+     * @ingroup group_int_context
      */
     ~Context();
 
+    /*! \brief This determines if a context is valid.
+     * \param [in] context The pointer to the context to test.
+     * \retval vx_true_e The context is valid.
+     * \retval vx_false_e The context is not valid.
+     * \ingroup group_int_context
+     */
     static vx_bool isValidContext(vx_context context);
 
+    /*! \brief This returns true if the type is within the definition of types in OpenVX.
+     * \note VX_TYPE_INVALID is not valid for determining a type.
+     * \param [in] type The \ref vx_type_e value.
+     * \ingroup group_int_context
+     */
     static vx_bool isValidType(vx_enum type);
 
+    /*! \brief This determines if the import type is supported.
+     * \param [in] type The \ref vx_import_type_e value.
+     * \ingroup group_int_context
+     */
     static vx_bool isValidImport(vx_enum type);
 
+    /*! \brief This allows the implementation to load a target interface into OpenVX.
+     * \param [in] context The overall context pointer.
+     * \param [in] name The shortened name of the target module.
+     * \ingroup group_int_target
+     */
     vx_status loadTarget(const vx_char* targetName);
 
+    /*! \brief This unloads a specific target in the targets list.
+     * \param [in] targetName The string name of the target module.
+     * \ingroup group_int_target
+     */
     vx_status unloadTarget(const vx_char* targetName);
 
+    /*! \brief This unloads a specific target in the targets list.
+     * \param [in] context The overall context pointer.
+     * \param [in] index The index into the context's target array.
+     * \ingroup group_int_target
+     */
     vx_status unloadTarget(vx_uint32 index, vx_bool unload_module);
 
+    /*! \brief Searches the accessors list to find an open spot and then
+     * will allocate memory if needed.
+     * \ingroup group_int_context
+     */
     VX_INT_API vx_bool addAccessor(
                                  vx_size size,
                                  vx_enum usage,
@@ -72,12 +105,27 @@ public:
                                  vx_uint32 *pIndex,
                                  void *extra_data);
 
+    /*! \brief Finds and removes an accessor from the list.
+     * \ingroup group_int_context
+     */
     VX_INT_API void removeAccessor(vx_uint32 index);
 
+    /*! \brief Finds the accessor in the list and returns the index.
+     * \ingroup group_int_context
+     */
     VX_INT_API vx_bool findAccessor(const void* ptr, vx_uint32* pIndex);
 
+    /*! \brief Used to add a reference to the context.
+     * \param [in] ref The pointer to the reference object.
+     * \ingroup group_int_reference
+     */
     vx_bool addReference(const std::shared_ptr<Reference>& ref);
 
+    /*! \brief Used to remove a reference from the context.
+     * \param [in] context The system context.
+     * \param [in] ref The pointer to the reference object.
+     * \ingroup group_int_reference
+     */
     vx_bool removeReference(vx_reference ref);
 
     /*! \brief Searches the memory maps list to find an open slot and

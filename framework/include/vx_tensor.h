@@ -38,43 +38,45 @@ public:
     /**
      * @brief Construct a new Tensor object
      *
-     * @param context
-     * @param reference
+     * @param context       The context associated with this obj
+     * @param reference     The parent ref of this obj
+     * @ingroup group_int_tensor
      */
     Tensor(vx_context context, vx_reference reference);
 
     /**
      * @brief Destroy the Tensor object
-     *
+     * @ingroup group_int_tensor
      */
     ~Tensor();
 
-    /**
-     * @brief Validate tensor object
-     *
-     * @param tensor
-     * @return vx_bool
+    /*! \brief Used to validate the vx_tensor types.
+     * \param [in] tensor The vx_tensor to validate.
+     * \ingroup group_int_tensor
      */
     static vx_bool isValidTensor(vx_tensor tensor);
 
     /**
      * @brief Allocate tensor memory
      *
-     * @param tensor
-     * @return void*
+     * @return void*    pointer to allocated memory
+     * @ingroup group_int_tensor
      */
     void* allocateTensorMemory();
 
-    /**
-     * @brief Initialize tensor object
-     *
-     * @param dimensions
-     * @param number_of_dimensions
-     * @param data_type
-     * @param fixed_point_position
+    /*! \brief Used to initialize the tensor data structure with the correct
+     * \param [in] dimensions           arr of dimensions of tensor.
+     * \param [in] number_of_dimensions number of tensor dimensions.
+     * \param [in] data_type            data type of tensor.
+     * \param [in] fixed_point_position fixed point position of tensor.
+     * \ingroup group_int_tensor
      */
     void initTensor(const vx_size* dimensions, vx_size number_of_dimensions, vx_enum data_type, vx_int8 fixed_point_position);
 
+    /**
+     * @brief Function to destroy tensor obj
+     * @ingroup group_int_tensor
+     */
     void destructTensor();
 
     /*! \brief The memory layout definition */
