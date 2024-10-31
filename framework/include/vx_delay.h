@@ -25,17 +25,31 @@ public:
      *
      * @param context
      * @param scope
+     * @ingroup group_int_delay
      */
     Delay(vx_context context, vx_reference scope);
 
     /**
      * @brief Destroy the Delay object
-     *
+     * @ingroup group_int_delay
      */
     ~Delay() = default;
 
+    /*! \brief Removes an association to a node from a delay slot object reference.
+     * \param [in] value The delay slot object reference.
+     * \param [in] n The node reference.
+     * \param [in] i The index of the parameter.
+     * \ingroup group_int_delay
+     */
     static vx_bool removeAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i);
 
+    /*! \brief Adds an association to a node to a delay slot object reference.
+     * \param [in] value The delay slot object reference.
+     * \param [in] n The node reference.
+     * \param [in] i The index of the parameter.
+     * \param [in] d The direction of the parameter.
+     * \ingroup group_int_delay
+     */
     static vx_bool addAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i);
 
     /*! \brief The number of objects in the delay. */

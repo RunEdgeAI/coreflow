@@ -40,8 +40,9 @@ public:
     /**
      * @brief Construct a new Kernel object
      *
-     * @param context
-     * @param scope
+     * @param context   The context associated with this obj
+     * @param scope     The parent ref of this obj
+     * @ingroup group_int_kernel
      */
     Kernel(vx_context context, vx_reference scope);
 
@@ -55,6 +56,7 @@ public:
      * @param parameters
      * @param numParams
      * @param scope
+     * @ingroup group_int_kernel
      */
     Kernel(vx_context context,
             vx_enum kenum,
@@ -66,12 +68,29 @@ public:
 
     /**
      * @brief Destroy the Kernel object
-     *
+     * @ingroup group_int_kernel
      */
     ~Kernel() = default;
 
+    /*! \brief Determines if a kernel is unique in the system.
+     * \param kernel The handle to the kernel.
+     * \ingroup group_int_kernel
+     */
     static vx_bool isKernelUnique(vx_kernel kernel);
 
+    /*! \brief Used to initialize a kernel object in a target kernel list.
+     * \param [in] kenum The kernel enumeration value.
+     * \param [in] function The pointer to the function of the kernel.
+     * \param [in] name The name of the kernel in dotted notation.
+     * \param [in] parameters The list of parameters for each kernel.
+     * \param [in] numParams The number of parameters in the list.
+     * \param [in] validator The function pointer to the params validator.
+     * \param [in] in_validator The function pointer to the input validator.
+     * \param [in] out_validator The function pointer to the output validator.
+     * \param [in] initialize The function to call to initialize the kernel.
+     * \param [in] deinitialize The function to call to deinitialize the kernel.
+     * \ingroup group_int_kernel
+     */
     vx_status initializeKernel(vx_enum kenum,
                              vx_kernel_f function,
                              vx_char name[VX_MAX_KERNEL_NAME],
@@ -83,6 +102,10 @@ public:
                              vx_kernel_initialize_f initialize,
                              vx_kernel_deinitialize_f deinitialize);
 
+    /*! \brief Used to deinitialize a kernel object in a target kernel list.
+     * \param [in] kernel The pointer to the kernel structure.
+     * \ingroup group_int_kernel
+     */
     vx_status deinitializeKernel();
 
     /*! \brief */

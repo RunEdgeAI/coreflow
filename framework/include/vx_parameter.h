@@ -40,25 +40,37 @@ public:
      *
      * @param context
      * @param ref
+     * @ingroup group_int_parameter
      */
     Parameter(vx_context context, vx_reference ref);
 
     /**
      * @brief Destroy the Parameter object
-     *
+     * @ingroup group_int_parameter
      */
     ~Parameter();
 
     /**
-     * @brief Destruct the Parameter object
-     *
+     * @brief Function to destruct the Parameter object
+     * @ingroup group_int_parameter
      */
     void destructParameter();
 
+    /*! \brief This returns true if the direction is a valid enum
+     * \param [in] dir The \ref vx_direction_e enum.
+     * \ingroup group_int_parameter
+     */
     static vx_bool isValidDirection(vx_enum dir);
 
+    /*! \brief This returns true if the supplied type matches the expected type with
+     * some fuzzy rules.
+     * \ingroup group_int_parameter
+     */
     static vx_bool isValidTypeMatch(vx_enum expected, vx_enum supplied);
 
+    /*! \brief This returns true if the supplied state is a valid enum.
+     * \ingroup group_int_parameter
+     */
     static vx_bool isValidState(vx_enum state);
 
     /*! \brief Index at which this parameter is tracked in both the node references and kernel signatures */

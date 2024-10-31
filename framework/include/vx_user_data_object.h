@@ -22,17 +22,24 @@ public:
     /**
      * @brief Construct a new User Data Object object
      *
-     * @param context
-     * @param scope
+     * @param context    The context associated with this obj
+     * @param scope      The parent ref of this obj
+     * @ingroup group_int_user_data_object
      */
     UserDataObject(vx_context context, vx_reference scope);
 
     /**
      * @brief Destroy the User Data Object object
-     *
+     * @ingroup group_int_user_data_object
      */
     ~UserDataObject() = default;
 
+    /**
+     * @brief Allocate user data object
+     *
+     * @return vx_bool      vx_true_e if allocated | otherwise vx_false_e
+     * @ingroup group_int_user_data_object
+     */
     vx_bool allocateUserDataObject();
 
     /*! \brief Memory layout */

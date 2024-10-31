@@ -29,10 +29,26 @@
  * \ingroup group_internal
  * \brief The Internal Import Object API
  */
+
+/*! \brief The internal representation of a \ref vx_import
+ * \ingroup group_int_import
+ */
 class Import : public Reference
 {
 public:
+    /**
+     * @brief Construct a new Import object
+     *
+     * @param context   The context associated with this obj
+     * @param scope     The parent ref of this obj
+     * @ingroup group_int_import
+     */
     Import(vx_context context, vx_reference scope);
+
+    /**
+     * @brief Destroy the Import object
+     * @ingroup group_int_import
+     */
     ~Import();
 
 #if defined(OPENVX_USE_IX) || defined(OPENVX_USE_XML)

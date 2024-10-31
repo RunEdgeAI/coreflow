@@ -30,23 +30,25 @@ public:
     /**
      * @brief Construct a new Array object
      *
-     * @param context
-     * @param scope
+     * @param context   The context associated with this object
+     * @param scope     The parent reference of this object
+     * @ingroup group_int_array
      */
     Array(vx_context context, vx_reference scope);
 
     /**
      * @brief Construct a new Array object
      *
-     * @param context
-     * @param type
-     * @param scope
+     * @param context   The context associated with this object
+     * @param type      The type of this array (arr or lut)
+     * @param scope     The parent reference of this object
+     * @ingroup group_int_array
      */
     Array(vx_context context, vx_enum type, vx_reference scope);
 
     /**
      * @brief Destroy the Array object
-     *
+     * @ingroup group_int_array
      */
     ~Array();
 

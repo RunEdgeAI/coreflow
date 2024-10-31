@@ -181,16 +181,28 @@ vx_symbol_t ownGetSymbol(vx_module_handle_t mod, const vx_char * name);
  */
 vx_float32 ownTimeToMS(vx_uint64 c);
 
+/*! \brief Destroy thread pool.
+ * \ingroup group_int_osal
+ */
 void ownDestroyThreadpool(vx_threadpool_t **ppool);
 
+/*! \brief Create and allocate thread pool.
+ * \ingroup group_int_osal
+ */
 vx_threadpool_t *ownCreateThreadpool(vx_uint32 numThreads,
                                     vx_uint32 numWorkItems,
                                     vx_size sizeWorkItem,
                                     vx_threadpool_f worker,
                                     void *arg);
 
+/*! \brief Start and issue tasks to thread pool.
+ * \ingroup group_int_osal
+ */
 vx_bool ownIssueThreadpool(vx_threadpool_t *pool, vx_value_set_t workitems[], uint32_t numWorkItems);
 
+/*! \brief Complete and join thread pool.
+ * \ingroup group_int_osal
+ */
 vx_bool ownCompleteThreadpool(vx_threadpool_t *pool, vx_bool blocking);
 
 #endif /* VX_OSAL_H */

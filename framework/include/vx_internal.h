@@ -225,17 +225,19 @@
  */
 #define VX_TYPE_IS_OBJECT(type) ((type) >= VX_TYPE_REFERENCE && (type) < VX_TYPE_VENDOR_OBJECT_END)
 
-/*! A parameter checker for size and alignment.
+/*! \brief A parameter checker for size and alignment.
  * \ingroup group_int_macros
  */
 #define VX_CHECK_PARAM(ptr, size, type, align) (size == sizeof(type) && ((vx_size)ptr & align) == 0)
 
-/*! Convenience wrapper around calloc to cast it correctly
+/*! \brief Convenience wrapper around calloc to cast it correctly
  * \ingroup group_int_macros
  */
 #define VX_CALLOC(type) (type *)calloc(1, sizeof(type))
 
-
+/*! \brief Helper to convert any data type to string
+ * \ingroup group_int_macros
+ */
 #define VX_STRINGERIZE(x)   x, #x
 
 #if defined(_WIN32) && !defined(__GNUC__)
@@ -253,12 +255,18 @@
 #endif
 #endif
 
+/*! \brief Min & Max helper macros
+ * \ingroup group_int_macros
+ */
 #define VX_MIN(a, b) ((a) < (b) ? (a) : (b))
 #define VX_MAX(a, b) ((a) > (b) ? (a) : (b))
 
+/*! \brief Helper to extract vx_status from vx_bool
+ * \ingroup group_int_macros
+ */
 #define VX_BOOL_TO_STATUS(b) ((b == vx_true_e) ? (VX_SUCCESS) : (VX_FAILURE))
 
-/*! A convenience typedef for void pointers.
+/*! \brief A convenience typedef for void pointers.
  * \ingroup group_int_types
  */
 typedef void *vx_ptr_t;
@@ -266,22 +274,22 @@ typedef void *vx_ptr_t;
 /*! \brief Used to print out the value of a value. */
 #define VX_FMT_VALUE VX_FMT_SIZE
 
-/*! A thread return value.
+/*! \brief A thread return value.
  * \ingroup group_int_osal
  */
 typedef vx_size vx_value_t;
 
-/*! A thread function pointer.
+/*! \brief A thread function pointer.
  * \ingroup group_int_osal
  */
 typedef vx_value_t (*vx_thread_f)(void *arg);
 
 #if defined(__linux__) || defined(__ANDROID__) || defined(__CYGWIN__) || defined(__APPLE__) || defined(__QNX__)
-/*! A POSIX module handle.
+/*! \brief A POSIX module handle.
  * \ingroup group_int_osal
  */
 typedef void *vx_module_handle_t;
-/*! A POSIX symbol handle.
+/*! \brief A POSIX symbol handle.
  * \ingroup group_int_osal
  */
 typedef void *vx_symbol_t;
@@ -307,7 +315,7 @@ typedef void *vx_symbol_t;
 #endif
 #if defined(__APPLE__)
 #define VX_PTHREAD_SEMAPHORE
-/*! A MacOSX semaphore wrapper.
+/*! \brief A MacOSX semaphore wrapper.
  * \ingroup group_int_osal
  */
 typedef struct vx_sem_t
@@ -317,20 +325,20 @@ typedef struct vx_sem_t
     int count;
 };
 #else
-/*! A POSIX semaphore wrapper
+/*! \brief A POSIX semaphore wrapper
  * \ingroup group_int_osal
  */
 typedef sem_t vx_sem_t;
 #endif
-/*! A POSIX thread
+/*! \brief A POSIX thread
  * \ingroup group_int_osal
  */
 typedef pthread_t vx_thread_t;
-/*! A POSIX thread function def
+/*! \brief A POSIX thread function def
  * \ingroup group_int_osal
  */
 typedef void * (*pthread_f )(void *);
-/*! A POSIX event type
+/*! \brief A POSIX event type
  * \ingroup group_int_osal
  */
 typedef struct vx_internal_event_t {

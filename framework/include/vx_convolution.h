@@ -39,14 +39,15 @@ public:
     /**
      * @brief Construct a new Convolution object
      *
-     * @param context
-     * @param scope
+     * @param context   The context associated with object
+     * @param scope     The parent ref of this object
+     * @ingroup group_int_convolution
      */
     Convolution(vx_context context, vx_reference scope);
 
     /**
      * @brief Destroy the Convolution object
-     *
+     * @ingroup group_int_convolution
      */
     ~Convolution();
 
@@ -55,7 +56,7 @@ public:
      */
     void destructConvolution();
 
-    /*!< \brief The Scale Factor. */
+    /*! \brief The Scale Factor. */
     vx_uint32 scale;
 };
 

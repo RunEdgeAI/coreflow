@@ -39,30 +39,73 @@ public:
     /**
      * @brief Construct a new Target object
      *
-     * @param context
-     * @param scope
+     * @param context   The context associated with this obj
+     * @param scope     The parent ref of this obj
+     * @ingroup group_int_target
      */
     Target(vx_context context, vx_reference scope);
 
     /**
      * @brief Destroy the Target object
-     *
+     * @ingroup group_int_target
      */
     ~Target() = default;
 
+    /*! \brief Prints Target Information for Debugging.
+     * \ingroup group_int_target
+     */
     static void printTarget(vx_target target, vx_uint32 index);
 
+    /*! \brief Match target name with specified target string.
+     * \param [in] target_name The target name string.
+     * \param [in] target_string The target string.
+     * \ingroup group_int_target
+     * \retval vx_true_e If string matches, vx_false_e if not.
+     */
     static vx_bool matchTargetNameWithString(const char* target_name, const char* target_string);
 
+    /**
+     * @brief Find the last occurrence of a substring in a string.
+     *
+     * @param string The string to search in.
+     * @param substr The substring to search for.
+     * @return const char* Pointer to the last occurrence of the substring, or nullptr if not found.
+     * @ingroup group_int_target
+     */
     static const char* reverse_strstr(const char* string, const char* substr);
 
+    /*! \brief Initializes a target's kernels list.
+     * \param [in] target The pointer to the target struct.
+     * \param [in] kernels The array of kernels that the target supports.
+     * \param [in] numkernels The length of the kernels list.
+     * \ingroup group_int_target
+     */
     vx_status initializeTarget(vx_kernel_description_t *kernels[],
                              vx_uint32 numkernels);
 
+    /*! \brief Deinitializes a target's kernels list.
+     * \param [in] target The pointer to the target struct.
+     * \param [in] kernels The array of kernels that the target supports.
+     * \param [in] numkernels The length of the kernels list.
+     * \ingroup group_int_target
+     */
     vx_status deinitializeTarget();
 
+    /**
+     * @brief Find target's index within context
+     *
+     * @return vx_uint32    index of target
+     * @ingroup group_int_target
+     */
     vx_uint32 findTargetIndex();
 
+    /**
+     * @brief Find kernel belonging to this target module by enum
+     *
+     * @param enumeration   enum of kernel to search for
+     * @return vx_kernel    kernel found or nullptr
+     * @ingroup group_int_target
+     */
     vx_kernel findKernelByEnum(vx_enum enumeration);
 
     /*! \brief A quick checking method to see if the target is usable. */
