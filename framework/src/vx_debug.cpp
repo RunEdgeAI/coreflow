@@ -20,7 +20,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
-#include <string>
+#include <cstring>
 #if defined(_WIN32)
 #include <windows.h>
 #endif

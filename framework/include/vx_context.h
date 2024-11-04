@@ -16,6 +16,8 @@
 #ifndef VX_CONTEXT_H
 #define VX_CONTEXT_H
 
+#include <memory>
+
 #include <VX/vx.h>
 
 #include "vx_internal.h"

@@ -301,17 +301,17 @@ typedef void *vx_symbol_t;
 /*! \brief The module name macro.
  * \ingroup group_int_osal
  */
-#define VX_MODULE_NAME(name)    "lib"name".dylib"
+#define VX_MODULE_NAME(name)    "lib" name ".dylib"
 #elif defined(__CYGWIN__)
 /*! \brief The module name macro.
  * \ingroup group_int_osal
  */
-#define VX_MODULE_NAME(name)   "lib"name".dll.a"
+#define VX_MODULE_NAME(name)   "lib" name ".dll.a"
 #elif defined(__QNX__) || defined(__linux__) || defined(__ANDROID__)
 /*! \brief The module name macro.
  * \ingroup group_int_osal
  */
-#define VX_MODULE_NAME(name)   "lib"name".so"
+#define VX_MODULE_NAME(name)   "lib" name ".so"
 #endif
 #if defined(__APPLE__)
 #define VX_PTHREAD_SEMAPHORE
