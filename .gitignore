@@ -43,7 +43,6 @@
 **/__pycache__
 **/.idea
 **/dist
-**/build
 **/nnef.egg-info
 **/nnef_tools.egg-info
 **/_models
