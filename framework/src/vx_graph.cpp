@@ -671,6 +671,32 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryGraph(vx_graph graph, vx_enum attribut
     return status;
 }
 
+void ownDestructGraph(vx_reference ref)
+{
+    vx_graph graph = (vx_graph)ref;
+    vx_uint32 i = graph->numNodes;
+
+    for (int n = 0; n < VX_INT_MAX_REF && i; n++)
+    {
+        vx_node node = (vx_node)graph->nodes[n];
+        /* Interpretation of spec is to release all external references of Nodes when vxReleaseGraph()
+           is called AND all graph references count == 0 (garbage collection).
+           However, it may be possible that the user would have already released its external reference
+           so we need to check. */
+        if(node)
+        {
+            node->removeNode();
+            if (node->external_count)
+            {
+                node->releaseReference(VX_TYPE_NODE, VX_EXTERNAL, nullptr);
+            }
+            i--;
+        }
+    }
+    // execution lock
+    ownDestroySem(&graph->lock);
+}
+
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseGraph(vx_graph *g)
 {
     vx_status status = VX_ERROR_INVALID_REFERENCE;

@@ -330,18 +330,18 @@ vx_bool Context::removeReference(vx_reference ref)
     ownSemWait(&lock);
     for (vx_uint32 r = 0; r < VX_INT_MAX_REF; r++)
     {
-        if (reftable[r].get() == ref)
+        if (reftable[r] &&
+            reftable[r].get() == ref)
         {
             if (0u == ref->totalReferenceCount() &&
                 1u == reftable[r].use_count())
             {
-                VX_PRINT(VX_ZONE_LOG, "Removing: \n");
+                VX_PRINT(VX_ZONE_LOG, "Removing:\n");
                 Reference::printReference(ref); // For debugging
                 // reftable[r] = nullptr;
             }
             ref = nullptr;
             num_references--;
-            ownSemPost(&lock);
             ret = vx_true_e;
             break;
         }

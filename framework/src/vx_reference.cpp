@@ -377,9 +377,10 @@ vx_status Reference::releaseReference(vx_enum type,
                                       vx_destructor_f special_destructor)
 {
     vx_status status = VX_SUCCESS;
+    vx_reference ref = this;
 
-    if (Reference::isValidReference(this, type) == vx_true_e &&
-        type == this->type)
+    if (Reference::isValidReference(ref, type) == vx_true_e &&
+        type == ref->type)
     {
         if (decrementReference(reftype) == 0)
         {
@@ -389,16 +390,16 @@ vx_status Reference::releaseReference(vx_enum type,
             /* if there is a destructor, call it. */
             if (destructor)
             {
-                destructor(this);
+                destructor(ref);
             }
 
-            if (context->removeReference(this) == vx_false_e)
+            if (context->removeReference(ref) == vx_false_e)
             {
                 status = VX_ERROR_INVALID_REFERENCE;
                 return status;
             }
 
-            VX_PRINT(VX_ZONE_REFERENCE, ">>>> Reference count was zero, destructed object " VX_FMT_REF "\n", this);
+            VX_PRINT(VX_ZONE_REFERENCE, ">>>> Reference count was zero, destructed object " VX_FMT_REF "\n", ref);
 
             ownDestroySem(&lock);
             magic = VX_BAD_MAGIC; /* make sure no existing copies of refs can use ref again */
