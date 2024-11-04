@@ -36,7 +36,6 @@
 
 # Bazel ignores
 **/bazel-*
-MODULE.bazel*
 
 # Python files
 **/.venv
