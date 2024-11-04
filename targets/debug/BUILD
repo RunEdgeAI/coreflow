@@ -22,7 +22,6 @@ cc_library(
 
 cc_shared_library(
     name = "openvx-debug",
-    shared_lib_name = "libopenvx-debug.dylib",
     deps = [
         ":debug"
     ],

@@ -27,7 +27,6 @@ cc_library(
 
 cc_shared_library(
     name = "openvx-tiling",
-    shared_lib_name = "libopenvx-tiling.dylib",
     deps = [
         ":tiling"
     ],

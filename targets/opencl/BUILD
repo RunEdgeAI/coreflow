@@ -29,7 +29,6 @@ cc_library(
 
 # cc_shared_library(
 #     name = "openvx-opencl",
-#     shared_lib_name = "libopenvx-opencl.dylib",
 #     deps = [
 #         ":opencl"
 #     ],
