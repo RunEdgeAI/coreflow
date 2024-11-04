@@ -27,7 +27,6 @@ cc_library(
 
 cc_shared_library(
     name = "openvx-venum",
-    shared_lib_name = "libopenvx-venum.dylib",
     deps = [
         ":venum"
     ],

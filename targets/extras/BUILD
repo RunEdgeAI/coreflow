@@ -22,7 +22,6 @@ cc_library(
 
 cc_shared_library(
     name = "openvx-extras",
-    shared_lib_name = "libopenvx-extras.dylib",
     deps = [
         ":extras"
     ],

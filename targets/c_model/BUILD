@@ -22,7 +22,6 @@ cc_library(
 
 cc_shared_library(
     name = "openvx-c_model",
-    shared_lib_name = "libopenvx-c_model.dylib",
     deps = [
         ":c_model"
     ],

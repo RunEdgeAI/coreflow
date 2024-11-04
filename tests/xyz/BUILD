@@ -1,7 +1,7 @@
 
 
 cc_library(
-    name = "xyz",
+    name = "xyz-static",
     srcs = [
         "vx_xyz_lib.cpp",
         "vx_xyz_module.cpp",
@@ -16,15 +16,15 @@ cc_library(
 )
 
 cc_shared_library(
-    name = "xyz-shared",
-    shared_lib_name = "libxyz.dylib",
+    name = "xyz",
     deps = [
-        ":xyz"
-    ]
+        ":xyz-static"
+    ],
+    visibility = ["//visibility:public"]
 )
 
 cc_import(
     name = "imported_xyz",
-    shared_library = ":xyz-shared",  # Correctly import the shared library
+    shared_library = ":xyz",
     visibility = ["//visibility:public"]
 )
