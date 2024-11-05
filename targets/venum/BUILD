@@ -1,7 +1,4 @@
 
-
-
-
 cc_library(
     name = "venum",
     srcs = glob([
