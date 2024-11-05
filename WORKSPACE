@@ -1,1 +1,1 @@
-workspace(name = "coreVX")
+workspace(name = "corevx")
