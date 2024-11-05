@@ -5,8 +5,6 @@
  *      Author: vcherp
  */
 
-#ifdef OPENVX_USE_NN
-
 #include "c_model.h"
 
 #include <conversion_utils.h>
@@ -16,6 +14,8 @@
 
 #include <assert.h>
 #include <stdlib.h>
+
+#ifdef OPENVX_USE_NN
 
 #define MAX_NUM_OF_DIMENSIONS   6
 #define PWL_NORM_NUM_SEGMENTS   64
@@ -251,8 +251,8 @@ void ConvolutionKernelImpl(
     // Input and output pointers for the current batch being processed,
     // Note: The compiler should've been able to hoist this out... And
     // there's a bunch of other possible hoising iopportunities here.
-    const char * in_b_ptr = input_ptr;
-    char * out_b_ptr = output_ptr;
+    const char * in_b_ptr = (const char *)input_ptr;
+    char * out_b_ptr = (char *)output_ptr;
 
     for (size_t b = 0; b < output_b; ++b, in_b_ptr += input.strides[3], out_b_ptr += output.strides[3])
     for (size_t ofm = 0; ofm < output_c; ++ofm)
@@ -269,7 +269,7 @@ void ConvolutionKernelImpl(
 
             sum = loadValueAsRawInt(fmt, (char *)bias_ptr + bias_byte_offset);
         }
-        
+
         const size_t xx = x * stride_x;
         const size_t yy = y * stride_y;
 
@@ -477,8 +477,8 @@ void PoolingKernelImpl(
     // Input and output pointers for the current batch being processed,
     // Note: The compiler should've been able to hoist this out... And
     // there's a bunch of other possible hoising iopportunities here.
-    const char * in_b_ptr = input_ptr;
-    char * out_b_ptr = output_ptr;
+    const char * in_b_ptr = (const char *)input_ptr;
+    char * out_b_ptr = (char *)output_ptr;
 
     for (size_t b = 0; b < output_b; ++b, in_b_ptr += input.strides[3], out_b_ptr += output.strides[3])
     for (size_t c = 0; c < output_c; ++c)
@@ -526,7 +526,7 @@ void SoftmaxKernelImpl(
 {
 //TODO: @Tomer, should we allow extra batch dims beyond 4? conv and poll have upto 3 of them! if not we can just discard this define and its usage
 #define SOFTMAX_ALLOW_EXTRA_DIMS
-    
+
 #ifdef SOFTMAX_ALLOW_EXTRA_DIMS
     assert(input.dim_num >= 1 && input.dim_num <= 4);
 #else
@@ -562,7 +562,7 @@ void SoftmaxKernelImpl(
 
         key_sz = input.dims[key];
         key_in_stride = input.strides[key];
-        
+
         for (size_t i = 0; i < input.dim_num - 1; ++i)
         {
             size_t idx = i < key ? i : i + 1;
@@ -703,7 +703,7 @@ void SoftmaxKernelImpl(
 
             max_val = MAX(max_val, in_val);
         }
-        
+
         // Note: It may be benificial to cache the exponents
         for (size_t i = 0; i < key_sz; ++i)
         {
@@ -923,8 +923,8 @@ void DeconvolutionKernelImpl(
     // Input and output pointers for the current batch being processed,
     // Note: The compiler should've been able to hoist this out... And
     // there's a bunch of other possible hoising iopportunities here.
-    const char * in_b_ptr = input_ptr;
-    char * out_b_ptr = output_ptr;
+    const char * in_b_ptr = (const char *)input_ptr;
+    char * out_b_ptr = (char *)output_ptr;
 
     for (size_t b = 0; b < output_b; ++b)
     for (size_t ofm = 0; ofm < output_c; ++ofm)
@@ -941,7 +941,7 @@ void DeconvolutionKernelImpl(
 
             sum = loadValueAsRawInt(fmt, (char *)bias_ptr + bias_byte_offset);
         }
-        
+
         for (size_t ifm = 0; ifm < input_c; ++ifm)
         {
             for (size_t w_y = 0; w_y < weight_h; ++w_y)
@@ -1327,8 +1327,8 @@ void ActivationKernelImpl(
     // Input and output pointers for the current batch being processed,
     // Note: The compiler should've been able to hoist this out... And
     // there's a bunch of other possible hoising iopportunities here.
-    const char * in_b_ptr = input_ptr;
-    char * out_b_ptr = output_ptr;
+    const char * in_b_ptr = (const char *)input_ptr;
+    char * out_b_ptr = (char *)output_ptr;
 
     for (size_t b = 0; b < output_b; ++b, in_b_ptr += input.strides[3], out_b_ptr += output.strides[3])
     for (size_t c = 0; c < output_c; ++c)
@@ -1374,4 +1374,4 @@ void ActivationKernelImpl(
 
 }
 
-#endif
+#endif /* OPENVX_USE_NN */

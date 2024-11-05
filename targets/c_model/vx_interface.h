@@ -99,8 +99,7 @@ extern vx_kernel_description_t nn_softmax_kernel;
 extern vx_kernel_description_t nn_norm_kernel;
 extern vx_kernel_description_t nn_activation_kernel;
 extern vx_kernel_description_t nn_roipooling_kernel;
-#endif
+#endif /* OPENVX_USE_NN */
 
 
-#endif
-
+#endif /* _OPENVX_INTERFACE_H_ */
