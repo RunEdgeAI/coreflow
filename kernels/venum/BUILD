@@ -15,5 +15,8 @@ cc_library(
     deps = [
         "//:corevx",
     ],
+    target_compatible_with = [
+        "@platforms//cpu:arm",
+    ],
     visibility = ["//visibility:public"]
 )

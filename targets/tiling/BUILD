@@ -22,6 +22,9 @@ cc_library(
         "//:corevx",
         "//kernels/tiling:tiling_kernels"
     ],
+    target_compatible_with = [
+        "@platforms//cpu:arm",
+    ],
     visibility = ["//visibility:public"]
 )
 

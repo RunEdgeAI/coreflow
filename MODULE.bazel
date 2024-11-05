@@ -2,66 +2,44 @@
 bzlmod defs
 """
 module(
-    name = "coreVX",
+    name = "corevx",
     version = "1.0",
 )
 
-@unused
-load("//build_tools:custom_repos.bzl", "custom_git_repository", "custom_http_archive")
-
 # Set up C++ toolchain with rules_cc
-bazel_dep(name = "rules_cc", version = "0.0.2")
+bazel_dep(name = "rules_cc", version = "0.0.9")
 
 # Set up rules_foreign_cc
 bazel_dep(name = "rules_foreign_cc", version = "0.12.0")
 
-# Add rules_foreign_cc dependencies
-use_extension("@rules_foreign_cc//:extensions.bzl", "foreign_cc_dependencies", "rules_foreign_cc_dependencies")
+# Setup platforms for cross-compiling
+bazel_dep(name = "platforms", version = "0.0.10")
 
 # Set up rules_python
-bazel_dep(name = "rules_python", version = "0.1.0")
+bazel_dep(name = "rules_python", version = "0.37.2")
 
-# Add rules_python dependencies
-use_extension("@rules_python//python:repositories.bzl", "python_repositories", "py_repositories")
+# Load custom module
+custom_extensions = use_extension("//build_tools/custom_repos.bzl", "custom_repos")
 
-# Example: Load a generic library from GitHub (if this repository is not in the Bazel Central Registry, use a custom repository function)
-use_repo(
-    name = "some_generic_library",
-    repo_fn = "custom_git_repository",
-    args = {
-        "name": "some_generic_library",
-        "remote": "https://github.com/user/some_generic_library.git",
-        "branch": "main",
-    },
+# Define pytorch repository
+custom_extensions.custom_git_repository(
+    name = "pytorch",
+    remote = "https://github.com/pytorch/pytorch.git",
+    commit = "7c98e70d44abc7a1aead68b6ea6c8adc8c554db5",
 )
 
 # Fetch OpenCL Headers (if available in Bazel Central Registry)
-use_repo(
+custom_extensions.custom_http_archive(
     name = "opencl_headers",
-    repo_fn = "custom_http_archive",
-    args = {
-        "name": "opencl_headers",
-        "url": "https://github.com/KhronosGroup/OpenCL-Headers/archive/refs/tags/v2023.04.17.tar.gz",
-        "strip_prefix": "OpenCL-Headers-2023.04.17",
-        "sha256": "0ce992f4167f958f68a37918dec6325be18f848dee29a4521c633aae3304915d",
-        "build_file_content": """
-            cc_library(
-                name = "opencl_headers",
-                hdrs = glob(["CL/*.h"]),
-                includes = ["."],
-                visibility = ["//visibility:public"],
-            )
-        """,
-    },
-)
-
-# Define PyTorch repository
-use_repo(
-    name = "pytorch",
-    repo_fn = "custom_git_repository",
-    args = {
-        "name": "pytorch",
-        "remote": "https://github.com/pytorch/pytorch.git",
-        "commit": "7c98e70d44abc7a1aead68b6ea6c8adc8c554db5",
-    },
+    url = "https://github.com/KhronosGroup/OpenCL-Headers/archive/refs/tags/v2023.04.17.tar.gz",
+    strip_prefix = "OpenCL-Headers-2023.04.17",
+    sha256 = "0ce992f4167f958f68a37918dec6325be18f848dee29a4521c633aae3304915d",
+    build_file_content = """
+        cc_library(
+            name = "opencl_headers",
+            hdrs = glob(["CL/*.h"]),
+            includes = ["."],
+            visibility = ["//visibility:public"],
+        )
+    """,
 )

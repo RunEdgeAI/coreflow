@@ -12,6 +12,16 @@ build --color=yes          # Enable colored output in build logs
 build --show_progress=true # Show build progress in the terminal
 # build --keep_going       # Continue building even if some targets fail
 
+# Default x86 configuration
+build --platforms=@platforms//host
+build --crosstool_top=@bazel_tools//tools/cpp:default-toolchain
+build --cpu=amd
+
+# ARM configuration
+build:arm --platforms=//build_tools/platforms:arm
+build:arm --crosstool_top=@bazel_tools//tools/cpp:cc-toolchain
+build:arm --cpu=aarch64
+
 # Additional settings can be added as needed
 # Address sanitizer
 # To use it: bazel build --config asan
