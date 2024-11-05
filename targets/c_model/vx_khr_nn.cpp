@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-#ifdef OPENVX_CONFORMANCE_NEURAL_NETWORKS
-#ifdef OPENVX_USE_NN
-
 #include <VX/vx.h>
 #include <VX/vx_helper.h>
 #include <VX/vx_khr_nn.h>
@@ -26,6 +23,8 @@
 
 #include <assert.h>
 
+#ifdef OPENVX_CONFORMANCE_NEURAL_NETWORKS
+#ifdef OPENVX_USE_NN
 
 /****************************************************************************
  *                                                                          *
@@ -1910,7 +1909,7 @@ static vx_status VX_CALLBACK nnDeconvolutionValidator(
     VX_CALL(scalarCheckGet(a_y_sc, VX_TYPE_SIZE, &a_y));
 
     UNLESS (overflow == VX_CONVERT_POLICY_WRAP ||
-            overflow == VX_CONVERT_POLICY_SATURATE) 
+            overflow == VX_CONVERT_POLICY_SATURATE)
     {
         VX_PRINT(VX_ZONE_ERROR, "Deconvolution layer overflow param must be either VX_CONVERT_POLICY_WRAP or VX_CONVERT_POLICY_SATURATE"
                 /* (either %d or %d, but got %d instead), VX_CONVERT_POLICY_WRAP, VX_CONVERT_POLICY_SATURATE, overflow*/);
@@ -1918,7 +1917,7 @@ static vx_status VX_CALLBACK nnDeconvolutionValidator(
     }
 
     UNLESS(rounding == VX_ROUND_POLICY_TO_ZERO ||
-           rounding == VX_ROUND_POLICY_TO_NEAREST_EVEN) 
+           rounding == VX_ROUND_POLICY_TO_NEAREST_EVEN)
     {
         VX_PRINT(VX_ZONE_ERROR, "Deconvolution layer round param must be either VX_ROUND_POLICY_TO_ZERO or VX_ROUND_POLICY_TO_NEAREST_EVEN"
                 /* (either %d or %d, but got %d instead), VX_ROUND_POLICY_TO_ZERO, VX_ROUND_POLICY_TO_NEAREST_EVEN, rounding*/);
@@ -2078,5 +2077,5 @@ vx_kernel_description_t nn_deconvolution_kernel = {
     NULL, NULL, NULL, NULL,
 };
 
-#endif
-#endif//OPENVX_CONFORMANCE_NEURAL_NETWORKS
+#endif /* OPENVX_USE_NN */
+#endif /* OPENVX_CONFORMANCE_NEURAL_NETWORKS */

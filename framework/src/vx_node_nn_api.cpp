@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-#ifdef OPENVX_CONFORMANCE_NEURAL_NETWORKS
-#ifdef OPENVX_USE_NN
-
 #include "vx_internal.h"
 
 #include "VX/vx_khr_nn.h"
 
+#ifdef OPENVX_CONFORMANCE_NEURAL_NETWORKS
+#ifdef OPENVX_USE_NN
 
 /*==============================================================================
 vxConvolutionLayer
