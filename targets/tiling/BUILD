@@ -3,8 +3,6 @@ cc_library(
     name = "tiling",
     srcs = glob([
         "*.cpp",
-    ],
-    exclude = [
     ]),
     hdrs = glob([
         "*.h"
