@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2016-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,7 +22,7 @@
 
 struct rcood
 {
-    vx_uint32 rx0; 
+    vx_uint32 rx0;
     vx_uint32 ry0;
     vx_uint32 rx1;
     vx_uint32 ry1;
@@ -33,7 +32,7 @@ struct src_ptr
 {
     vx_uint8* top2_src;
     vx_uint8* top_src;
-    vx_uint8* mid_src; 
+    vx_uint8* mid_src;
     vx_uint8* bot_src;
     vx_uint8* bot2_src;
 };
@@ -612,8 +611,8 @@ static void sort25_max(uint8x8_t p[25])
     sort_max(&p[0], &p[24]);
 }
 
-static void NonLinearFilter_c(const void *src_base, const vx_imagepatch_addressing_t *src_addr, 
-                              void *dst_base, const vx_imagepatch_addressing_t *dst_addr, vx_uint32 x, vx_uint32 y, 
+static void NonLinearFilter_c(const void *src_base, const vx_imagepatch_addressing_t *src_addr,
+                              void *dst_base, const vx_imagepatch_addressing_t *dst_addr, vx_uint32 x, vx_uint32 y,
                               struct rcood r, vx_uint8 *m, vx_uint8 *v, const vx_border_t * border, vx_enum function)
 {
     vx_uint8 *dstp = vxFormatImagePatchAddress2d(dst_base, x, y, dst_addr);
@@ -630,8 +629,8 @@ static void NonLinearFilter_c(const void *src_base, const vx_imagepatch_addressi
 }
 
 //Calculate border in REPLICATE and CONSTANT border mode
-static void cal_border_around(const void *src_base, const vx_imagepatch_addressing_t *src_addr, 
-                              void *dst_base, const vx_imagepatch_addressing_t *dst_addr, struct rcood r, 
+static void cal_border_around(const void *src_base, const vx_imagepatch_addressing_t *src_addr,
+                              void *dst_base, const vx_imagepatch_addressing_t *dst_addr, struct rcood r,
                               vx_enum function, vx_uint8 *m, vx_uint8 *v, const vx_border_t * border)
 {
     vx_uint32 y, x;
@@ -639,7 +638,7 @@ static void cal_border_around(const void *src_base, const vx_imagepatch_addressi
     vx_uint32 low_x = 0, low_y = 0, high_x, high_y;
 
     high_x = src_addr->dim_x;
-    high_y = src_addr->dim_y; 
+    high_y = src_addr->dim_y;
 
     for (y = low_y; y < high_y; y++)
     {
@@ -669,8 +668,8 @@ static void cal_border_around(const void *src_base, const vx_imagepatch_addressi
 }
 
 //Calculate border in REPLICATE and CONSTANT border mode
-static void cal_border_right(const void *src_base, const vx_imagepatch_addressing_t *src_addr, 
-                             void *dst_base, const vx_imagepatch_addressing_t *dst_addr, struct rcood r, 
+static void cal_border_right(const void *src_base, const vx_imagepatch_addressing_t *src_addr,
+                             void *dst_base, const vx_imagepatch_addressing_t *dst_addr, struct rcood r,
                              vx_enum function, vx_uint8 *m, vx_uint8 *v, const vx_border_t * border)
 {
     vx_uint32 y, x;
@@ -678,7 +677,7 @@ static void cal_border_right(const void *src_base, const vx_imagepatch_addressin
     vx_uint32 low_x = 0, low_y = 0, high_x, high_y;
 
     high_x = src_addr->dim_x;
-    high_y = src_addr->dim_y; 
+    high_y = src_addr->dim_y;
 
     for (y = low_y; y < high_y - r.ry1; y++)
     {
@@ -699,8 +698,8 @@ static void cal_border_right(const void *src_base, const vx_imagepatch_addressin
 
 
 static void filter_box_3x3_neon(struct src_ptr src, vx_uint8* dst, struct rcood r, vx_uint32 low_x, vx_uint32 high_x,
-                                vx_enum function, vx_uint8 *m, vx_uint8 *v, vx_uint32 y, 
-                                const void *src_base, const vx_imagepatch_addressing_t *src_addr, 
+                                vx_enum function, vx_uint8 *m, vx_uint8 *v, vx_uint32 y,
+                                const void *src_base, const vx_imagepatch_addressing_t *src_addr,
                                 void *dst_base, const vx_imagepatch_addressing_t *dst_addr, const vx_border_t * border)
 {
     vx_uint32 x;
@@ -724,25 +723,25 @@ static void filter_box_3x3_neon(struct src_ptr src, vx_uint8* dst, struct rcood 
         switch (function)
         {
             /* minimal value */
-            case VX_NONLINEAR_FILTER_MIN: 
+            case VX_NONLINEAR_FILTER_MIN:
             {
                 sort9_min(&p0, &p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8);
-                vst1_u8(dst, p0); 
+                vst1_u8(dst, p0);
                 break;
-            } 
+            }
             /* maximum value */
-            case VX_NONLINEAR_FILTER_MAX: 
+            case VX_NONLINEAR_FILTER_MAX:
             {
                 sort9_max(&p0, &p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8);
-                vst1_u8(dst, p0); 
-                break; 
+                vst1_u8(dst, p0);
+                break;
             }
             /* pick the middle value */
-            case VX_NONLINEAR_FILTER_MEDIAN: 
+            case VX_NONLINEAR_FILTER_MEDIAN:
             {
                 sort9_mid(&p0, &p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8);
-                vst1_u8(dst, p4); 
-                break; 
+                vst1_u8(dst, p4);
+                break;
             }
         }
 
@@ -758,9 +757,9 @@ static void filter_box_3x3_neon(struct src_ptr src, vx_uint8* dst, struct rcood 
 }
 
 
-static void* filter_box_3x3(const void *src_base, const vx_imagepatch_addressing_t *src_addr, 
-                            void *dst_base, const vx_imagepatch_addressing_t *dst_addr, 
-                            struct rcood r, vx_enum function, 
+static void* filter_box_3x3(const void *src_base, const vx_imagepatch_addressing_t *src_addr,
+                            void *dst_base, const vx_imagepatch_addressing_t *dst_addr,
+                            struct rcood r, vx_enum function,
                             const vx_border_t * border, vx_uint8 *m, vx_uint8 *v)
 {
     vx_uint32 y;
@@ -811,8 +810,8 @@ static void* filter_box_3x3(const void *src_base, const vx_imagepatch_addressing
 }
 
 static void filter_cross_3x3_neon(struct src_ptr src, vx_uint8* dst, struct rcood r, vx_uint32 low_x, vx_uint32 high_x,
-                                  vx_enum function, vx_uint8 *m, vx_uint8 *v, vx_uint32 y, 
-                                  const void *src_base, const vx_imagepatch_addressing_t *src_addr, 
+                                  vx_enum function, vx_uint8 *m, vx_uint8 *v, vx_uint32 y,
+                                  const void *src_base, const vx_imagepatch_addressing_t *src_addr,
                                   void *dst_base, const vx_imagepatch_addressing_t *dst_addr, const vx_border_t * border)
 {
     vx_uint32 x;
@@ -832,25 +831,25 @@ static void filter_cross_3x3_neon(struct src_ptr src, vx_uint8* dst, struct rcoo
         switch (function)
         {
             /* minimal value */
-            case VX_NONLINEAR_FILTER_MIN: 
+            case VX_NONLINEAR_FILTER_MIN:
             {
                 sort5_min(&p0, &p1, &p2, &p3, &p4);
-                vst1_u8(dst, p0); 
+                vst1_u8(dst, p0);
                 break;
-            } 
+            }
             /* maximum value */
-            case VX_NONLINEAR_FILTER_MAX: 
+            case VX_NONLINEAR_FILTER_MAX:
             {
                 sort5_max(&p0, &p1, &p2, &p3, &p4);
-                vst1_u8(dst, p0); 
-                break; 
+                vst1_u8(dst, p0);
+                break;
             }
             /* pick the middle value */
-            case VX_NONLINEAR_FILTER_MEDIAN: 
+            case VX_NONLINEAR_FILTER_MEDIAN:
             {
                 sort5_mid(&p0, &p1, &p2, &p3, &p4);
-                vst1_u8(dst, p2); 
-                break; 
+                vst1_u8(dst, p2);
+                break;
             }
         }
 
@@ -866,9 +865,9 @@ static void filter_cross_3x3_neon(struct src_ptr src, vx_uint8* dst, struct rcoo
 }
 
 
-static void* filter_cross_3x3(const void *src_base, const vx_imagepatch_addressing_t *src_addr, 
-    void *dst_base, const vx_imagepatch_addressing_t *dst_addr, 
-    struct rcood r, vx_enum function, 
+static void* filter_cross_3x3(const void *src_base, const vx_imagepatch_addressing_t *src_addr,
+    void *dst_base, const vx_imagepatch_addressing_t *dst_addr,
+    struct rcood r, vx_enum function,
     const vx_border_t * border, vx_uint8 *m, vx_uint8 *v)
 {
     vx_uint32 y;
@@ -918,8 +917,8 @@ static void* filter_cross_3x3(const void *src_base, const vx_imagepatch_addressi
 }
 
 static void filter_cross_5x5_neon(struct src_ptr src, vx_uint8* dst, struct rcood r, vx_uint32 low_x, vx_uint32 high_x,
-                                  vx_enum function, vx_uint8 *m, vx_uint8 *v, vx_uint32 y, 
-                                  const void *src_base, const vx_imagepatch_addressing_t *src_addr, 
+                                  vx_enum function, vx_uint8 *m, vx_uint8 *v, vx_uint32 y,
+                                  const void *src_base, const vx_imagepatch_addressing_t *src_addr,
                                   void *dst_base, const vx_imagepatch_addressing_t *dst_addr, const vx_border_t * border)
 {
     vx_uint32 x;
@@ -945,25 +944,25 @@ static void filter_cross_5x5_neon(struct src_ptr src, vx_uint8* dst, struct rcoo
         switch (function)
         {
             /* minimal value */
-            case VX_NONLINEAR_FILTER_MIN: 
+            case VX_NONLINEAR_FILTER_MIN:
             {
                 sort9_min(&p0, &p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8);
-                vst1_u8(dst, p0); 
+                vst1_u8(dst, p0);
                 break;
-            } 
+            }
             /* maximum value */
-            case VX_NONLINEAR_FILTER_MAX: 
+            case VX_NONLINEAR_FILTER_MAX:
             {
                 sort9_max(&p0, &p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8);
-                vst1_u8(dst, p0); 
-                break; 
+                vst1_u8(dst, p0);
+                break;
             }
             /* pick the middle value */
-            case VX_NONLINEAR_FILTER_MEDIAN: 
+            case VX_NONLINEAR_FILTER_MEDIAN:
             {
                 sort9_mid(&p0, &p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8);
-                vst1_u8(dst, p4); 
-                break; 
+                vst1_u8(dst, p4);
+                break;
             }
         }
 
@@ -982,8 +981,8 @@ static void filter_cross_5x5_neon(struct src_ptr src, vx_uint8* dst, struct rcoo
 
 
 
-static void* filter_cross_5x5(const void *src_base, const vx_imagepatch_addressing_t *src_addr, 
-    void *dst_base, const vx_imagepatch_addressing_t *dst_addr, struct rcood r, vx_enum function, 
+static void* filter_cross_5x5(const void *src_base, const vx_imagepatch_addressing_t *src_addr,
+    void *dst_base, const vx_imagepatch_addressing_t *dst_addr, struct rcood r, vx_enum function,
     const vx_border_t * border, vx_uint8 *m, vx_uint8 *v)
 {
     vx_uint32 y;
@@ -1038,8 +1037,8 @@ static void* filter_cross_5x5(const void *src_base, const vx_imagepatch_addressi
 }
 
 static void filter_box_5x5_neon(struct src_ptr src, vx_uint8* dst, struct rcood r, vx_uint32 low_x, vx_uint32 high_x,
-                                  vx_enum function, vx_uint8 *m, vx_uint8 *v, vx_uint32 y, 
-                                  const void *src_base, const vx_imagepatch_addressing_t *src_addr, 
+                                  vx_enum function, vx_uint8 *m, vx_uint8 *v, vx_uint32 y,
+                                  const void *src_base, const vx_imagepatch_addressing_t *src_addr,
                                   void *dst_base, const vx_imagepatch_addressing_t *dst_addr, const vx_border_t * border)
 {
     vx_uint32 x;
@@ -1082,25 +1081,25 @@ static void filter_box_5x5_neon(struct src_ptr src, vx_uint8* dst, struct rcood 
         switch (function)
         {
             /* minimal value */
-            case VX_NONLINEAR_FILTER_MIN: 
+            case VX_NONLINEAR_FILTER_MIN:
             {
                 sort25_min(p);
-                vst1_u8(dst, p[0]); 
+                vst1_u8(dst, p[0]);
                 break;
-            } 
+            }
             /* maximum value */
-            case VX_NONLINEAR_FILTER_MAX: 
+            case VX_NONLINEAR_FILTER_MAX:
             {
                 sort25_max(p);
-                vst1_u8(dst, p[0]); 
-                break; 
+                vst1_u8(dst, p[0]);
+                break;
             }
             /* pick the middle value */
-            case VX_NONLINEAR_FILTER_MEDIAN: 
+            case VX_NONLINEAR_FILTER_MEDIAN:
             {
                 sort25_mid(p);
-                vst1_u8(dst, p[12]); 
-                break; 
+                vst1_u8(dst, p[12]);
+                break;
             }
         }
 
@@ -1118,8 +1117,8 @@ static void filter_box_5x5_neon(struct src_ptr src, vx_uint8* dst, struct rcood 
 }
 
 
-static void* filter_box_5x5(const void *src_base, const vx_imagepatch_addressing_t *src_addr, 
-    void *dst_base, const vx_imagepatch_addressing_t *dst_addr, struct rcood r, vx_enum function, 
+static void* filter_box_5x5(const void *src_base, const vx_imagepatch_addressing_t *src_addr,
+    void *dst_base, const vx_imagepatch_addressing_t *dst_addr, struct rcood r, vx_enum function,
     const vx_border_t * border, vx_uint8 *m, vx_uint8 *v)
 {
     vx_uint32 y;
@@ -1173,8 +1172,8 @@ static void* filter_box_5x5(const void *src_base, const vx_imagepatch_addressing
 }
 
 static void filter_disk_5x5_neon(struct src_ptr src, vx_uint8* dst, struct rcood r, vx_uint32 low_x, vx_uint32 high_x,
-                                  vx_enum function, vx_uint8 *m, vx_uint8 *v, vx_uint32 y, 
-                                  const void *src_base, const vx_imagepatch_addressing_t *src_addr, 
+                                  vx_enum function, vx_uint8 *m, vx_uint8 *v, vx_uint32 y,
+                                  const void *src_base, const vx_imagepatch_addressing_t *src_addr,
                                   void *dst_base, const vx_imagepatch_addressing_t *dst_addr, const vx_border_t * border)
 {
     vx_uint32 x;
@@ -1225,25 +1224,25 @@ static void filter_disk_5x5_neon(struct src_ptr src, vx_uint8* dst, struct rcood
         switch (function)
         {
             /* minimal value */
-            case VX_NONLINEAR_FILTER_MIN: 
+            case VX_NONLINEAR_FILTER_MIN:
             {
                 sort21_min(p);
-                vst1_u8(dst, p[0]); 
+                vst1_u8(dst, p[0]);
                 break;
-            } 
+            }
             /* maximum value */
-            case VX_NONLINEAR_FILTER_MAX: 
+            case VX_NONLINEAR_FILTER_MAX:
             {
                 sort21_max(p);
-                vst1_u8(dst, p[0]); 
-                break; 
+                vst1_u8(dst, p[0]);
+                break;
             }
             /* pick the middle value */
-            case VX_NONLINEAR_FILTER_MEDIAN: 
+            case VX_NONLINEAR_FILTER_MEDIAN:
             {
                 sort21_mid(p);
-                vst1_u8(dst, p[10]); 
-                break; 
+                vst1_u8(dst, p[10]);
+                break;
             }
         }
 
@@ -1261,9 +1260,9 @@ static void filter_disk_5x5_neon(struct src_ptr src, vx_uint8* dst, struct rcood
 }
 
 
-static void* filter_disk_5x5(const void *src_base, const vx_imagepatch_addressing_t *src_addr, 
-    void *dst_base, const vx_imagepatch_addressing_t *dst_addr, 
-    struct rcood r, vx_enum function, 
+static void* filter_disk_5x5(const void *src_base, const vx_imagepatch_addressing_t *src_addr,
+    void *dst_base, const vx_imagepatch_addressing_t *dst_addr,
+    struct rcood r, vx_enum function,
     const vx_border_t * border, vx_uint8 *m, vx_uint8 *v)
 {
     vx_uint32 y;
@@ -1425,7 +1424,7 @@ vx_status vxNonLinearFilter(vx_scalar function, vx_image src, vx_matrix mask, vx
                         dst_base = filter_box_3x3(src_base, &src_addr, dst_base, &dst_addr, rxy, func, border, m, v);
 
                     break;
-                } 
+                }
 
                 case 5:   // mask = 5x5
                 {
