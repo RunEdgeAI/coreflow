@@ -77,7 +77,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseRemap(vx_remap* r)
         vx_reference ref = *r;
         if (vx_true_e == Reference::isValidReference(ref, VX_TYPE_REMAP))
         {
-            status = ref->releaseReference(VX_TYPE_REMAP, VX_EXTERNAL, nullptr);
+            status = Reference::releaseReference((vx_reference*)r, VX_TYPE_REMAP, VX_EXTERNAL, nullptr);
         }
     }
 

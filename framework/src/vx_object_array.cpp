@@ -80,8 +80,10 @@ vx_status ObjectArray::initObjectArray(vx_reference exemplar, vx_size num_items)
     vx_size tensor_num_dims, tensor_dims[VX_MAX_TENSOR_DIMENSIONS];
     vx_enum tensor_type;
     vx_int8 tensor_fpp;
+#if defined(OPENVX_USE_USER_DATA_OBJECT)
     vx_size udo_size;
     vx_char udo_name[VX_MAX_REFERENCE_NAME];
+#endif /* defined(OPENVX_USE_USER_DATA_OBJECT) */
 
     if (is_virtual)
     {
@@ -147,7 +149,7 @@ vx_status ObjectArray::initObjectArray(vx_reference exemplar, vx_size num_items)
                 /* free all allocated references */
                 for (vx_uint32 j = 0u; j < i; j++)
                 {
-                    items[j]->releaseReference(item_type, VX_EXTERNAL, nullptr);
+                    Reference::releaseReference((vx_reference*)&items[j], item_type, VX_EXTERNAL, nullptr);
                 }
 
                 return VX_ERROR_NO_RESOURCES;
@@ -220,11 +222,13 @@ vx_status ObjectArray::initObjectArray(vx_reference exemplar, vx_size num_items)
                     vxQueryTensor((vx_tensor)exemplar, VX_TENSOR_FIXED_POINT_POSITION, &tensor_fpp, sizeof(tensor_fpp)) != VX_SUCCESS)
                     status = VX_ERROR_INVALID_REFERENCE;
                 break;
+#if defined(OPENVX_USE_USER_DATA_OBJECT)
             case VX_TYPE_USER_DATA_OBJECT:
                 if (vxQueryUserDataObject((vx_user_data_object)exemplar, VX_USER_DATA_OBJECT_SIZE, &udo_size, sizeof(udo_size)) != VX_SUCCESS ||
                     vxQueryUserDataObject((vx_user_data_object)exemplar, VX_USER_DATA_OBJECT_NAME, &udo_name[0], sizeof(vx_char) * VX_MAX_REFERENCE_NAME) != VX_SUCCESS)
                     status = VX_ERROR_INVALID_REFERENCE;
                 break;
+#endif /* defined(OPENVX_USE_USER_DATA_OBJECT) */
             default:
                 status =  VX_ERROR_INVALID_TYPE;
                 break;
@@ -269,9 +273,11 @@ vx_status ObjectArray::initObjectArray(vx_reference exemplar, vx_size num_items)
                 case VX_TYPE_TENSOR:
                     ref = (vx_reference)vxCreateTensor(context, tensor_num_dims, tensor_dims, tensor_type, tensor_fpp);
                     break;
+#if defined(OPENVX_USE_USER_DATA_OBJECT)
                 case VX_TYPE_USER_DATA_OBJECT:
                     ref = (vx_reference)vxCreateUserDataObject(context, udo_name, udo_size, nullptr);
                     break;
+#endif /* defined(OPENVX_USE_USER_DATA_OBJECT) */
                 default:
                     ref = nullptr;
                     break;
@@ -288,7 +294,7 @@ vx_status ObjectArray::initObjectArray(vx_reference exemplar, vx_size num_items)
                 /* free all allocated references */
                 for (vx_uint32 j = 0u; j < i; j++)
                 {
-                    items[j]->releaseReference(item_type, VX_EXTERNAL, nullptr);
+                    Reference::releaseReference((vx_reference*)&items[j], item_type, VX_EXTERNAL, nullptr);
                 }
 
                 return VX_ERROR_NO_RESOURCES;
@@ -319,7 +325,7 @@ vx_object_array ObjectArray::createObjectArray(vx_reference scope, vx_reference 
 
         if (arr->initObjectArray(exemplar, count) != VX_SUCCESS)
         {
-            arr->releaseReference(VX_TYPE_OBJECT_ARRAY, VX_EXTERNAL, nullptr);
+            Reference::releaseReference((vx_reference*)&arr, VX_TYPE_OBJECT_ARRAY, VX_EXTERNAL, nullptr);
             arr = nullptr;
             // arr = (vx_object_array)ownGetErrorObject(context, VX_ERROR_NO_MEMORY);
         }
@@ -335,7 +341,7 @@ void ObjectArray::destructObjectArray()
     for (vx_uint32 i = 0u; i < num_items; i++)
     {
         /* nullptr means standard destructor */
-        status = items[i]->releaseReference(item_type, VX_EXTERNAL, nullptr);
+        status = Reference::releaseReference((vx_reference*)&items[i], item_type, VX_EXTERNAL, nullptr);
 
         if (status != VX_SUCCESS)
         {
@@ -425,7 +431,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseObjectArray(vx_object_array* arr)
         vx_object_array object_array = *arr;
         if (vx_true_e == Reference::isValidReference(object_array, VX_TYPE_OBJECT_ARRAY))
         {
-            status = object_array->releaseReference(VX_TYPE_OBJECT_ARRAY, VX_EXTERNAL, nullptr);
+            status = Reference::releaseReference((vx_reference*)arr, VX_TYPE_OBJECT_ARRAY, VX_EXTERNAL, nullptr);
         }
     }
     return status;

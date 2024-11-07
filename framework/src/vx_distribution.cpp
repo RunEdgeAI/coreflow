@@ -93,7 +93,7 @@ vx_status vxReleaseDistributionInt(vx_distribution* distribution)
         vx_reference ref = *distribution;
         if (vx_true_e == Reference::isValidReference(ref, VX_TYPE_DISTRIBUTION))
         {
-            status = ref->releaseReference(VX_TYPE_DISTRIBUTION, VX_INTERNAL, nullptr);
+            status = Reference::releaseReference((vx_reference*)distribution, VX_TYPE_DISTRIBUTION, VX_INTERNAL, nullptr);
         }
     }
 
@@ -109,7 +109,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseDistribution(vx_distribution *d)
         vx_reference ref = *d;
         if (vx_true_e == Reference::isValidReference(ref, VX_TYPE_DISTRIBUTION))
         {
-            status = ref->releaseReference(VX_TYPE_DISTRIBUTION, VX_EXTERNAL, nullptr);
+            status = Reference::releaseReference((vx_reference*)d, VX_TYPE_DISTRIBUTION, VX_EXTERNAL, nullptr);
         }
     }
 

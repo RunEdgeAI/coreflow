@@ -203,143 +203,145 @@ vx_reference Reference::createReference(vx_context context, vx_enum type, vx_ref
         {
             case VX_TYPE_GRAPH:
             {
-                const auto& spT = std::make_shared<Graph>(context, scope);
+                const auto spT = new Graph(context, scope);
                 (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT.get());
+                ref = static_cast<vx_reference>(spT);
                 break;
             }
             case VX_TYPE_NODE:
             {
-                const auto& spT = std::make_shared<Node>(context, scope);
+                const auto spT = new Node(context, scope);
                 (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT.get());
+                ref = static_cast<vx_reference>(spT);
                 break;
             }
             case VX_TYPE_KERNEL:
             {
-                const auto& spT = std::make_shared<Kernel>(context, scope);
+                const auto spT = new Kernel(context, scope);
                 (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT.get());
+                ref = static_cast<vx_reference>(spT);
                 break;
             }
             case VX_TYPE_PARAMETER:
             {
-                const auto& spT = std::make_shared<Parameter>(context, scope);
+                const auto spT = new Parameter(context, scope);
                 (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT.get());
+                ref = static_cast<vx_reference>(spT);
                 break;
             }
             case VX_TYPE_IMAGE:
             {
-                const auto& spT = std::make_shared<Image>(context, scope);
+                const auto spT = new Image(context, scope);
                 (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT.get());
+                ref = static_cast<vx_reference>(spT);
                 break;
             }
             case VX_TYPE_SCALAR:
             {
-                const auto& spT = std::make_shared<Scalar>(context, scope);
+                const auto spT = new Scalar(context, scope);
                 (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT.get());
+                ref = static_cast<vx_reference>(spT);
                 break;
             }
             case VX_TYPE_TENSOR:
             {
-                const auto& spT = std::make_shared<Tensor>(context, scope);
+                const auto spT = new Tensor(context, scope);
                 (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT.get());
+                ref = static_cast<vx_reference>(spT);
                 break;
             }
             case VX_TYPE_LUT:
             case VX_TYPE_ARRAY:
             {
-                const auto& spT = std::make_shared<Array>(context, type, scope);
+                const auto spT = new Array(context, type, scope);
                 (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT.get());
+                ref = static_cast<vx_reference>(spT);
                 break;
             }
             case VX_TYPE_OBJECT_ARRAY:
             {
-                const auto& spT = std::make_shared<ObjectArray>(context, scope);
+                const auto spT = new ObjectArray(context, scope);
                 (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT.get());
+                ref = static_cast<vx_reference>(spT);
                 break;
             }
             case VX_TYPE_MATRIX:
             {
-                const auto& spT = std::make_shared<Matrix>(context, scope);
+                const auto spT = new Matrix(context, scope);
                 (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT.get());
+                ref = static_cast<vx_reference>(spT);
                 break;
             }
             case VX_TYPE_CONVOLUTION:
             {
-                const auto& spT = std::make_shared<Convolution>(context, scope);
+                const auto spT = new Convolution(context, scope);
                 (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT.get());
+                ref = static_cast<vx_reference>(spT);
                 break;
             }
+#if defined(OPENVX_USE_USER_DATA_OBJECT)
             case VX_TYPE_USER_DATA_OBJECT:
             {
-                const auto& spT = std::make_shared<UserDataObject>(context, scope);
+                const auto spT = new UserDataObject(context, scope);
                 (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT.get());
+                ref = static_cast<vx_reference>(spT);
                 break;
             }
+#endif /* defined(OPENVX_USE_USER_DATA_OBJECT) */
             case VX_TYPE_DELAY:
             {
-                const auto& spT = std::make_shared<Delay>(context, scope);
+                const auto spT = new Delay(context, scope);
                 (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT.get());
+                ref = static_cast<vx_reference>(spT);
                 break;
             }
             case VX_TYPE_DISTRIBUTION:
             {
-                const auto& spT = std::make_shared<Distribution>(context, scope);
+                const auto spT = new Distribution(context, scope);
                 (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT.get());
+                ref = static_cast<vx_reference>(spT);
                 break;
             }
             case VX_TYPE_REMAP:
             {
-                const auto& spT = std::make_shared<Remap>(context, scope);
+                const auto spT = new Remap(context, scope);
                 (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT.get());
+                ref = static_cast<vx_reference>(spT);
                 break;
             }
             case VX_TYPE_PYRAMID:
             {
-                const auto& spT = std::make_shared<Pyramid>(context, scope);
+                const auto spT = new Pyramid(context, scope);
                 (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT.get());
+                ref = static_cast<vx_reference>(spT);
                 break;
             }
             case VX_TYPE_THRESHOLD:
             {
-                const auto& spT = std::make_shared<Threshold>(context, scope);
+                const auto spT = new Threshold(context, scope);
                 (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT.get());
+                ref = static_cast<vx_reference>(spT);
                 break;
             }
             case VX_TYPE_META_FORMAT:
             {
-                const auto& spT = std::make_shared<MetaFormat>(context, scope);
+                const auto spT = new MetaFormat(context, scope);
                 (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT.get());
+                ref = static_cast<vx_reference>(spT);
                 break;
             }
             case VX_TYPE_TARGET:
             {
-                const auto& spT = std::make_shared<Target>(context, scope);
+                const auto spT = new Target(context, scope);
                 (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT.get());
+                ref = static_cast<vx_reference>(spT);
                 break;
             }
             case VX_TYPE_IMPORT:
             {
-                const auto& spT = std::make_shared<Import>(context, scope);
+                const auto spT = new Import(context, scope);
                 (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT.get());
+                ref = static_cast<vx_reference>(spT);
                 break;
             }
             default:
@@ -372,19 +374,19 @@ void Reference::printReference(vx_reference ref)
     }
 }
 
-vx_status Reference::releaseReference(vx_enum type,
+vx_status Reference::releaseReference(
+                                      vx_reference* r,
+                                      vx_enum type,
                                       vx_reftype_e reftype,
                                       vx_destructor_f special_destructor)
 {
     vx_status status = VX_SUCCESS;
-    vx_reference ref = this;
-
+    vx_reference ref = *r;
     if (Reference::isValidReference(ref, type) == vx_true_e &&
         type == ref->type)
     {
-        if (decrementReference(reftype) == 0)
+        if (ref->decrementReference(reftype) == 0)
         {
-            vx_uint32 d = 0u;
             vx_destructor_f destructor = special_destructor;
 
             /* if there is a destructor, call it. */
@@ -393,29 +395,19 @@ vx_status Reference::releaseReference(vx_enum type,
                 destructor(ref);
             }
 
-            if (context->removeReference(ref) == vx_false_e)
+            ownDestroySem(&ref->lock);
+            /* make sure no existing copies of refs can use ref again */
+            ref->magic = VX_BAD_MAGIC;
+
+            if (ref->context->removeReference(ref) == vx_false_e)
             {
                 status = VX_ERROR_INVALID_REFERENCE;
                 return status;
             }
 
             VX_PRINT(VX_ZONE_REFERENCE, ">>>> Reference count was zero, destructed object " VX_FMT_REF "\n", ref);
-
-            ownDestroySem(&lock);
-            magic = VX_BAD_MAGIC; /* make sure no existing copies of refs can use ref again */
-
-            /* some objects are statically allocated. */
-            for (d = 0; d < dimof(static_objects); d++)
-            {
-                if (type == static_objects[d])
-                    break;
-            }
-            // not found in list
-            if (d == dimof(static_objects))
-            {
-                // free(ref);
-            }
         }
+        *r = nullptr;
     }
     else
     {
@@ -525,7 +517,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseReference(vx_reference* ref_ptr)
         case VX_TYPE_KERNEL:       status = vxReleaseKernel((vx_kernel*)ref_ptr); break;
         case VX_TYPE_PARAMETER:    status = vxReleaseParameter((vx_parameter*)ref_ptr); break;
         case VX_TYPE_TENSOR:       status = vxReleaseTensor((vx_tensor*)ref_ptr); break;
+#if defined(OPENVX_USE_USER_DATA_OBJECT)
         case VX_TYPE_USER_DATA_OBJECT: status = vxReleaseUserDataObject((vx_user_data_object*)ref_ptr); break;
+#endif /* defined(OPENVX_USE_USER_DATA_OBJECT) */
 #if defined(OPENVX_USE_IX) || defined(OPENVX_USE_XML)
         case VX_TYPE_IMPORT:       status = vxReleaseImport((vx_import*)ref_ptr); break;
 #endif

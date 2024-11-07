@@ -46,7 +46,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseMatrix(vx_matrix* mat)
         vx_matrix matrix = *mat;
         if (Reference::isValidReference(matrix, VX_TYPE_MATRIX))
         {
-            status = matrix->releaseReference(VX_TYPE_MATRIX, VX_EXTERNAL, nullptr);
+            status = Reference::releaseReference((vx_reference*)mat, VX_TYPE_MATRIX, VX_EXTERNAL, nullptr);
         }
     }
 

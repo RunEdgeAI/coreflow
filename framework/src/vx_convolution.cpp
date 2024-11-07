@@ -56,7 +56,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseConvolution(vx_convolution* convolut
         vx_convolution conv = *convolution;
         if (vx_true_e == Reference::isValidReference(conv, VX_TYPE_CONVOLUTION))
         {
-            status = conv->releaseReference(VX_TYPE_CONVOLUTION, VX_EXTERNAL, nullptr);
+            status = Reference::releaseReference((vx_reference*)convolution, VX_TYPE_CONVOLUTION, VX_EXTERNAL, nullptr);
         }
     }
 

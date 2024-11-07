@@ -72,7 +72,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseThreshold(vx_threshold* t)
         vx_threshold ref = *t;
         if (vx_true_e == Reference::isValidReference(ref, VX_TYPE_THRESHOLD))
         {
-            status = ref->releaseReference(VX_TYPE_THRESHOLD, VX_EXTERNAL, nullptr);
+            status = Reference::releaseReference((vx_reference*)t, VX_TYPE_THRESHOLD, VX_EXTERNAL, nullptr);
         }
     }
 
