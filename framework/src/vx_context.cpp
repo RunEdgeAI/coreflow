@@ -93,12 +93,12 @@ Context::~Context()
     vx_uint32 r;
     for (r = 0; r < VX_INT_MAX_REF; r++)
     {
-        vx_reference ref = reftable[r].get();
+        vx_reference ref = reftable[r];
         if (ref)
         {
-            // printf("ref removed: ");
+            // VX_PRINT(VX_ZONE_INFO, "ref removed:\n");
             // Reference::printReference(ref); // For debugging
-            reftable[r].reset();
+            delete reftable[r];
             reftable[r] = nullptr;
             num_references--;
         }
@@ -276,7 +276,7 @@ vx_status Context::unloadTarget(vx_uint32 index, vx_bool unload_module)
             }
 
             memset(target->module.name, 0, sizeof(target->module.name));
-            target->releaseReference(VX_TYPE_TARGET, VX_INTERNAL, nullptr);
+            Reference::releaseReference((vx_reference*)&target, VX_TYPE_TARGET, VX_INTERNAL, nullptr);
         }
         status = VX_SUCCESS;
     }
@@ -301,7 +301,7 @@ VX_INT_API void Context::removeAccessor(vx_uint32 index)
     }
 }
 
-vx_bool Context::addReference(const std::shared_ptr<Reference>& ref)
+vx_bool Context::addReference(const vx_reference& ref)
 {
     vx_uint32 r;
     vx_bool ret = vx_false_e;
@@ -314,7 +314,7 @@ vx_bool Context::addReference(const std::shared_ptr<Reference>& ref)
                 reftable[r] = ref;
                 num_references++;
                 ret = vx_true_e;
-                VX_PRINT(VX_ZONE_INFO, "Added ref %p to reftable\n", ref.get());
+                VX_PRINT(VX_ZONE_INFO, "Added ref %p to reftable\n", ref);
                 break;
             }
         }
@@ -331,14 +331,14 @@ vx_bool Context::removeReference(vx_reference ref)
     for (vx_uint32 r = 0; r < VX_INT_MAX_REF; r++)
     {
         if (reftable[r] &&
-            reftable[r].get() == ref)
+            reftable[r] == ref)
         {
-            if (0u == ref->totalReferenceCount() &&
-                1u == reftable[r].use_count())
+            if (0u == ref->totalReferenceCount())
             {
                 VX_PRINT(VX_ZONE_LOG, "Removing:\n");
                 Reference::printReference(ref); // For debugging
-                // reftable[r] = nullptr;
+                delete reftable[r];
+                reftable[r] = nullptr;
             }
             ref = nullptr;
             num_references--;
@@ -548,8 +548,11 @@ VX_INT_API vx_bool Context::memoryMap(
                     memory_maps[id].extra.image_data.rect        = extra->image_data.rect;
                 }
                 else if (VX_TYPE_ARRAY == ref->type ||
-                         VX_TYPE_LUT == ref->type ||
+                         VX_TYPE_LUT == ref->type
+#if defined(OPENVX_USE_USER_DATA_OBJECT)
+                         ||
                          VX_TYPE_USER_DATA_OBJECT == ref->type
+#endif /* defined(OPENVX_USE_USER_DATA_OBJECT) */
                 )
                 {
                     vx_memory_map_extra* extra = (vx_memory_map_extra*)extra_data;
@@ -842,7 +845,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
              */
             for (r = 0; r < VX_INT_MAX_REF; r++)
             {
-                vx_reference ref = context->reftable[r].get();
+                vx_reference ref = context->reftable[r];
 
                 /* Warnings should only come when users have not released all external references */
                 if (ref && ref->external_count > 0)
@@ -852,9 +855,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
                 }
 
                 /* These were internally opened during creation, so should internally close ERRORs */
-                if(ref && ref->type == VX_TYPE_ERROR)
+                if (ref && ref->type == VX_TYPE_ERROR)
                 {
-                    ref->releaseReference(ref->type, VX_INTERNAL, nullptr);
+                    Reference::releaseReference(&ref, ref->type, VX_INTERNAL, nullptr);
                 }
 
                 /* Warning above so user can fix release external objects, but close here anyway */
@@ -864,7 +867,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
                 }
                 if (ref && ref->external_count > 0)
                 {
-                    ref->releaseReference(ref->type, VX_EXTERNAL, nullptr);
+                    Reference::releaseReference(&ref, ref->type, VX_EXTERNAL, nullptr);
                 }
             }
 

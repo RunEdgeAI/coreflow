@@ -120,7 +120,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseLUT(vx_lut* l)
         vx_lut lut = *l;
         if (vx_true_e == Reference::isValidReference(lut, VX_TYPE_LUT))
         {
-            status = lut->releaseReference(VX_TYPE_LUT, VX_EXTERNAL, nullptr);
+            status = Reference::releaseReference((vx_reference*)l, VX_TYPE_LUT, VX_EXTERNAL, nullptr);
         }
     }
 

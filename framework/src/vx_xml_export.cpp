@@ -1070,8 +1070,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
         if (context->reftable[r]) {
             r1++;
             if(vxIsMemberOf(context->reftable[r]->type, skipTypes, dimof(skipTypes)) == vx_true_e ||
-               vxIsImgInVirtPyramid(context->reftable[r].get()) == vx_true_e  ||
-               vxIsDelayInDelay(context->reftable[r].get()) == vx_true_e)
+               vxIsImgInVirtPyramid(context->reftable[r]) == vx_true_e  ||
+               vxIsDelayInDelay(context->reftable[r]) == vx_true_e)
                 continue;
             numrefs++;
         }
@@ -1094,10 +1094,10 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
             if (context->reftable[r2]) {
                 r1++;
                 if (vxIsMemberOf(context->reftable[r2]->type, skipTypes, dimof(skipTypes)) == vx_true_e ||
-                    vxIsImgInVirtPyramid(context->reftable[r2].get()) == vx_true_e ||
-                    vxIsDelayInDelay(context->reftable[r2].get()) == vx_true_e)
+                    vxIsImgInVirtPyramid(context->reftable[r2]) == vx_true_e ||
+                    vxIsDelayInDelay(context->reftable[r2]) == vx_true_e)
                     continue;
-                refs[r++] = context->reftable[r2].get();
+                refs[r++] = context->reftable[r2];
             }
             /* "r" or the index in this list is the reference "index" */
         }

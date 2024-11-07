@@ -93,7 +93,7 @@ void Tensor::destructTensor()
     }
     else if (parent)
     {
-        parent->releaseReference(VX_TYPE_TENSOR, VX_INTERNAL, nullptr);
+        Reference::releaseReference((vx_reference*)&parent, VX_TYPE_TENSOR, VX_INTERNAL, nullptr);
     }
 }
 
@@ -500,7 +500,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseTensor(vx_tensor* tensor)
         vx_tensor this_tensor = *tensor;
         if (vx_true_e == Reference::isValidReference(this_tensor, VX_TYPE_TENSOR))
         {
-            status = this_tensor->releaseReference(VX_TYPE_TENSOR, VX_EXTERNAL, nullptr);
+            status = Reference::releaseReference((vx_reference*)tensor, VX_TYPE_TENSOR, VX_EXTERNAL, nullptr);
         }
     }
 

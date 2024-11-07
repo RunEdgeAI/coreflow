@@ -72,14 +72,14 @@ void Parameter::destructParameter()
     {
         if (Reference::isValidReference(reinterpret_cast<vx_reference>(node), VX_TYPE_NODE) == vx_true_e)
         {
-            node->releaseReference(VX_TYPE_NODE, VX_INTERNAL, nullptr);
+            Reference::releaseReference((vx_reference*)&node, VX_TYPE_NODE, VX_INTERNAL, nullptr);
         }
     }
     if (kernel)
     {
         if (Reference::isValidReference(reinterpret_cast<vx_reference>(kernel), VX_TYPE_KERNEL) == vx_true_e)
         {
-            kernel->releaseReference(VX_TYPE_KERNEL, VX_INTERNAL, nullptr);
+            Reference::releaseReference((vx_reference*)&kernel, VX_TYPE_KERNEL, VX_INTERNAL, nullptr);
         }
     }
 }
@@ -102,7 +102,13 @@ VX_API_ENTRY vx_parameter VX_API_CALL vxGetKernelParameterByIndex(vx_kernel kern
                 parameter->index = index;
                 parameter->node = nullptr;
                 parameter->kernel = kernel;
-                parameter->incrementReference(VX_INTERNAL);
+                parameter->kernel->incrementReference(VX_INTERNAL);
+            }
+            else
+            {
+                VX_PRINT(VX_ZONE_ERROR, "Failed to create valid parameter object!\n");
+                delete parameter;
+                parameter = nullptr;
             }
         }
         else
@@ -167,7 +173,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseParameter(vx_parameter* param)
         vx_parameter this_param = *param;
         if (Reference::isValidReference((vx_reference)this_param, VX_TYPE_PARAMETER) == vx_true_e)
         {
-            status = this_param->releaseReference(VX_TYPE_PARAMETER, VX_EXTERNAL, nullptr);
+            status = Reference::releaseReference((vx_reference*)param, VX_TYPE_PARAMETER, VX_EXTERNAL, nullptr);
         }
     }
 

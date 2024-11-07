@@ -34,7 +34,7 @@ void Pyramid::destructPyramid()
     {
         if (levels[i])
         {
-            levels[i]->releaseReference(VX_TYPE_IMAGE, VX_INTERNAL, nullptr);
+            Reference::releaseReference((vx_reference*)&levels[i], VX_TYPE_IMAGE, VX_INTERNAL, nullptr);
         }
     }
     free(levels);
@@ -319,7 +319,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleasePyramid(vx_pyramid* pyr)
         vx_reference ref = *pyr;
         if (vx_true_e == Reference::isValidReference(ref, VX_TYPE_PYRAMID))
         {
-            status = ref->releaseReference(VX_TYPE_PYRAMID, VX_EXTERNAL, nullptr);
+            status = Reference::releaseReference((vx_reference*)pyr, VX_TYPE_PYRAMID, VX_EXTERNAL, nullptr);
         }
     }
 

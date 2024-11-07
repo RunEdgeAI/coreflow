@@ -23,6 +23,7 @@
 
 #include "vx_internal.h"
 
+#if defined(OPENVX_USE_USER_DATA_OBJECT)
 /*==============================================================================
 User Data Object HELPER FUNCTIONS
 =============================================================================*/
@@ -122,7 +123,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseUserDataObject(vx_user_data_object *
         vx_user_data_object obj = *user_data_object;
         if (vx_true_e == Reference::isValidReference(obj, VX_TYPE_USER_DATA_OBJECT))
         {
-            status = obj->releaseReference(VX_TYPE_USER_DATA_OBJECT, VX_EXTERNAL, nullptr);
+            status = Reference::releaseReference((vx_reference*)user_data_object, VX_TYPE_USER_DATA_OBJECT, VX_EXTERNAL, nullptr);
         }
     }
 
@@ -392,3 +393,5 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapUserDataObject(vx_user_data_object use
 
     return status;
 }
+
+#endif /* defined(OPENVX_USE_USER_DATA_OBJECT) */

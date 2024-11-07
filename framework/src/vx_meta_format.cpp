@@ -558,6 +558,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetMetaFormatAttribute(vx_meta_format meta,
             }
             break;
         /**********************************************************************/
+#if defined(OPENVX_USE_USER_DATA_OBJECT)
         case VX_USER_DATA_OBJECT_NAME:
             if ((ptr != nullptr) && (size <= VX_MAX_REFERENCE_NAME))
             {
@@ -569,7 +570,6 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetMetaFormatAttribute(vx_meta_format meta,
                 status = VX_ERROR_INVALID_PARAMETERS;
             }
             break;
-
         case VX_USER_DATA_OBJECT_SIZE:
             if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3U))
             {
@@ -581,6 +581,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetMetaFormatAttribute(vx_meta_format meta,
                 status = VX_ERROR_INVALID_PARAMETERS;
             }
             break;
+#endif /* defined(OPENVX_USE_USER_DATA_OBJECT) */
         default:
             status = VX_ERROR_NOT_SUPPORTED;
             break;
@@ -690,6 +691,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetMetaFormatFromReference(vx_meta_format m
         meta->dim.threshold.type = threshold->thresh_type;
         break;
     }
+#if defined(OPENVX_USE_USER_DATA_OBJECT)
     case VX_TYPE_USER_DATA_OBJECT:
     {
         vx_user_data_object user_data_object = (vx_user_data_object)examplar;
@@ -699,6 +701,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetMetaFormatFromReference(vx_meta_format m
         strncpy(meta->dim.user_data_object.type_name, user_data_object->type_name, VX_MAX_REFERENCE_NAME);
         break;
     }
+#endif /* defined(OPENVX_USE_USER_DATA_OBJECT) */
     case VX_TYPE_OBJECT_ARRAY:
     {
         vx_object_array objarray = (vx_object_array)examplar;
@@ -778,6 +781,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetMetaFormatFromReference(vx_meta_format m
             meta->dim.threshold.type = threshold->thresh_type;
             break;
         }
+#if defined(OPENVX_USE_USER_DATA_OBJECT)
         case VX_TYPE_USER_DATA_OBJECT:
         {
             vx_user_data_object user_data_object = (vx_user_data_object)item;
@@ -786,6 +790,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetMetaFormatFromReference(vx_meta_format m
             strncpy(meta->dim.user_data_object.type_name, user_data_object->type_name, VX_MAX_REFERENCE_NAME);
             break;
         }
+#endif /* defined(OPENVX_USE_USER_DATA_OBJECT) */
         default:
             status = VX_ERROR_INVALID_REFERENCE;
             break;
@@ -810,7 +815,7 @@ vx_status vxReleaseMetaFormat(vx_meta_format* pmeta)
         vx_meta_format this_meta_format = *pmeta;
         if (Reference::isValidReference((vx_reference)this_meta_format, VX_TYPE_META_FORMAT) == vx_true_e)
         {
-            status = this_meta_format->releaseReference(VX_TYPE_META_FORMAT, VX_EXTERNAL, nullptr);
+            status = Reference::releaseReference((vx_reference*)pmeta, VX_TYPE_META_FORMAT, VX_EXTERNAL, nullptr);
         }
     }
 

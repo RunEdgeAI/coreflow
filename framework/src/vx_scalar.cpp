@@ -203,7 +203,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseScalar(vx_scalar* s)
         vx_scalar scalar = *s;
         if (vx_true_e == Reference::isValidReference(scalar, VX_TYPE_SCALAR))
         {
-            status = scalar->releaseReference(VX_TYPE_SCALAR, VX_EXTERNAL, nullptr);
+            status = Reference::releaseReference((vx_reference*)s, VX_TYPE_SCALAR, VX_EXTERNAL, nullptr);
         }
     }
 

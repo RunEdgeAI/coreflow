@@ -59,7 +59,7 @@ void Import::destructImport()
     {
         if (refs && refs[i])
         {
-            refs[i]->releaseReference(refs[i]->type, VX_INTERNAL, nullptr);
+            Reference::releaseReference((vx_reference*)&refs[i], refs[i]->type, VX_INTERNAL, nullptr);
         }
     }
     if (refs)
@@ -166,7 +166,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseImport(vx_import* import)
         vx_import this_import = *import;
         if (Reference::isValidReference(this_import, VX_TYPE_IMPORT) == vx_true_e)
         {
-            status = this_import->releaseReference(VX_TYPE_IMPORT, VX_EXTERNAL, nullptr);
+            status = Reference::releaseReference((vx_reference*)import, VX_TYPE_IMPORT, VX_EXTERNAL, nullptr);
         }
     }
 

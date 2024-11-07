@@ -446,7 +446,7 @@ void Image::destructImage()
     }
     else if (parent)
     {
-        parent->releaseReference(VX_TYPE_IMAGE, VX_INTERNAL, nullptr);
+        Reference::releaseReference((vx_reference*)&parent, VX_TYPE_IMAGE, VX_INTERNAL, nullptr);
     }
     else if (memory_type != VX_MEMORY_TYPE_NONE)
     {
@@ -1477,7 +1477,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseImage(vx_image* image)
                 }
             }
 
-            status = this_image->releaseReference(VX_TYPE_IMAGE, VX_EXTERNAL, nullptr);
+            status = Reference::releaseReference((vx_reference*)image, VX_TYPE_IMAGE, VX_EXTERNAL, nullptr);
         }
     }
 

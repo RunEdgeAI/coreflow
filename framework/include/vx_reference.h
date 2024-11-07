@@ -102,9 +102,10 @@ public:
      * \param [in] special_destructor The a special function to call after the total count has reached zero, if NULL, a default destructor is used.
      * \ingroup group_int_reference
      */
-    vx_status releaseReference(vx_enum type,
-                               vx_reftype_e reftype,
-                               vx_destructor_f special_destructor);
+    static vx_status releaseReference(vx_reference* ref,
+                                      vx_enum type,
+                                      vx_reftype_e reftype,
+                                      vx_destructor_f special_destructor);
 
     /*! \brief Used to initialize any vx_reference as a delay element
     * \param [in] d The delay to which the object belongs

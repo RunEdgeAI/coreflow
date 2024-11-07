@@ -748,7 +748,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseArray(vx_array *a)
         vx_array arr = *(a);
         if (Reference::isValidReference(arr, VX_TYPE_ARRAY) == vx_true_e)
         {
-            status = arr->releaseReference(VX_TYPE_ARRAY, VX_EXTERNAL, nullptr);
+            status = Reference::releaseReference((vx_reference*)a, VX_TYPE_ARRAY, VX_EXTERNAL, nullptr);
         }
     }
 

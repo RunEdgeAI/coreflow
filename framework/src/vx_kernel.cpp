@@ -174,11 +174,12 @@ vx_status Kernel::initializeKernel(vx_enum kenum,
 vx_status Kernel::deinitializeKernel()
 {
     vx_status status = VX_SUCCESS;
+    vx_reference ref = (vx_reference)this;
 
     if (internal_count)
     {
-        VX_PRINT(VX_ZONE_KERNEL, "Releasing kernel " VX_FMT_REF "\n", (void *)this);
-        status = releaseReference(VX_TYPE_KERNEL, VX_INTERNAL, nullptr);
+        VX_PRINT(VX_ZONE_KERNEL, "Deinit and Releasing kernel " VX_FMT_REF "\n", (void *)ref);
+        status = Reference::releaseReference(&ref, VX_TYPE_KERNEL, VX_INTERNAL, nullptr);
     }
 
     return status;
@@ -496,7 +497,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseKernel(vx_kernel *kernel)
                 ref->kernel_object_deinitialize(ref);
             }
 
-            status = ref->releaseReference(VX_TYPE_KERNEL, VX_EXTERNAL, nullptr);
+            status = Reference::releaseReference((vx_reference*)kernel, VX_TYPE_KERNEL, VX_EXTERNAL, nullptr);
         }
     }
     return status;

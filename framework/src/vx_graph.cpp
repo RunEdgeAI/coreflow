@@ -536,7 +536,7 @@ void ownContaminateGraphs(vx_reference ref)
             {
                 vx_uint32 n;
                 vx_bool found = vx_false_e;
-                vx_graph graph = (vx_graph)context->reftable[r].get();
+                vx_graph graph = (vx_graph)context->reftable[r];
                 for (n = 0u; n < (graph->numNodes) && (found == vx_false_e); n++)
                 {
                     vx_uint32 p;
@@ -688,7 +688,7 @@ void ownDestructGraph(vx_reference ref)
             node->removeNode();
             if (node->external_count)
             {
-                node->releaseReference(VX_TYPE_NODE, VX_EXTERNAL, nullptr);
+                Reference::releaseReference((vx_reference*)&node, VX_TYPE_NODE, VX_EXTERNAL, nullptr);
             }
             i--;
         }
@@ -706,7 +706,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseGraph(vx_graph *g)
         vx_graph graph = *(g);
         if (Reference::isValidReference(graph, VX_TYPE_GRAPH) == vx_true_e)
         {
-            status = graph->releaseReference(VX_TYPE_GRAPH, VX_EXTERNAL, nullptr);
+            status = Reference::releaseReference((vx_reference*)g, VX_TYPE_GRAPH, VX_EXTERNAL, ownDestructGraph);
         }
     }
 

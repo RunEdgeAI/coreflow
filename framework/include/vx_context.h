@@ -121,7 +121,7 @@ public:
      * \param [in] ref The pointer to the reference object.
      * \ingroup group_int_reference
      */
-    vx_bool addReference(const std::shared_ptr<Reference>& ref);
+    vx_bool addReference(const vx_reference& ref);
 
     /*! \brief Used to remove a reference from the context.
      * \param [in] context The system context.
@@ -160,7 +160,7 @@ public:
     /*! \brief The pointer to process global lock */
     vx_sem_t*           p_global_lock;
     /*! \brief The reference table which contains the handle for later garage collection if needed */
-    std::shared_ptr<Reference>        reftable[VX_INT_MAX_REF];
+    vx_reference        reftable[VX_INT_MAX_REF];
     /*! \brief The number of references in the table. */
     vx_uint32           num_references;
     /*! \brief The array of kernel modules. */
