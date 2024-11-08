@@ -17,9 +17,12 @@
 #include "vx_internal.h"
 #include "vx_graph.h"
 
-
 static vx_value_set_t graph_queue[10];
 static vx_size numGraphsQueued = 0ul;
+
+/******************************************************************************/
+/* INTERNAL FUNCTIONS */
+/******************************************************************************/
 
 Graph::Graph(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_GRAPH, scope),
 nodes(),
@@ -37,9 +40,36 @@ should_serialize(vx_false_e),
 parentGraph(nullptr),
 delays()
 {
-
 }
 
+Graph::~Graph()
+{
+    destructGraph();
+}
+
+void Graph::destructGraph()
+{
+    vx_graph graph = this;
+
+    for (int n = 0; n < VX_INT_MAX_REF; n++)
+    {
+        vx_node node = (vx_node)graph->nodes[n];
+        /* Interpretation of spec is to release all external references of Nodes when vxReleaseGraph()
+           is called AND all graph references count == 0 (garbage collection).
+           However, it may be possible that the user would have already released its external reference
+           so we need to check. */
+        if(node)
+        {
+            node->removeNode();
+            if (node->external_count)
+            {
+                Reference::releaseReference((vx_reference*)&node, VX_TYPE_NODE, VX_EXTERNAL, nullptr);
+            }
+        }
+    }
+    // execution lock
+    ownDestroySem(&graph->lock);
+}
 
 static vx_uint32 vxNextNode(vx_graph graph, vx_uint32 index)
 {
@@ -248,7 +278,6 @@ vx_status ownFindNodesWithReference(vx_graph graph,
     VX_PRINT(VX_ZONE_GRAPH, "Found %u nodes with reference " VX_FMT_REF " status = %d\n", nc, ref, status);
     return status;
 }
-
 
 void ownClearVisitation(vx_graph graph)
 {
@@ -671,30 +700,6 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryGraph(vx_graph graph, vx_enum attribut
     return status;
 }
 
-void ownDestructGraph(vx_reference ref)
-{
-    vx_graph graph = (vx_graph)ref;
-
-    for (int n = 0; n < VX_INT_MAX_REF; n++)
-    {
-        vx_node node = (vx_node)graph->nodes[n];
-        /* Interpretation of spec is to release all external references of Nodes when vxReleaseGraph()
-           is called AND all graph references count == 0 (garbage collection).
-           However, it may be possible that the user would have already released its external reference
-           so we need to check. */
-        if(node)
-        {
-            node->removeNode();
-            if (node->external_count)
-            {
-                Reference::releaseReference((vx_reference*)&node, VX_TYPE_NODE, VX_EXTERNAL, nullptr);
-            }
-        }
-    }
-    // execution lock
-    ownDestroySem(&graph->lock);
-}
-
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseGraph(vx_graph *g)
 {
     vx_status status = VX_ERROR_INVALID_REFERENCE;
@@ -704,7 +709,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseGraph(vx_graph *g)
         vx_graph graph = *(g);
         if (Reference::isValidReference(graph, VX_TYPE_GRAPH) == vx_true_e)
         {
-            status = Reference::releaseReference((vx_reference*)g, VX_TYPE_GRAPH, VX_EXTERNAL, ownDestructGraph);
+            status = Reference::releaseReference((vx_reference*)g, VX_TYPE_GRAPH, VX_EXTERNAL, nullptr);
         }
     }
 

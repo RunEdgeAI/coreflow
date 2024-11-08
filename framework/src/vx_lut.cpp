@@ -104,13 +104,6 @@ VX_API_ENTRY vx_lut VX_API_CALL vxCreateVirtualLUT(vx_graph graph, vx_enum data_
     return (vx_lut)lut;
 }
 
-
-void vxDestructLUT(vx_reference ref)
-{
-    vx_lut_t lut = (vx_lut_t)ref;
-    lut->destructArray();
-}
-
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseLUT(vx_lut* l)
 {
     vx_status status = VX_FAILURE;
@@ -344,4 +337,3 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapLUT(vx_lut lut, vx_map_id map_id)
     }
     return status;
 }
-

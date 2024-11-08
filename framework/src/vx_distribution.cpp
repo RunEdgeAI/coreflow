@@ -17,9 +17,13 @@
 #include "vx_internal.h"
 #include "vx_distribution.h"
 
-Distribution::Distribution(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_DISTRIBUTION, scope)
+Distribution::Distribution(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_DISTRIBUTION, scope),
+memory(),
+range_x(0),
+range_y(0),
+offset_x(0),
+offset_y(0)
 {
-
 }
 
 Distribution::~Distribution()

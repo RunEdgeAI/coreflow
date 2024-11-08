@@ -34,6 +34,11 @@ type_name()
 {
 }
 
+UserDataObject::~UserDataObject()
+{
+    ownFreeMemory(context, &memory);
+}
+
 vx_bool UserDataObject::allocateUserDataObject()
 {
     vx_bool res = vx_false_e;

@@ -205,7 +205,11 @@ constant(vx_false_e),
 region(),
 memory_type()
 {
+}
 
+Image::~Image()
+{
+    destructImage();
 }
 
 void Image::initPlane(vx_uint32 index,
@@ -435,7 +439,6 @@ vx_image Image::createImage(vx_context context,
 
     return image;
 }
-
 
 void Image::destructImage()
 {
