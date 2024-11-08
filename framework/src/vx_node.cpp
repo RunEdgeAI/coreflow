@@ -46,7 +46,6 @@ costs(),
 is_replicated(vx_false_e),
 replicated_flags()
 {
-
 }
 
 Node::~Node()

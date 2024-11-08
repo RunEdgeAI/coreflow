@@ -674,9 +674,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryGraph(vx_graph graph, vx_enum attribut
 void ownDestructGraph(vx_reference ref)
 {
     vx_graph graph = (vx_graph)ref;
-    vx_uint32 i = graph->numNodes;
 
-    for (int n = 0; n < VX_INT_MAX_REF && i; n++)
+    for (int n = 0; n < VX_INT_MAX_REF; n++)
     {
         vx_node node = (vx_node)graph->nodes[n];
         /* Interpretation of spec is to release all external references of Nodes when vxReleaseGraph()
@@ -690,7 +689,6 @@ void ownDestructGraph(vx_reference ref)
             {
                 Reference::releaseReference((vx_reference*)&node, VX_TYPE_NODE, VX_EXTERNAL, nullptr);
             }
-            i--;
         }
     }
     // execution lock
