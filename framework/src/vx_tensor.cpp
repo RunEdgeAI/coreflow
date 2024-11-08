@@ -23,9 +23,17 @@
 /*==============================================================================
 Tensor INTERNAL HELPER FUNCTIONS
 =============================================================================*/
-Tensor::Tensor(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_TENSOR, scope)
+Tensor::Tensor(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_TENSOR, scope),
+addr(nullptr),
+number_of_dimensions(0),
+dimensions(),
+stride(),
+data_type(),
+fixed_point_position(),
+subtensors(),
+parent(),
+subimages()
 {
-
 }
 
 Tensor::~Tensor()
@@ -86,7 +94,7 @@ void Tensor::initTensor(const vx_size* dimensions, vx_size number_of_dimensions,
 void Tensor::destructTensor()
 {
     /* if it's not imported and does not have a parent, free it */
-    if (parent == nullptr && addr)
+    if (!parent && addr)
     {
         free (addr);
         addr = nullptr;
@@ -103,10 +111,10 @@ static VX_INLINE int validFormat(vx_enum data_type, vx_uint8 fixed_point_pos)
         return
 #ifdef EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT
             data_type == VX_TYPE_FLOAT16 ||
-#endif
+#endif /* EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT */
 #ifdef OPENVX_CONFORMANCE_NNEF_IMPORT
             data_type == VX_TYPE_FLOAT32 || data_type == VX_TYPE_INT32 || data_type == VX_TYPE_BOOL ||
-#endif
+#endif /* OPENVX_CONFORMANCE_NNEF_IMPORT */
             (data_type == VX_TYPE_INT16 && fixed_point_pos == Q78_FIXED_POINT_POSITION) ||
             (data_type == VX_TYPE_INT8 && fixed_point_pos == 0) ||
             (data_type == VX_TYPE_UINT8 && fixed_point_pos == 0);
@@ -154,8 +162,8 @@ VX_API_ENTRY vx_tensor VX_API_CALL vxCreateTensor(
         return tensor;
     }
     tensor->initTensor(dims, number_of_dims, data_type, fixed_point_position);
-                  tensor->parent = nullptr;
-                  tensor->scope = (vx_reference)context;
+    tensor->parent = nullptr;
+    tensor->scope = (vx_reference)context;
 
     return tensor;
 }
@@ -260,7 +268,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxSwapTensorHandle(vx_tensor tensor, void* ne
                 if (tensor->subtensors[i] != nullptr)
                 {
                     if (new_ptr == nullptr)
+                    {
                         status = vxSwapTensorHandle(tensor->subtensors[i], nullptr, nullptr);
+                    }
                     else
                     {
                         status = vxSwapTensorHandle(tensor->subtensors[i], new_ptr, nullptr);
@@ -278,7 +288,6 @@ VX_API_ENTRY vx_status VX_API_CALL vxSwapTensorHandle(vx_tensor tensor, void* ne
             {
                 tensor->addr = new_ptr;
             }
-
         }
         else
         {
@@ -304,7 +313,7 @@ VX_API_ENTRY vx_object_array VX_API_CALL vxCreateImageObjectArrayFromTensor(vx_t
         (rect->end_y <= rect->start_y))
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid rectangle!\n");
-        goto exit;
+        return images;
     }
 
     if (Tensor::isValidTensor(tensor) == vx_true_e)
@@ -394,7 +403,6 @@ VX_API_ENTRY vx_object_array VX_API_CALL vxCreateImageObjectArrayFromTensor(vx_t
         }
     }
 
-exit:
     return images;
 }
 
@@ -488,9 +496,6 @@ VX_API_ENTRY vx_tensor VX_API_CALL vxCreateVirtualTensor(
     return tensor;
 }
 
-
-
-
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseTensor(vx_tensor* tensor)
 {
     vx_status status = VX_FAILURE;
@@ -506,7 +511,6 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseTensor(vx_tensor* tensor)
 
     return status;
 }
-
 
 VX_API_ENTRY vx_status VX_API_CALL vxQueryTensor(vx_tensor tensor, vx_enum attribute, void *ptr, vx_size size)
 {
@@ -565,11 +569,12 @@ int CheckSizes(vx_size* dimensions, const vx_size * view_start, const vx_size * 
     for (vx_size i = 0; i < number_of_dimensions; i++)
     {
         if (view_end[i] <= view_start[i] ||
-                view_end[i] > dimensions[i])
+            view_end[i] > dimensions[i])
+        {
             return -1;
+        }
     }
     return 0;
-
 }
 
 vx_size ComputePatchSize(const vx_size * view_start, const vx_size * view_end, vx_size number_of_dimensions)
@@ -599,7 +604,6 @@ void ComputePositionsFromIndex(vx_size index, const vx_size * start, const vx_si
         *patch_pos += patch_stride[i] * curr_dim_index ;
         index_leftover = index_leftover /divisor;
     }
-
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxMapTensorPatch(vx_tensor tensor, vx_size number_of_dims,
@@ -791,7 +795,7 @@ exit:
 VX_API_ENTRY vx_status VX_API_CALL vxCopyTensorPatch(vx_tensor tensor, vx_size number_of_dimensions, const vx_size * view_start, const vx_size * view_end,
         const vx_size * user_stride, void * user_ptr, vx_enum usage, vx_enum user_memory_type)
 {
-    vx_status status = VX_FAILURE;
+    vx_status status = VX_SUCCESS;
     (void)user_memory_type;
 
     /* bad parameters */
@@ -834,7 +838,6 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyTensorPatch(vx_tensor tensor, vx_size n
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid view\n");
         status = VX_ERROR_INVALID_PARAMETERS;
-
     }
 
     if (VX_SUCCESS == status)
@@ -871,7 +874,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyTensorPatch(vx_tensor tensor, vx_size n
     vx_uint8* user_curr_ptr = (vx_uint8*)user_ptr;
     vx_uint8* tensor_ptr = (vx_uint8*)tensor->addr;
     vx_size patch_size = ComputePatchSize (view_start, view_end, number_of_dimensions);
-    for (vx_size i = 0; i < patch_size; i++) {
+    for (vx_size i = 0; i < patch_size; i++)
+    {
         vx_size patch_pos = 0;
         vx_size tensor_pos = 0;
         ComputePositionsFromIndex(i,view_start, view_end, tensor->stride, user_stride, number_of_dimensions, &tensor_pos, &patch_pos);
@@ -879,8 +883,6 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyTensorPatch(vx_tensor tensor, vx_size n
             memcpy (user_curr_ptr + patch_pos, tensor_ptr + tensor_pos, tensor->stride[0]);
         else
             memcpy (tensor_ptr + tensor_pos, user_curr_ptr + patch_pos, tensor->stride[0]);
-
-
     }
     status = VX_SUCCESS;
 
