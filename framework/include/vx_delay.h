@@ -33,7 +33,7 @@ public:
      * @brief Destroy the Delay object
      * @ingroup group_int_delay
      */
-    ~Delay() = default;
+    ~Delay();
 
     /*! \brief Removes an association to a node from a delay slot object reference.
      * \param [in] value The delay slot object reference.
@@ -51,6 +51,12 @@ public:
      * \ingroup group_int_delay
      */
     static vx_bool addAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i);
+
+    /**
+     * @brief Destruct function for delay objects
+     * @ingroup group_int_delay
+     */
+    void destructDelay();
 
     /*! \brief The number of objects in the delay. */
     vx_size count;

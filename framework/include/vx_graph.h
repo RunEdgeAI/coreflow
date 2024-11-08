@@ -49,7 +49,13 @@ public:
      * @brief Destroy the Graph object
      * @ingroup group_int_graph
      */
-    ~Graph() = default;
+    ~Graph();
+
+    /**
+     * @brief Destruct function for the Graph object
+     * @ingroup group_int_graph
+     */
+    void destructGraph();
 
     /*! \brief The array of all nodes in this graph */
     vx_node        nodes[VX_INT_MAX_REF];

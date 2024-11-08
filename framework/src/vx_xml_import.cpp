@@ -19,7 +19,6 @@
 
 #if defined(OPENVX_USE_XML)
 
-
 #if defined(__APPLE__)
 typedef unsigned long ulong;
 #endif

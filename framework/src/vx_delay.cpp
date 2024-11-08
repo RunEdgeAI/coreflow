@@ -28,7 +28,11 @@ set(nullptr),
 refs(nullptr),
 pyr(nullptr)
 {
+}
 
+Delay::~Delay()
+{
+    destructDelay();
 }
 
 vx_bool Delay::addAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i)
@@ -123,6 +127,48 @@ vx_bool Delay::removeAssociationToDelay(vx_reference value, vx_node n, vx_uint32
     return vx_true_e;
 }
 
+void Delay::destructDelay()
+{
+    vx_uint32 i = 0;
+    vx_delay delay = this;
+
+    if (vxIsValidDelay(delay) && (delay->type == VX_TYPE_PYRAMID) && (delay->pyr != nullptr))
+    {
+        vx_uint32 numLevels = (vx_uint32)(((vx_pyramid)delay->refs[0])->numLevels);
+        /* release pyramid delays */
+        for (i = 0; i < numLevels; ++i)
+        {
+            Reference::releaseReference((vx_reference*)&delay->pyr[i], VX_TYPE_DELAY, VX_INTERNAL, nullptr);
+        }
+        free(delay->pyr);
+    }
+
+    for (i = 0; i < delay->count; i++)
+    {
+        Reference::releaseReference((vx_reference*)&delay->pyr[i], delay->type, VX_INTERNAL, nullptr);
+    }
+
+    if (delay->set)
+    {
+        for (i = 0; i < delay->count; i++)
+        {
+            vx_delay_param_t* cur = delay->set[i].next;
+            while (cur != nullptr)
+            {
+                vx_delay_param_t *next = cur->next;
+                free(cur);
+                cur = next;
+            }
+        }
+        free(delay->set);
+    }
+
+    if (delay->refs)
+    {
+        free(delay->refs);
+    }
+}
+
 /******************************************************************************/
 /* PUBLIC INTERFACE */
 /******************************************************************************/
@@ -180,48 +226,6 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryDelay(vx_delay delay, vx_enum attribut
     return status;
 }
 
-void ownDestructDelay(vx_reference ref)
-{
-    vx_uint32 i = 0;
-    vx_delay delay = (vx_delay)ref;
-
-    if (vxIsValidDelay(delay) && (delay->type == VX_TYPE_PYRAMID) && (delay->pyr != nullptr))
-    {
-        vx_uint32 numLevels = (vx_uint32)(((vx_pyramid)delay->refs[0])->numLevels);
-        /* release pyramid delays */
-        for (i = 0; i < numLevels; ++i)
-        {
-            Reference::releaseReference((vx_reference*)&delay->pyr[i], VX_TYPE_DELAY, VX_INTERNAL, &ownDestructDelay);
-        }
-        free(delay->pyr);
-    }
-
-    for (i = 0; i < delay->count; i++)
-    {
-        Reference::releaseReference((vx_reference*)&delay->pyr[i], delay->type, VX_INTERNAL, nullptr);
-    }
-
-    if (delay->set)
-    {
-        for (i = 0; i < delay->count; i++)
-        {
-            vx_delay_param_t* cur = delay->set[i].next;
-            while (cur != nullptr)
-            {
-                vx_delay_param_t *next = cur->next;
-                free(cur);
-                cur = next;
-            }
-        }
-        free(delay->set);
-    }
-
-    if (delay->refs)
-    {
-        free(delay->refs);
-    }
-}
-
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseDelay(vx_delay* d)
 {
     vx_status status = VX_FAILURE;
@@ -231,7 +235,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseDelay(vx_delay* d)
         vx_delay delay = *d;
         if (vx_true_e == Reference::isValidReference(delay, VX_TYPE_DELAY))
         {
-            status = Reference::releaseReference((vx_reference*)d, VX_TYPE_DELAY, VX_EXTERNAL, &ownDestructDelay);
+            status = Reference::releaseReference((vx_reference*)d, VX_TYPE_DELAY, VX_EXTERNAL, nullptr);
         }
     }
 

@@ -32,7 +32,7 @@ public:
      * @brief Destroy the User Data Object object
      * @ingroup group_int_user_data_object
      */
-    ~UserDataObject() = default;
+    ~UserDataObject();
 
     /**
      * @brief Allocate user data object

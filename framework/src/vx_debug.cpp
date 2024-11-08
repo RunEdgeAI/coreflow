@@ -36,32 +36,6 @@ static vx_uint32 vx_zone_mask;
 #undef  ZONE_BIT
 #define ZONE_BIT(zone)  (1 << zone)
 
-void vx_set_debug_zone(vx_enum zone)
-{
-    if (0 <= zone && zone < VX_ZONE_MAX) {
-        vx_zone_mask |= ZONE_BIT(zone);
-        vx_print(zone, "Enabled\n");
-        //printf("vx_debug_mask=0x%08x\n", vx_debug_mask);
-    }
-}
-
-void vx_clr_debug_zone(vx_enum zone)
-{
-    if (0 <= zone && zone < VX_ZONE_MAX) {
-        vx_print(zone, "Disabled\n");
-        vx_zone_mask &= ~(ZONE_BIT(zone));
-        //printf("vx_debug_mask=0x%08x\n", vx_debug_mask);
-    }
-}
-
-vx_bool vx_get_debug_zone(vx_enum zone)
-{
-    if (0 <= zone && zone < VX_ZONE_MAX)
-        return ((vx_zone_mask & zone)?vx_true_e:vx_false_e);
-    else
-        return vx_false_e;
-}
-
 #define _STR2(x) {#x, x}
 
 struct vx_string_and_enum_e {
@@ -90,6 +64,32 @@ struct vx_string_and_enum_e enumnames[] = {
     _STR2(VX_ZONE_LOG),
     {"UNKNOWN", -1}, // if the zone is not found, this will be returned.
 };
+
+void vx_set_debug_zone(vx_enum zone)
+{
+    if (0 <= zone && zone < VX_ZONE_MAX) {
+        vx_zone_mask |= ZONE_BIT(zone);
+        vx_print(zone, "Enabled\n");
+        //printf("vx_debug_mask=0x%08x\n", vx_debug_mask);
+    }
+}
+
+void vx_clr_debug_zone(vx_enum zone)
+{
+    if (0 <= zone && zone < VX_ZONE_MAX) {
+        vx_print(zone, "Disabled\n");
+        vx_zone_mask &= ~(ZONE_BIT(zone));
+        //printf("vx_debug_mask=0x%08x\n", vx_debug_mask);
+    }
+}
+
+vx_bool vx_get_debug_zone(vx_enum zone)
+{
+    if (0 <= zone && zone < VX_ZONE_MAX)
+        return ((vx_zone_mask & zone)?vx_true_e:vx_false_e);
+    else
+        return vx_false_e;
+}
 
 vx_char *find_zone_name(vx_enum zone)
 {
@@ -269,13 +269,9 @@ const char* ownGetObjectTypeName(vx_enum type) {
         name = "OBJECT_ARRAY"; break;
     case VX_TYPE_TENSOR:
         name = "TENSOR"; break;
-
     default:
         name = "<UNKNOWN TYPE>";
     }
 
     return name;
 }
-
-
-

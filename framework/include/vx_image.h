@@ -50,7 +50,7 @@ public:
      * @brief Destroy the Image object
      * @ingroup group_int_image
      */
-    ~Image() = default;
+    ~Image();
 
     /*! \brief Used to validate the vx_image types.
      * \param [in] img The vx_image to validate.
