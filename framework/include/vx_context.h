@@ -128,7 +128,7 @@ public:
      * \param [in] ref The pointer to the reference object.
      * \ingroup group_int_reference
      */
-    vx_bool removeReference(vx_reference ref);
+    vx_bool removeReference(vx_reference& ref);
 
     /*! \brief Searches the memory maps list to find an open slot and
      *  allocate memory for mapped buffer.
