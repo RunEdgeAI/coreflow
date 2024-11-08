@@ -362,8 +362,7 @@ void Reference::printReference(vx_reference ref)
     }
 }
 
-vx_status Reference::releaseReference(
-                                      vx_reference* r,
+vx_status Reference::releaseReference(vx_reference* r,
                                       vx_enum type,
                                       vx_reftype_e reftype,
                                       vx_destructor_f special_destructor)

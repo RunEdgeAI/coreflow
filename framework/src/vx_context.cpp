@@ -323,7 +323,7 @@ vx_bool Context::addReference(const vx_reference& ref)
     return ret;
 }
 
-vx_bool Context::removeReference(vx_reference ref)
+vx_bool Context::removeReference(vx_reference& ref)
 {
     vx_bool ret = vx_false_e;
 

@@ -805,7 +805,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxRemoveKernel(vx_kernel kernel)
         vx_context context = kernel->context;
 
         /* Remove the reference from the context */
-        context->removeReference(kernel);
+        vx_reference ref = reinterpret_cast<vx_reference>(kernel);
+        context->removeReference(ref);
 
         /* find back references to kernel's target and kernel in target->kernels array */
         vx_uint32 index = (vx_uint32)(strnindex(kernel->name, ':', VX_MAX_TARGET_NAME));
