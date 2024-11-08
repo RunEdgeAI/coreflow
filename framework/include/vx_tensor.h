@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2016-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -91,9 +90,11 @@ public:
     vx_enum data_type;
     /*! \brief Fixed point position */
     vx_int8 fixed_point_position;
+    /*! \brief Array of subtensors. */
     vx_tensor subtensors[VX_INT_MAX_REF];
     /*! \brief A pointer to a parent md data object. */
     vx_tensor parent;
+    /*! \brief Array of subimages. */
     vx_image  subimages[VX_INT_MAX_REF];
 };
 
