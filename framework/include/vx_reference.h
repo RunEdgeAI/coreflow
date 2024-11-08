@@ -44,7 +44,7 @@ public:
      * @brief Destroy the vx reference object
      * @ingroup group_int_reference
      */
-    ~Reference() = default;
+    ~Reference();
 
     /*! \brief Used to create a reference.
      * \note This does not add the reference to the system context yet.

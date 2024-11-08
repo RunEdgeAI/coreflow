@@ -50,6 +50,14 @@ Reference::Reference(vx_context context, vx_enum type, vx_reference scope)
     ownCreateSem(&lock, 1);
 }
 
+Reference::~Reference()
+{
+    ownDestroySem(&lock);
+    /* make sure no existing copies of refs can use ref again */
+    magic = VX_BAD_MAGIC;
+    VX_PRINT(VX_ZONE_REFERENCE, ">>>> Reference count was zero, destructed object " VX_FMT_REF "\n", this);
+}
+
 vx_bool Reference::isValidReference(vx_reference ref)
 {
     vx_bool ret = vx_false_e;
@@ -203,145 +211,125 @@ vx_reference Reference::createReference(vx_context context, vx_enum type, vx_ref
         {
             case VX_TYPE_GRAPH:
             {
-                const auto spT = new Graph(context, scope);
-                (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT);
+                ref = new Graph(context, scope);
+                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_NODE:
             {
-                const auto spT = new Node(context, scope);
-                (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT);
+                ref = new Node(context, scope);
+                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_KERNEL:
             {
-                const auto spT = new Kernel(context, scope);
-                (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT);
+                ref = new Kernel(context, scope);
+                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_PARAMETER:
             {
-                const auto spT = new Parameter(context, scope);
-                (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT);
+                ref = new Parameter(context, scope);
+                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_IMAGE:
             {
-                const auto spT = new Image(context, scope);
-                (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT);
+                ref = new Image(context, scope);
+                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_SCALAR:
             {
-                const auto spT = new Scalar(context, scope);
-                (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT);
+                ref = new Scalar(context, scope);
+                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_TENSOR:
             {
-                const auto spT = new Tensor(context, scope);
-                (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT);
+                ref = new Tensor(context, scope);
+                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_LUT:
             case VX_TYPE_ARRAY:
             {
-                const auto spT = new Array(context, type, scope);
-                (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT);
+                ref = new Array(context, type, scope);
+                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_OBJECT_ARRAY:
             {
-                const auto spT = new ObjectArray(context, scope);
-                (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT);
+                ref = new ObjectArray(context, scope);
+                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_MATRIX:
             {
-                const auto spT = new Matrix(context, scope);
-                (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT);
+                ref = new Matrix(context, scope);
+                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_CONVOLUTION:
             {
-                const auto spT = new Convolution(context, scope);
-                (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT);
+                ref = new Convolution(context, scope);
+                (void)context->addReference(ref);
                 break;
             }
 #if defined(OPENVX_USE_USER_DATA_OBJECT)
             case VX_TYPE_USER_DATA_OBJECT:
             {
-                const auto spT = new UserDataObject(context, scope);
-                (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT);
+                ref = new UserDataObject(context, scope);
+                (void)context->addReference(ref);
                 break;
             }
 #endif /* defined(OPENVX_USE_USER_DATA_OBJECT) */
             case VX_TYPE_DELAY:
             {
-                const auto spT = new Delay(context, scope);
-                (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT);
+                ref = new Delay(context, scope);
+                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_DISTRIBUTION:
             {
-                const auto spT = new Distribution(context, scope);
-                (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT);
+                ref = new Distribution(context, scope);
+                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_REMAP:
             {
-                const auto spT = new Remap(context, scope);
-                (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT);
+                ref = new Remap(context, scope);
+                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_PYRAMID:
             {
-                const auto spT = new Pyramid(context, scope);
-                (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT);
+                ref = new Pyramid(context, scope);
+                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_THRESHOLD:
             {
-                const auto spT = new Threshold(context, scope);
-                (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT);
+                ref = new Threshold(context, scope);
+                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_META_FORMAT:
             {
-                const auto spT = new MetaFormat(context, scope);
-                (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT);
+                ref = new MetaFormat(context, scope);
+                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_TARGET:
             {
-                const auto spT = new Target(context, scope);
-                (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT);
+                ref = new Target(context, scope);
+                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_IMPORT:
             {
-                const auto spT = new Import(context, scope);
-                (void)context->addReference(spT);
-                ref = static_cast<vx_reference>(spT);
+                ref = new Import(context, scope);
+                (void)context->addReference(ref);
                 break;
             }
             default:
@@ -395,17 +383,11 @@ vx_status Reference::releaseReference(
                 destructor(ref);
             }
 
-            ownDestroySem(&ref->lock);
-            /* make sure no existing copies of refs can use ref again */
-            ref->magic = VX_BAD_MAGIC;
-
             if (ref->context->removeReference(ref) == vx_false_e)
             {
                 status = VX_ERROR_INVALID_REFERENCE;
                 return status;
             }
-
-            VX_PRINT(VX_ZONE_REFERENCE, ">>>> Reference count was zero, destructed object " VX_FMT_REF "\n", ref);
         }
         *r = nullptr;
     }
