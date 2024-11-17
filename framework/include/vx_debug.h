@@ -21,7 +21,7 @@
 #include <string>
 #else
 #include <signal.h>
-#endif
+#endif /* __cplusplus */
 
 #if defined(__linux__) && !defined(__ANDROID__)
 #include <execinfo.h>
@@ -138,7 +138,7 @@ enum vx_debug_zone_e {
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 /*! \brief Internal Printing Function.
  * \param [in] zone The debug zone from \ref vx_debug_zone_e.
@@ -185,6 +185,6 @@ const char *ownGetObjectTypeName(vx_enum type);
 
 #ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
 #endif /* VX_DEBUG_H */
