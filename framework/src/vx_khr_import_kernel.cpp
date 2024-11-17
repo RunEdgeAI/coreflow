@@ -303,6 +303,7 @@ static vx_status vxSetMetaFormatNNEF(void *nnef_graph, vx_meta_format meta, cons
     return status;
 }
 
+extern "C"
 VX_API_ENTRY vx_kernel VX_API_CALL vxImportKernelFromURL(vx_context context, const vx_char * type, const vx_char * url)
 {
     vx_kernel kernel = NULL;
