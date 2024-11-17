@@ -52,25 +52,115 @@ public:
      */
     ~Array();
 
+    /**
+     * @brief Create a Array object
+     *
+     * @param context       context object
+     * @param item_type     array object type
+     * @param capacity      capacity of array
+     * @param is_virtual    is array virtual
+     * @param type          array or lut
+     * @return vx_array
+     * @ingroup group_int_array
+     */
     static vx_array createArray(vx_context context, vx_enum item_type, vx_size capacity, vx_bool is_virtual, vx_enum type);
 
+    /**
+     * @brief Validate array object
+     *
+     * @param item_type     array object type
+     * @param capacity      capacity of array
+     * @return vx_bool
+     * @ingroup group_int_array
+     */
     vx_bool validateArray(vx_enum item_type, vx_size capacity);
 
+    /**
+     * @brief Allocate memory for array object
+     *
+     * @return vx_bool
+     * @ingroup group_int_array
+     */
     vx_bool allocateArray();
 
+    /**
+     * @brief Initialize virutal array object
+     *
+     * @param item_type     array object type
+     * @param capacity      capacity of array
+     * @return vx_bool
+     * @ingroup group_int_array
+     */
     vx_bool initVirtualArray(vx_enum item_type, vx_size capacity);
 
+    /**
+     * @brief Access array range in object
+     *
+     * @param start     start index
+     * @param end       end index
+     * @param pStride   pointer of stride
+     * @param ptr       pointer to data
+     * @param usage     ro | rw | wo
+     * @return vx_status
+     * @ingroup group_int_array
+     */
     vx_status accessArrayRange(vx_size start, vx_size end, vx_size *pStride, void **ptr, vx_enum usage);
 
+    /**
+     * @brief Commit array range
+     *
+     * @param start     start index
+     * @param end       end index
+     * @param ptr       pointer to data
+     * @return vx_status
+     * @ingroup group_int_array
+     */
     vx_status commitArrayRange(vx_size start, vx_size end, const void *ptr);
 
+    /**
+     * @brief Copy array range
+     *
+     * @param start     start index
+     * @param end       end index
+     * @param stride    size of stride
+     * @param ptr       pointer to data
+     * @param usage     ro | rw | wo
+     * @param mem_type  host | device
+     * @return vx_status
+     * @ingroup group_int_array
+     */
     vx_status copyArrayRange(vx_size start, vx_size end, vx_size stride, void *ptr, vx_enum usage, vx_enum mem_type);
 
+    /**
+     * @brief Map array range
+     *
+     * @param start     start index
+     * @param end       end index
+     * @param map_id    memory map id
+     * @param stride    size of stride
+     * @param ptr       pointer to data
+     * @param usage     ro | rw | wo
+     * @param mem_type  host | device
+     * @param flags     additional flags
+     * @return vx_status
+     * @ingroup group_int_array
+     */
     vx_status mapArrayRange(vx_size start, vx_size end, vx_map_id *map_id, vx_size *stride,
                                 void **ptr, vx_enum usage, vx_enum mem_type, vx_uint32 flags);
 
+    /**
+     * @brief Unmap array range
+     *
+     * @param map_id        memory map id
+     * @return vx_status
+     * @ingroup group_int_array
+     */
     vx_status unmapArrayRange(vx_map_id map_id);
 
+    /**
+     * @brief Destruct function for array object
+     * @ingroup group_int_array
+     */
     void destructArray();
 
     /*! \brief The memory layout definition */
