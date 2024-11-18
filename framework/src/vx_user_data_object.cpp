@@ -66,6 +66,7 @@ VX_API_ENTRY vx_user_data_object VX_API_CALL vxCreateUserDataObject(
         if (size < 1U)
         {
             VX_PRINT(VX_ZONE_ERROR, "Invalid size for the user data object.\n");
+            return user_data_object;
             // user_data_object = (vx_user_data_object)ownGetErrorObject((vx_context)context, (vx_status)VX_ERROR_INVALID_PARAMETERS);
         }
 

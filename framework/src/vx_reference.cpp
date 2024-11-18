@@ -55,7 +55,7 @@ Reference::~Reference()
     ownDestroySem(&lock);
     /* make sure no existing copies of refs can use ref again */
     magic = VX_BAD_MAGIC;
-    VX_PRINT(VX_ZONE_REFERENCE, ">>>> Reference count was zero, destructed object " VX_FMT_REF "\n", this);
+    // VX_PRINT(VX_ZONE_REFERENCE, ">>>> Reference count was zero, destructed object " VX_FMT_REF "\n", this);
 }
 
 vx_bool Reference::isValidReference(vx_reference ref)
@@ -212,124 +212,104 @@ vx_reference Reference::createReference(vx_context context, vx_enum type, vx_ref
             case VX_TYPE_GRAPH:
             {
                 ref = new Graph(context, scope);
-                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_NODE:
             {
                 ref = new Node(context, scope);
-                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_KERNEL:
             {
                 ref = new Kernel(context, scope);
-                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_PARAMETER:
             {
                 ref = new Parameter(context, scope);
-                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_IMAGE:
             {
                 ref = new Image(context, scope);
-                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_SCALAR:
             {
                 ref = new Scalar(context, scope);
-                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_TENSOR:
             {
                 ref = new Tensor(context, scope);
-                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_LUT:
             case VX_TYPE_ARRAY:
             {
                 ref = new Array(context, type, scope);
-                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_OBJECT_ARRAY:
             {
                 ref = new ObjectArray(context, scope);
-                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_MATRIX:
             {
                 ref = new Matrix(context, scope);
-                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_CONVOLUTION:
             {
                 ref = new Convolution(context, scope);
-                (void)context->addReference(ref);
                 break;
             }
 #if defined(OPENVX_USE_USER_DATA_OBJECT)
             case VX_TYPE_USER_DATA_OBJECT:
             {
                 ref = new UserDataObject(context, scope);
-                (void)context->addReference(ref);
                 break;
             }
 #endif /* defined(OPENVX_USE_USER_DATA_OBJECT) */
             case VX_TYPE_DELAY:
             {
                 ref = new Delay(context, scope);
-                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_DISTRIBUTION:
             {
                 ref = new Distribution(context, scope);
-                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_REMAP:
             {
                 ref = new Remap(context, scope);
-                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_PYRAMID:
             {
                 ref = new Pyramid(context, scope);
-                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_THRESHOLD:
             {
                 ref = new Threshold(context, scope);
-                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_META_FORMAT:
             {
                 ref = new MetaFormat(context, scope);
-                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_TARGET:
             {
                 ref = new Target(context, scope);
-                (void)context->addReference(ref);
                 break;
             }
             case VX_TYPE_IMPORT:
             {
                 ref = new Import(context, scope);
-                (void)context->addReference(ref);
                 break;
             }
             default:
@@ -340,6 +320,7 @@ vx_reference Reference::createReference(vx_context context, vx_enum type, vx_ref
 
         if (ref)
         {
+            (void)context->addReference(ref);
             ref->incrementReference(refType);
         }
     }
@@ -384,7 +365,7 @@ vx_status Reference::releaseReference(vx_reference* r,
 
             if (ref->context->removeReference(ref) == vx_false_e)
             {
-                status = VX_ERROR_INVALID_REFERENCE;
+                status = VX_FAILURE;
                 return status;
             }
         }
