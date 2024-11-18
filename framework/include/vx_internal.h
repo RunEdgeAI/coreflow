@@ -137,7 +137,7 @@
 /*! \brief Maximum number of references in the context.
  * \ingroup group_int_defines
  */
-#define VX_INT_MAX_REF      (4096)
+#define VX_INT_MAX_REF      (14336)
 
 /*! \brief Maximum number of user defined structs/
  * \ingroup group_int_defines

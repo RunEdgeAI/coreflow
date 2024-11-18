@@ -303,11 +303,10 @@ VX_INT_API void Context::removeAccessor(vx_uint32 index)
 
 vx_bool Context::addReference(const vx_reference& ref)
 {
-    vx_uint32 r;
     vx_bool ret = vx_false_e;
     ownSemWait(&lock);
     {
-        for (r = 0; r < VX_INT_MAX_REF; r++)
+        for (vx_uint32 r = 0; r < VX_INT_MAX_REF; r++)
         {
             if (reftable[r] == nullptr)
             {
@@ -315,11 +314,17 @@ vx_bool Context::addReference(const vx_reference& ref)
                 num_references++;
                 ret = vx_true_e;
                 VX_PRINT(VX_ZONE_INFO, "Added ref %p to reftable\n", ref);
+                VX_PRINT(VX_ZONE_INFO, "Current num_references:%d\n", num_references);
                 break;
             }
         }
     }
     ownSemPost(&lock);
+    if (vx_false_e == ret)
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Failed to add ref %p to reftable\n", ref);
+        DEBUG_BREAK();
+    }
     return ret;
 }
 
@@ -927,9 +932,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
 
             /*! \internal wipe away the context memory first */
             /* Normally destroy sem is part of release reference, but can't for context */
-            ownDestroySem(&((vx_reference)context)->lock);
-            memset(context, 0, sizeof(Context));
-            // free((void *)context);
+            ownDestroySem(&context->lock);
             ownDestroySem(&global_lock);
             ownSemPost(&context_lock);
             ownDestroySem(&context_lock);
