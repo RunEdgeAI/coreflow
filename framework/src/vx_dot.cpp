@@ -187,8 +187,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
                 }
             }
 
-            ownClearVisitation(graph);
-            ownClearExecution(graph);
+            graph->clearVisitation();
+            graph->clearExecution();
             memcpy(next_nodes, graph->heads, graph->numHeads * sizeof(graph->heads[0]));
             num_next = graph->numHeads;
             num_last = 0;
@@ -207,7 +207,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
 
                         if (showData && node->kernel->signature.directions[p] == VX_INPUT)
                         {
-                            ownFindNodesWithReference(graph,node->parameters[p],
+                            graph->findNodesWithReference(node->parameters[p],
                                                      nullptr, &count,VX_OUTPUT);
                             if (count > 0) continue;
                             for (d = 0u; d < num_data; d++)
@@ -218,7 +218,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
                         }
                         else if (node->kernel->signature.directions[p] == VX_OUTPUT)
                         {
-                            status = ownFindNodesWithReference(graph,
+                            status = graph->findNodesWithReference(
                                                               node->parameters[p],
                                                               dep_nodes,
                                                               &count,
@@ -244,10 +244,10 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
                 memcpy(last_nodes, next_nodes, num_next * sizeof(next_nodes[0]));
                 num_last = num_next;
                 num_next = 0;
-                ownFindNextNodes(graph, last_nodes, num_last, next_nodes, &num_next, left_nodes, &num_left);
+                graph->findNextNodes(last_nodes, num_last, next_nodes, &num_next, left_nodes, &num_left);
             } while (num_next > 0);
-            ownClearVisitation(graph);
-            ownClearExecution(graph);
+            graph->clearVisitation();
+            graph->clearExecution();
             fprintf(fp, "}\n");
             fclose(fp);
         }

@@ -21,56 +21,8 @@ static vx_value_set_t graph_queue[10];
 static vx_size numGraphsQueued = 0ul;
 
 /******************************************************************************/
-/* INTERNAL FUNCTIONS */
+/* STATIC FUNCTIONS */
 /******************************************************************************/
-
-Graph::Graph(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_GRAPH, scope),
-nodes(),
-perf(),
-numNodes(0),
-heads(),
-numHeads(0),
-state(VX_FAILURE),
-verified(vx_false_e),
-reverify(vx_false_e),
-lock(),
-parameters(),
-numParams(0),
-should_serialize(vx_false_e),
-parentGraph(nullptr),
-delays()
-{
-}
-
-Graph::~Graph()
-{
-    destructGraph();
-}
-
-void Graph::destructGraph()
-{
-    vx_graph graph = this;
-
-    for (int n = 0; n < VX_INT_MAX_REF; n++)
-    {
-        vx_node node = (vx_node)graph->nodes[n];
-        /* Interpretation of spec is to release all external references of Nodes when vxReleaseGraph()
-           is called AND all graph references count == 0 (garbage collection).
-           However, it may be possible that the user would have already released its external reference
-           so we need to check. */
-        if(node)
-        {
-            node->removeNode();
-            if (node->external_count)
-            {
-                Reference::releaseReference((vx_reference*)&node, VX_TYPE_NODE, VX_EXTERNAL, nullptr);
-            }
-        }
-    }
-    // execution lock
-    ownDestroySem(&graph->lock);
-}
-
 static vx_uint32 vxNextNode(vx_graph graph, vx_uint32 index)
 {
     return ((index + 1) % graph->numNodes);
@@ -230,324 +182,7 @@ static vx_bool vxCheckWriteDependency(vx_reference ref1, vx_reference ref2)
     return vx_false_e;
 }
 
-/*! \brief This function starts on the next node in the list and loops until we
- * hit the original node again. Parse over the nodes in circular fashion.
- */
-vx_status ownFindNodesWithReference(vx_graph graph,
-                                   vx_reference ref,
-                                   vx_uint32 refnodes[],
-                                   vx_uint32 *count,
-                                   vx_enum reftype)
-{
-    vx_uint32 n, p, nc = 0, max;
-    vx_status status = VX_ERROR_INVALID_LINK;
-
-    /* save the maximum number of nodes to find */
-    max = *count;
-
-    /* reset the current count to zero */
-    *count = 0;
-
-    VX_PRINT(VX_ZONE_GRAPH,"Find nodes with reference " VX_FMT_REF " type %d over %u nodes upto %u finds\n", ref, reftype, graph->numNodes, max);
-    for (n = 0; n < graph->numNodes; n++)
-    {
-        for (p = 0; p < graph->nodes[n]->kernel->signature.num_parameters; p++)
-        {
-            vx_enum dir = graph->nodes[n]->kernel->signature.directions[p];
-            vx_reference thisref = graph->nodes[n]->parameters[p];
-
-            VX_PRINT(VX_ZONE_GRAPH,"\tchecking node[%u].parameter[%u] dir = %d ref = " VX_FMT_REF " (=?%d:" VX_FMT_REF ")\n", n, p, dir, thisref, reftype, ref);
-            if ((dir == reftype) && vxCheckWriteDependency(thisref, ref))
-            {
-                if (nc < max)
-                {
-                    VX_PRINT(VX_ZONE_GRAPH, "match at node[%u].parameter[%u]\n", n, p);
-                    if (refnodes)
-                        refnodes[nc] = n;
-                    nc++;
-                    status = VX_SUCCESS;
-                }
-                else
-                {
-                    VX_PRINT(VX_ZONE_ERROR, "ERROR: Overflow in refnodes[]\n");
-                }
-            }
-        }
-    }
-    *count = nc;
-    VX_PRINT(VX_ZONE_GRAPH, "Found %u nodes with reference " VX_FMT_REF " status = %d\n", nc, ref, status);
-    return status;
-}
-
-void ownClearVisitation(vx_graph graph)
-{
-    vx_uint32 n = 0;
-    for (n = 0; n < graph->numNodes; n++)
-        graph->nodes[n]->visited = vx_false_e;
-}
-
-void ownClearExecution(vx_graph graph)
-{
-    vx_uint32 n = 0;
-    for (n = 0; n < graph->numNodes; n++)
-        graph->nodes[n]->executed = vx_false_e;
-}
-
-vx_status ownTraverseGraph(vx_graph graph,
-                          vx_uint32 parentIndex,
-                          vx_uint32 childIndex)
-{
-    /* this is expensive, but needed in order to know who references a parameter */
-    static vx_uint32 refNodes[VX_INT_MAX_REF];
-    /* this keeps track of the available starting point in the static buffer */
-    static vx_uint32 refStart = 0;
-    /* this makes sure we don't have any odd conditions about infinite depth */
-    static vx_uint32 depth = 0;
-
-    vx_uint32 refCount = 0;
-    vx_uint32 refIndex = 0;
-    vx_uint32 thisIndex = 0;
-    vx_status status = VX_SUCCESS;
-    vx_uint32 p = 0;
-
-    VX_PRINT(VX_ZONE_GRAPH, "refStart = %u\n", refStart);
-
-    if (parentIndex == childIndex && parentIndex != VX_INT_MAX_NODES)
-    {
-        VX_PRINT(VX_ZONE_ERROR, "################################\n");
-        VX_PRINT(VX_ZONE_ERROR, "ERROR: CYCLE DETECTED! node[%u]\n", parentIndex);
-        VX_PRINT(VX_ZONE_ERROR, "################################\n");
-        /* there's a cycle in the graph */
-        status = VX_ERROR_INVALID_GRAPH;
-    }
-    else if (depth > graph->numNodes) /* should be impossible under normal circumstances */
-    {
-        /* there's a cycle in the graph */
-        status = VX_ERROR_INVALID_GRAPH;
-    }
-    else
-    {
-        /* if the parent is an invalid index, then we assume we're processing a
-         * head of a graph which has no parent index.
-         */
-        if (parentIndex == VX_INT_MAX_NODES)
-        {
-            parentIndex = childIndex;
-            thisIndex = parentIndex;
-            VX_PRINT(VX_ZONE_GRAPH, "Starting head-first traverse of graph from node[%u]\n", thisIndex);
-        }
-        else
-        {
-            thisIndex = childIndex;
-            VX_PRINT(VX_ZONE_GRAPH, "continuing traverse of graph from node[%u] on node[%u] start=%u\n", parentIndex, thisIndex, refStart);
-        }
-
-        for (p = 0; p < graph->nodes[thisIndex]->kernel->signature.num_parameters; p++)
-        {
-            vx_enum dir = graph->nodes[thisIndex]->kernel->signature.directions[p];
-            vx_reference ref = graph->nodes[thisIndex]->parameters[p];
-
-            if (dir != VX_INPUT && ref != NULL)
-            {
-                VX_PRINT(VX_ZONE_GRAPH, "[traverse] node[%u].parameter[%u] = " VX_FMT_REF "\n", thisIndex, p, ref);
-                /* send the maximum number of possible nodes to find */
-                refCount = dimof(refNodes) - refStart;
-                status = ownFindNodesWithReference(graph, ref, &refNodes[refStart], &refCount, VX_INPUT);
-                VX_PRINT(VX_ZONE_GRAPH, "status = %d at node[%u] start=%u count=%u\n", status, thisIndex, refStart, refCount);
-                if (status == VX_SUCCESS)
-                {
-                    vx_uint32 refStop = refStart + refCount;
-                    VX_PRINT(VX_ZONE_GRAPH, "Looping from %u to %u\n", refStart, refStop);
-                    for (refIndex = refStart; refIndex < refStop; refIndex++)
-                    {
-                        vx_status child_status = VX_SUCCESS;
-                        VX_PRINT(VX_ZONE_GRAPH, "node[%u] => node[%u]\n", thisIndex, refNodes[refIndex]);
-                        refStart += refCount;
-                        depth++; /* go one more level in */
-                        child_status = ownTraverseGraph(graph, thisIndex, refNodes[refIndex]);
-                        if (child_status != VX_SUCCESS)
-                            status = child_status;
-                        depth--; /* pull out one level */
-                        refStart -= refCount;
-                        VX_PRINT(VX_ZONE_GRAPH, "status = %d at node[%u]\n", status, thisIndex);
-                    }
-                }
-                if (status == VX_ERROR_INVALID_LINK) /* no links at all */
-                {
-                    VX_PRINT(VX_ZONE_GRAPH, "[Ok] No link found for node[%u].parameter[%u]\n", thisIndex, p);
-                    status = VX_SUCCESS;
-                }
-            }
-            else
-            {
-                VX_PRINT(VX_ZONE_GRAPH, "[ ignore ] node[%u].parameter[%u] = " VX_FMT_REF " type %d\n", childIndex, p, ref, dir);
-            }
-            if (status == VX_ERROR_INVALID_GRAPH)
-                break;
-        }
-
-        if (status == VX_SUCCESS)
-        {
-            /* mark it visited for the next check to pass */
-            graph->nodes[thisIndex]->visited = vx_true_e;
-        }
-    }
-    VX_PRINT(VX_ZONE_GRAPH, "returning status %d\n", status);
-    return status;
-}
-
-void ownFindNextNodes(vx_graph graph,
-                     vx_uint32 last_nodes[VX_INT_MAX_REF], vx_uint32 numLast,
-                     vx_uint32 next_nodes[VX_INT_MAX_REF], vx_uint32 *numNext,
-                     vx_uint32 left_nodes[VX_INT_MAX_REF], vx_uint32 *numLeft)
-{
-    vx_uint32 poss_next[VX_INT_MAX_REF];
-    vx_uint32 i,n,p,n1,numPoss = 0;
-
-    VX_PRINT(VX_ZONE_GRAPH, "Entering with %u left nodes\n", *numLeft);
-    for (n = 0; n < *numLeft; n++)
-    {
-        VX_PRINT(VX_ZONE_GRAPH, "leftover: node[%u] = %s\n", left_nodes[n], graph->nodes[left_nodes[n]]->kernel->name);
-    }
-
-    numPoss = 0;
-    *numNext = 0;
-
-    /* for each last node, add all output to input nodes to the list of possible. */
-    for (i = 0; i < numLast; i++)
-    {
-        n = last_nodes[i];
-        for (p = 0; p < graph->nodes[n]->kernel->signature.num_parameters; p++)
-        {
-            vx_enum dir = graph->nodes[n]->kernel->signature.directions[p];
-            vx_reference ref =  graph->nodes[n]->parameters[p];
-            if (((dir == VX_OUTPUT) || (dir == VX_BIDIRECTIONAL)) && (ref != NULL))
-            {
-                /* send the max possible nodes */
-                n1 = dimof(poss_next) - numPoss;
-                if (ownFindNodesWithReference(graph, ref, &poss_next[numPoss], &n1, VX_INPUT) == VX_SUCCESS)
-                {
-                    VX_PRINT(VX_ZONE_GRAPH, "Adding %u nodes to possible list\n", n1);
-                    numPoss += n1;
-                }
-            }
-        }
-    }
-
-    VX_PRINT(VX_ZONE_GRAPH, "There are %u possible nodes\n", numPoss);
-
-    /* add back all the left over nodes (making sure to not include duplicates) */
-    for (i = 0; i < *numLeft; i++)
-    {
-        vx_uint32 j;
-        vx_bool match = vx_false_e;
-        for (j = 0; j < numPoss; j++)
-        {
-            if (left_nodes[i] == poss_next[j])
-            {
-                match = vx_true_e;
-            }
-        }
-        if (match == vx_false_e)
-        {
-            VX_PRINT(VX_ZONE_GRAPH, "Adding back left over node[%u] %s\n", left_nodes[i], graph->nodes[left_nodes[i]]->kernel->name);
-            poss_next[numPoss++] = left_nodes[i];
-        }
-    }
-    *numLeft = 0;
-
-    /* now check all possible next nodes to see if the parent nodes are visited. */
-    for (i = 0; i < numPoss; i++)
-    {
-        vx_uint32 poss_params[VX_INT_MAX_PARAMS];
-        vx_uint32 pi, numPossParam = 0;
-        vx_bool ready = vx_true_e;
-
-        n = poss_next[i];
-        VX_PRINT(VX_ZONE_GRAPH, "possible: node[%u] = %s\n", n, graph->nodes[n]->kernel->name);
-        for (p = 0; p < graph->nodes[n]->kernel->signature.num_parameters; p++)
-        {
-            if (graph->nodes[n]->kernel->signature.directions[p] == VX_INPUT)
-            {
-                VX_PRINT(VX_ZONE_GRAPH,"nodes[%u].parameter[%u] predicate needs to be checked\n", n, p);
-                poss_params[numPossParam] = p;
-                numPossParam++;
-            }
-        }
-
-        /* now check to make sure all possible input parameters have their */
-        /* parent nodes executed. */
-        for (pi = 0; pi < numPossParam; pi++)
-        {
-            vx_uint32 predicate_nodes[VX_INT_MAX_REF];
-            vx_uint32 predicate_count = 0;
-            vx_uint32 predicate_index = 0;
-            vx_uint32 refIdx = 0;
-            vx_reference ref = 0;
-            vx_enum reftype[2] = {VX_OUTPUT, VX_BIDIRECTIONAL};
-
-            p = poss_params[pi];
-            ref = graph->nodes[n]->parameters[p];
-            VX_PRINT(VX_ZONE_GRAPH, "checking node[%u].parameter[%u] = " VX_FMT_REF "\n", n, p, ref);
-
-            for(refIdx = 0; refIdx < dimof(reftype); refIdx++)
-            {
-                /* set the size of predicate nodes going in */
-                predicate_count = dimof(predicate_nodes);
-                if (ownFindNodesWithReference(graph, ref, predicate_nodes, &predicate_count, reftype[refIdx]) == VX_SUCCESS)
-                {
-                    /* check to see of all of the predicate nodes are executed */
-                    for (predicate_index = 0;
-                         predicate_index < predicate_count;
-                         predicate_index++)
-                    {
-                        n1 = predicate_nodes[predicate_index];
-                        if (graph->nodes[n1]->executed == vx_false_e)
-                        {
-                            VX_PRINT(VX_ZONE_GRAPH, "predicated: node[%u] = %s\n", n1, graph->nodes[n1]->kernel->name);
-                            ready = vx_false_e;
-                            break;
-                        }
-                    }
-                }
-                if(ready == vx_false_e)
-                {
-                    break;
-                }
-            }
-        }
-        if (ready == vx_true_e)
-        {
-            /* make sure we don't schedule this node twice */
-            if (graph->nodes[n]->visited == vx_false_e)
-            {
-                next_nodes[(*numNext)++] = n;
-                graph->nodes[n]->visited = vx_true_e;
-            }
-        }
-        else
-        {
-            /* put the node back into the possible list for next time */
-            left_nodes[(*numLeft)++] = n;
-            VX_PRINT(VX_ZONE_GRAPH, "notready: node[%u] = %s\n", n, graph->nodes[n]->kernel->name);
-        }
-    }
-
-    VX_PRINT(VX_ZONE_GRAPH, "%u Next Nodes\n", *numNext);
-    for (i = 0; i < *numNext; i++)
-    {
-        n = next_nodes[i];
-        VX_PRINT(VX_ZONE_GRAPH, "next: node[%u] = %s\n", n, graph->nodes[n]->kernel->name);
-    }
-    VX_PRINT(VX_ZONE_GRAPH, "%u Left Nodes\n", *numLeft);
-    for (i = 0; i < *numLeft; i++)
-    {
-        n = left_nodes[i];
-        VX_PRINT(VX_ZONE_GRAPH, "left: node[%u] = %s\n", n, graph->nodes[n]->kernel->name);
-    }
-}
-
-void ownContaminateGraphs(vx_reference ref)
+void vxContaminateGraphs(vx_reference ref)
 {
     if (Reference::isValidReference(ref) == vx_true_e)
     {
@@ -589,6 +224,370 @@ void ownContaminateGraphs(vx_reference ref)
         }
         ownSemPost(&context->lock);
     }
+}
+
+/******************************************************************************/
+/* INTERNAL FUNCTIONS */
+/******************************************************************************/
+
+Graph::Graph(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_GRAPH, scope),
+nodes(),
+perf(),
+numNodes(0),
+heads(),
+numHeads(0),
+state(VX_FAILURE),
+verified(vx_false_e),
+reverify(vx_false_e),
+lock(),
+parameters(),
+numParams(0),
+should_serialize(vx_false_e),
+parentGraph(nullptr),
+delays()
+{
+}
+
+Graph::~Graph()
+{
+    destructGraph();
+}
+
+void Graph::clearVisitation()
+{
+    vx_uint32 n = 0;
+    for (n = 0; n < numNodes; n++)
+        nodes[n]->visited = vx_false_e;
+}
+
+void Graph::clearExecution()
+{
+    vx_uint32 n = 0;
+    for (n = 0; n < numNodes; n++)
+        nodes[n]->executed = vx_false_e;
+}
+
+vx_status Graph::findNodesWithReference(
+                                   vx_reference ref,
+                                   vx_uint32 refnodes[],
+                                   vx_uint32 *count,
+                                   vx_enum reftype)
+{
+    vx_uint32 n, p, nc = 0, max;
+    vx_status status = VX_ERROR_INVALID_LINK;
+
+    /* save the maximum number of nodes to find */
+    max = *count;
+
+    /* reset the current count to zero */
+    *count = 0;
+
+    VX_PRINT(VX_ZONE_GRAPH,"Find nodes with reference " VX_FMT_REF " type %d over %u nodes upto %u finds\n", ref, reftype, numNodes, max);
+    for (n = 0; n < numNodes; n++)
+    {
+        for (p = 0; p < nodes[n]->kernel->signature.num_parameters; p++)
+        {
+            vx_enum dir = nodes[n]->kernel->signature.directions[p];
+            vx_reference thisref = nodes[n]->parameters[p];
+
+            VX_PRINT(VX_ZONE_GRAPH,"\tchecking node[%u].parameter[%u] dir = %d ref = " VX_FMT_REF " (=?%d:" VX_FMT_REF ")\n", n, p, dir, thisref, reftype, ref);
+            if ((dir == reftype) && vxCheckWriteDependency(thisref, ref))
+            {
+                if (nc < max)
+                {
+                    VX_PRINT(VX_ZONE_GRAPH, "match at node[%u].parameter[%u]\n", n, p);
+                    if (refnodes)
+                        refnodes[nc] = n;
+                    nc++;
+                    status = VX_SUCCESS;
+                }
+                else
+                {
+                    VX_PRINT(VX_ZONE_ERROR, "ERROR: Overflow in refnodes[]\n");
+                }
+            }
+        }
+    }
+    *count = nc;
+    VX_PRINT(VX_ZONE_GRAPH, "Found %u nodes with reference " VX_FMT_REF " status = %d\n", nc, ref, status);
+    return status;
+}
+
+void Graph::findNextNodes(
+                     vx_uint32 last_nodes[VX_INT_MAX_REF], vx_uint32 numLast,
+                     vx_uint32 next_nodes[VX_INT_MAX_REF], vx_uint32 *numNext,
+                     vx_uint32 left_nodes[VX_INT_MAX_REF], vx_uint32 *numLeft)
+{
+    vx_uint32 poss_next[VX_INT_MAX_REF];
+    vx_uint32 i,n,p,n1,numPoss = 0;
+
+    VX_PRINT(VX_ZONE_GRAPH, "Entering with %u left nodes\n", *numLeft);
+    for (n = 0; n < *numLeft; n++)
+    {
+        VX_PRINT(VX_ZONE_GRAPH, "leftover: node[%u] = %s\n", left_nodes[n], nodes[left_nodes[n]]->kernel->name);
+    }
+
+    numPoss = 0;
+    *numNext = 0;
+
+    /* for each last node, add all output to input nodes to the list of possible. */
+    for (i = 0; i < numLast; i++)
+    {
+        n = last_nodes[i];
+        for (p = 0; p < nodes[n]->kernel->signature.num_parameters; p++)
+        {
+            vx_enum dir = nodes[n]->kernel->signature.directions[p];
+            vx_reference ref =  nodes[n]->parameters[p];
+            if (((dir == VX_OUTPUT) || (dir == VX_BIDIRECTIONAL)) && (ref != NULL))
+            {
+                /* send the max possible nodes */
+                n1 = dimof(poss_next) - numPoss;
+                if (findNodesWithReference(ref, &poss_next[numPoss], &n1, VX_INPUT) == VX_SUCCESS)
+                {
+                    VX_PRINT(VX_ZONE_GRAPH, "Adding %u nodes to possible list\n", n1);
+                    numPoss += n1;
+                }
+            }
+        }
+    }
+
+    VX_PRINT(VX_ZONE_GRAPH, "There are %u possible nodes\n", numPoss);
+
+    /* add back all the left over nodes (making sure to not include duplicates) */
+    for (i = 0; i < *numLeft; i++)
+    {
+        vx_uint32 j;
+        vx_bool match = vx_false_e;
+        for (j = 0; j < numPoss; j++)
+        {
+            if (left_nodes[i] == poss_next[j])
+            {
+                match = vx_true_e;
+            }
+        }
+        if (match == vx_false_e)
+        {
+            VX_PRINT(VX_ZONE_GRAPH, "Adding back left over node[%u] %s\n", left_nodes[i], nodes[left_nodes[i]]->kernel->name);
+            poss_next[numPoss++] = left_nodes[i];
+        }
+    }
+    *numLeft = 0;
+
+    /* now check all possible next nodes to see if the parent nodes are visited. */
+    for (i = 0; i < numPoss; i++)
+    {
+        vx_uint32 poss_params[VX_INT_MAX_PARAMS];
+        vx_uint32 pi, numPossParam = 0;
+        vx_bool ready = vx_true_e;
+
+        n = poss_next[i];
+        VX_PRINT(VX_ZONE_GRAPH, "possible: node[%u] = %s\n", n, nodes[n]->kernel->name);
+        for (p = 0; p < nodes[n]->kernel->signature.num_parameters; p++)
+        {
+            if (nodes[n]->kernel->signature.directions[p] == VX_INPUT)
+            {
+                VX_PRINT(VX_ZONE_GRAPH,"nodes[%u].parameter[%u] predicate needs to be checked\n", n, p);
+                poss_params[numPossParam] = p;
+                numPossParam++;
+            }
+        }
+
+        /* now check to make sure all possible input parameters have their */
+        /* parent nodes executed. */
+        for (pi = 0; pi < numPossParam; pi++)
+        {
+            vx_uint32 predicate_nodes[VX_INT_MAX_REF];
+            vx_uint32 predicate_count = 0;
+            vx_uint32 predicate_index = 0;
+            vx_uint32 refIdx = 0;
+            vx_reference ref = 0;
+            vx_enum reftype[2] = {VX_OUTPUT, VX_BIDIRECTIONAL};
+
+            p = poss_params[pi];
+            ref = nodes[n]->parameters[p];
+            VX_PRINT(VX_ZONE_GRAPH, "checking node[%u].parameter[%u] = " VX_FMT_REF "\n", n, p, ref);
+
+            for(refIdx = 0; refIdx < dimof(reftype); refIdx++)
+            {
+                /* set the size of predicate nodes going in */
+                predicate_count = dimof(predicate_nodes);
+                if (findNodesWithReference(ref, predicate_nodes, &predicate_count, reftype[refIdx]) == VX_SUCCESS)
+                {
+                    /* check to see of all of the predicate nodes are executed */
+                    for (predicate_index = 0;
+                         predicate_index < predicate_count;
+                         predicate_index++)
+                    {
+                        n1 = predicate_nodes[predicate_index];
+                        if (nodes[n1]->executed == vx_false_e)
+                        {
+                            VX_PRINT(VX_ZONE_GRAPH, "predicated: node[%u] = %s\n", n1, nodes[n1]->kernel->name);
+                            ready = vx_false_e;
+                            break;
+                        }
+                    }
+                }
+                if(ready == vx_false_e)
+                {
+                    break;
+                }
+            }
+        }
+        if (ready == vx_true_e)
+        {
+            /* make sure we don't schedule this node twice */
+            if (nodes[n]->visited == vx_false_e)
+            {
+                next_nodes[(*numNext)++] = n;
+                nodes[n]->visited = vx_true_e;
+            }
+        }
+        else
+        {
+            /* put the node back into the possible list for next time */
+            left_nodes[(*numLeft)++] = n;
+            VX_PRINT(VX_ZONE_GRAPH, "notready: node[%u] = %s\n", n, nodes[n]->kernel->name);
+        }
+    }
+
+    VX_PRINT(VX_ZONE_GRAPH, "%u Next Nodes\n", *numNext);
+    for (i = 0; i < *numNext; i++)
+    {
+        n = next_nodes[i];
+        VX_PRINT(VX_ZONE_GRAPH, "next: node[%u] = %s\n", n, nodes[n]->kernel->name);
+    }
+    VX_PRINT(VX_ZONE_GRAPH, "%u Left Nodes\n", *numLeft);
+    for (i = 0; i < *numLeft; i++)
+    {
+        n = left_nodes[i];
+        VX_PRINT(VX_ZONE_GRAPH, "left: node[%u] = %s\n", n, nodes[n]->kernel->name);
+    }
+}
+
+vx_status Graph::traverseGraph(vx_uint32 parentIndex,
+                               vx_uint32 childIndex)
+{
+    /* this is expensive, but needed in order to know who references a parameter */
+    static vx_uint32 refNodes[VX_INT_MAX_REF];
+    /* this keeps track of the available starting point in the static buffer */
+    static vx_uint32 refStart = 0;
+    /* this makes sure we don't have any odd conditions about infinite depth */
+    static vx_uint32 depth = 0;
+
+    vx_uint32 refCount = 0;
+    vx_uint32 refIndex = 0;
+    vx_uint32 thisIndex = 0;
+    vx_status status = VX_SUCCESS;
+    vx_uint32 p = 0;
+
+    VX_PRINT(VX_ZONE_GRAPH, "refStart = %u\n", refStart);
+
+    if (parentIndex == childIndex && parentIndex != VX_INT_MAX_NODES)
+    {
+        VX_PRINT(VX_ZONE_ERROR, "################################\n");
+        VX_PRINT(VX_ZONE_ERROR, "ERROR: CYCLE DETECTED! node[%u]\n", parentIndex);
+        VX_PRINT(VX_ZONE_ERROR, "################################\n");
+        /* there's a cycle in the graph */
+        status = VX_ERROR_INVALID_GRAPH;
+    }
+    else if (depth > numNodes) /* should be impossible under normal circumstances */
+    {
+        /* there's a cycle in the graph */
+        status = VX_ERROR_INVALID_GRAPH;
+    }
+    else
+    {
+        /* if the parent is an invalid index, then we assume we're processing a
+         * head of a graph which has no parent index.
+         */
+        if (parentIndex == VX_INT_MAX_NODES)
+        {
+            parentIndex = childIndex;
+            thisIndex = parentIndex;
+            VX_PRINT(VX_ZONE_GRAPH, "Starting head-first traverse of graph from node[%u]\n", thisIndex);
+        }
+        else
+        {
+            thisIndex = childIndex;
+            VX_PRINT(VX_ZONE_GRAPH, "continuing traverse of graph from node[%u] on node[%u] start=%u\n", parentIndex, thisIndex, refStart);
+        }
+
+        for (p = 0; p < nodes[thisIndex]->kernel->signature.num_parameters; p++)
+        {
+            vx_enum dir = nodes[thisIndex]->kernel->signature.directions[p];
+            vx_reference ref = nodes[thisIndex]->parameters[p];
+
+            if (dir != VX_INPUT && ref != NULL)
+            {
+                VX_PRINT(VX_ZONE_GRAPH, "[traverse] node[%u].parameter[%u] = " VX_FMT_REF "\n", thisIndex, p, ref);
+                /* send the maximum number of possible nodes to find */
+                refCount = dimof(refNodes) - refStart;
+                status = findNodesWithReference(ref, &refNodes[refStart], &refCount, VX_INPUT);
+                VX_PRINT(VX_ZONE_GRAPH, "status = %d at node[%u] start=%u count=%u\n", status, thisIndex, refStart, refCount);
+                if (status == VX_SUCCESS)
+                {
+                    vx_uint32 refStop = refStart + refCount;
+                    VX_PRINT(VX_ZONE_GRAPH, "Looping from %u to %u\n", refStart, refStop);
+                    for (refIndex = refStart; refIndex < refStop; refIndex++)
+                    {
+                        vx_status child_status = VX_SUCCESS;
+                        VX_PRINT(VX_ZONE_GRAPH, "node[%u] => node[%u]\n", thisIndex, refNodes[refIndex]);
+                        refStart += refCount;
+                        depth++; /* go one more level in */
+                        child_status = traverseGraph(thisIndex, refNodes[refIndex]);
+                        if (child_status != VX_SUCCESS)
+                            status = child_status;
+                        depth--; /* pull out one level */
+                        refStart -= refCount;
+                        VX_PRINT(VX_ZONE_GRAPH, "status = %d at node[%u]\n", status, thisIndex);
+                    }
+                }
+                if (status == VX_ERROR_INVALID_LINK) /* no links at all */
+                {
+                    VX_PRINT(VX_ZONE_GRAPH, "[Ok] No link found for node[%u].parameter[%u]\n", thisIndex, p);
+                    status = VX_SUCCESS;
+                }
+            }
+            else
+            {
+                VX_PRINT(VX_ZONE_GRAPH, "[ ignore ] node[%u].parameter[%u] = " VX_FMT_REF " type %d\n", childIndex, p, ref, dir);
+            }
+            if (status == VX_ERROR_INVALID_GRAPH)
+                break;
+        }
+
+        if (status == VX_SUCCESS)
+        {
+            /* mark it visited for the next check to pass */
+            nodes[thisIndex]->visited = vx_true_e;
+        }
+    }
+    VX_PRINT(VX_ZONE_GRAPH, "returning status %d\n", status);
+    return status;
+}
+
+void Graph::destructGraph()
+{
+    vx_graph graph = this;
+
+    for (int n = 0; n < VX_INT_MAX_REF; n++)
+    {
+        vx_node node = (vx_node)graph->nodes[n];
+        /* Interpretation of spec is to release all external references of Nodes when vxReleaseGraph()
+           is called AND all graph references count == 0 (garbage collection).
+           However, it may be possible that the user would have already released its external reference
+           so we need to check. */
+        if(node)
+        {
+            node->removeNode();
+            if (node->external_count)
+            {
+                Reference::releaseReference((vx_reference*)&node, VX_TYPE_NODE, VX_EXTERNAL, nullptr);
+            }
+        }
+    }
+    // execution lock
+    ownDestroySem(&graph->lock);
 }
 
 /******************************************************************************/
@@ -2233,13 +2232,13 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
         VX_PRINT(VX_ZONE_GRAPH,"Cycle Checking (%d)\n", status);
         VX_PRINT(VX_ZONE_GRAPH,"##############\n");
 
-        ownClearVisitation(graph);
+        graph->clearVisitation();
 
         /* cycle checking by traversal of the graph from heads to tails */
         for (h = 0; h < graph->numHeads; h++)
         {
             vx_status cycle_status = VX_SUCCESS;
-            status = ownTraverseGraph(graph, VX_INT_MAX_NODES, graph->heads[h]);
+            status = graph->traverseGraph(VX_INT_MAX_NODES, graph->heads[h]);
             if (cycle_status != VX_SUCCESS)
             {
                 status = cycle_status;
@@ -2263,7 +2262,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
             }
         }
 
-        ownClearVisitation(graph);
+        graph->clearVisitation();
 
         if (hasACycle == vx_true_e)
         {
@@ -2439,8 +2438,8 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
     VX_PRINT(VX_ZONE_GRAPH,"************************\n");
 
     graph->state = VX_GRAPH_STATE_RUNNING;
-    ownClearVisitation(graph);
-    ownClearExecution(graph);
+    graph->clearVisitation();
+    graph->clearExecution();
     if (context->perf_enabled)
     {
         ownStartCapture(&graph->perf);
@@ -2561,7 +2560,7 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
         numLast = numNext;
 
         /* determine the next nodes */
-        ownFindNextNodes(graph, last_nodes, numLast, next_nodes, &numNext, left_nodes, &numLeft);
+        graph->findNextNodes(last_nodes, numLast, next_nodes, &numNext, left_nodes, &numLeft);
 
     } while (numNext > 0);
 
@@ -2573,7 +2572,7 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
     {
         ownStopCapture(&graph->perf);
     }
-    ownClearVisitation(graph);
+    graph->clearVisitation();
 
     for (n = 0; n < VX_INT_MAX_REF; n++)
     {
