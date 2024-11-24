@@ -197,7 +197,7 @@ void vx_print(vx_enum zone, const char *format, ...)
 
 void vx_print(vx_enum zone, const char *format, ...)
 {
-    // if (vx_zone_mask & ZONE_BIT(zone))
+    if (vx_zone_mask & ZONE_BIT(zone))
     {
         char string[1024];
         va_list ap;

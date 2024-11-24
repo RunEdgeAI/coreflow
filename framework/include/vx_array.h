@@ -17,8 +17,6 @@
 #ifndef VX_ARRAY_H
 #define VX_ARRAY_H
 
-#include <VX/vx.h>
-
 #include "vx_reference.h"
 
 /*! \brief The internal representation of a \ref vx_array

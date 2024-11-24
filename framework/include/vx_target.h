@@ -17,8 +17,6 @@
 #ifndef VX_TARGET_H
 #define VX_TARGET_H
 
-#include <VX/vx.h>
-
 #include "vx_internal.h"
 
 /*!

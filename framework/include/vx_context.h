@@ -18,8 +18,6 @@
 
 #include <memory>
 
-#include <VX/vx.h>
-
 #include "vx_internal.h"
 #include "vx_reference.h"
 

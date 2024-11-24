@@ -17,7 +17,6 @@
 #ifndef VX_SCALAR_H
 #define VX_SCALAR_H
 
-#include <VX/vx.h>
 #include "vx_internal.h"
 
 /*!

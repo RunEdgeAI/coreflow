@@ -17,8 +17,6 @@
 #ifndef VX_REFERENCE_H
 #define VX_REFERENCE_H
 
-#include <VX/vx.h>
-
 #include "vx_internal.h"
 
 #define VX_BAD_MAGIC (42)

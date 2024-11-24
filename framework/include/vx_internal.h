@@ -422,6 +422,8 @@ struct vx_threadpool_t;
 struct vx_threadpool_worker_t;
 class Target;
 using vx_target = Target*;
+class Error;
+using vx_error = Error*;
 
 /*! \brief The function pointer to the worker function.
  * \param [in] worker The per-thread worker data structure.
@@ -496,16 +498,6 @@ typedef enum vx_reftype_e {
     VX_INTERNAL = 1,
     VX_EXTERNAL = 2,
     VX_BOTH = 3,
-};
-
-/*! \brief The internal representation of the error object.
- * \ingroup group_int_error
- */
-typedef struct vx_error_t {
-    /*! \brief The "base" reference object. */
-    vx_reference base;
-    /*! \brief The specific error code contained in this object. */
-    vx_status status;
 };
 
 /*! \brief The internal representation of the attributes associated with a run-time parameter.
@@ -900,7 +892,7 @@ static vx_type_size_t type_sizes[] = {
     {VX_TYPE_LINE_2D,   sizeof(vx_line2d_t)},
     {VX_TYPE_HOG_PARAMS,   sizeof(vx_hog_t)},
     // pseudo objects
-    {VX_TYPE_ERROR,     sizeof(vx_error_t)},
+    {VX_TYPE_ERROR,     sizeof(vx_error)},
     {VX_TYPE_META_FORMAT,sizeof(vx_meta_format)},
     {VX_TYPE_OBJECT_ARRAY, sizeof(vx_object_array)},
     // framework objects
