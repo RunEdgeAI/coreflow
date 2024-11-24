@@ -17,6 +17,9 @@
 #include "vx_internal.h"
 #include "vx_threshold.h"
 
+/*****************************************************************************/
+/* INTERNAL INTERFACE                                                        */
+/*****************************************************************************/
 Threshold::Threshold(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_THRESHOLD, scope),
 thresh_type(),
 data_type(),
@@ -36,7 +39,7 @@ Threshold::~Threshold()
 
 }
 
-static vx_bool vxIsValidThresholdType(vx_enum thresh_type)
+vx_bool Threshold::isValidThresholdType(vx_enum thresh_type)
 {
     vx_bool ret = vx_false_e;
     if ((thresh_type == VX_THRESHOLD_TYPE_BINARY) ||
@@ -47,7 +50,7 @@ static vx_bool vxIsValidThresholdType(vx_enum thresh_type)
     return ret;
 }
 
-static vx_bool vxIsValidThresholdDataType(vx_enum data_type)
+vx_bool Threshold::isValidThresholdDataType(vx_enum data_type)
 {
     vx_bool ret = vx_false_e;
     if (data_type == VX_TYPE_BOOL ||
@@ -62,6 +65,10 @@ static vx_bool vxIsValidThresholdDataType(vx_enum data_type)
     }
     return ret;
 }
+
+/*****************************************************************************/
+/* PUBLIC INTERFACE                                                          */
+/*****************************************************************************/
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseThreshold(vx_threshold* t)
 {
@@ -85,9 +92,9 @@ VX_API_ENTRY vx_threshold VX_API_CALL vxCreateThreshold(vx_context context, vx_e
 
     if (Context::isValidContext(context) == vx_true_e)
     {
-        if (vxIsValidThresholdDataType(data_type) == vx_true_e)
+        if (Threshold::isValidThresholdDataType(data_type) == vx_true_e)
         {
-            if (vxIsValidThresholdType(thresh_type) == vx_true_e)
+            if (Threshold::isValidThresholdType(thresh_type) == vx_true_e)
             {
                 threshold = (vx_threshold)Reference::createReference(context, VX_TYPE_THRESHOLD, VX_EXTERNAL, context);
                 if (vxGetStatus((vx_reference)threshold) == VX_SUCCESS && threshold->type == VX_TYPE_THRESHOLD)
@@ -445,7 +452,7 @@ VX_API_ENTRY vx_threshold VX_API_CALL vxCreateThresholdForImage(vx_context conte
         threshold = nullptr;
     }
 
-    if (vxIsValidThresholdType(thresh_type) == vx_false_e)
+    if (Threshold::isValidThresholdType(thresh_type) == vx_false_e)
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid threshold type\n");
         vxAddLogEntry(context, VX_ERROR_INVALID_TYPE, "Invalid threshold type\n");

@@ -566,6 +566,1086 @@ vx_status Graph::traverseGraph(vx_uint32 parentIndex,
     return status;
 }
 
+void Graph::topologicalSort(vx_node *list, vx_uint32 nnodes)
+{
+   /* Knuth TAoCP algorithm 2.2.3 T.
+      Nodes and their parameters are the "objects" which have partial-order
+      relations (with "<" noting the similar-looking general symbol for
+      relational order, not the specific less-than relation), and it's
+      always pair-wise: node < parameter for outputs,
+      parameter < node for inputs. */
+    vx_uint32 nobjects;         /* Number of objects; "n" in TAoCP. */
+    vx_uint32 nremain;          /* Number of remaining objects to be "output"; "N" in TAoCP. */
+    vx_uint32 objectno;         /* Running count, 1-based. */
+    vx_uint32 j, k, n, r, f;
+    vx_uint32 outputnr;         /* Running count of nodes as they're "output". */
+
+    struct direct_successor {
+        vx_uint32 suc;
+        struct direct_successor *next;
+    };
+
+    struct object_relations {
+        union {
+            vx_uint32 count;
+            vx_uint32 qlink;
+        } u;
+        struct direct_successor *top;
+        vx_reference ref;
+    };
+
+    struct object_relations *x;
+    struct direct_successor *suc_next_table;
+    struct direct_successor *avail;
+
+    /* Visit each node in the list and its in- and out-parameters,
+       clearing all indices. Find upper bound for nobjects, for use when
+       allocating x (X in the algorithm). This number is also the exact
+       number of relations, for use with suc_next_table (the unnamed
+       "suc, next" table in the algorithm). */
+    vx_uint32 max_n_objects_relations = nnodes;
+
+    for (n = 0; n < nnodes; n++)
+    {
+        vx_uint32 parmno;
+
+        max_n_objects_relations += list[n]->kernel->signature.num_parameters;
+
+        for (parmno = 0; parmno < list[n]->kernel->signature.num_parameters; parmno++)
+        {
+            /* Pick the parent object in case of su-objects (e.g., ROI) */
+            vx_reference ref = list[n]->parameters[parmno];
+            while ( (ref != nullptr) &&
+                    (ref->scope != nullptr) &&
+                    (ref->scope != (vx_reference)this) &&
+                    (ref->scope != (vx_reference)ref->context)
+                    )
+            {
+                ref = ref->scope;
+            }
+
+            if (ref != nullptr)
+            {
+                ref->index = 0;
+            }
+            else
+            {
+                /* Ignore nullptr (optional) parameters. */
+                max_n_objects_relations--;
+            }
+        }
+    }
+
+    /* Visit each node and its parameters, setting all indices. Allocate
+       and initialize the node + parameters-list. The x table is
+       1-based; index 0 is a sentinel.
+       (This is step T1.) */
+    x = reinterpret_cast<object_relations*>(calloc(max_n_objects_relations + 1, sizeof (*x)));
+    suc_next_table = reinterpret_cast<direct_successor*>(calloc(max_n_objects_relations, sizeof (*x)));
+
+    avail = suc_next_table;
+
+    for (objectno = 1; objectno <= nnodes; objectno++)
+    {
+        vx_node node = list[objectno - 1];
+        node->index = objectno;
+        x[objectno].ref = (vx_reference)node;
+    }
+
+    /* While we visit the parameters (setting their index if 0), we
+       "input" the relation. We don't have to iterate separately after
+       all parameters are "indexed", as all nodes are already in place
+       (and "indexed") and a parameter doesn't have a direct relation
+       with another parameter.
+       (Steps T2 and T3). */
+    for (n = 0; n < nnodes; n++)
+    {
+        vx_uint32 parmno;
+
+        for (parmno = 0; parmno < list[n]->kernel->signature.num_parameters; parmno++)
+        {
+            vx_reference ref = list[n]->parameters[parmno];
+            struct direct_successor *p;
+
+            /* Pick the parent object in case of su-objects (e.g., ROI) */
+            while ( (ref != nullptr) &&
+                    (ref->scope != nullptr) &&
+                    (ref->scope != (vx_reference)this) &&
+                    (ref->scope != (vx_reference)ref->context)
+                    )
+            {
+                ref = ref->scope;
+            }
+
+            if (ref == nullptr)
+            {
+                continue;
+            }
+
+            if (ref->index == 0)
+            {
+                x[objectno].ref = ref;
+                ref->index = objectno++;
+            }
+
+            /* Step T2. */
+            if (list[n]->kernel->signature.directions[parmno] == VX_INPUT)
+            {
+                /* parameter < node */
+                j = ref->index;
+                k = n + 1;
+            }
+            else
+            {
+                /* node < parameter */
+                k = ref->index;
+                j = n + 1;
+            }
+
+            /* Step T3. */
+            x[k].u.count++;
+            p = avail++;
+            p->suc = k;
+            p->next = x[j].top;
+            x[j].top = p;
+        }
+    }
+
+    /* With a 1-based index, we need to back-off one to get the number of objects. */
+    nobjects = objectno - 1;
+    nremain = nobjects;
+
+    /* At this point, we could visit all the nodes in
+       x[1..graph->numNodes] (all the first graph->numNodes in x are
+       nodes) and put those with
+       count <= node->kernel->signature.num_parameters in graph->heads
+       (as a node is always dependent on its input parameters and all
+       nodes have inputs, but some may be nullptr), avoiding the
+       O(numNodes**2) loop later in our caller. */
+
+    /* Step T4. Note that we're not zero-based but 1-based; 0 and x[0]
+       are sentinels. */
+    r = 0;
+    x[0].u.qlink = 0;
+    for (k = 1; k <= nobjects; k++)
+    {
+        if (x[k].u.count == 0)
+        {
+            x[r].u.qlink = k;
+            r = k;
+        }
+    }
+
+    f = x[0].u.qlink;
+    outputnr = 0;
+
+    /* Step T5. (We don't output a final 0 as present in the algorithm.) */
+    while (f != 0)
+    {
+        struct direct_successor *p;
+
+        /* This is our "output". Nodes only; we don't otherwise make
+           use the order in which parameters are being processed. */
+        if (x[f].ref->type == VX_TYPE_NODE)
+            list[outputnr++] = (vx_node)x[f].ref;
+        nremain--;
+        p = x[f].top;
+
+        /* Step T6. */
+        while (p != nullptr)
+        {
+            if (--x[p->suc].u.count == 0)
+            {
+                x[r].u.qlink = p->suc;
+                r = p->suc;
+            }
+            p = p->next;
+        }
+
+        /* Step T7 */
+        f = x[f].u.qlink;
+    }
+
+    /* Step T8.
+       At this point, we could inspect nremain and if non-zero, we have
+       a cycle. To wit, we can avoid the O(numNodes**2) loop later in
+       our caller. We have to do check for cycles anyway, because if
+       there was a cycle we need to restore *all* the nodes into list[],
+       or else they can't be disposed of properly. We use the original
+       order, both for simplicity and because the caller might be making
+       invalid assumptions; having passed an incorrect graph is cause
+       for concern about integrity. */
+    if (nremain != 0)
+        for (n = 0; n < nnodes; n++)
+            list[n] = (vx_node)x[n+1].ref;
+
+    free(suc_next_table);
+    free(x);
+}
+
+vx_bool Graph::setupOutput(vx_uint32 n, vx_uint32 p, vx_reference* vref, vx_meta_format* meta,
+                            vx_status* status, vx_uint32* num_errors)
+{
+    *vref = nodes[n]->parameters[p];
+    *meta = vxCreateMetaFormat(context);
+
+    /* check to see if the reference is virtual */
+    if ((*vref)->is_virtual == vx_false_e)
+    {
+        *vref = nullptr;
+    }
+    else
+    {
+        VX_PRINT(VX_ZONE_GRAPH, "Virtual Reference detected at kernel %S parameter %u\n",
+                nodes[n]->kernel->name,
+                p);
+        if ((*vref)->scope->type == VX_TYPE_GRAPH &&
+            (*vref)->scope != (vx_reference)this &&
+            /* We check only one level up; we make use of the
+               knowledge that this implementation has no more
+               than one level of child-graphs. (Nodes are only
+               one level; no child-graph-using node is composed
+               from other child-graph-using nodes.) We need
+               this check (for example) for a virtual image
+               being an output parameter to a node for which
+               this graph is the child-graph implementation,
+               like in vx_bug13517.c. */
+            (*vref)->scope != (vx_reference)parentGraph)
+        {
+            /* major fault! */
+            *status = VX_ERROR_INVALID_SCOPE;
+            vxAddLogEntry((vx_reference)(*vref), *status, "Virtual Reference is in the wrong scope, created from another graph!\n");
+            (*num_errors)++;
+            return vx_false_e; /* break; */
+        }
+        /* ok if context, pyramid or this graph */
+    }
+
+    /* the type of the parameter is known by the system, so let the system set it by default. */
+    (*meta)->type = nodes[n]->kernel->signature.types[p];
+
+    return vx_true_e;
+}
+
+/*
+ * Parameters:
+ *   n    - index of node
+ *   p    - index of parameter
+ *   vref - reference of the parameter
+ *   meta - parameter meta info
+ */
+vx_bool Graph::postprocessOutputDataType(vx_uint32 n, vx_uint32 p, vx_reference* item, vx_reference* vref, vx_meta_format meta,
+                                  vx_status* status, vx_uint32* num_errors)
+{
+    if (Context::isValidType(meta->type) == vx_false_e)
+    {
+        *status = VX_ERROR_INVALID_TYPE;
+        vxAddLogEntry(reinterpret_cast<vx_reference>(this), *status,
+            "Node: %s: parameter[%u] is not a valid type %d!\n",
+            nodes[n]->kernel->name, p, meta->type);
+        (*num_errors)++;
+        return vx_false_e; /* exit on error */
+    }
+
+    if (meta->type == VX_TYPE_IMAGE)
+    {
+        vx_image img = (vx_image)*item;
+        VX_PRINT(VX_ZONE_GRAPH, "meta: type 0x%08x, %ux%u\n", meta->type, meta->dim.image.width, meta->dim.image.height);
+        if (vref == item || img->is_virtual == vx_true_e)
+        {
+            VX_PRINT(VX_ZONE_GRAPH, "Creating Image From Meta Data!\n");
+            /*! \todo need to worry about images that have a format, but no dimensions too */
+            if (img->format == VX_DF_IMAGE_VIRT || img->format == meta->dim.image.format)
+            {
+                img->format = meta->dim.image.format;
+                img->width = meta->dim.image.width;
+                img->height = meta->dim.image.height;
+                /* we have to go set all the other dimensional information up. */
+                img->initImage(img->width, img->height, img->format);
+                Image::printImage(img); /* show that it's been created. */
+            }
+            else
+            {
+                *status = VX_ERROR_INVALID_FORMAT;
+                vxAddLogEntry(reinterpret_cast<vx_reference>(this), *status,
+                    "Node: %s: parameter[%u] has invalid format %08x!\n",
+                    nodes[n]->kernel->name, p, img->format);
+                VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has invalid format %08x!\n",
+                    nodes[n]->kernel->name, p, img->format);
+                (*num_errors)++;
+                return vx_false_e; /* exit on error */
+            }
+        }
+        else
+        {
+            /* check the data that came back from the output validator against the object */
+            if ((img->width != meta->dim.image.width) ||
+                (img->height != meta->dim.image.height))
+            {
+                *status = VX_ERROR_INVALID_DIMENSION;
+                vxAddLogEntry(reinterpret_cast<vx_reference>(this), *status,
+                    "Node: %s: parameter[%u] is an invalid dimension %ux%u!\n",
+                    nodes[n]->kernel->name, p, img->width, img->height);
+                VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] is an invalid dimension %ux%u!\n",
+                    nodes[n]->kernel->name, p, img->width, img->height);
+                VX_PRINT(VX_ZONE_ERROR, "Node: %s: expected dimension %ux%u with format %08x!\n",
+                    nodes[n]->kernel->name, meta->dim.image.width, meta->dim.image.height, meta->dim.image.format);
+                (*num_errors)++;
+                return vx_false_e; /* exit on error */
+            }
+            if (img->format != meta->dim.image.format)
+            {
+                *status = VX_ERROR_INVALID_FORMAT;
+                vxAddLogEntry(reinterpret_cast<vx_reference>(this), *status,
+                    "Node: %s: parameter[%u] is an invalid format %08x!\n",
+                    nodes[n]->kernel->name, p, img->format);
+                VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has invalid format %08x!\n",
+                    nodes[n]->kernel->name, p, img->format);
+                (*num_errors)++;
+                return vx_false_e; /* exit on error */
+            }
+        }
+
+        if (nullptr != meta->set_valid_rectangle_callback)
+            nodes[n]->attributes.valid_rect_reset = vx_false_e;
+
+        if (vx_false_e == nodes[n]->attributes.valid_rect_reset &&
+            nullptr != meta->set_valid_rectangle_callback)
+        {
+            /* calculate image valid rectangle through callback */
+
+            vx_uint32 i;
+            vx_uint32 nparams = 0;
+            vx_uint32 num_in_images = 0;
+            vx_rectangle_t** in_rect = nullptr;
+            vx_rectangle_t* out_rect[1] = { nullptr };
+            vx_node node = nodes[n];
+
+            /* assume no errors */
+            vx_bool res = vx_true_e;
+
+            if (VX_SUCCESS != vxQueryNode(node, VX_NODE_PARAMETERS, &nparams, sizeof(nparams)))
+            {
+                *status = VX_FAILURE;
+                return vx_false_e;
+            }
+
+            /* compute num of input images */
+            for (i = 0; i < nparams; i++)
+            {
+                if (VX_INPUT == node->kernel->signature.directions[i] &&
+                    VX_TYPE_IMAGE == node->parameters[i]->type)
+                {
+                    num_in_images++;
+                }
+            }
+
+            /* allocate array of pointers to input images valid rectangles */
+            in_rect = (vx_rectangle_t**)malloc(num_in_images * sizeof(vx_rectangle_t*));
+            if (nullptr == in_rect)
+            {
+                *status = VX_FAILURE;
+                return vx_false_e;
+            }
+
+            for (i = 0; i < nparams; i++)
+            {
+                if (VX_INPUT == node->kernel->signature.directions[i] &&
+                    VX_TYPE_IMAGE == node->parameters[i]->type)
+                {
+                    in_rect[i] = (vx_rectangle_t*)malloc(sizeof(vx_rectangle_t));
+                    if (nullptr == in_rect[i])
+                    {
+                        *status = VX_FAILURE;
+                        res = vx_false_e;
+                        break;
+                    }
+
+                    /* collect input images valid rectagles in array */
+                    if (VX_SUCCESS != vxGetValidRegionImage((vx_image)node->parameters[i], in_rect[i]))
+                    {
+                        *status = VX_FAILURE;
+                        res = vx_false_e;
+                        break;
+                    }
+                }
+            }
+
+            if (vx_false_e != res)
+            {
+                out_rect[0] = (vx_rectangle_t*)malloc(sizeof(vx_rectangle_t));
+                if (nullptr == out_rect[0])
+                {
+                    *status = VX_FAILURE;
+                    res = vx_false_e;
+                }
+
+                /* calculate output image valid rectangle */
+                if (VX_SUCCESS == meta->set_valid_rectangle_callback(nodes[n], p, (const vx_rectangle_t* const*)in_rect,
+                                                                     (vx_rectangle_t* const*)out_rect))
+                {
+                    /* set output image valid rectangle */
+                    if (VX_SUCCESS != vxSetImageValidRectangle(img, (const vx_rectangle_t*)out_rect[0]))
+                    {
+                        *status = VX_FAILURE;
+                        res = vx_false_e;
+                    }
+                }
+                else
+                {
+                    *status = VX_FAILURE;
+                    res = vx_false_e;
+                }
+            }
+
+            /* deallocate arrays memory */
+            for (i = 0; i < num_in_images; i++)
+            {
+                if (nullptr != in_rect[i])
+                {
+                    free(in_rect[i]);
+                }
+            }
+
+            if (nullptr != in_rect)
+                free(in_rect);
+            if (nullptr != out_rect[0])
+                free(out_rect[0]);
+
+
+            return res;
+        }
+
+        if (vx_true_e == nodes[n]->attributes.valid_rect_reset)
+        {
+            /* reset image valid rectangle */
+            vx_rectangle_t out_rect;
+            out_rect.start_x = 0;
+            out_rect.start_y = 0;
+            out_rect.end_x   = img->width;
+            out_rect.end_y   = img->height;
+
+            if (VX_SUCCESS != vxSetImageValidRectangle(img, &out_rect))
+            {
+                *status = VX_FAILURE;
+                return vx_false_e;
+            }
+        }
+    } /* VX_TYPE_IMAGE */
+    else if (meta->type == VX_TYPE_ARRAY)
+    {
+        vx_array arr = (vx_array)*item;
+        VX_PRINT(VX_ZONE_GRAPH, "meta: type 0x%08x, 0x%08x " VX_FMT_SIZE "\n", meta->type, meta->dim.array.item_type, meta->dim.array.capacity);
+        if (vref == (vx_reference *)&arr)
+        {
+            VX_PRINT(VX_ZONE_GRAPH, "Creating Array From Meta Data %x and " VX_FMT_SIZE "!\n", meta->dim.array.item_type, meta->dim.array.capacity);
+            if (arr->initVirtualArray(meta->dim.array.item_type, meta->dim.array.capacity) != vx_true_e)
+            {
+                *status = VX_ERROR_INVALID_DIMENSION;
+                vxAddLogEntry(reinterpret_cast<vx_reference>(this), VX_ERROR_INVALID_DIMENSION,
+                    "Node: %s: meta[%u] has an invalid item type 0x%08x or capacity " VX_FMT_SIZE "\n",
+                    nodes[n]->kernel->name, p, meta->dim.array.item_type, meta->dim.array.capacity);
+                VX_PRINT(VX_ZONE_ERROR, "Node: %s: meta[%u] has an invalid item type 0x%08x or capacity " VX_FMT_SIZE "\n",
+                    nodes[n]->kernel->name, p, meta->dim.array.item_type, meta->dim.array.capacity);
+                (*num_errors)++;
+                return vx_false_e; //break;
+            }
+        }
+        else
+        {
+            if (arr->validateArray(meta->dim.array.item_type, meta->dim.array.capacity) != vx_true_e)
+            {
+                *status = VX_ERROR_INVALID_DIMENSION;
+                vxAddLogEntry(reinterpret_cast<vx_reference>(this), VX_ERROR_INVALID_DIMENSION,
+                    "Node: %s: parameter[%u] has an invalid item type 0x%08x or capacity " VX_FMT_SIZE "\n",
+                    nodes[n]->kernel->name, p, arr->item_type, arr->capacity);
+                VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has an invalid item type 0x%08x or capacity " VX_FMT_SIZE "\n",
+                    nodes[n]->kernel->name, p, arr->item_type, arr->capacity);
+                (*num_errors)++;
+                return vx_false_e; //break;
+            }
+        }
+    }
+    else if (meta->type == VX_TYPE_PYRAMID)
+    {
+        vx_pyramid pyramid = (vx_pyramid)*item;
+
+        vx_uint32 i;
+        vx_bool res = vx_true_e;
+
+        VX_PRINT(VX_ZONE_GRAPH, "meta: type 0x%08x, %ux%u:%u:%lf\n",
+            meta->type,
+            meta->dim.pyramid.width,
+            meta->dim.pyramid.height,
+            meta->dim.pyramid.levels,
+            meta->dim.pyramid.scale);
+        VX_PRINT(VX_ZONE_GRAPH, "Nodes[%u] %s parameters[%u]\n", n, nodes[n]->kernel->name, p);
+
+        if ((pyramid->numLevels != meta->dim.pyramid.levels) ||
+            (pyramid->scale != meta->dim.pyramid.scale))
+        {
+            *status = VX_ERROR_INVALID_VALUE;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(this), *status, "Either levels (%u?=%u) or scale (%lf?=%lf) are invalid\n",
+                pyramid->numLevels, meta->dim.pyramid.levels,
+                pyramid->scale, meta->dim.pyramid.scale);
+            (*num_errors)++;
+            return vx_false_e; //break;
+        }
+
+        if ((pyramid->format != VX_DF_IMAGE_VIRT) &&
+            (pyramid->format != meta->dim.pyramid.format))
+        {
+            *status = VX_ERROR_INVALID_FORMAT;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(this), *status, "Invalid pyramid format %x, needs %x\n",
+                pyramid->format,
+                meta->dim.pyramid.format);
+            (*num_errors)++;
+            return vx_false_e; //break;
+        }
+
+        if (((pyramid->width != 0) &&
+            (pyramid->width != meta->dim.pyramid.width)) ||
+            ((pyramid->height != 0) &&
+            (pyramid->height != meta->dim.pyramid.height)))
+        {
+            *status = VX_ERROR_INVALID_DIMENSION;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(this), *status, "Invalid pyramid dimensions %ux%u, needs %ux%u\n",
+                pyramid->width, pyramid->height,
+                meta->dim.pyramid.width, meta->dim.pyramid.height);
+            (*num_errors)++;
+            return vx_false_e; //break;
+        }
+
+        /* check to see if the pyramid is virtual */
+        if (vref == (vx_reference*)&pyramid)
+        {
+            pyramid->initPyramid(
+                meta->dim.pyramid.levels,
+                meta->dim.pyramid.scale,
+                meta->dim.pyramid.width,
+                meta->dim.pyramid.height,
+                meta->dim.pyramid.format);
+        }
+
+        if (nullptr != meta->set_valid_rectangle_callback)
+            nodes[n]->attributes.valid_rect_reset = vx_false_e;
+
+        if (vx_false_e == nodes[n]->attributes.valid_rect_reset &&
+            nullptr != meta->set_valid_rectangle_callback)
+        {
+            /* calculate pyramid levels valid rectangles */
+
+            vx_uint32 nparams = 0;
+            vx_uint32 num_in_images = 0;
+            vx_rectangle_t** in_rect = nullptr;
+            vx_rectangle_t** out_rect = nullptr;
+
+            vx_node node = nodes[n];
+
+            if (VX_SUCCESS != vxQueryNode(node, VX_NODE_PARAMETERS, &nparams, sizeof(nparams)))
+            {
+                *status = VX_FAILURE;
+                return vx_false_e;
+            }
+
+            /* compute num of input images */
+            for (i = 0; i < nparams; i++)
+            {
+                if (VX_INPUT == node->kernel->signature.directions[i] &&
+                    VX_TYPE_IMAGE == node->parameters[i]->type)
+                {
+                    num_in_images++;
+                }
+            }
+
+            in_rect = (vx_rectangle_t**)malloc(num_in_images * sizeof(vx_rectangle_t*));
+            if (nullptr == in_rect)
+            {
+                *status = VX_FAILURE;
+                return vx_false_e;
+            }
+
+            for (i = 0; i < num_in_images; i++)
+                in_rect[i] = nullptr;
+
+            for (i = 0; i < nparams; i++)
+            {
+                if (VX_INPUT == node->kernel->signature.directions[i] &&
+                    VX_TYPE_IMAGE == node->parameters[i]->type)
+                {
+                    in_rect[i] = (vx_rectangle_t*)malloc(sizeof(vx_rectangle_t));
+                    if (nullptr == in_rect[i])
+                    {
+                        *status = VX_FAILURE;
+                        res = vx_false_e;
+                        break;
+                    }
+
+                    if (VX_SUCCESS != vxGetValidRegionImage((vx_image)node->parameters[i], in_rect[i]))
+                    {
+                        *status = VX_FAILURE;
+                        res = vx_false_e;
+                        break;
+                    }
+                }
+            }
+
+            if (vx_false_e != res)
+            {
+                out_rect = (vx_rectangle_t**)malloc(meta->dim.pyramid.levels * sizeof(vx_rectangle_t*));
+                if (nullptr != out_rect)
+                {
+                    vx_uint32 k;
+                    for (k = 0; k < meta->dim.pyramid.levels; k++)
+                        out_rect[k] = nullptr;
+
+                    for (i = 0; i < meta->dim.pyramid.levels; i++)
+                    {
+                        out_rect[i] = (vx_rectangle_t*)malloc(sizeof(vx_rectangle_t));
+                        if (nullptr == out_rect[i])
+                        {
+                            *status = VX_FAILURE;
+                            res = vx_false_e;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    *status = VX_FAILURE;
+                    res = vx_false_e;
+                }
+            }
+
+            if (vx_false_e != res)
+            {
+                /* calculate pyramid levels valid rectangles */
+                if (VX_SUCCESS == meta->set_valid_rectangle_callback(nodes[n], p, (const vx_rectangle_t* const*)in_rect, out_rect))
+                {
+                    for (i = 0; i < meta->dim.pyramid.levels; i++)
+                    {
+                        vx_image img = vxGetPyramidLevel(pyramid, i);
+
+                        if (vx_false_e == Reference::isValidReference((vx_reference)img, VX_TYPE_IMAGE))
+                        {
+                            *status = VX_FAILURE;
+                            res = vx_false_e;
+                            vxReleaseImage(&img); /* already on error path, ignore additional errors */
+                            break;
+                        }
+
+                        if (VX_SUCCESS != vxSetImageValidRectangle(img, out_rect[i]))
+                        {
+                            *status = VX_FAILURE;
+                            res = vx_false_e;
+                            vxReleaseImage(&img); /* already on error path, ignore additional errors */
+                            break;
+                        }
+
+                        if (VX_SUCCESS != vxReleaseImage(&img))
+                        {
+                            *status = VX_FAILURE;
+                            res = vx_false_e;
+                            break;
+                        }
+                    } /* for pyramid levels */
+                }
+                else
+                {
+                    *status = VX_FAILURE;
+                    res = vx_false_e;
+                }
+            } /* if successful memory allocation */
+
+            /* deallocate rectangle arrays */
+            for (i = 0; i < num_in_images; i++)
+            {
+                if (nullptr != in_rect && nullptr != in_rect[i])
+                {
+                    free(in_rect[i]);
+                }
+            }
+
+            if (nullptr != in_rect)
+                free(in_rect);
+
+            for (i = 0; i < meta->dim.pyramid.levels; i++)
+            {
+                if (nullptr != out_rect && nullptr != out_rect[i])
+                    free(out_rect[i]);
+            }
+
+            if (nullptr != out_rect)
+                free(out_rect);
+
+            return res;
+        }
+
+        if (vx_true_e == nodes[n]->attributes.valid_rect_reset)
+        {
+            /* reset output pyramid levels valid rectangles */
+
+            vx_bool res = vx_true_e;
+
+            for (i = 0; i < meta->dim.pyramid.levels; i++)
+            {
+                vx_uint32 width = 0;
+                vx_uint32 height = 0;
+                vx_rectangle_t out_rect;
+
+                vx_image img = vxGetPyramidLevel(pyramid, i);
+
+                if (vx_false_e == Reference::isValidReference((vx_reference)img, VX_TYPE_IMAGE))
+                {
+                    *status = VX_FAILURE;
+                    return vx_false_e;
+                }
+
+                if (VX_SUCCESS != vxQueryImage(img, VX_IMAGE_WIDTH, &width, sizeof(width)))
+                {
+                    *status = VX_FAILURE;
+                    res = vx_false_e;
+                    vxReleaseImage(&img); /* already on error path, ignore additional errors */
+                    break;
+                }
+
+                if (VX_SUCCESS != vxQueryImage(img, VX_IMAGE_HEIGHT, &height, sizeof(height)))
+                {
+                    *status = VX_FAILURE;
+                    res = vx_false_e;
+                    vxReleaseImage(&img); /* already on error path, ignore additional errors */
+                    break;
+                }
+
+                if (vx_false_e != res)
+                {
+                    out_rect.start_x = 0;
+                    out_rect.start_y = 0;
+                    out_rect.end_x   = width;
+                    out_rect.end_y   = height;
+
+                    /* pyramid level valid rectangle is a whole image */
+                    if (VX_SUCCESS != vxSetImageValidRectangle(img, &out_rect))
+                    {
+                        *status = VX_FAILURE;
+                        res = vx_false_e;
+                    }
+                }
+
+                if (VX_SUCCESS != vxReleaseImage(&img))
+                {
+                    *status = VX_FAILURE;
+                    res = vx_false_e;
+                }
+            } /* for pyramid levels */
+
+            return res;
+        }
+    } /* VX_TYPE_PYRAMID */
+    else if (meta->type == VX_TYPE_SCALAR)
+    {
+        vx_scalar scalar = (vx_scalar)*item;
+        if (scalar->data_type != meta->dim.scalar.type)
+        {
+            *status = VX_ERROR_INVALID_TYPE;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(this), VX_ERROR_INVALID_TYPE,
+                "Scalar contains invalid typed objects for node %s\n", nodes[n]->kernel->name);
+            (*num_errors)++;
+            return vx_false_e; //break;
+        }
+    } /* VX_TYPE_SCALAR */
+    else if (meta->type == VX_TYPE_MATRIX)
+    {
+        vx_matrix matrix = (vx_matrix)*item;
+        if (matrix->data_type != meta->dim.matrix.type)
+        {
+            *status = VX_ERROR_INVALID_TYPE;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(this), VX_ERROR_INVALID_TYPE,
+                "Node: %s: parameter[%u] has an invalid data type 0x%08x\n",
+                nodes[n]->kernel->name, p, matrix->data_type);
+            (*num_errors)++;
+            return vx_false_e; //break;
+        }
+
+        if (matrix->columns != meta->dim.matrix.cols || matrix->rows != meta->dim.matrix.rows)
+        {
+            *status = VX_ERROR_INVALID_DIMENSION;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(this), VX_ERROR_INVALID_DIMENSION,
+                "Node: %s: parameter[%u] has an invalid matrix dimention %ux%u\n",
+                nodes[n]->kernel->name, p, matrix->data_type, matrix->rows, matrix->columns);
+            (*num_errors)++;
+            return vx_false_e; //break;
+        }
+    } /* VX_TYPE_MATRIX */
+    else if (meta->type == VX_TYPE_DISTRIBUTION)
+    {
+        vx_distribution distribution = (vx_distribution)*item;
+        //fix
+        if (distribution->offset_x != meta->dim.distribution.offset ||
+            distribution->range_x != meta->dim.distribution.range ||
+            distribution->memory.dims[0][VX_DIM_X] != meta->dim.distribution.bins)
+        {
+            *status = VX_ERROR_INVALID_VALUE;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(this), VX_ERROR_INVALID_VALUE,
+                "Node: %s: parameter[%u] has an invalid offset %u, number of bins %u or range %u\n",
+                nodes[n]->kernel->name, p, distribution->offset_x,
+                distribution->memory.dims[0][VX_DIM_X], distribution->range_x);
+            (*num_errors)++;
+            return vx_false_e; //break;
+        }
+    } /* VX_TYPE_DISTRIBUTION */
+    else if (meta->type == VX_TYPE_REMAP)
+    {
+        vx_remap remap = (vx_remap)*item;
+        if (remap->src_width != meta->dim.remap.src_width || remap->src_height != meta->dim.remap.src_height)
+        {
+            *status = VX_ERROR_INVALID_DIMENSION;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(this), VX_ERROR_INVALID_DIMENSION,
+                "Node: %s: parameter[%u] has an invalid source dimention %ux%u\n",
+                nodes[n]->kernel->name, p);
+            (*num_errors)++;
+            return vx_false_e; //break;
+        }
+
+        if (remap->dst_width != meta->dim.remap.dst_width || remap->dst_height != meta->dim.remap.dst_height)
+        {
+            *status = VX_ERROR_INVALID_DIMENSION;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(this), VX_ERROR_INVALID_DIMENSION,
+                "Node: %s: parameter[%u] has an invalid destination dimention %ux%u",
+                nodes[n]->kernel->name, p);
+            (*num_errors)++;
+            return vx_false_e; //break;
+        }
+    } /* VX_TYPE_REMAP */
+    else if (meta->type == VX_TYPE_LUT)
+    {
+        vx_lut_t lut = (vx_lut_t)*item;
+        if (lut->item_type != meta->dim.lut.type || lut->num_items != meta->dim.lut.count)
+        {
+            *status = VX_ERROR_INVALID_DIMENSION;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(this), VX_ERROR_INVALID_DIMENSION,
+                "Node: %s: parameter[%u] has an invalid item type 0x%08x or count " VX_FMT_SIZE "\n",
+                nodes[n]->kernel->name, p, lut->item_type, lut->num_items);
+            (*num_errors)++;
+            return vx_false_e; //break;
+        }
+    } /* VX_TYPE_LUT */
+    else if (meta->type == VX_TYPE_THRESHOLD)
+    {
+        vx_threshold threshold = (vx_threshold)*item;
+        if (threshold->thresh_type != meta->dim.threshold.type)
+        {
+            *status = VX_ERROR_INVALID_TYPE;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(this), VX_ERROR_INVALID_TYPE,
+                "Threshold contains invalid typed objects for node %s\n", nodes[n]->kernel->name);
+            (*num_errors)++;
+            return vx_false_e; //break;
+        }
+    } /* VX_TYPE_THRESHOLD */
+    else if (meta->type == VX_TYPE_TENSOR)
+    {
+        vx_tensor tensor = (vx_tensor)*item;
+        if (vref == (vx_reference*)&tensor)
+        {
+            VX_PRINT(VX_ZONE_GRAPH, "Creating Tensor From Meta Data!\n");
+            if ((tensor->data_type != VX_TYPE_INVALID) &&
+                    (tensor->data_type != meta->dim.tensor.data_type || tensor->fixed_point_position != meta->dim.tensor.fixed_point_position))
+            {
+                *status = VX_ERROR_INVALID_FORMAT;
+                vxAddLogEntry(reinterpret_cast<vx_reference>(this), *status,
+                    "Node: %s: parameter[%u] has invalid data type %08x or fixed point position %d!\n",
+                    nodes[n]->kernel->name, p, tensor->data_type, tensor->fixed_point_position);
+                VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has invalid data type %08x or fixed point position %d!\n",
+                    nodes[n]->kernel->name, p, tensor->data_type, tensor->fixed_point_position);
+                (*num_errors)++;
+                return vx_false_e; /* exit on error */
+            }
+            if (tensor->number_of_dimensions != 0)
+            {
+               for (unsigned i = 0; i < tensor->number_of_dimensions; i++)
+               {
+                   if (tensor->dimensions[i] != 0 && tensor->dimensions[i] != meta->dim.tensor.dimensions[i])
+                   {
+                       *status = VX_ERROR_INVALID_DIMENSION;
+                       vxAddLogEntry(reinterpret_cast<vx_reference>(this), *status,
+                           "Node: %s: parameter[%u] has invalid dimension size %d in dimension %d!\n",
+                           nodes[n]->kernel->name, p, tensor->dimensions[i], i);
+                       VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has invalid dimension size %d in dimension %d!\n",
+                           nodes[n]->kernel->name, p, tensor->dimensions[i], i);
+                       (*num_errors)++;
+                       return vx_false_e; /* exit on error */
+                   }
+               }
+            }
+            else if (tensor->number_of_dimensions != meta->dim.tensor.number_of_dimensions)
+            {
+                *status = VX_ERROR_INVALID_DIMENSION;
+                vxAddLogEntry(reinterpret_cast<vx_reference>(this), *status,
+                    "Node: %s: parameter[%u] has invalid dimension  %d!\n",
+                    nodes[n]->kernel->name, p, tensor->number_of_dimensions);
+                VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has invalid dimension %d!\n",
+                    nodes[n]->kernel->name, p, tensor->number_of_dimensions);
+                (*num_errors)++;
+                return vx_false_e; /* exit on error */
+            }
+            tensor->initTensor(meta->dim.tensor.dimensions, meta->dim.tensor.number_of_dimensions, meta->dim.tensor.data_type, meta->dim.tensor.fixed_point_position);
+            tensor->allocateTensorMemory();
+        }
+        else
+        {
+            if (tensor->number_of_dimensions != meta->dim.tensor.number_of_dimensions)
+            {
+                *status = VX_ERROR_INVALID_DIMENSION;
+                vxAddLogEntry(reinterpret_cast<vx_reference>(this), *status,
+                    "Node: %s: parameter[%u] is an invalid number of dimensions %u!\n",
+                    nodes[n]->kernel->name, p, tensor->number_of_dimensions);
+                VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] is an invalid number of dimensions %u!\n",
+                    nodes[n]->kernel->name, p, tensor->number_of_dimensions);
+                (*num_errors)++;
+                return vx_false_e; /* exit on error */
+            }
+            for (unsigned i = 0; i < tensor->number_of_dimensions; i++)
+            {
+                if (tensor->dimensions[i] != meta->dim.tensor.dimensions[i])
+                {
+                    *status = VX_ERROR_INVALID_DIMENSION;
+                    vxAddLogEntry(reinterpret_cast<vx_reference>(this), *status,
+                        "Node: %s: parameter[%u] has an invalid dimension %u!\n",
+                        nodes[n]->kernel->name, p, tensor->dimensions[i]);
+                    VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has an invalid dimension %u!\n",
+                        nodes[n]->kernel->name, p, tensor->dimensions[i]);
+                    (*num_errors)++;
+                    return vx_false_e; /* exit on error */
+                }
+            }
+            if (tensor->data_type != meta->dim.tensor.data_type)
+            {
+                *status = VX_ERROR_INVALID_FORMAT;
+                vxAddLogEntry(reinterpret_cast<vx_reference>(this), *status,
+                    "Node: %s: parameter[%u] is an invalid data type %08x!\n",
+                    nodes[n]->kernel->name, p, tensor->data_type);
+                VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has invalid data type %08x!\n",
+                    nodes[n]->kernel->name, p, tensor->data_type);
+                (*num_errors)++;
+                return vx_false_e; /* exit on error */
+            }
+            if (tensor->fixed_point_position != meta->dim.tensor.fixed_point_position)
+            {
+                *status = VX_ERROR_INVALID_FORMAT;
+                vxAddLogEntry(reinterpret_cast<vx_reference>(this), *status,
+                    "Node: %s: parameter[%u] has an invalid fixed point position %08x!\n",
+                    nodes[n]->kernel->name, p, tensor->fixed_point_position);
+                VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has invalid fixed point position  %08x!\n",
+                    nodes[n]->kernel->name, p, tensor->fixed_point_position);
+                (*num_errors)++;
+                return vx_false_e; /* exit on error */
+            }
+        }
+    } /* VX_TYPE_TENSOR */
+    /*! \todo support other output types for safety checks in graph verification parameters phase */
+    else
+    {
+        VX_PRINT(VX_ZONE_GRAPH, "Returned Meta type %x\n", meta->type);
+    }
+
+    return vx_true_e;
+} /* postprocessOutputDataType() */
+
+/*
+ * Parameters:
+ *   n    - index of node
+ *   p    - index of parameter
+ *   vref - reference of the parameter
+ *   meta - parameter meta info
+ */
+vx_bool Graph::postprocessOutput(vx_uint32 n, vx_uint32 p, vx_reference* vref, vx_meta_format meta,
+                                  vx_status* status, vx_uint32* num_errors)
+{
+    if (Context::isValidType(meta->type) == vx_false_e)
+    {
+        *status = VX_ERROR_INVALID_TYPE;
+        vxAddLogEntry(reinterpret_cast<vx_reference>(this), *status,
+            "Node: %s: parameter[%u] is not a valid type %d!\n",
+            nodes[n]->kernel->name, p, meta->type);
+        (*num_errors)++;
+        return vx_false_e; /* exit on error */
+    }
+
+    if (meta->type == VX_TYPE_OBJECT_ARRAY)
+    {
+        vx_object_array objarr = (vx_object_array)nodes[n]->parameters[p];
+        VX_PRINT(VX_ZONE_GRAPH, "meta: type 0x%08x, 0x%08x " VX_FMT_SIZE "\n", meta->type, meta->dim.object_array.item_type, meta->dim.object_array.num_items);
+
+        if (ObjectArray::isValidObjectArray(objarr, meta->dim.object_array.item_type, meta->dim.object_array.num_items) != vx_true_e)
+        {
+            *status = VX_ERROR_INVALID_DIMENSION;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(this), VX_ERROR_INVALID_DIMENSION,
+                "Node: %s: parameter[%u] has an invalid item type 0x%08x or num_items " VX_FMT_SIZE "\n",
+                nodes[n]->kernel->name, p, objarr->item_type, objarr->num_items);
+            VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has an invalid item type 0x%08x or num_items " VX_FMT_SIZE "\n",
+                nodes[n]->kernel->name, p, objarr->item_type, objarr->num_items);
+            (*num_errors)++;
+            return vx_false_e; //break;
+        }
+
+        if (vref == (vx_reference*)&objarr)
+        {
+            VX_PRINT(VX_ZONE_GRAPH, "Creating Object Array From Meta Data %x and " VX_FMT_SIZE "!\n", meta->dim.object_array.item_type, meta->dim.object_array.num_items);
+            for (vx_uint32 i = 0; i < meta->dim.object_array.num_items; i++)
+            {
+                vx_reference item = vxGetObjectArrayItem(objarr, i);
+
+                if (!postprocessOutputDataType(n, p, &item, vref, meta, status, num_errors))
+                {
+                    vxReleaseReference(&item);
+                    *status = VX_ERROR_INVALID_PARAMETERS;
+                    vxAddLogEntry(reinterpret_cast<vx_reference>(this), VX_ERROR_INVALID_PARAMETERS,
+                        "Node: %s: meta[%u] has an invalid meta of exemplar\n",
+                        nodes[n]->kernel->name, p);
+                    VX_PRINT(VX_ZONE_ERROR, "Node: %s: meta[%u] has an invalid meta of exemplar\n",
+                        nodes[n]->kernel->name, p);
+                    (*num_errors)++;
+
+                    return vx_false_e; //break;
+                }
+
+                vxReleaseReference(&item);
+            }
+        }
+        else
+        {
+            /* check the data that came back from the output validator against the object */
+            for (vx_uint32 i = 0; i < meta->dim.object_array.num_items; i++)
+            {
+                vx_reference item = vxGetObjectArrayItem(objarr, i);
+                vx_reference itemref = vxGetObjectArrayItem((vx_object_array)*vref, i);
+
+                if (!postprocessOutputDataType(n, p, &item, &itemref, meta, status, num_errors))
+                {
+                    vxReleaseReference(&item);
+                    *status = VX_ERROR_INVALID_PARAMETERS;
+                    vxAddLogEntry(reinterpret_cast<vx_reference>(this), VX_ERROR_INVALID_PARAMETERS,
+                        "Node: %s: meta[%u] has an invalid meta of exemplar\n",
+                        nodes[n]->kernel->name, p);
+                    VX_PRINT(VX_ZONE_ERROR, "Node: %s: meta[%u] has an invalid meta of exemplar\n",
+                        nodes[n]->kernel->name, p);
+                    (*num_errors)++;
+
+                    return vx_false_e; //break;
+                }
+
+                vxReleaseReference(&item);
+            }
+        }
+    }
+    else
+    {
+        return postprocessOutputDataType(n, p, &nodes[n]->parameters[p], vref, meta, status, num_errors);
+    }
+
+    return vx_true_e;
+} /* postprocessOutput() */
+
 void Graph::destructGraph()
 {
     vx_graph graph = this;
@@ -715,1088 +1795,6 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseGraph(vx_graph *g)
     return status;
 }
 
-/* Do a topological in-place sort of the nodes in list, with current
-   order maintained between independent nodes. */
-static void vxTopologicalSort(vx_graph graph, vx_node *list, vx_uint32 nnodes)
-{
-   /* Knuth TAoCP algorithm 2.2.3 T.
-      Nodes and their parameters are the "objects" which have partial-order
-      relations (with "<" noting the similar-looking general symbol for
-      relational order, not the specific less-than relation), and it's
-      always pair-wise: node < parameter for outputs,
-      parameter < node for inputs. */
-    vx_uint32 nobjects;         /* Number of objects; "n" in TAoCP. */
-    vx_uint32 nremain;          /* Number of remaining objects to be "output"; "N" in TAoCP. */
-    vx_uint32 objectno;         /* Running count, 1-based. */
-    vx_uint32 j, k, n, r, f;
-    vx_uint32 outputnr;         /* Running count of nodes as they're "output". */
-
-    struct direct_successor {
-        vx_uint32 suc;
-        struct direct_successor *next;
-    };
-
-    struct object_relations {
-        union {
-            vx_uint32 count;
-            vx_uint32 qlink;
-        } u;
-        struct direct_successor *top;
-        vx_reference ref;
-    };
-
-    struct object_relations *x;
-    struct direct_successor *suc_next_table;
-    struct direct_successor *avail;
-
-    /* Visit each node in the list and its in- and out-parameters,
-       clearing all indices. Find upper bound for nobjects, for use when
-       allocating x (X in the algorithm). This number is also the exact
-       number of relations, for use with suc_next_table (the unnamed
-       "suc, next" table in the algorithm). */
-    vx_uint32 max_n_objects_relations = nnodes;
-
-    for (n = 0; n < nnodes; n++)
-    {
-        vx_uint32 parmno;
-
-        max_n_objects_relations += list[n]->kernel->signature.num_parameters;
-
-        for (parmno = 0; parmno < list[n]->kernel->signature.num_parameters; parmno++)
-        {
-            /* Pick the parent object in case of su-objects (e.g., ROI) */
-            vx_reference ref = list[n]->parameters[parmno];
-            while ( (ref != nullptr) &&
-                    (ref->scope != nullptr) &&
-                    (ref->scope != (vx_reference)graph) &&
-                    (ref->scope != (vx_reference)ref->context)
-                    )
-            {
-                ref = ref->scope;
-            }
-
-            if (ref != nullptr)
-            {
-                ref->index = 0;
-            }
-            else
-            {
-                /* Ignore nullptr (optional) parameters. */
-                max_n_objects_relations--;
-            }
-        }
-    }
-
-    /* Visit each node and its parameters, setting all indices. Allocate
-       and initialize the node + parameters-list. The x table is
-       1-based; index 0 is a sentinel.
-       (This is step T1.) */
-    x = reinterpret_cast<object_relations*>(calloc(max_n_objects_relations + 1, sizeof (*x)));
-    suc_next_table = reinterpret_cast<direct_successor*>(calloc(max_n_objects_relations, sizeof (*x)));
-
-    avail = suc_next_table;
-
-    for (objectno = 1; objectno <= nnodes; objectno++)
-    {
-        vx_node node = list[objectno - 1];
-        node->index = objectno;
-        x[objectno].ref = (vx_reference)node;
-    }
-
-    /* While we visit the parameters (setting their index if 0), we
-       "input" the relation. We don't have to iterate separately after
-       all parameters are "indexed", as all nodes are already in place
-       (and "indexed") and a parameter doesn't have a direct relation
-       with another parameter.
-       (Steps T2 and T3). */
-    for (n = 0; n < nnodes; n++)
-    {
-        vx_uint32 parmno;
-
-        for (parmno = 0; parmno < list[n]->kernel->signature.num_parameters; parmno++)
-        {
-            vx_reference ref = list[n]->parameters[parmno];
-            struct direct_successor *p;
-
-            /* Pick the parent object in case of su-objects (e.g., ROI) */
-            while ( (ref != nullptr) &&
-                    (ref->scope != nullptr) &&
-                    (ref->scope != (vx_reference)graph) &&
-                    (ref->scope != (vx_reference)ref->context)
-                    )
-            {
-                ref = ref->scope;
-            }
-
-            if (ref == nullptr)
-            {
-                continue;
-            }
-
-            if (ref->index == 0)
-            {
-                x[objectno].ref = ref;
-                ref->index = objectno++;
-            }
-
-            /* Step T2. */
-            if (list[n]->kernel->signature.directions[parmno] == VX_INPUT)
-            {
-                /* parameter < node */
-                j = ref->index;
-                k = n + 1;
-            }
-            else
-            {
-                /* node < parameter */
-                k = ref->index;
-                j = n + 1;
-            }
-
-            /* Step T3. */
-            x[k].u.count++;
-            p = avail++;
-            p->suc = k;
-            p->next = x[j].top;
-            x[j].top = p;
-        }
-    }
-
-    /* With a 1-based index, we need to back-off one to get the number of objects. */
-    nobjects = objectno - 1;
-    nremain = nobjects;
-
-    /* At this point, we could visit all the nodes in
-       x[1..graph->numNodes] (all the first graph->numNodes in x are
-       nodes) and put those with
-       count <= node->kernel->signature.num_parameters in graph->heads
-       (as a node is always dependent on its input parameters and all
-       nodes have inputs, but some may be nullptr), avoiding the
-       O(numNodes**2) loop later in our caller. */
-
-    /* Step T4. Note that we're not zero-based but 1-based; 0 and x[0]
-       are sentinels. */
-    r = 0;
-    x[0].u.qlink = 0;
-    for (k = 1; k <= nobjects; k++)
-    {
-        if (x[k].u.count == 0)
-        {
-            x[r].u.qlink = k;
-            r = k;
-        }
-    }
-
-    f = x[0].u.qlink;
-    outputnr = 0;
-
-    /* Step T5. (We don't output a final 0 as present in the algorithm.) */
-    while (f != 0)
-    {
-        struct direct_successor *p;
-
-        /* This is our "output". Nodes only; we don't otherwise make
-           use the order in which parameters are being processed. */
-        if (x[f].ref->type == VX_TYPE_NODE)
-            list[outputnr++] = (vx_node)x[f].ref;
-        nremain--;
-        p = x[f].top;
-
-        /* Step T6. */
-        while (p != nullptr)
-        {
-            if (--x[p->suc].u.count == 0)
-            {
-                x[r].u.qlink = p->suc;
-                r = p->suc;
-            }
-            p = p->next;
-        }
-
-        /* Step T7 */
-        f = x[f].u.qlink;
-    }
-
-    /* Step T8.
-       At this point, we could inspect nremain and if non-zero, we have
-       a cycle. To wit, we can avoid the O(numNodes**2) loop later in
-       our caller. We have to do check for cycles anyway, because if
-       there was a cycle we need to restore *all* the nodes into list[],
-       or else they can't be disposed of properly. We use the original
-       order, both for simplicity and because the caller might be making
-       invalid assumptions; having passed an incorrect graph is cause
-       for concern about integrity. */
-    if (nremain != 0)
-        for (n = 0; n < nnodes; n++)
-            list[n] = (vx_node)x[n+1].ref;
-
-    free(suc_next_table);
-    free(x);
-}
-
-static vx_bool setup_output(vx_graph graph, vx_uint32 n, vx_uint32 p, vx_reference* vref, vx_meta_format* meta,
-                            vx_status* status, vx_uint32* num_errors)
-{
-    *vref = graph->nodes[n]->parameters[p];
-    *meta = vxCreateMetaFormat(graph->context);
-
-    /* check to see if the reference is virtual */
-    if ((*vref)->is_virtual == vx_false_e)
-    {
-        *vref = nullptr;
-    }
-    else
-    {
-        VX_PRINT(VX_ZONE_GRAPH, "Virtual Reference detected at kernel %S parameter %u\n",
-                graph->nodes[n]->kernel->name,
-                p);
-        if ((*vref)->scope->type == VX_TYPE_GRAPH &&
-            (*vref)->scope != (vx_reference)graph &&
-            /* We check only one level up; we make use of the
-               knowledge that this implementation has no more
-               than one level of child-graphs. (Nodes are only
-               one level; no child-graph-using node is composed
-               from other child-graph-using nodes.) We need
-               this check (for example) for a virtual image
-               being an output parameter to a node for which
-               this graph is the child-graph implementation,
-               like in vx_bug13517.c. */
-            (*vref)->scope != (vx_reference)graph->parentGraph)
-        {
-            /* major fault! */
-            *status = VX_ERROR_INVALID_SCOPE;
-            vxAddLogEntry((vx_reference)(*vref), *status, "Virtual Reference is in the wrong scope, created from another graph!\n");
-            (*num_errors)++;
-            return vx_false_e; /* break; */
-        }
-        /* ok if context, pyramid or this graph */
-    }
-
-    /* the type of the parameter is known by the system, so let the system set it by default. */
-    (*meta)->type = graph->nodes[n]->kernel->signature.types[p];
-
-    return vx_true_e;
-}
-
-/*
- * Parameters:
- *   n    - index of node
- *   p    - index of parameter
- *   vref - reference of the parameter
- *   meta - parameter meta info
- */
-static vx_bool postprocess_output_data_type(vx_graph graph, vx_uint32 n, vx_uint32 p, vx_reference* item, vx_reference* vref, vx_meta_format meta,
-                                  vx_status* status, vx_uint32* num_errors)
-{
-    if (Context::isValidType(meta->type) == vx_false_e)
-    {
-        *status = VX_ERROR_INVALID_TYPE;
-        vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status,
-            "Node: %s: parameter[%u] is not a valid type %d!\n",
-            graph->nodes[n]->kernel->name, p, meta->type);
-        (*num_errors)++;
-        return vx_false_e; /* exit on error */
-    }
-
-    if (meta->type == VX_TYPE_IMAGE)
-    {
-        vx_image img = (vx_image)*item;
-        VX_PRINT(VX_ZONE_GRAPH, "meta: type 0x%08x, %ux%u\n", meta->type, meta->dim.image.width, meta->dim.image.height);
-        if (vref == item || img->is_virtual == vx_true_e)
-        {
-            VX_PRINT(VX_ZONE_GRAPH, "Creating Image From Meta Data!\n");
-            /*! \todo need to worry about images that have a format, but no dimensions too */
-            if (img->format == VX_DF_IMAGE_VIRT || img->format == meta->dim.image.format)
-            {
-                img->format = meta->dim.image.format;
-                img->width = meta->dim.image.width;
-                img->height = meta->dim.image.height;
-                /* we have to go set all the other dimensional information up. */
-                img->initImage(img->width, img->height, img->format);
-                vxPrintImage(img); /* show that it's been created. */
-            }
-            else
-            {
-                *status = VX_ERROR_INVALID_FORMAT;
-                vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status,
-                    "Node: %s: parameter[%u] has invalid format %08x!\n",
-                    graph->nodes[n]->kernel->name, p, img->format);
-                VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has invalid format %08x!\n",
-                    graph->nodes[n]->kernel->name, p, img->format);
-                (*num_errors)++;
-                return vx_false_e; /* exit on error */
-            }
-        }
-        else
-        {
-            /* check the data that came back from the output validator against the object */
-            if ((img->width != meta->dim.image.width) ||
-                (img->height != meta->dim.image.height))
-            {
-                *status = VX_ERROR_INVALID_DIMENSION;
-                vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status,
-                    "Node: %s: parameter[%u] is an invalid dimension %ux%u!\n",
-                    graph->nodes[n]->kernel->name, p, img->width, img->height);
-                VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] is an invalid dimension %ux%u!\n",
-                    graph->nodes[n]->kernel->name, p, img->width, img->height);
-                VX_PRINT(VX_ZONE_ERROR, "Node: %s: expected dimension %ux%u with format %08x!\n",
-                    graph->nodes[n]->kernel->name, meta->dim.image.width, meta->dim.image.height, meta->dim.image.format);
-                (*num_errors)++;
-                return vx_false_e; /* exit on error */
-            }
-            if (img->format != meta->dim.image.format)
-            {
-                *status = VX_ERROR_INVALID_FORMAT;
-                vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status,
-                    "Node: %s: parameter[%u] is an invalid format %08x!\n",
-                    graph->nodes[n]->kernel->name, p, img->format);
-                VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has invalid format %08x!\n",
-                    graph->nodes[n]->kernel->name, p, img->format);
-                (*num_errors)++;
-                return vx_false_e; /* exit on error */
-            }
-        }
-
-        if (nullptr != meta->set_valid_rectangle_callback)
-            graph->nodes[n]->attributes.valid_rect_reset = vx_false_e;
-
-        if (vx_false_e == graph->nodes[n]->attributes.valid_rect_reset &&
-            nullptr != meta->set_valid_rectangle_callback)
-        {
-            /* calculate image valid rectangle through callback */
-
-            vx_uint32 i;
-            vx_uint32 nparams = 0;
-            vx_uint32 num_in_images = 0;
-            vx_rectangle_t** in_rect = nullptr;
-            vx_rectangle_t* out_rect[1] = { nullptr };
-            vx_node node = graph->nodes[n];
-
-            /* assume no errors */
-            vx_bool res = vx_true_e;
-
-            if (VX_SUCCESS != vxQueryNode(node, VX_NODE_PARAMETERS, &nparams, sizeof(nparams)))
-            {
-                *status = VX_FAILURE;
-                return vx_false_e;
-            }
-
-            /* compute num of input images */
-            for (i = 0; i < nparams; i++)
-            {
-                if (VX_INPUT == node->kernel->signature.directions[i] &&
-                    VX_TYPE_IMAGE == node->parameters[i]->type)
-                {
-                    num_in_images++;
-                }
-            }
-
-            /* allocate array of pointers to input images valid rectangles */
-            in_rect = (vx_rectangle_t**)malloc(num_in_images * sizeof(vx_rectangle_t*));
-            if (nullptr == in_rect)
-            {
-                *status = VX_FAILURE;
-                return vx_false_e;
-            }
-
-            for (i = 0; i < nparams; i++)
-            {
-                if (VX_INPUT == node->kernel->signature.directions[i] &&
-                    VX_TYPE_IMAGE == node->parameters[i]->type)
-                {
-                    in_rect[i] = (vx_rectangle_t*)malloc(sizeof(vx_rectangle_t));
-                    if (nullptr == in_rect[i])
-                    {
-                        *status = VX_FAILURE;
-                        res = vx_false_e;
-                        break;
-                    }
-
-                    /* collect input images valid rectagles in array */
-                    if (VX_SUCCESS != vxGetValidRegionImage((vx_image)node->parameters[i], in_rect[i]))
-                    {
-                        *status = VX_FAILURE;
-                        res = vx_false_e;
-                        break;
-                    }
-                }
-            }
-
-            if (vx_false_e != res)
-            {
-                out_rect[0] = (vx_rectangle_t*)malloc(sizeof(vx_rectangle_t));
-                if (nullptr == out_rect[0])
-                {
-                    *status = VX_FAILURE;
-                    res = vx_false_e;
-                }
-
-                /* calculate output image valid rectangle */
-                if (VX_SUCCESS == meta->set_valid_rectangle_callback(graph->nodes[n], p, (const vx_rectangle_t* const*)in_rect,
-                                                                     (vx_rectangle_t* const*)out_rect))
-                {
-                    /* set output image valid rectangle */
-                    if (VX_SUCCESS != vxSetImageValidRectangle(img, (const vx_rectangle_t*)out_rect[0]))
-                    {
-                        *status = VX_FAILURE;
-                        res = vx_false_e;
-                    }
-                }
-                else
-                {
-                    *status = VX_FAILURE;
-                    res = vx_false_e;
-                }
-            }
-
-            /* deallocate arrays memory */
-            for (i = 0; i < num_in_images; i++)
-            {
-                if (nullptr != in_rect[i])
-                {
-                    free(in_rect[i]);
-                }
-            }
-
-            if (nullptr != in_rect)
-                free(in_rect);
-            if (nullptr != out_rect[0])
-                free(out_rect[0]);
-
-
-            return res;
-        }
-
-        if (vx_true_e == graph->nodes[n]->attributes.valid_rect_reset)
-        {
-            /* reset image valid rectangle */
-            vx_rectangle_t out_rect;
-            out_rect.start_x = 0;
-            out_rect.start_y = 0;
-            out_rect.end_x   = img->width;
-            out_rect.end_y   = img->height;
-
-            if (VX_SUCCESS != vxSetImageValidRectangle(img, &out_rect))
-            {
-                *status = VX_FAILURE;
-                return vx_false_e;
-            }
-        }
-    } /* VX_TYPE_IMAGE */
-    else if (meta->type == VX_TYPE_ARRAY)
-    {
-        vx_array arr = (vx_array)*item;
-        VX_PRINT(VX_ZONE_GRAPH, "meta: type 0x%08x, 0x%08x " VX_FMT_SIZE "\n", meta->type, meta->dim.array.item_type, meta->dim.array.capacity);
-        if (vref == (vx_reference *)&arr)
-        {
-            VX_PRINT(VX_ZONE_GRAPH, "Creating Array From Meta Data %x and " VX_FMT_SIZE "!\n", meta->dim.array.item_type, meta->dim.array.capacity);
-            if (arr->initVirtualArray(meta->dim.array.item_type, meta->dim.array.capacity) != vx_true_e)
-            {
-                *status = VX_ERROR_INVALID_DIMENSION;
-                vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_DIMENSION,
-                    "Node: %s: meta[%u] has an invalid item type 0x%08x or capacity " VX_FMT_SIZE "\n",
-                    graph->nodes[n]->kernel->name, p, meta->dim.array.item_type, meta->dim.array.capacity);
-                VX_PRINT(VX_ZONE_ERROR, "Node: %s: meta[%u] has an invalid item type 0x%08x or capacity " VX_FMT_SIZE "\n",
-                    graph->nodes[n]->kernel->name, p, meta->dim.array.item_type, meta->dim.array.capacity);
-                (*num_errors)++;
-                return vx_false_e; //break;
-            }
-        }
-        else
-        {
-            if (arr->validateArray(meta->dim.array.item_type, meta->dim.array.capacity) != vx_true_e)
-            {
-                *status = VX_ERROR_INVALID_DIMENSION;
-                vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_DIMENSION,
-                    "Node: %s: parameter[%u] has an invalid item type 0x%08x or capacity " VX_FMT_SIZE "\n",
-                    graph->nodes[n]->kernel->name, p, arr->item_type, arr->capacity);
-                VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has an invalid item type 0x%08x or capacity " VX_FMT_SIZE "\n",
-                    graph->nodes[n]->kernel->name, p, arr->item_type, arr->capacity);
-                (*num_errors)++;
-                return vx_false_e; //break;
-            }
-        }
-    }
-    else if (meta->type == VX_TYPE_PYRAMID)
-    {
-        vx_pyramid pyramid = (vx_pyramid)*item;
-
-        vx_uint32 i;
-        vx_bool res = vx_true_e;
-
-        VX_PRINT(VX_ZONE_GRAPH, "meta: type 0x%08x, %ux%u:%u:%lf\n",
-            meta->type,
-            meta->dim.pyramid.width,
-            meta->dim.pyramid.height,
-            meta->dim.pyramid.levels,
-            meta->dim.pyramid.scale);
-        VX_PRINT(VX_ZONE_GRAPH, "Nodes[%u] %s parameters[%u]\n", n, graph->nodes[n]->kernel->name, p);
-
-        if ((pyramid->numLevels != meta->dim.pyramid.levels) ||
-            (pyramid->scale != meta->dim.pyramid.scale))
-        {
-            *status = VX_ERROR_INVALID_VALUE;
-            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status, "Either levels (%u?=%u) or scale (%lf?=%lf) are invalid\n",
-                pyramid->numLevels, meta->dim.pyramid.levels,
-                pyramid->scale, meta->dim.pyramid.scale);
-            (*num_errors)++;
-            return vx_false_e; //break;
-        }
-
-        if ((pyramid->format != VX_DF_IMAGE_VIRT) &&
-            (pyramid->format != meta->dim.pyramid.format))
-        {
-            *status = VX_ERROR_INVALID_FORMAT;
-            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status, "Invalid pyramid format %x, needs %x\n",
-                pyramid->format,
-                meta->dim.pyramid.format);
-            (*num_errors)++;
-            return vx_false_e; //break;
-        }
-
-        if (((pyramid->width != 0) &&
-            (pyramid->width != meta->dim.pyramid.width)) ||
-            ((pyramid->height != 0) &&
-            (pyramid->height != meta->dim.pyramid.height)))
-        {
-            *status = VX_ERROR_INVALID_DIMENSION;
-            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status, "Invalid pyramid dimensions %ux%u, needs %ux%u\n",
-                pyramid->width, pyramid->height,
-                meta->dim.pyramid.width, meta->dim.pyramid.height);
-            (*num_errors)++;
-            return vx_false_e; //break;
-        }
-
-        /* check to see if the pyramid is virtual */
-        if (vref == (vx_reference*)&pyramid)
-        {
-            pyramid->initPyramid(
-                meta->dim.pyramid.levels,
-                meta->dim.pyramid.scale,
-                meta->dim.pyramid.width,
-                meta->dim.pyramid.height,
-                meta->dim.pyramid.format);
-        }
-
-        if (nullptr != meta->set_valid_rectangle_callback)
-            graph->nodes[n]->attributes.valid_rect_reset = vx_false_e;
-
-        if (vx_false_e == graph->nodes[n]->attributes.valid_rect_reset &&
-            nullptr != meta->set_valid_rectangle_callback)
-        {
-            /* calculate pyramid levels valid rectangles */
-
-            vx_uint32 nparams = 0;
-            vx_uint32 num_in_images = 0;
-            vx_rectangle_t** in_rect = nullptr;
-            vx_rectangle_t** out_rect = nullptr;
-
-            vx_node node = graph->nodes[n];
-
-            if (VX_SUCCESS != vxQueryNode(node, VX_NODE_PARAMETERS, &nparams, sizeof(nparams)))
-            {
-                *status = VX_FAILURE;
-                return vx_false_e;
-            }
-
-            /* compute num of input images */
-            for (i = 0; i < nparams; i++)
-            {
-                if (VX_INPUT == node->kernel->signature.directions[i] &&
-                    VX_TYPE_IMAGE == node->parameters[i]->type)
-                {
-                    num_in_images++;
-                }
-            }
-
-            in_rect = (vx_rectangle_t**)malloc(num_in_images * sizeof(vx_rectangle_t*));
-            if (nullptr == in_rect)
-            {
-                *status = VX_FAILURE;
-                return vx_false_e;
-            }
-
-            for (i = 0; i < num_in_images; i++)
-                in_rect[i] = nullptr;
-
-            for (i = 0; i < nparams; i++)
-            {
-                if (VX_INPUT == node->kernel->signature.directions[i] &&
-                    VX_TYPE_IMAGE == node->parameters[i]->type)
-                {
-                    in_rect[i] = (vx_rectangle_t*)malloc(sizeof(vx_rectangle_t));
-                    if (nullptr == in_rect[i])
-                    {
-                        *status = VX_FAILURE;
-                        res = vx_false_e;
-                        break;
-                    }
-
-                    if (VX_SUCCESS != vxGetValidRegionImage((vx_image)node->parameters[i], in_rect[i]))
-                    {
-                        *status = VX_FAILURE;
-                        res = vx_false_e;
-                        break;
-                    }
-                }
-            }
-
-            if (vx_false_e != res)
-            {
-                out_rect = (vx_rectangle_t**)malloc(meta->dim.pyramid.levels * sizeof(vx_rectangle_t*));
-                if (nullptr != out_rect)
-                {
-                    vx_uint32 k;
-                    for (k = 0; k < meta->dim.pyramid.levels; k++)
-                        out_rect[k] = nullptr;
-
-                    for (i = 0; i < meta->dim.pyramid.levels; i++)
-                    {
-                        out_rect[i] = (vx_rectangle_t*)malloc(sizeof(vx_rectangle_t));
-                        if (nullptr == out_rect[i])
-                        {
-                            *status = VX_FAILURE;
-                            res = vx_false_e;
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    *status = VX_FAILURE;
-                    res = vx_false_e;
-                }
-            }
-
-            if (vx_false_e != res)
-            {
-                /* calculate pyramid levels valid rectangles */
-                if (VX_SUCCESS == meta->set_valid_rectangle_callback(graph->nodes[n], p, (const vx_rectangle_t* const*)in_rect, out_rect))
-                {
-                    for (i = 0; i < meta->dim.pyramid.levels; i++)
-                    {
-                        vx_image img = vxGetPyramidLevel(pyramid, i);
-
-                        if (vx_false_e == Reference::isValidReference((vx_reference)img, VX_TYPE_IMAGE))
-                        {
-                            *status = VX_FAILURE;
-                            res = vx_false_e;
-                            vxReleaseImage(&img); /* already on error path, ignore additional errors */
-                            break;
-                        }
-
-                        if (VX_SUCCESS != vxSetImageValidRectangle(img, out_rect[i]))
-                        {
-                            *status = VX_FAILURE;
-                            res = vx_false_e;
-                            vxReleaseImage(&img); /* already on error path, ignore additional errors */
-                            break;
-                        }
-
-                        if (VX_SUCCESS != vxReleaseImage(&img))
-                        {
-                            *status = VX_FAILURE;
-                            res = vx_false_e;
-                            break;
-                        }
-                    } /* for pyramid levels */
-                }
-                else
-                {
-                    *status = VX_FAILURE;
-                    res = vx_false_e;
-                }
-            } /* if successful memory allocation */
-
-            /* deallocate rectangle arrays */
-            for (i = 0; i < num_in_images; i++)
-            {
-                if (nullptr != in_rect && nullptr != in_rect[i])
-                {
-                    free(in_rect[i]);
-                }
-            }
-
-            if (nullptr != in_rect)
-                free(in_rect);
-
-            for (i = 0; i < meta->dim.pyramid.levels; i++)
-            {
-                if (nullptr != out_rect && nullptr != out_rect[i])
-                    free(out_rect[i]);
-            }
-
-            if (nullptr != out_rect)
-                free(out_rect);
-
-            return res;
-        }
-
-        if (vx_true_e == graph->nodes[n]->attributes.valid_rect_reset)
-        {
-            /* reset output pyramid levels valid rectangles */
-
-            vx_bool res = vx_true_e;
-
-            for (i = 0; i < meta->dim.pyramid.levels; i++)
-            {
-                vx_uint32 width = 0;
-                vx_uint32 height = 0;
-                vx_rectangle_t out_rect;
-
-                vx_image img = vxGetPyramidLevel(pyramid, i);
-
-                if (vx_false_e == Reference::isValidReference((vx_reference)img, VX_TYPE_IMAGE))
-                {
-                    *status = VX_FAILURE;
-                    return vx_false_e;
-                }
-
-                if (VX_SUCCESS != vxQueryImage(img, VX_IMAGE_WIDTH, &width, sizeof(width)))
-                {
-                    *status = VX_FAILURE;
-                    res = vx_false_e;
-                    vxReleaseImage(&img); /* already on error path, ignore additional errors */
-                    break;
-                }
-
-                if (VX_SUCCESS != vxQueryImage(img, VX_IMAGE_HEIGHT, &height, sizeof(height)))
-                {
-                    *status = VX_FAILURE;
-                    res = vx_false_e;
-                    vxReleaseImage(&img); /* already on error path, ignore additional errors */
-                    break;
-                }
-
-                if (vx_false_e != res)
-                {
-                    out_rect.start_x = 0;
-                    out_rect.start_y = 0;
-                    out_rect.end_x   = width;
-                    out_rect.end_y   = height;
-
-                    /* pyramid level valid rectangle is a whole image */
-                    if (VX_SUCCESS != vxSetImageValidRectangle(img, &out_rect))
-                    {
-                        *status = VX_FAILURE;
-                        res = vx_false_e;
-                    }
-                }
-
-                if (VX_SUCCESS != vxReleaseImage(&img))
-                {
-                    *status = VX_FAILURE;
-                    res = vx_false_e;
-                }
-            } /* for pyramid levels */
-
-            return res;
-        }
-    } /* VX_TYPE_PYRAMID */
-    else if (meta->type == VX_TYPE_SCALAR)
-    {
-        vx_scalar scalar = (vx_scalar)*item;
-        if (scalar->data_type != meta->dim.scalar.type)
-        {
-            *status = VX_ERROR_INVALID_TYPE;
-            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_TYPE,
-                "Scalar contains invalid typed objects for node %s\n", graph->nodes[n]->kernel->name);
-            (*num_errors)++;
-            return vx_false_e; //break;
-        }
-    } /* VX_TYPE_SCALAR */
-    else if (meta->type == VX_TYPE_MATRIX)
-    {
-        vx_matrix matrix = (vx_matrix)*item;
-        if (matrix->data_type != meta->dim.matrix.type)
-        {
-            *status = VX_ERROR_INVALID_TYPE;
-            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_TYPE,
-                "Node: %s: parameter[%u] has an invalid data type 0x%08x\n",
-                graph->nodes[n]->kernel->name, p, matrix->data_type);
-            (*num_errors)++;
-            return vx_false_e; //break;
-        }
-
-        if (matrix->columns != meta->dim.matrix.cols || matrix->rows != meta->dim.matrix.rows)
-        {
-            *status = VX_ERROR_INVALID_DIMENSION;
-            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_DIMENSION,
-                "Node: %s: parameter[%u] has an invalid matrix dimention %ux%u\n",
-                graph->nodes[n]->kernel->name, p, matrix->data_type, matrix->rows, matrix->columns);
-            (*num_errors)++;
-            return vx_false_e; //break;
-        }
-    } /* VX_TYPE_MATRIX */
-    else if (meta->type == VX_TYPE_DISTRIBUTION)
-    {
-        vx_distribution distribution = (vx_distribution)*item;
-        //fix
-        if (distribution->offset_x != meta->dim.distribution.offset ||
-            distribution->range_x != meta->dim.distribution.range ||
-            distribution->memory.dims[0][VX_DIM_X] != meta->dim.distribution.bins)
-        {
-            *status = VX_ERROR_INVALID_VALUE;
-            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_VALUE,
-                "Node: %s: parameter[%u] has an invalid offset %u, number of bins %u or range %u\n",
-                graph->nodes[n]->kernel->name, p, distribution->offset_x,
-                distribution->memory.dims[0][VX_DIM_X], distribution->range_x);
-            (*num_errors)++;
-            return vx_false_e; //break;
-        }
-    } /* VX_TYPE_DISTRIBUTION */
-    else if (meta->type == VX_TYPE_REMAP)
-    {
-        vx_remap remap = (vx_remap)*item;
-        if (remap->src_width != meta->dim.remap.src_width || remap->src_height != meta->dim.remap.src_height)
-        {
-            *status = VX_ERROR_INVALID_DIMENSION;
-            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_DIMENSION,
-                "Node: %s: parameter[%u] has an invalid source dimention %ux%u\n",
-                graph->nodes[n]->kernel->name, p);
-            (*num_errors)++;
-            return vx_false_e; //break;
-        }
-
-        if (remap->dst_width != meta->dim.remap.dst_width || remap->dst_height != meta->dim.remap.dst_height)
-        {
-            *status = VX_ERROR_INVALID_DIMENSION;
-            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_DIMENSION,
-                "Node: %s: parameter[%u] has an invalid destination dimention %ux%u",
-                graph->nodes[n]->kernel->name, p);
-            (*num_errors)++;
-            return vx_false_e; //break;
-        }
-    } /* VX_TYPE_REMAP */
-    else if (meta->type == VX_TYPE_LUT)
-    {
-        vx_lut_t lut = (vx_lut_t)*item;
-        if (lut->item_type != meta->dim.lut.type || lut->num_items != meta->dim.lut.count)
-        {
-            *status = VX_ERROR_INVALID_DIMENSION;
-            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_DIMENSION,
-                "Node: %s: parameter[%u] has an invalid item type 0x%08x or count " VX_FMT_SIZE "\n",
-                graph->nodes[n]->kernel->name, p, lut->item_type, lut->num_items);
-            (*num_errors)++;
-            return vx_false_e; //break;
-        }
-    } /* VX_TYPE_LUT */
-    else if (meta->type == VX_TYPE_THRESHOLD)
-    {
-        vx_threshold threshold = (vx_threshold)*item;
-        if (threshold->thresh_type != meta->dim.threshold.type)
-        {
-            *status = VX_ERROR_INVALID_TYPE;
-            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_TYPE,
-                "Threshold contains invalid typed objects for node %s\n", graph->nodes[n]->kernel->name);
-            (*num_errors)++;
-            return vx_false_e; //break;
-        }
-    } /* VX_TYPE_THRESHOLD */
-    else if (meta->type == VX_TYPE_TENSOR)
-    {
-        vx_tensor tensor = (vx_tensor)*item;
-        if (vref == (vx_reference*)&tensor)
-        {
-            VX_PRINT(VX_ZONE_GRAPH, "Creating Tensor From Meta Data!\n");
-            if ((tensor->data_type != VX_TYPE_INVALID) &&
-                    (tensor->data_type != meta->dim.tensor.data_type || tensor->fixed_point_position != meta->dim.tensor.fixed_point_position))
-            {
-                *status = VX_ERROR_INVALID_FORMAT;
-                vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status,
-                    "Node: %s: parameter[%u] has invalid data type %08x or fixed point position %d!\n",
-                    graph->nodes[n]->kernel->name, p, tensor->data_type, tensor->fixed_point_position);
-                VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has invalid data type %08x or fixed point position %d!\n",
-                    graph->nodes[n]->kernel->name, p, tensor->data_type, tensor->fixed_point_position);
-                (*num_errors)++;
-                return vx_false_e; /* exit on error */
-            }
-            if (tensor->number_of_dimensions != 0)
-            {
-               for (unsigned i = 0; i < tensor->number_of_dimensions; i++)
-               {
-                   if (tensor->dimensions[i] != 0 && tensor->dimensions[i] != meta->dim.tensor.dimensions[i])
-                   {
-                       *status = VX_ERROR_INVALID_DIMENSION;
-                       vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status,
-                           "Node: %s: parameter[%u] has invalid dimension size %d in dimension %d!\n",
-                           graph->nodes[n]->kernel->name, p, tensor->dimensions[i], i);
-                       VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has invalid dimension size %d in dimension %d!\n",
-                           graph->nodes[n]->kernel->name, p, tensor->dimensions[i], i);
-                       (*num_errors)++;
-                       return vx_false_e; /* exit on error */
-                   }
-               }
-            }
-            else if (tensor->number_of_dimensions != meta->dim.tensor.number_of_dimensions)
-            {
-                *status = VX_ERROR_INVALID_DIMENSION;
-                vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status,
-                    "Node: %s: parameter[%u] has invalid dimension  %d!\n",
-                    graph->nodes[n]->kernel->name, p, tensor->number_of_dimensions);
-                VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has invalid dimension %d!\n",
-                    graph->nodes[n]->kernel->name, p, tensor->number_of_dimensions);
-                (*num_errors)++;
-                return vx_false_e; /* exit on error */
-            }
-            tensor->initTensor(meta->dim.tensor.dimensions, meta->dim.tensor.number_of_dimensions, meta->dim.tensor.data_type, meta->dim.tensor.fixed_point_position);
-            tensor->allocateTensorMemory();
-        }
-        else
-        {
-            if (tensor->number_of_dimensions != meta->dim.tensor.number_of_dimensions)
-            {
-                *status = VX_ERROR_INVALID_DIMENSION;
-                vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status,
-                    "Node: %s: parameter[%u] is an invalid number of dimensions %u!\n",
-                    graph->nodes[n]->kernel->name, p, tensor->number_of_dimensions);
-                VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] is an invalid number of dimensions %u!\n",
-                    graph->nodes[n]->kernel->name, p, tensor->number_of_dimensions);
-                (*num_errors)++;
-                return vx_false_e; /* exit on error */
-            }
-            for (unsigned i = 0; i < tensor->number_of_dimensions; i++)
-            {
-                if (tensor->dimensions[i] != meta->dim.tensor.dimensions[i])
-                {
-                    *status = VX_ERROR_INVALID_DIMENSION;
-                    vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status,
-                        "Node: %s: parameter[%u] has an invalid dimension %u!\n",
-                        graph->nodes[n]->kernel->name, p, tensor->dimensions[i]);
-                    VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has an invalid dimension %u!\n",
-                        graph->nodes[n]->kernel->name, p, tensor->dimensions[i]);
-                    (*num_errors)++;
-                    return vx_false_e; /* exit on error */
-                }
-            }
-            if (tensor->data_type != meta->dim.tensor.data_type)
-            {
-                *status = VX_ERROR_INVALID_FORMAT;
-                vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status,
-                    "Node: %s: parameter[%u] is an invalid data type %08x!\n",
-                    graph->nodes[n]->kernel->name, p, tensor->data_type);
-                VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has invalid data type %08x!\n",
-                    graph->nodes[n]->kernel->name, p, tensor->data_type);
-                (*num_errors)++;
-                return vx_false_e; /* exit on error */
-            }
-            if (tensor->fixed_point_position != meta->dim.tensor.fixed_point_position)
-            {
-                *status = VX_ERROR_INVALID_FORMAT;
-                vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status,
-                    "Node: %s: parameter[%u] has an invalid fixed point position %08x!\n",
-                    graph->nodes[n]->kernel->name, p, tensor->fixed_point_position);
-                VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has invalid fixed point position  %08x!\n",
-                    graph->nodes[n]->kernel->name, p, tensor->fixed_point_position);
-                (*num_errors)++;
-                return vx_false_e; /* exit on error */
-            }
-        }
-    } /* VX_TYPE_TENSOR */
-    /*! \todo support other output types for safety checks in graph verification parameters phase */
-    else
-    {
-        VX_PRINT(VX_ZONE_GRAPH, "Returned Meta type %x\n", meta->type);
-    }
-
-    return vx_true_e;
-} /* postprocess_output_data_type() */
-
-/*
- * Parameters:
- *   n    - index of node
- *   p    - index of parameter
- *   vref - reference of the parameter
- *   meta - parameter meta info
- */
-static vx_bool postprocess_output(vx_graph graph, vx_uint32 n, vx_uint32 p, vx_reference* vref, vx_meta_format meta,
-                                  vx_status* status, vx_uint32* num_errors)
-{
-    if (Context::isValidType(meta->type) == vx_false_e)
-    {
-        *status = VX_ERROR_INVALID_TYPE;
-        vxAddLogEntry(reinterpret_cast<vx_reference>(graph), *status,
-            "Node: %s: parameter[%u] is not a valid type %d!\n",
-            graph->nodes[n]->kernel->name, p, meta->type);
-        (*num_errors)++;
-        return vx_false_e; /* exit on error */
-    }
-
-    if (meta->type == VX_TYPE_OBJECT_ARRAY)
-    {
-        vx_object_array objarr = (vx_object_array)graph->nodes[n]->parameters[p];
-        VX_PRINT(VX_ZONE_GRAPH, "meta: type 0x%08x, 0x%08x " VX_FMT_SIZE "\n", meta->type, meta->dim.object_array.item_type, meta->dim.object_array.num_items);
-
-        if (ObjectArray::isValidObjectArray(objarr, meta->dim.object_array.item_type, meta->dim.object_array.num_items) != vx_true_e)
-        {
-            *status = VX_ERROR_INVALID_DIMENSION;
-            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_DIMENSION,
-                "Node: %s: parameter[%u] has an invalid item type 0x%08x or num_items " VX_FMT_SIZE "\n",
-                graph->nodes[n]->kernel->name, p, objarr->item_type, objarr->num_items);
-            VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has an invalid item type 0x%08x or num_items " VX_FMT_SIZE "\n",
-                graph->nodes[n]->kernel->name, p, objarr->item_type, objarr->num_items);
-            (*num_errors)++;
-            return vx_false_e; //break;
-        }
-
-        if (vref == (vx_reference*)&objarr)
-        {
-            VX_PRINT(VX_ZONE_GRAPH, "Creating Object Array From Meta Data %x and " VX_FMT_SIZE "!\n", meta->dim.object_array.item_type, meta->dim.object_array.num_items);
-            for (vx_uint32 i = 0; i < meta->dim.object_array.num_items; i++)
-            {
-                vx_reference item = vxGetObjectArrayItem(objarr, i);
-
-                if (!postprocess_output_data_type(graph, n, p, &item, vref, meta, status, num_errors))
-                {
-                    vxReleaseReference(&item);
-                    *status = VX_ERROR_INVALID_PARAMETERS;
-                    vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_PARAMETERS,
-                        "Node: %s: meta[%u] has an invalid meta of exemplar\n",
-                        graph->nodes[n]->kernel->name, p);
-                    VX_PRINT(VX_ZONE_ERROR, "Node: %s: meta[%u] has an invalid meta of exemplar\n",
-                        graph->nodes[n]->kernel->name, p);
-                    (*num_errors)++;
-
-                    return vx_false_e; //break;
-                }
-
-                vxReleaseReference(&item);
-            }
-        }
-        else
-        {
-            /* check the data that came back from the output validator against the object */
-            for (vx_uint32 i = 0; i < meta->dim.object_array.num_items; i++)
-            {
-                vx_reference item = vxGetObjectArrayItem(objarr, i);
-                vx_reference itemref = vxGetObjectArrayItem((vx_object_array)*vref, i);
-
-                if (!postprocess_output_data_type(graph, n, p, &item, &itemref, meta, status, num_errors))
-                {
-                    vxReleaseReference(&item);
-                    *status = VX_ERROR_INVALID_PARAMETERS;
-                    vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_PARAMETERS,
-                        "Node: %s: meta[%u] has an invalid meta of exemplar\n",
-                        graph->nodes[n]->kernel->name, p);
-                    VX_PRINT(VX_ZONE_ERROR, "Node: %s: meta[%u] has an invalid meta of exemplar\n",
-                        graph->nodes[n]->kernel->name, p);
-                    (*num_errors)++;
-
-                    return vx_false_e; //break;
-                }
-
-                vxReleaseReference(&item);
-            }
-        }
-    }
-    else
-    {
-        return postprocess_output_data_type(graph, n, p, &graph->nodes[n]->parameters[p], vref, meta, status, num_errors);
-    }
-
-    return vx_true_e;
-} /* postprocess_output() */
-
 VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
 {
     vx_status status = VX_SUCCESS;
@@ -1820,7 +1818,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
         VX_PRINT(VX_ZONE_GRAPH,"###########################\n");
         VX_PRINT(VX_ZONE_GRAPH,"Topological Sort Phase\n");
         VX_PRINT(VX_ZONE_GRAPH,"###########################\n");
-        vxTopologicalSort(graph, graph->nodes, graph->numNodes);
+        graph->topologicalSort(graph->nodes, graph->numNodes);
 
         VX_PRINT(VX_ZONE_GRAPH,"###########################\n");
         VX_PRINT(VX_ZONE_GRAPH,"User Kernel Preprocess Phase! (%d)\n", status);
@@ -1934,7 +1932,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                     if ((graph->nodes[n]->parameters[p] != nullptr) &&
                         (graph->nodes[n]->kernel->signature.directions[p] == VX_OUTPUT))
                     {
-                        if (setup_output(graph, n, p, &vref[p], &metas[p], &status, &num_errors) == vx_false_e)
+                        if (graph->setupOutput(n, p, &vref[p], &metas[p], &status, &num_errors) == vx_false_e)
                         {
                             break;
                         }
@@ -1965,7 +1963,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                         if ((graph->nodes[n]->parameters[p] != nullptr) &&
                             (graph->nodes[n]->kernel->signature.directions[p] == VX_OUTPUT))
                         {
-                            if (postprocess_output(graph, n, p, &vref[p], metas[p], &status, &num_errors) == vx_false_e)
+                            if (graph->postprocessOutput(n, p, &vref[p], metas[p], &status, &num_errors) == vx_false_e)
                             {
                                 break;
                             }
@@ -2020,12 +2018,12 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                     if (graph->nodes[n]->kernel->signature.directions[p] == VX_OUTPUT)
                     {
                         vx_status output_validation_status = VX_SUCCESS;
-                        if (setup_output(graph, n, p, &vref, &meta, &status, &num_errors) == vx_false_e)
+                        if (graph->setupOutput(n, p, &vref, &meta, &status, &num_errors) == vx_false_e)
                             break;
                         output_validation_status = graph->nodes[n]->kernel->validate_output((vx_node)graph->nodes[n], p, meta);
                         if (output_validation_status == VX_SUCCESS)
                         {
-                            if (postprocess_output(graph, n, p, &vref, meta, &status, &num_errors) == vx_false_e)
+                            if (graph->postprocessOutput(n, p, &vref, meta, &status, &num_errors) == vx_false_e)
                             {
                                 break;
                             }

@@ -73,6 +73,46 @@ public:
     void initTensor(const vx_size* dimensions, vx_size number_of_dimensions, vx_enum data_type, vx_int8 fixed_point_position);
 
     /**
+     * @brief  Check tensor sizes
+     *
+     * @param dimensions           dimensions
+     * @param view_start           view start
+     * @param view_end             view end
+     * @param number_of_dimensions number of dimensions
+     * @return vx_int32
+     * @ingroup group_int_tensor
+     */
+    static vx_int32 checkSizes(vx_size* dimensions, const vx_size * view_start, const vx_size * view_end, vx_size number_of_dimensions);
+
+    /**
+     * @brief Compute patch size
+     *
+     * @param view_start           view start
+     * @param view_end             view end
+     * @param number_of_dimensions number of dimensions
+     * @return vx_size
+     * @ingroup group_int_tensor
+     */
+    static vx_size computePatchSize(const vx_size * view_start, const vx_size * view_end, vx_size number_of_dimensions);
+
+    /**
+     * @brief Compute positions from index
+     *
+     * @param index                 index
+     * @param start                 view start
+     * @param end                   view end
+     * @param tensor_stride         tensor stride
+     * @param patch_stride          patch stride
+     * @param number_of_dimensions  number of dimensions
+     * @param tensor_pos            tensor position
+     * @param patch_pos             patch position
+     * @ingroup group_int_tensor
+     */
+    static void computePositionsFromIndex(vx_size index, const vx_size * start, const vx_size * end,
+        const vx_size * tensor_stride, const vx_size * patch_stride,  vx_size number_of_dimensions,
+        vx_size * tensor_pos, vx_size * patch_pos);
+
+    /**
      * @brief Function to destroy tensor obj
      * @ingroup group_int_tensor
      */

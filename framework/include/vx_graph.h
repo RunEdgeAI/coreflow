@@ -51,6 +51,62 @@ public:
      */
     ~Graph();
 
+    /**
+     * @brief Do a topological in-place sort of the nodes in list, with current
+     * order maintained between independent nodes.
+     *
+     * @param list      list of nodes
+     * @param nnodes    number of nodes
+     * @ingroup group_int_graph
+     */
+    void topologicalSort(vx_node *list, vx_uint32 nnodes);
+
+    /**
+     * @brief Setup output
+     *
+     * @param n             index of node
+     * @param p             index of parameter
+     * @param vref          reference of the parameter
+     * @param meta          parameter meta info
+     * @param status        status
+     * @param num_errors    num errors
+     * @return vx_bool
+     * @ingroup group_int_graph
+     */
+    vx_bool setupOutput(vx_uint32 n, vx_uint32 p, vx_reference* vref, vx_meta_format* meta,
+                            vx_status* status, vx_uint32* num_errors);
+
+    /**
+     * @brief Post process output data type
+     *
+     * @param n            index of node
+     * @param p            index of parameter
+     * @param item         item to post process
+     * @param vref         reference of the parameter
+     * @param meta         parameter meta info
+     * @param status       status
+     * @param num_errors   num errors
+     * @return vx_bool
+     * @ingroup group_int_graph
+     */
+    vx_bool postprocessOutputDataType(vx_uint32 n, vx_uint32 p, vx_reference* item, vx_reference* vref, vx_meta_format meta,
+                                  vx_status* status, vx_uint32* num_errors);
+
+    /**
+     * @brief Post process output
+     *
+     * @param n            index of node
+     * @param p            index of parameter
+     * @param vref         reference of the parameter
+     * @param meta         parameter meta info
+     * @param status       status
+     * @param num_errors   num errors
+     * @return vx_bool
+     * @ingroup group_int_graph
+     */
+    vx_bool postprocessOutput(vx_uint32 n, vx_uint32 p, vx_reference* vref, vx_meta_format meta,
+                                  vx_status* status, vx_uint32* num_errors);
+
     /*! \brief Clears visited flag.
      * \ingroup group_int_graph
      */

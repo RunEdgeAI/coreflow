@@ -84,6 +84,42 @@ public:
     vx_bool allocateArray();
 
     /**
+     * @brief Get item size of type
+     *
+     * @param context     global context
+     * @param item_type   item type
+     * @return vx_size
+     * @ingroup group_int_array
+     */
+    static vx_size itemSize(vx_context context, vx_enum item_type);
+
+    /**
+     * @brief Validate array item type
+     *
+     * @param context    global context
+     * @param item_type  item type
+     * @return vx_bool
+     * @ingroup group_int_array
+     */
+    static vx_bool isValidArrayItemType(vx_context context, vx_enum item_type);
+
+    /**
+     * @brief Validate array object
+     *
+     * @param arr       array object to check
+     * @return vx_bool
+     * @ingroup group_int_array
+     */
+    static vx_bool isValidArray(vx_array arr);
+
+    /**
+     * @brief Initialize internal array memory
+     *
+     * @ingroup group_int_array
+     */
+    void initArrayMemory();
+
+    /**
      * @brief Initialize virutal array object
      *
      * @param item_type     array object type
@@ -163,6 +199,14 @@ public:
      */
     void destructArray();
 
+    /**
+     * @brief Print array object
+     *
+     * @param array
+     * @ingroup group_int_array
+     */
+    static void printArray(vx_array array);
+
     /*! \brief The memory layout definition */
     vx_memory_t memory;
     /*! \brief The item type of the array. */
@@ -176,7 +220,5 @@ public:
     /*! \brief Offset attribute value. Used internally by LUT implementation */
     vx_uint32 offset;
 };
-
-void vxPrintArray(vx_array array);
 
 #endif /* VX_ARRAY_H */

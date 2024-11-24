@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2011-2017 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,70 +17,9 @@
 #include "vx_internal.h"
 #include "vx_context.h"
 
-/*==============================================================================
- INTERNAL INTERFACE
- =============================================================================*/
-
-static vx_size vxArrayItemSize(vx_context context, vx_enum item_type)
-{
-    vx_size res = Reference::sizeOfType(item_type);
-    vx_uint32 i = 0;
-    if (res == 0ul)
-    {
-        for (i = 0; i < VX_INT_MAX_USER_STRUCTS; ++i)
-        {
-            if (context->user_structs[i].type == item_type)
-            {
-                res = context->user_structs[i].size;
-                break;
-            }
-        }
-    }
-    return res;
-}
-
-static vx_bool vxIsValidArrayItemType(vx_context context, vx_enum item_type)
-{
-    vx_bool res = vx_false_e;
-
-    if (vxArrayItemSize(context, item_type) != 0)
-    {
-        res = vx_true_e;
-    }
-
-    return res;
-}
-
-static vx_bool vxIsValidArray(vx_array arr)
-{
-    vx_bool res = vx_false_e;
-
-    if (arr != nullptr)
-        res = Reference::isValidReference(reinterpret_cast<vx_reference>(arr), VX_TYPE_ARRAY);
-
-    if (res == vx_true_e)
-        res = vxIsValidArrayItemType(arr->context, arr->item_type);
-
-    return res;
-}
-
-static void vxInitArrayMemory(vx_array arr)
-{
-    arr->memory.nptrs = 1;
-    arr->memory.ndims = 2;
-
-    arr->memory.dims[0][0] = (vx_uint32)arr->item_size;
-    arr->memory.dims[0][1] = (vx_uint32)arr->capacity;
-}
-
-void vxPrintArray(vx_array array)
-{
-    VX_PRINT(VX_ZONE_INFO, "Array:%p has %zu elements of %04x type of %zu size each.\n", array, array->capacity, array->item_type, array->item_size);
-}
-
-/*==============================================================================
- PRIVATE INTERFACE
- =============================================================================*/
+/******************************************************************************/
+/* INTERNAL INTERFACE                                                         */
+/******************************************************************************/
 Array::Array(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_ARRAY, scope)
 {
 
@@ -103,10 +41,10 @@ vx_array Array::createArray(vx_context context, vx_enum item_type, vx_size capac
     if (vxGetStatus((vx_reference)arr) == VX_SUCCESS && arr->type == type)
     {
         arr->item_type = item_type;
-        arr->item_size = vxArrayItemSize(context, item_type);
+        arr->item_size = Array::itemSize(context, item_type);
         arr->capacity = capacity;
         arr->is_virtual = is_virtual;
-        vxInitArrayMemory(arr);
+        arr->initArrayMemory();
     }
     return arr;
 }
@@ -119,18 +57,18 @@ void Array::destructArray()
 vx_bool Array::initVirtualArray(vx_enum item_type, vx_size capacity)
 {
     vx_bool res = vx_false_e;
-    if ((vxIsValidArrayItemType(context, item_type) == vx_true_e) &&
+    if ((Array::isValidArrayItemType(context, item_type) == vx_true_e) &&
         ((this->capacity > 0 || capacity > 0) && (capacity <= this->capacity || this->capacity == 0)))
     {
         if ((this->item_type == VX_TYPE_INVALID) || (this->item_type == item_type))
         {
             this->item_type = item_type;
-            item_size = vxArrayItemSize(context, item_type);
+            item_size = Array::itemSize(context, item_type);
 
             if (this->capacity == 0)
                 this->capacity = capacity;
 
-            vxInitArrayMemory(this);
+            initArrayMemory();
             res = vx_true_e;
         }
     }
@@ -140,7 +78,7 @@ vx_bool Array::initVirtualArray(vx_enum item_type, vx_size capacity)
 vx_bool Array::validateArray(vx_enum item_type, vx_size capacity)
 {
     vx_bool res = vx_false_e;
-    if ((vxIsValidArrayItemType(context, item_type)) &&
+    if ((Array::isValidArrayItemType(context, item_type)) &&
         (this->item_type == item_type))
     {
         /* if the required capacity is > 0 and the objects capacity is not sufficient */
@@ -681,9 +619,66 @@ vx_status Array::unmapArrayRange(vx_map_id map_id)
     return status;
 }
 
-/*==============================================================================
- PUBLIC INTERFACE
- =============================================================================*/
+vx_size Array::itemSize(vx_context context, vx_enum item_type)
+{
+    vx_size res = Reference::sizeOfType(item_type);
+    vx_uint32 i = 0;
+    if (res == 0ul)
+    {
+        for (i = 0; i < VX_INT_MAX_USER_STRUCTS; ++i)
+        {
+            if (context->user_structs[i].type == item_type)
+            {
+                res = context->user_structs[i].size;
+                break;
+            }
+        }
+    }
+    return res;
+}
+
+vx_bool Array::isValidArrayItemType(vx_context context, vx_enum item_type)
+{
+    vx_bool res = vx_false_e;
+
+    if (Array::itemSize(context, item_type) != 0)
+    {
+        res = vx_true_e;
+    }
+
+    return res;
+}
+
+vx_bool Array::isValidArray(vx_array arr)
+{
+    vx_bool res = vx_false_e;
+
+    if (arr != nullptr)
+        res = Reference::isValidReference(reinterpret_cast<vx_reference>(arr), VX_TYPE_ARRAY);
+
+    if (res == vx_true_e)
+        res = Array::isValidArrayItemType(arr->context, arr->item_type);
+
+    return res;
+}
+
+void Array::initArrayMemory()
+{
+    memory.nptrs = 1;
+    memory.ndims = 2;
+
+    memory.dims[0][0] = (vx_uint32)item_size;
+    memory.dims[0][1] = (vx_uint32)capacity;
+}
+
+void Array::printArray(vx_array array)
+{
+    VX_PRINT(VX_ZONE_INFO, "Array:%p has %zu elements of %04x type of %zu size each.\n", array, array->capacity, array->item_type, array->item_size);
+}
+
+/******************************************************************************/
+/* PUBLIC INTERFACE                                                           */
+/******************************************************************************/
 
 VX_API_ENTRY vx_array VX_API_CALL vxCreateArray(vx_context context, vx_enum item_type, vx_size capacity)
 {
@@ -691,7 +686,7 @@ VX_API_ENTRY vx_array VX_API_CALL vxCreateArray(vx_context context, vx_enum item
 
     if (Context::isValidContext(context) == vx_true_e)
     {
-        if ( (vxIsValidArrayItemType(context, item_type) == vx_true_e) &&
+        if ( (Array::isValidArrayItemType(context, item_type) == vx_true_e) &&
              (capacity > 0))
         {
             arr = (vx_array)Array::createArray(context, item_type, capacity, vx_false_e, VX_TYPE_ARRAY);
@@ -716,7 +711,7 @@ VX_API_ENTRY vx_array VX_API_CALL vxCreateVirtualArray(vx_graph graph, vx_enum i
 
     if (Reference::isValidReference(reinterpret_cast<vx_reference>(graph), VX_TYPE_GRAPH) == vx_true_e)
     {
-        if (((vxIsValidArrayItemType(graph->context, item_type) == vx_true_e) || item_type == VX_TYPE_INVALID))
+        if (((Array::isValidArrayItemType(graph->context, item_type) == vx_true_e) || item_type == VX_TYPE_INVALID))
         {
             arr = (vx_array)Array::createArray(graph->context, item_type, capacity, vx_true_e, VX_TYPE_ARRAY);
 
@@ -758,7 +753,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseArray(vx_array *a)
 VX_API_ENTRY vx_status VX_API_CALL vxQueryArray(vx_array arr, vx_enum attribute, void *ptr, vx_size size)
 {
     vx_status status = VX_ERROR_INVALID_REFERENCE;
-    if (vxIsValidArray(arr) == vx_true_e)
+    if (Array::isValidArray(arr) == vx_true_e)
     {
         status = VX_SUCCESS;
         switch (attribute)
@@ -819,7 +814,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryArray(vx_array arr, vx_enum attribute,
 VX_API_ENTRY vx_status VX_API_CALL vxAddArrayItems(vx_array arr, vx_size count, const void *ptr, vx_size stride)
 {
     vx_status status = VX_ERROR_INVALID_REFERENCE;
-    if (vxIsValidArray(arr) == vx_true_e)
+    if (Array::isValidArray(arr) == vx_true_e)
     {
         status = VX_ERROR_NO_MEMORY;
 
@@ -858,7 +853,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxAddArrayItems(vx_array arr, vx_size count, 
 VX_API_ENTRY vx_status VX_API_CALL vxTruncateArray(vx_array arr, vx_size new_num_items)
 {
     vx_status status = VX_ERROR_INVALID_REFERENCE;
-    if (vxIsValidArray(arr) == vx_true_e)
+    if (Array::isValidArray(arr) == vx_true_e)
     {
         status = VX_ERROR_INVALID_PARAMETERS;
 
@@ -877,7 +872,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxAccessArrayRange(vx_array arr, vx_size star
 {
     vx_status status = VX_FAILURE;
     /* bad references */
-    if (vxIsValidArray(arr) == vx_false_e)
+    if (Array::isValidArray(arr) == vx_false_e)
     {
         VX_PRINT(VX_ZONE_ERROR, "Not a valid array!\n");
         return VX_ERROR_INVALID_REFERENCE;
@@ -896,7 +891,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxAccessArrayRange(vx_array arr, vx_size star
 
 VX_API_ENTRY vx_status VX_API_CALL vxCommitArrayRange(vx_array arr, vx_size start, vx_size end, const void *ptr)
 {
-    if (vxIsValidArray(arr) == vx_false_e)
+    if (Array::isValidArray(arr) == vx_false_e)
     {
         return VX_ERROR_INVALID_REFERENCE;
     }
@@ -908,7 +903,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyArrayRange(vx_array arr, vx_size start,
 {
     vx_status status = VX_FAILURE;
     /* bad references */
-    if (vxIsValidArray(arr) == vx_false_e)
+    if (Array::isValidArray(arr) == vx_false_e)
     {
         VX_PRINT(VX_ZONE_ERROR, "Not a valid array!\n");
         return VX_ERROR_INVALID_REFERENCE;
@@ -961,7 +956,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapArrayRange(vx_array arr, vx_size start, 
 {
     vx_status status = VX_FAILURE;
     /* bad references */
-    if (vxIsValidArray(arr) == vx_false_e)
+    if (Array::isValidArray(arr) == vx_false_e)
     {
         VX_PRINT(VX_ZONE_ERROR, "Not a valid array!\n");
         return VX_ERROR_INVALID_REFERENCE;
@@ -1009,7 +1004,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapArrayRange(vx_array arr, vx_map_id map
 {
     vx_status status = VX_FAILURE;
     /* bad references */
-    if (vxIsValidArray(arr) == vx_false_e)
+    if (Array::isValidArray(arr) == vx_false_e)
     {
         VX_PRINT(VX_ZONE_ERROR, "Not a valid array!\n");
         return VX_ERROR_INVALID_REFERENCE;

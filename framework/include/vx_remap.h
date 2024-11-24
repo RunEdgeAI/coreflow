@@ -50,6 +50,39 @@ public:
     ~Remap();
 
     /**
+     * @brief Validate remap object
+     *
+     * @param remap
+     * @return vx_bool
+     * @ingroup group_int_remap
+     */
+    static vx_bool isValidRemap(vx_remap remap);
+
+    /**
+     * @brief Set the Coord Value object
+     *
+     * @param dst_x     destination x coord
+     * @param dst_y     destination y coord
+     * @param src_x     source x coord
+     * @param src_y     source y coord
+     * @return vx_status
+     * @ingroup group_int_remap
+     */
+    vx_status setCoordValue(vx_uint32 dst_x, vx_uint32 dst_y, vx_float32 src_x, vx_float32 src_y);
+
+    /**
+     * @brief Get the Coord Value object
+     *
+     * @param dst_x     destination x coord
+     * @param dst_y     destination y coord
+     * @param src_x     source x coord
+     * @param src_y     source y coord
+     * @return vx_status
+     * @ingroup group_int_remap
+     */
+    vx_status getCoordValue(vx_uint32 dst_x, vx_uint32 dst_y, vx_float32 *src_x, vx_float32 *src_y);
+
+    /**
      * @brief Function to destroy a remap object
      * @ingroup group_int_remap
      */

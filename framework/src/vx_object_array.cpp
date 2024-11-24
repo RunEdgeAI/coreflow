@@ -17,10 +17,9 @@
 #include "vx_internal.h"
 #include "vx_object_array.h"
 
-/*==============================================================================
- PRIVATE INTERFACE
- =============================================================================*/
-
+/******************************************************************************/
+/* INTERNAL INTERFACE                                                         */
+/******************************************************************************/
 ObjectArray::ObjectArray(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_OBJECT_ARRAY, scope),
 items(),
 num_items(0),
@@ -366,9 +365,9 @@ vx_bool ObjectArray::isValidObjectArray(vx_object_array objarr, vx_enum item_typ
     return res;
 }
 
-/*==============================================================================
- PUBLIC INTERFACE
- =============================================================================*/
+/******************************************************************************/
+/* PUBLIC INTERFACE                                                           */
+/******************************************************************************/
 
 VX_API_ENTRY vx_object_array VX_API_CALL vxCreateObjectArray(vx_context context, vx_reference exemplar, vx_size count)
 {

@@ -17,6 +17,9 @@
 #include "vx_internal.h"
 #include "vx_pyramid.h"
 
+/******************************************************************************/
+/* INTERNAL INTERFACE                                                         */
+/******************************************************************************/
 Pyramid::Pyramid(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_PYRAMID, scope)
 {
 
@@ -179,6 +182,10 @@ static vx_pyramid vxCreatePyramidInt(vx_context context,
 
     return pyramid;
 }
+
+/******************************************************************************/
+/* PUBLIC INTERFACE                                                           */
+/******************************************************************************/
 
 VX_API_ENTRY vx_pyramid VX_API_CALL vxCreateVirtualPyramid(vx_graph graph,
                                                            vx_size levels,

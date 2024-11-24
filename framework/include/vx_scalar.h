@@ -60,6 +60,14 @@ public:
     void* allocateScalarMemory(vx_size size);
 
     /**
+     * @brief Print scalar object
+     *
+     * @param scalar
+     * @ingroup group_int_scalar
+     */
+    static void printScalarValue(vx_scalar scalar);
+
+    /**
      * @brief Function to destroy scalar obj
      * @ingroup group_int_scalar
      */

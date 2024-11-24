@@ -428,7 +428,6 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
         {
             vxQueryNode(node, VX_NODE_OUTPUT_TILE_BLOCK_SIZE, &tiles[p].tile_block, sizeof(vx_tile_block_size_t));
             vxQueryNode(node, VX_NODE_INPUT_NEIGHBORHOOD, &tiles[p].neighborhood, sizeof(vx_neighborhood_size_t));
-            vxPrintImage((vx_image_t *)parameters[p]);
             images[p] = (vx_image)parameters[p];
             vxQueryImage(images[p], VX_IMAGE_WIDTH, &tiles[p].image.width, sizeof(vx_uint32));
             vxQueryImage(images[p], VX_IMAGE_HEIGHT, &tiles[p].image.height, sizeof(vx_uint32));

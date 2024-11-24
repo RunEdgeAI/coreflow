@@ -17,6 +17,9 @@
 #include "vx_internal.h"
 #include "vx_convolution.h"
 
+/******************************************************************************/
+/* INTERNAL INTERFACE                                                         */
+/******************************************************************************/
 Convolution::Convolution(vx_context context, vx_reference scope) : Matrix(context, VX_TYPE_CONVOLUTION, scope)
 {
 
@@ -32,21 +35,9 @@ void Convolution::destructConvolution()
     ownFreeMemory(context, &memory);
 }
 
-static VX_INLINE int isodd(size_t a)
-{
-    return (int)(a & 1);
-}
-
-static vx_bool vxIsPowerOfTwo(vx_uint32 a)
-{
-    if (a == 0)
-        return vx_false_e;
-    else if ((a & ((a) - 1)) == 0)
-        return vx_true_e;
-    else
-        return vx_false_e;
-}
-
+/******************************************************************************/
+/* PUBLIC INTERFACE                                                           */
+/******************************************************************************/
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseConvolution(vx_convolution* convolution)
 {
     vx_status status = VX_FAILURE;

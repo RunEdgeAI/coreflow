@@ -17,6 +17,9 @@
 #include "vx_internal.h"
 #include "vx_meta_format.h"
 
+/******************************************************************************/
+/* INTERNAL INTERFACE                                                         */
+/******************************************************************************/
 MetaFormat::MetaFormat(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_META_FORMAT, scope),
 size(0),
 type(),
@@ -27,7 +30,7 @@ set_valid_rectangle_callback(nullptr)
 }
 
 /******************************************************************************/
-/* PUBLIC */
+/* PUBLIC INTERFACE                                                           */
 /******************************************************************************/
 
 vx_meta_format vxCreateMetaFormat(vx_context context)

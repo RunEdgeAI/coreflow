@@ -355,7 +355,7 @@ vx_bool Context::removeReference(vx_reference& ref)
     return ret;
 }
 
-VX_INT_API vx_bool vxIsValidBorderMode(vx_enum mode)
+VX_INT_API vx_bool Context::isValidBorderMode(vx_enum mode)
 {
     vx_bool ret = vx_true_e;
     switch (mode)
@@ -371,7 +371,7 @@ VX_INT_API vx_bool vxIsValidBorderMode(vx_enum mode)
     return ret;
 }
 
-static vx_bool vxWorkerNode(vx_threadpool_worker_t *worker)
+vx_bool Context::workerNode(vx_threadpool_worker_t *worker)
 {
     vx_bool ret = vx_true_e;
     vx_target target = (vx_target)worker->data->v1;
@@ -417,7 +417,7 @@ static vx_bool vxWorkerNode(vx_threadpool_worker_t *worker)
     return ret;
 }
 
-static vx_value_t vxWorkerGraph(void *arg)
+vx_value_t Context::workerGraph(void *arg)
 {
     vx_processor_t *proc = (vx_processor_t *)arg;
     VX_PRINT(VX_ZONE_CONTEXT, "Starting thread!\n");
@@ -648,6 +648,39 @@ VX_INT_API void Context::memoryUnmap(vx_uint32 map_id)
     return;
 } /* MemoryUnmap() */
 
+vx_target* Context::findTargetByString(const char* target_string)
+{
+    vx_uint32 t = 0;
+    vx_target* target = nullptr;
+
+    size_t len = strlen(target_string);
+    char* target_lower_string = (char*)calloc(len + 1, sizeof(char));
+
+    if (target_lower_string)
+    {
+        unsigned int i;
+        /* to lower case */
+        for (i = 0; target_string[i] != 0; i++)
+        {
+            target_lower_string[i] = (char)tolower(target_string[i]);
+        }
+
+        for (t = 0; t < num_targets; t++)
+        {
+            vx_uint32 rt = priority_targets[t];
+            vx_target curr_target = targets[rt];
+            if (Target::matchTargetNameWithString(curr_target->name, target_lower_string) == vx_true_e)
+            {
+                target = &curr_target;
+            }
+        }
+
+        free(target_lower_string);
+    }
+
+    return target;
+}
+
 /******************************************************************************/
 /* PUBLIC API */
 /******************************************************************************/
@@ -706,7 +739,7 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContext(void)
             context->workers = ownCreateThreadpool(VX_INT_HOST_CORES,
                                                   VX_INT_MAX_REF, /* very deep queues! */
                                                   sizeof(vx_work_t),
-                                                  vxWorkerNode,
+                                                  Context::workerNode,
                                                   context);
             // ownCreateConstErrors(context);
 
@@ -785,7 +818,7 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContext(void)
             ownInitQueue(&context->proc.input);
             ownInitQueue(&context->proc.output);
             context->proc.running = vx_true_e;
-            context->proc.thread = ownCreateThread(vxWorkerGraph, &context->proc);
+            context->proc.thread = ownCreateThread(Context::workerGraph, &context->proc);
             context->imm_target_enum = VX_TARGET_ANY;
             memset(context->imm_target_string, 0, sizeof(context->imm_target_string));
 
@@ -990,7 +1023,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetContextAttribute(vx_context context, vx_
                 if (VX_CHECK_PARAM(ptr, size, vx_border_t, 0x3))
                 {
                     vx_border_t *config = (vx_border_t *)ptr;
-                    if (vxIsValidBorderMode(config->mode) == vx_false_e)
+                    if (Context::isValidBorderMode(config->mode) == vx_false_e)
                         status = VX_ERROR_INVALID_VALUE;
                     else
                     {
@@ -1495,39 +1528,6 @@ VX_API_ENTRY vx_status VX_API_CALL vxAllocateUserKernelLibraryId(vx_context cont
     return status;
 }
 
-static vx_target* findTargetByString(vx_context context, const char* target_string)
-{
-    vx_uint32 t = 0;
-    vx_target* target = nullptr;
-
-    size_t len = strlen(target_string);
-    char* target_lower_string = (char*)calloc(len + 1, sizeof(char));
-
-    if (target_lower_string)
-    {
-        unsigned int i;
-        /* to lower case */
-        for (i = 0; target_string[i] != 0; i++)
-        {
-            target_lower_string[i] = (char)tolower(target_string[i]);
-        }
-
-        for (t = 0; t < context->num_targets; t++)
-        {
-            vx_uint32 rt = context->priority_targets[t];
-            vx_target curr_target = context->targets[rt];
-            if (Target::matchTargetNameWithString(curr_target->name, target_lower_string) == vx_true_e)
-            {
-                target = &curr_target;
-            }
-        }
-
-        free(target_lower_string);
-    }
-
-    return target;
-}
-
 VX_API_ENTRY vx_status VX_API_CALL vxSetImmediateModeTarget(vx_context context, vx_enum target_enum, const char* target_string)
 {
     vx_status status = VX_ERROR_INVALID_REFERENCE;
@@ -1544,7 +1544,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetImmediateModeTarget(vx_context context, 
                 break;
 
             case VX_TARGET_STRING:
-                target = findTargetByString(context, target_string);
+                target = context->findTargetByString(target_string);
                 if (target != nullptr) /* target was found */
                 {
                     context->imm_target_enum = VX_TARGET_STRING;

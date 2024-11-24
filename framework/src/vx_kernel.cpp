@@ -17,6 +17,9 @@
 #include "vx_internal.h"
 #include "vx_kernel.h"
 
+/******************************************************************************/
+/* INTERNAL INTERFACE                                                         */
+/******************************************************************************/
 Kernel::Kernel(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_KERNEL, scope),
 name(""),
 enumeration(VX_ERROR_NOT_SUPPORTED),
@@ -69,7 +72,7 @@ Kernel::Kernel(vx_context context,
     }
 }
 
-void vxPrintKernel(vx_kernel kernel)
+void Kernel::printKernel(vx_kernel kernel)
 {
     VX_PRINT(VX_ZONE_KERNEL, "kernel[%u] enabled?=%s %s \n",
             kernel->enumeration,
@@ -171,6 +174,96 @@ vx_status Kernel::initializeKernel(vx_enum kenum,
     }
 }
 
+vx_kernel Kernel::addkernel(vx_context context,
+                           const vx_char name[VX_MAX_KERNEL_NAME],
+                           vx_enum enumeration,
+                           vx_kernel_f func_ptr,
+                           vx_uint32 numParams,
+                           vx_kernel_validate_f validate,
+                           vx_kernel_input_validate_f input,
+                           vx_kernel_output_validate_f output,
+                           vx_kernel_initialize_f initialize,
+                           vx_kernel_deinitialize_f deinitialize,
+                           vx_bool valid_rect_reset)
+{
+    vx_kernel kernel = 0;
+    vx_uint32 t = 0;
+    vx_size index = 0;
+    vx_target target = nullptr;
+    vx_char targetName[VX_MAX_TARGET_NAME];
+
+    VX_PRINT(VX_ZONE_INFO, "Entered %s\n", __func__);
+
+    if (Context::isValidContext(context) == vx_false_e)
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid Context\n");
+        return (vx_kernel)nullptr;
+    }
+
+    if (func_ptr == nullptr ||
+        ((validate == nullptr) &&
+         (input == nullptr ||
+          output == nullptr)) ||
+        numParams > VX_INT_MAX_PARAMS || numParams == 0 ||
+        name == nullptr ||
+        strncmp(name, "",  VX_MAX_KERNEL_NAME) == 0)
+        /* initialize and de-initialize can be nullptr */
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid Parameters!\n");
+        vxAddLogEntry((vx_reference)context, VX_ERROR_INVALID_PARAMETERS, "Invalid Parameters supplied to vxAddKernel or vxAddUserKernel\n");
+        // kernel = (vx_kernel_t *)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+        return kernel;
+    }
+
+    /* find target to assign this to */
+    index = strnindex(name, ':', VX_MAX_TARGET_NAME);
+    if (index == VX_MAX_TARGET_NAME)
+    {
+        strcpy(targetName,"khronos.any");
+    }
+    else
+    {
+        strncpy(targetName, name, index);
+    }
+    VX_PRINT(VX_ZONE_KERNEL, "Deduced Name as %s\n", targetName);
+    for (t = 0u; t < context->num_targets; t++)
+    {
+        target = context->targets[t];
+        if (strncmp(targetName,target->name, VX_MAX_TARGET_NAME) == 0)
+        {
+            break;
+        }
+        target = nullptr;
+    }
+    if (target && target->funcs.addkernel)
+    {
+        kernel = target->funcs.addkernel(target, name, enumeration,
+                                         func_ptr, numParams,
+                                         validate, input, output,
+                                         initialize, deinitialize);
+        if (kernel)
+        {
+            kernel->user_kernel = vx_true_e;
+            kernel->attributes.valid_rect_reset = valid_rect_reset;
+            VX_PRINT(VX_ZONE_KERNEL,"Added Kernel %s to Target %s (" VX_FMT_REF ")\n", name, target->name, kernel);
+            /* A reference is returned to the user */
+            kernel->incrementReference(VX_EXTERNAL);
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Failed to add kernel %s to target %s\n", name, target->name);
+            kernel = nullptr;
+        }
+    }
+    else
+    {
+        vxAddLogEntry((vx_reference)context, VX_ERROR_NO_RESOURCES, "No target named %s exists!\n", targetName);
+        // kernel = (vx_kernel_t *)ownGetErrorObject(context, VX_ERROR_NO_RESOURCES);
+    }
+
+    return kernel;
+}
+
 vx_status Kernel::deinitializeKernel()
 {
     vx_status status = VX_SUCCESS;
@@ -185,33 +278,8 @@ vx_status Kernel::deinitializeKernel()
     return status;
 }
 
-static vx_size strnindex(const vx_char *str, vx_char c, vx_size limit)
-{
-    vx_size index = 0;
-    while (index < limit && *str != c)
-    {
-        if(!*str)
-        {
-            index = limit;
-            break;
-        }
-        str++;
-        index++;
-    }
-    return index;
-}
-
-static vx_size strncount(const vx_char string[], vx_size size, vx_char c)
-{
-    vx_size i = 0ul, count = 0ul;
-    while (string[i] != '\0' && i < size)
-        if (string[i++] == c)
-            count++;
-    return count;
-}
-
 /******************************************************************************/
-/* PUBLIC FUNCTIONS */
+/* PUBLIC FUNCTIONS                                                           */
 /******************************************************************************/
 
 VX_API_ENTRY vx_status VX_API_CALL vxLoadKernels(vx_context context, const vx_char *name)
@@ -402,7 +470,7 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxGetKernelByName(vx_context context, const v
             if (target->funcs.supports(target, targetName, kernelName, &k) == VX_SUCCESS)
             {
                 vx_kernel kernel = target->kernels[k];
-                vxPrintKernel(kernel);
+                Kernel::printKernel(kernel);
                 if (kernel->enabled == vx_true_e)
                 {
                     kernel->affinity = context->priority_targets[t];
@@ -503,96 +571,6 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseKernel(vx_kernel *kernel)
     return status;
 }
 
-static vx_kernel addkernel(vx_context context,
-                           const vx_char name[VX_MAX_KERNEL_NAME],
-                           vx_enum enumeration,
-                           vx_kernel_f func_ptr,
-                           vx_uint32 numParams,
-                           vx_kernel_validate_f validate,
-                           vx_kernel_input_validate_f input,
-                           vx_kernel_output_validate_f output,
-                           vx_kernel_initialize_f initialize,
-                           vx_kernel_deinitialize_f deinitialize,
-                           vx_bool valid_rect_reset)
-{
-    vx_kernel kernel = 0;
-    vx_uint32 t = 0;
-    vx_size index = 0;
-    vx_target target = nullptr;
-    vx_char targetName[VX_MAX_TARGET_NAME];
-
-    VX_PRINT(VX_ZONE_INFO, "Entered %s\n", __func__);
-
-    if (Context::isValidContext(context) == vx_false_e)
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Invalid Context\n");
-        return (vx_kernel)nullptr;
-    }
-
-    if (func_ptr == nullptr ||
-        ((validate == nullptr) &&
-         (input == nullptr ||
-          output == nullptr)) ||
-        numParams > VX_INT_MAX_PARAMS || numParams == 0 ||
-        name == nullptr ||
-        strncmp(name, "",  VX_MAX_KERNEL_NAME) == 0)
-        /* initialize and de-initialize can be nullptr */
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Invalid Parameters!\n");
-        vxAddLogEntry((vx_reference)context, VX_ERROR_INVALID_PARAMETERS, "Invalid Parameters supplied to vxAddKernel or vxAddUserKernel\n");
-        // kernel = (vx_kernel_t *)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
-        return kernel;
-    }
-
-    /* find target to assign this to */
-    index = strnindex(name, ':', VX_MAX_TARGET_NAME);
-    if (index == VX_MAX_TARGET_NAME)
-    {
-        strcpy(targetName,"khronos.any");
-    }
-    else
-    {
-        strncpy(targetName, name, index);
-    }
-    VX_PRINT(VX_ZONE_KERNEL, "Deduced Name as %s\n", targetName);
-    for (t = 0u; t < context->num_targets; t++)
-    {
-        target = context->targets[t];
-        if (strncmp(targetName,target->name, VX_MAX_TARGET_NAME) == 0)
-        {
-            break;
-        }
-        target = nullptr;
-    }
-    if (target && target->funcs.addkernel)
-    {
-        kernel = target->funcs.addkernel(target, name, enumeration,
-                                         func_ptr, numParams,
-                                         validate, input, output,
-                                         initialize, deinitialize);
-        if (kernel)
-        {
-            kernel->user_kernel = vx_true_e;
-            kernel->attributes.valid_rect_reset = valid_rect_reset;
-            VX_PRINT(VX_ZONE_KERNEL,"Added Kernel %s to Target %s (" VX_FMT_REF ")\n", name, target->name, kernel);
-            /* A reference is returned to the user */
-            kernel->incrementReference(VX_EXTERNAL);
-        }
-        else
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Failed to add kernel %s to target %s\n", name, target->name);
-            kernel = nullptr;
-        }
-    }
-    else
-    {
-        vxAddLogEntry((vx_reference)context, VX_ERROR_NO_RESOURCES, "No target named %s exists!\n", targetName);
-        // kernel = (vx_kernel_t *)ownGetErrorObject(context, VX_ERROR_NO_RESOURCES);
-    }
-
-    return kernel;
-}
-
 /*
  *  add std-extra kernels
  */
@@ -606,7 +584,7 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxAddKernel(vx_context c,
                              vx_kernel_initialize_f initialize,
                              vx_kernel_deinitialize_f deinitialize)
 {
-    return addkernel(c, name, enumeration, func_ptr, numParams,
+    return Kernel::addkernel(c, name, enumeration, func_ptr, numParams,
                      nullptr, input, output, initialize, deinitialize,
                      vx_false_e);
 }
@@ -623,7 +601,7 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxAddUserKernel(vx_context c,
                              vx_kernel_initialize_f initialize,
                              vx_kernel_deinitialize_f deinitialize)
 {
-    return addkernel(c, name, enumeration, func_ptr, numParams,
+    return Kernel::addkernel(c, name, enumeration, func_ptr, numParams,
                      validate, nullptr, nullptr, initialize, deinitialize,
                      vx_true_e);
 }

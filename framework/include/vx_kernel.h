@@ -102,11 +102,48 @@ public:
                              vx_kernel_initialize_f initialize,
                              vx_kernel_deinitialize_f deinitialize);
 
+    /**
+     * @brief Add Kernel
+     *
+     * @param context           The global context
+     * @param name              The kernel name value.
+     * @param enumeration       The kernel enumeration value.
+     * @param func_ptr          The pointer to the function of the kernel.
+     * @param numParams         The number of parameters in the kernel.
+     * @param validate          The function pointer to the params validator.
+     * @param input             The function pointer to the input validator.
+     * @param output            The function pointer to the output validator.
+     * @param initialize        The function to call to initialize the kernel.
+     * @param deinitialize      The function to call to deinitialize the kernel.
+     * @param valid_rect_reset  The bool to reset the valid rect or not.
+     * @return vx_kernel
+     * @ingroup group_int_kernel
+     */
+    static vx_kernel addkernel(vx_context context,
+                           const vx_char name[VX_MAX_KERNEL_NAME],
+                           vx_enum enumeration,
+                           vx_kernel_f func_ptr,
+                           vx_uint32 numParams,
+                           vx_kernel_validate_f validate,
+                           vx_kernel_input_validate_f input,
+                           vx_kernel_output_validate_f output,
+                           vx_kernel_initialize_f initialize,
+                           vx_kernel_deinitialize_f deinitialize,
+                           vx_bool valid_rect_reset);
+
     /*! \brief Used to deinitialize a kernel object in a target kernel list.
      * \param [in] kernel The pointer to the kernel structure.
      * \ingroup group_int_kernel
      */
     vx_status deinitializeKernel();
+
+    /**
+     * @brief Print kernel object
+     *
+     * @param kernel
+     * @ingroup group_int_kernel
+     */
+    static void printKernel(vx_kernel kernel);
 
     /*! \brief */
     vx_char        name[VX_MAX_KERNEL_NAME];

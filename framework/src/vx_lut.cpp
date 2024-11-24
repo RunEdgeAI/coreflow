@@ -40,7 +40,7 @@ VX_API_ENTRY vx_lut VX_API_CALL vxCreateLUT(vx_context context, vx_enum data_typ
                 {
                     lut->num_items = count;
                     lut->offset = 0;
-                    vxPrintArray(lut);
+                    Array::printArray(lut);
                 }
             }
         }
@@ -59,7 +59,7 @@ VX_API_ENTRY vx_lut VX_API_CALL vxCreateLUT(vx_context context, vx_enum data_typ
                 {
                     lut->num_items = count;
                     lut->offset = (vx_uint32)(count/2);
-                    vxPrintArray(lut);
+                    Array::printArray(lut);
                 }
             }
         }
@@ -71,7 +71,7 @@ VX_API_ENTRY vx_lut VX_API_CALL vxCreateLUT(vx_context context, vx_enum data_typ
             {
                 lut->num_items = count;
                 lut->offset = 0;
-                vxPrintArray(lut);
+                Array::printArray(lut);
             }
         }
 #endif
