@@ -17,6 +17,9 @@
 #include "vx_internal.h"
 #include "vx_scalar.h"
 
+/*****************************************************************************/
+/* INTERNAL INTERFACE                                                        */
+/*****************************************************************************/
 Scalar::Scalar(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_SCALAR, scope)
 {
 
@@ -37,21 +40,7 @@ void* Scalar::allocateScalarMemory(vx_size size)
     return data_addr;
 }
 
-void Scalar::destructScalar()
-{
-    if (data_addr)
-    {
-        free(data_addr);
-        data_addr = nullptr;
-        data_len = 0;
-    }
-}
-
-/******************************************************************************/
-/* PUBLIC API */
-/******************************************************************************/
-
-void vxPrintScalarValue(vx_scalar scalar)
+void Scalar::printScalarValue(vx_scalar scalar)
 {
     switch (scalar->data_type)
     {
@@ -82,7 +71,7 @@ void vxPrintScalarValue(vx_scalar scalar)
         case VX_TYPE_UINT64:
             VX_PRINT(VX_ZONE_SCALAR, "scalar " VX_FMT_REF " = %lu\n", scalar, scalar->data.u64);
             break;
-#if OVX_SUPPORT_HALF_FLOAT
+#ifdef EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT
         case VX_TYPE_FLOAT16:
             VX_PRINT(VX_ZONE_SCALAR, "scalar " VX_FMT_REF " = %f\n", scalar, scalar->data.f16);
             break;
@@ -112,7 +101,21 @@ void vxPrintScalarValue(vx_scalar scalar)
     }
 
     return;
-} /* vxPrintScalarValue() */
+} /* printScalarValue() */
+
+void Scalar::destructScalar()
+{
+    if (data_addr)
+    {
+        free(data_addr);
+        data_addr = nullptr;
+        data_len = 0;
+    }
+}
+
+/******************************************************************************/
+/* PUBLIC API                                                                 */
+/******************************************************************************/
 
 VX_API_ENTRY vx_scalar VX_API_CALL vxCreateScalar(vx_context context, vx_enum data_type, const void* ptr)
 {
@@ -245,7 +248,7 @@ static vx_status own_scalar_to_host_mem(vx_scalar scalar, void* user_ptr)
     if (vx_false_e == ownSemWait(&scalar->lock))
         return VX_ERROR_NO_RESOURCES;
 
-    vxPrintScalarValue(scalar);
+    Scalar::printScalarValue(scalar);
 
     switch (scalar->data_type)
     {
@@ -258,7 +261,7 @@ static vx_status own_scalar_to_host_mem(vx_scalar scalar, void* user_ptr)
     case VX_TYPE_UINT32:   *(vx_uint32*)user_ptr = scalar->data.u32; break;
     case VX_TYPE_INT64:    *(vx_int64*)user_ptr = scalar->data.s64; break;
     case VX_TYPE_UINT64:   *(vx_uint64*)user_ptr = scalar->data.u64; break;
-#if OVX_SUPPORT_HALF_FLOAT
+#ifdef EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT
     case VX_TYPE_FLOAT16:  *(vx_float16*)ptr = scalar->data.f16; break;
 #endif
     case VX_TYPE_FLOAT32:  *(vx_float32*)user_ptr = scalar->data.f32; break;
@@ -300,7 +303,7 @@ static vx_status own_host_mem_to_scalar(vx_scalar scalar, void* user_ptr)
     case VX_TYPE_UINT32:   scalar->data.u32 = *(vx_uint32*)user_ptr; break;
     case VX_TYPE_INT64:    scalar->data.s64 = *(vx_int64*)user_ptr; break;
     case VX_TYPE_UINT64:   scalar->data.u64 = *(vx_uint64*)user_ptr; break;
-#if OVX_SUPPORT_HALF_FLOAT
+#ifdef EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT
     case VX_TYPE_FLOAT16:  scalar->data.f16 = *(vx_float16*)user_ptr; break;
 #endif
     case VX_TYPE_FLOAT32:  scalar->data.f32 = *(vx_float32*)user_ptr; break;
@@ -316,7 +319,7 @@ static vx_status own_host_mem_to_scalar(vx_scalar scalar, void* user_ptr)
         break;
     }
 
-    vxPrintScalarValue(scalar);
+    Scalar::printScalarValue(scalar);
 
     if (vx_false_e == ownSemPost(&scalar->lock))
         return VX_ERROR_NO_RESOURCES;
@@ -469,7 +472,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReadScalarValue(vx_scalar scalar, void *ptr
         return VX_ERROR_INVALID_PARAMETERS;
 
     ownSemWait(&scalar->lock);
-    vxPrintScalarValue(scalar);
+    Scalar::printScalarValue(scalar);
     switch (scalar->data_type)
     {
         case VX_TYPE_CHAR:
@@ -499,7 +502,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReadScalarValue(vx_scalar scalar, void *ptr
         case VX_TYPE_UINT64:
             *(vx_uint64 *)ptr = scalar->data.u64;
             break;
-#if OVX_SUPPORT_HALF_FLOAT
+#ifdef EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT
         case VX_TYPE_FLOAT16:
             *(vx_float16 *)ptr = scalar->data.f16;
             break;
@@ -572,7 +575,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxWriteScalarValue(vx_scalar scalar, const vo
         case VX_TYPE_UINT64:
             scalar->data.u64 = *(vx_uint64 *)ptr;
             break;
-#if OVX_SUPPORT_HALF_FLOAT
+#ifdef EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT
         case VX_TYPE_FLOAT16:
             scalar->data.f16 = *(vx_float16 *)ptr;
             break;
@@ -600,7 +603,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxWriteScalarValue(vx_scalar scalar, const vo
             status = VX_ERROR_NOT_SUPPORTED;
             break;
     }
-    vxPrintScalarValue(scalar);
+    Scalar::printScalarValue(scalar);
     ownSemPost(&scalar->lock);
     // ownWroteToReference(&scalar->base);
     return status;

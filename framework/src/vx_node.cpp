@@ -18,16 +18,9 @@
 #include "vx_internal.h"
 #include "vx_node.h"
 
-void vxPrintNode(vx_node node)
-{
-    if (node)
-        VX_PRINT(VX_ZONE_NODE, "vx_node_t:%p %s:%d affinity:%s\n",
-            node,
-            node->kernel->name,
-            node->kernel->enumeration,
-            node->context->targets[node->affinity]->name);
-}
-
+/******************************************************************************/
+/* INTERNAL INTERFACE                                                         */
+/******************************************************************************/
 Node::Node(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_NODE, scope),
 kernel(nullptr),
 parameters(),
@@ -157,6 +150,16 @@ vx_status Node::removeNode()
     return status;
 }
 
+void Node::printNode(vx_node node)
+{
+    if (node)
+        VX_PRINT(VX_ZONE_NODE, "vx_node_t:%p %s:%d affinity:%s\n",
+            node,
+            node->kernel->name,
+            node->kernel->enumeration,
+            node->context->targets[node->affinity]->name);
+}
+
 /* ![FROM SAMPLE EXTENSION] */
 vx_status ownSetChildGraphOfNode(vx_node node, vx_graph graph)
 {
@@ -241,7 +244,7 @@ vx_graph ownGetChildGraphOfNode(vx_node node)
 /* ![FROM SAMPLE EXTENSION] */
 
 /******************************************************************************/
-/* PUBLIC FUNCTIONS */
+/* PUBLIC FUNCTIONS                                                           */
 /******************************************************************************/
 
 VX_API_ENTRY vx_node VX_API_CALL vxCreateGenericNode(vx_graph graph, vx_kernel kernel)

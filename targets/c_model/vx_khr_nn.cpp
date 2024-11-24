@@ -44,7 +44,7 @@
     } while(0)
 
 //TODO: move this somewhere, there's like 3 copies of this already
-static VX_INLINE int validFormat(vx_enum data_type, vx_uint8 fixed_point_pos)
+static VX_INLINE int validNNFormat(vx_enum data_type, vx_uint8 fixed_point_pos)
 {
     return
         (data_type == VX_TYPE_INT16 && fixed_point_pos == Q78_FIXED_POINT_POSITION) ||  // Q78
@@ -299,7 +299,7 @@ static vx_status VX_CALLBACK nnConvolutionInputValidator(vx_node node, vx_uint32
             vxQueryTensor(data, VX_TENSOR_DATA_TYPE, &data_format, sizeof(data_format));
             vxQueryTensor(data, VX_TENSOR_FIXED_POINT_POSITION, &fixed_point_pos, sizeof(fixed_point_pos));
             if ((num_of_dims == 3 || num_of_dims == 4) &&
-                validFormat(data_format, fixed_point_pos))
+                validNNFormat(data_format, fixed_point_pos))
             {
                 status = VX_SUCCESS;
             }
@@ -316,7 +316,7 @@ static vx_status VX_CALLBACK nnConvolutionInputValidator(vx_node node, vx_uint32
             vxQueryTensor(data, VX_TENSOR_DATA_TYPE, &data_type, sizeof(data_type));
             vxQueryTensor(data, VX_TENSOR_DATA_TYPE, &data_format, sizeof(data_format));
             vxQueryTensor(data, VX_TENSOR_FIXED_POINT_POSITION, &fixed_point_pos, sizeof(fixed_point_pos));
-            if (num_of_dims == 4 && validFormat(data_format, fixed_point_pos))
+            if (num_of_dims == 4 && validNNFormat(data_format, fixed_point_pos))
             {
                 status = VX_SUCCESS;
             }
@@ -596,7 +596,7 @@ static vx_status VX_CALLBACK nnPoolingInputValidator(vx_node node, vx_uint32 ind
         vxQueryTensor(input, VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims_in, sizeof(num_of_dims_in));
         vxQueryTensor(input, VX_TENSOR_DATA_TYPE, &data_format, sizeof(data_format));
         vxQueryTensor(input, VX_TENSOR_FIXED_POINT_POSITION, &fixed_point_pos, sizeof(fixed_point_pos));
-        if ((num_of_dims_in == 3 || num_of_dims_in == 4) && validFormat(data_format, fixed_point_pos))
+        if ((num_of_dims_in == 3 || num_of_dims_in == 4) && validNNFormat(data_format, fixed_point_pos))
         {
             status = VX_SUCCESS;
         }
@@ -875,7 +875,7 @@ static vx_status VX_CALLBACK nnFullyConnectedInputValidator(vx_node node, vx_uin
         vxQueryTensor(in, VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims, sizeof(num_of_dims));
         vxQueryTensor(in, VX_TENSOR_DATA_TYPE, &data_type, sizeof(data_type));
         vxQueryTensor(in, VX_TENSOR_FIXED_POINT_POSITION, &fixed_point_pos, sizeof(fixed_point_pos));
-        if (num_of_dims >= 1 && validFormat(data_type, fixed_point_pos))
+        if (num_of_dims >= 1 && validNNFormat(data_type, fixed_point_pos))
         {
             status = VX_SUCCESS;
         }
@@ -897,7 +897,7 @@ static vx_status VX_CALLBACK nnFullyConnectedInputValidator(vx_node node, vx_uin
         vxQueryTensor(out, VX_TENSOR_DIMS, &out_dims, sizeof(out_dims));
         vxQueryTensor(wt, VX_TENSOR_DATA_TYPE, &data_type, sizeof(data_type));
         vxQueryTensor(wt, VX_TENSOR_FIXED_POINT_POSITION, &fixed_point_pos, sizeof(fixed_point_pos));
-        if (validFormat(data_type, fixed_point_pos))
+        if (validNNFormat(data_type, fixed_point_pos))
         {
             status = VX_ERROR_INVALID_PARAMETERS;
 
@@ -1018,7 +1018,7 @@ static vx_status VX_CALLBACK nnFullyConnectedOutputValidator(vx_node node, vx_ui
                 vxSetMetaFormatAttribute(meta, VX_TENSOR_DIMS, &dims_out, sizeof(dims_out));
                 vxSetMetaFormatAttribute(meta, VX_TENSOR_DATA_TYPE, &data_type, sizeof(data_type));
                 vxSetMetaFormatAttribute(meta, VX_TENSOR_FIXED_POINT_POSITION, &fixed_point_pos, sizeof(fixed_point_pos));
-                if (validFormat(data_type, fixed_point_pos))
+                if (validNNFormat(data_type, fixed_point_pos))
                 {
                     status = VX_SUCCESS;
                 }
@@ -1128,7 +1128,7 @@ static vx_status VX_CALLBACK nnSoftmaxInputValidator(vx_node node, vx_uint32 ind
         if (data) {
             vxQueryTensor(data, VX_TENSOR_DATA_TYPE, &data_type, sizeof(data_type));
             vxQueryTensor(data, VX_TENSOR_FIXED_POINT_POSITION, &fixed_point_pos, sizeof(fixed_point_pos));
-            if (validFormat(data_type, fixed_point_pos))
+            if (validNNFormat(data_type, fixed_point_pos))
             {
                 status = VX_SUCCESS;
             }
@@ -1165,7 +1165,7 @@ static vx_status VX_CALLBACK nnSoftmaxOutputValidator(vx_node node, vx_uint32 in
                 vxQueryTensor(data, VX_TENSOR_DIMS, &dims, sizeof(dims));
                 vxQueryTensor(data, VX_TENSOR_DATA_TYPE, &data_type, sizeof(data_type));
                 vxQueryTensor(data, VX_TENSOR_FIXED_POINT_POSITION, &fixed_point_pos, sizeof(fixed_point_pos));
-                if (validFormat(data_type, fixed_point_pos))
+                if (validNNFormat(data_type, fixed_point_pos))
                 {
                     vxSetMetaFormatAttribute(meta, VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims, sizeof(num_of_dims));
                     vxSetMetaFormatAttribute(meta, VX_TENSOR_DIMS, &dims, sizeof(dims));
@@ -1253,7 +1253,7 @@ static vx_status VX_CALLBACK nnNormalizationInputValidator(vx_node node, vx_uint
         vxQueryTensor(data, VX_TENSOR_DATA_TYPE, &data_type, sizeof(data_type));
         vxQueryTensor(data, VX_TENSOR_DATA_TYPE, &data_format, sizeof(data_format));
         vxQueryTensor(data, VX_TENSOR_FIXED_POINT_POSITION, &fixed_point_pos, sizeof(fixed_point_pos));
-        if (validFormat(data_type, fixed_point_pos))
+        if (validNNFormat(data_type, fixed_point_pos))
         {
             status = VX_SUCCESS;
         }
@@ -1305,7 +1305,7 @@ static vx_status VX_CALLBACK nnNormalizationOutputValidator(vx_node node, vx_uin
                 vxQueryTensor(data, VX_TENSOR_DIMS, &dims, sizeof(dims));
                 vxQueryTensor(data, VX_TENSOR_DATA_TYPE, &data_type, sizeof(data_type));
                 vxQueryTensor(data, VX_TENSOR_FIXED_POINT_POSITION, &fixed_point_pos, sizeof(fixed_point_pos));
-                if (validFormat(data_type, fixed_point_pos))
+                if (validNNFormat(data_type, fixed_point_pos))
                 {
                     vxSetMetaFormatAttribute(meta, VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims, sizeof(num_of_dims));
                     vxSetMetaFormatAttribute(meta, VX_TENSOR_DIMS, &dims, sizeof(dims));

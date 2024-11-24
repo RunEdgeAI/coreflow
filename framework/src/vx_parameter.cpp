@@ -17,6 +17,9 @@
 #include "vx_internal.h"
 #include "vx_parameter.h"
 
+/******************************************************************************/
+/* INTERNAL INTERFACE                                                         */
+/******************************************************************************/
 Parameter::Parameter(vx_context context, vx_reference ref) : Reference(context, VX_TYPE_PARAMETER, ref)
 {
 
@@ -85,7 +88,7 @@ void Parameter::destructParameter()
 }
 
 /******************************************************************************/
-/* PUBLIC API */
+/* PUBLIC API                                                                 */
 /******************************************************************************/
 
 VX_API_ENTRY vx_parameter VX_API_CALL vxGetKernelParameterByIndex(vx_kernel kernel, vx_uint32 index)

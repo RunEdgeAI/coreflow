@@ -17,6 +17,9 @@
 #include "vx_internal.h"
 #include "vx_distribution.h"
 
+/******************************************************************************/
+/* INTERNAL INTERFACE                                                         */
+/******************************************************************************/
 Distribution::Distribution(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_DISTRIBUTION, scope),
 memory(),
 range_x(0),
@@ -36,6 +39,9 @@ void Distribution::destructDistribution()
     ownFreeMemory(context, &memory);
 }
 
+/******************************************************************************/
+/* PUBLIC  INTERFACE                                                          */
+/******************************************************************************/
 VX_API_ENTRY vx_distribution VX_API_CALL vxCreateDistribution(vx_context context, vx_size numBins, vx_int32 offset, vx_uint32 range)
 {
     vx_distribution distribution = nullptr;

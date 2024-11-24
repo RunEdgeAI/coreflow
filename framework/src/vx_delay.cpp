@@ -20,6 +20,9 @@
 #define vxIsValidDelay(d) ((d) && Reference::isValidReference((vx_reference)(d), VX_TYPE_DELAY))
 #define vxIsValidGraph(g) ((g) && Reference::isValidReference((vx_reference)(g), VX_TYPE_GRAPH))
 
+/******************************************************************************/
+/* INTERNAL INTERFACE                                                         */
+/******************************************************************************/
 Delay::Delay(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_DELAY, scope),
 count(0),
 index(0),
@@ -170,7 +173,7 @@ void Delay::destructDelay()
 }
 
 /******************************************************************************/
-/* PUBLIC INTERFACE */
+/* PUBLIC INTERFACE                                                           */
 /******************************************************************************/
 
 VX_API_ENTRY vx_reference VX_API_CALL vxGetReferenceFromDelay(vx_delay delay, vx_int32 index)

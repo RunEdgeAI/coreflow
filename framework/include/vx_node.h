@@ -88,8 +88,17 @@ public:
      * \return A <tt>\ref vx_status_e</tt> enumeration.
      * \retval VX_SUCCESS No errors.
      * \retval VX_ERROR_INVALID_REFERENCE If *n is not a <tt>\ref vx_node</tt>.
+     * \ingroup group_int_node
      */
     vx_status removeNode();
+
+    /**
+     * @brief Print node object
+     *
+     * @param node
+     * @ingroup group_int_node
+     */
+    static void printNode(vx_node node);
 
     /*! \brief The pointer to the kernel structure */
     vx_kernel           kernel;

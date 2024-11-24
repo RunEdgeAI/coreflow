@@ -35,4 +35,66 @@ static VX_INLINE void *ownFormatMemoryPtr(vx_memory_t *memory,
     return ptr;
 }
 
+static VX_INLINE int isodd(size_t a)
+{
+    return (int)(a & 1);
+}
+
+static VX_INLINE vx_bool vxIsOdd(vx_uint32 a)
+{
+    if (a & 0x1)
+        return vx_true_e;
+    else
+        return vx_false_e;
+}
+
+static VX_INLINE vx_bool vxIsPowerOfTwo(vx_uint32 a)
+{
+    if (a == 0)
+        return vx_false_e;
+    else if ((a & ((a) - 1)) == 0)
+        return vx_true_e;
+    else
+        return vx_false_e;
+}
+
+static VX_INLINE vx_size strncount(const vx_char string[], vx_size size, vx_char c)
+{
+    vx_size i = 0ul, count = 0ul;
+    while (string[i] != '\0' && i < size)
+        if (string[i++] == c)
+            count++;
+    return count;
+}
+
+static VX_INLINE vx_size strnindex(const vx_char *str, vx_char c, vx_size limit)
+{
+    vx_size index = 0;
+    while (index < limit && *str != c)
+    {
+        if(!*str)
+        {
+            index = limit;
+            break;
+        }
+        str++;
+        index++;
+    }
+    return index;
+}
+
+static VX_INLINE int validFormat(vx_enum data_type, vx_uint8 fixed_point_pos)
+{
+        return
+#ifdef EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT
+            data_type == VX_TYPE_FLOAT16 ||
+#endif /* EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT */
+#ifdef OPENVX_CONFORMANCE_NNEF_IMPORT
+            data_type == VX_TYPE_FLOAT32 || data_type == VX_TYPE_INT32 || data_type == VX_TYPE_BOOL ||
+#endif /* OPENVX_CONFORMANCE_NNEF_IMPORT */
+            (data_type == VX_TYPE_INT16 && fixed_point_pos == Q78_FIXED_POINT_POSITION) ||
+            (data_type == VX_TYPE_INT8 && fixed_point_pos == 0) ||
+            (data_type == VX_TYPE_UINT8 && fixed_point_pos == 0);
+}
+
 #endif /* VX_INLINES_H */

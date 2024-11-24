@@ -19,10 +19,9 @@
 #include "vx_internal.h"
 #include "vx_tensor.h"
 
-
-/*==============================================================================
-Tensor INTERNAL HELPER FUNCTIONS
-=============================================================================*/
+/*****************************************************************************/
+/* INTERNAL INTERFACE                                                        */
+/*****************************************************************************/
 Tensor::Tensor(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_TENSOR, scope),
 addr(nullptr),
 number_of_dimensions(0),
@@ -91,6 +90,47 @@ void Tensor::initTensor(const vx_size* dimensions, vx_size number_of_dimensions,
     }
 }
 
+vx_int32 Tensor::checkSizes(vx_size* dimensions, const vx_size * view_start, const vx_size * view_end, vx_size number_of_dimensions)
+{
+    for (vx_size i = 0; i < number_of_dimensions; i++)
+    {
+        if (view_end[i] <= view_start[i] ||
+            view_end[i] > dimensions[i])
+        {
+            return -1;
+        }
+    }
+    return 0;
+}
+
+vx_size Tensor::computePatchSize(const vx_size * view_start, const vx_size * view_end, vx_size number_of_dimensions)
+{
+    vx_size total_size = 1;
+    for (vx_size i = 0; i < number_of_dimensions; i++)
+    {
+        total_size *= view_end[i] - view_start[i];
+    }
+    return total_size;
+}
+
+void Tensor::computePositionsFromIndex(vx_size index, const vx_size * start, const vx_size * end,
+        const vx_size * tensor_stride, const vx_size * patch_stride,  vx_size number_of_dimensions,
+        vx_size * tensor_pos, vx_size * patch_pos)
+{
+    *tensor_pos = 0;
+    *patch_pos = 0;
+    vx_size index_leftover = index;
+    int divisor = 1;
+    for (vx_size i = 0; i < number_of_dimensions; i++)
+    {
+        divisor = (vx_uint32)(end[i] - start[i]);
+        vx_size curr_dim_index = index_leftover%divisor;
+        *tensor_pos += tensor_stride[i] * (curr_dim_index + start[i]);
+        *patch_pos += patch_stride[i] * curr_dim_index ;
+        index_leftover = index_leftover /divisor;
+    }
+}
+
 void Tensor::destructTensor()
 {
     /* if it's not imported and does not have a parent, free it */
@@ -105,24 +145,9 @@ void Tensor::destructTensor()
     }
 }
 
-/* @TODO: move this somewhere, there's like 3 copies of this already */
-static VX_INLINE int validFormat(vx_enum data_type, vx_uint8 fixed_point_pos)
-{
-        return
-#ifdef EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT
-            data_type == VX_TYPE_FLOAT16 ||
-#endif /* EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT */
-#ifdef OPENVX_CONFORMANCE_NNEF_IMPORT
-            data_type == VX_TYPE_FLOAT32 || data_type == VX_TYPE_INT32 || data_type == VX_TYPE_BOOL ||
-#endif /* OPENVX_CONFORMANCE_NNEF_IMPORT */
-            (data_type == VX_TYPE_INT16 && fixed_point_pos == Q78_FIXED_POINT_POSITION) ||
-            (data_type == VX_TYPE_INT8 && fixed_point_pos == 0) ||
-            (data_type == VX_TYPE_UINT8 && fixed_point_pos == 0);
-}
-
-/*==============================================================================
-   Tensor API FUNCTIONS
-=============================================================================*/
+/*****************************************************************************/
+/* PUBLIC INTERFACE                                                          */
+/*****************************************************************************/
 VX_API_ENTRY vx_tensor VX_API_CALL vxCreateTensor(
         vx_context context,
         vx_size number_of_dims,
@@ -564,48 +589,6 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryTensor(vx_tensor tensor, vx_enum attri
     return status;
 }
 
-int CheckSizes(vx_size* dimensions, const vx_size * view_start, const vx_size * view_end, vx_size number_of_dimensions)
-{
-    for (vx_size i = 0; i < number_of_dimensions; i++)
-    {
-        if (view_end[i] <= view_start[i] ||
-            view_end[i] > dimensions[i])
-        {
-            return -1;
-        }
-    }
-    return 0;
-}
-
-vx_size ComputePatchSize(const vx_size * view_start, const vx_size * view_end, vx_size number_of_dimensions)
-{
-    vx_size total_size = 1;
-    for (vx_size i = 0; i < number_of_dimensions; i++)
-    {
-        total_size *= view_end[i] - view_start[i];
-    }
-    return total_size;
-}
-
-
-void ComputePositionsFromIndex(vx_size index, const vx_size * start, const vx_size * end,
-        const vx_size * tensor_stride, const vx_size * patch_stride,  vx_size number_of_dimensions,
-        vx_size * tensor_pos, vx_size * patch_pos)
-{
-    *tensor_pos = 0;
-    *patch_pos = 0;
-    vx_size index_leftover = index;
-    int divisor = 1;
-    for (vx_size i = 0; i < number_of_dimensions; i++)
-    {
-        divisor = (vx_uint32)(end[i] - start[i]);
-        vx_size curr_dim_index = index_leftover%divisor;
-        *tensor_pos += tensor_stride[i] * (curr_dim_index + start[i]);
-        *patch_pos += patch_stride[i] * curr_dim_index ;
-        index_leftover = index_leftover /divisor;
-    }
-}
-
 VX_API_ENTRY vx_status VX_API_CALL vxMapTensorPatch(vx_tensor tensor, vx_size number_of_dims,
     const vx_size * view_start, const vx_size * view_end,
     vx_map_id * map_id, vx_size * stride, void ** ptr, vx_enum usage, vx_enum mem_type)
@@ -658,7 +641,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapTensorPatch(vx_tensor tensor, vx_size nu
         goto exit;
 
     }
-    if (CheckSizes(tensor->dimensions, view_start, view_end, number_of_dims) != 0)
+    if (Tensor::checkSizes(tensor->dimensions, view_start, view_end, number_of_dims) != 0)
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid view\n");
         status = VX_ERROR_INVALID_PARAMETERS;
@@ -672,7 +655,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapTensorPatch(vx_tensor tensor, vx_size nu
         stride[i] = stride[i - 1] * (view_end[i] - view_start[i]);
     }
     //vx_map_id * map_id, vx_size * stride, void ** ptr
-    size = ComputePatchSize(view_start, view_end, number_of_dims);
+    size = Tensor::computePatchSize(view_start, view_end, number_of_dims);
 
     memcpy(extra.tensor_data.start, view_start, sizeof(vx_size) * number_of_dims);
     memcpy(extra.tensor_data.end, view_end, sizeof(vx_size) * number_of_dims);
@@ -698,7 +681,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapTensorPatch(vx_tensor tensor, vx_size nu
             {
                 vx_size patch_pos = 0;
                 vx_size tensor_pos = 0;
-                ComputePositionsFromIndex(i,view_start, view_end, tensor->stride, stride, number_of_dims, &tensor_pos, &patch_pos);
+                Tensor::computePositionsFromIndex(i,view_start, view_end, tensor->stride, stride, number_of_dims, &tensor_pos, &patch_pos);
                 memcpy (user_curr_ptr + patch_pos, tensor_ptr + tensor_pos, tensor->stride[0]);
             }
 
@@ -745,7 +728,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapTensorPatch(vx_tensor tensor, vx_map_i
             {
                 if (vx_true_e == ownSemWait(&tensor->lock))
                 {
-                    vx_uint32 size = ComputePatchSize(map->extra.tensor_data.start,
+                    vx_uint32 size = Tensor::computePatchSize(map->extra.tensor_data.start,
                                                       map->extra.tensor_data.end,
                                                       map->extra.tensor_data.number_of_dims);
                     vx_uint8* pSrc = (vx_uint8*)map->ptr;
@@ -755,7 +738,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapTensorPatch(vx_tensor tensor, vx_map_i
                     {
                         vx_size patch_pos = 0;
                         vx_size tensor_pos = 0;
-                        ComputePositionsFromIndex(i,map->extra.tensor_data.start,
+                        Tensor::computePositionsFromIndex(i,map->extra.tensor_data.start,
                                                   map->extra.tensor_data.end,
                                                   tensor->stride,
                                                   map->extra.tensor_data.stride,
@@ -834,7 +817,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyTensorPatch(vx_tensor tensor, vx_size n
         status = VX_ERROR_INVALID_PARAMETERS;
 
     }
-    if (VX_SUCCESS == status && CheckSizes(tensor->dimensions, view_start, view_end, number_of_dimensions) != 0)
+    if (VX_SUCCESS == status && Tensor::checkSizes(tensor->dimensions, view_start, view_end, number_of_dimensions) != 0)
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid view\n");
         status = VX_ERROR_INVALID_PARAMETERS;
@@ -873,12 +856,12 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyTensorPatch(vx_tensor tensor, vx_size n
     //element_size = Reference::sizeOfType(tensor->data_type);
     vx_uint8* user_curr_ptr = (vx_uint8*)user_ptr;
     vx_uint8* tensor_ptr = (vx_uint8*)tensor->addr;
-    vx_size patch_size = ComputePatchSize (view_start, view_end, number_of_dimensions);
+    vx_size patch_size = Tensor::computePatchSize (view_start, view_end, number_of_dimensions);
     for (vx_size i = 0; i < patch_size; i++)
     {
         vx_size patch_pos = 0;
         vx_size tensor_pos = 0;
-        ComputePositionsFromIndex(i,view_start, view_end, tensor->stride, user_stride, number_of_dimensions, &tensor_pos, &patch_pos);
+        Tensor::computePositionsFromIndex(i,view_start, view_end, tensor->stride, user_stride, number_of_dimensions, &tensor_pos, &patch_pos);
         if (usage == VX_READ_ONLY)
             memcpy (user_curr_ptr + patch_pos, tensor_ptr + tensor_pos, tensor->stride[0]);
         else

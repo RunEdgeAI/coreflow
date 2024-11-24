@@ -24,9 +24,10 @@
 #include "vx_internal.h"
 
 #if defined(OPENVX_USE_USER_DATA_OBJECT)
-/*==============================================================================
-User Data Object HELPER FUNCTIONS
-=============================================================================*/
+
+/*****************************************************************************/
+/* INTERNAL INTERFACE                                                        */
+/*****************************************************************************/
 UserDataObject::UserDataObject(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_USER_DATA_OBJECT, scope),
 memory(),
 size(0),
@@ -49,9 +50,9 @@ vx_bool UserDataObject::allocateUserDataObject()
     return res;
 }
 
-/*==============================================================================
-   User Data Object API FUNCTIONS
-=============================================================================*/
+/*****************************************************************************/
+/* PUBLIC INTERFACE                                                          */
+/*****************************************************************************/
 VX_API_ENTRY vx_user_data_object VX_API_CALL vxCreateUserDataObject(
     vx_context context,
     const vx_char *type_name,

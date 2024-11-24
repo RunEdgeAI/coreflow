@@ -197,7 +197,7 @@
 /*! \brief Used to determine is a type is an image.
  * \ingroup group_int_macros
  */
-#define VX_TYPE_IS_IMAGE(type)  (vxIsSupportedFourcc(type) == vx_true_e)
+#define VX_TYPE_IS_IMAGE(type)  (Image::isSupportedFourcc(type) == vx_true_e)
 
 /*! \brief Used to determine if a type is a scalar.
  * \ingroup group_int_macros

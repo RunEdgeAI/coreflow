@@ -75,6 +75,15 @@ public:
      */
     static vx_bool isValidImport(vx_enum type);
 
+    /**
+     * @brief Find target by string
+     *
+     * @param target_string   target string
+     * @return vx_target*
+     * @ingroup group_int_context
+     */
+    vx_target* findTargetByString(const char* target_string);
+
     /*! \brief This allows the implementation to load a target interface into OpenVX.
      * \param [in] context The overall context pointer.
      * \param [in] name The shortened name of the target module.
@@ -156,6 +165,33 @@ public:
      * \ingroup group_int_context
      */
     VX_INT_API void memoryUnmap(vx_uint32 map_id);
+
+    /**
+     * @brief Validate border mode supported
+     *
+     * @param mode     border mode
+     * @return VX_INT_API
+     * @ingroup group_int_context
+     */
+    VX_INT_API static vx_bool isValidBorderMode(vx_enum mode);
+
+    /**
+     * @brief Launch worker graph thread
+     *
+     * @param arg
+     * @return vx_value_t
+     * @ingroup group_int_context
+     */
+    VX_INT_API static vx_value_t workerGraph(void *arg);
+
+    /**
+     * @brief Launch worker node thread
+     *
+     * @param worker
+     * @return vx_bool
+     * @ingroup group_int_context
+     */
+    VX_INT_API static vx_bool workerNode(vx_threadpool_worker_t *worker);
 
     /*! \brief The pointer to process global lock */
     vx_sem_t*           p_global_lock;

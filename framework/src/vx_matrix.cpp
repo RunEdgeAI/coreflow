@@ -17,6 +17,9 @@
 #include "vx_internal.h"
 #include "vx_matrix.h"
 
+/******************************************************************************/
+/* INTERNAL INTERFACE                                                         */
+/******************************************************************************/
 Matrix::Matrix(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_MATRIX, scope)
 {
 
@@ -37,6 +40,9 @@ void Matrix::destructMatrix()
     ownFreeMemory(context, &memory);
 }
 
+/******************************************************************************/
+/* PUBLIC INTERFACE                                                           */
+/******************************************************************************/
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseMatrix(vx_matrix* mat)
 {
     vx_status status = VX_FAILURE;

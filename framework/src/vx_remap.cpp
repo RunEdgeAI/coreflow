@@ -17,6 +17,9 @@
 #include "vx_internal.h"
 #include "vx_remap.h"
 
+/*****************************************************************************/
+/* INTERNAL INTERFACE                                                        */
+/*****************************************************************************/
 Remap::Remap(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_REMAP, scope)
 {
 
@@ -27,10 +30,92 @@ Remap::~Remap()
     destructRemap();
 }
 
+vx_bool Remap::isValidRemap(vx_remap remap)
+{
+    if (Reference::isValidReference(remap, VX_TYPE_REMAP) == vx_true_e)
+    {
+        return vx_true_e;
+    }
+    else
+    {
+        return vx_false_e;
+    }
+}
+
+vx_status Remap::setCoordValue(vx_uint32 dst_x, vx_uint32 dst_y, vx_float32 src_x, vx_float32 src_y)
+{
+    vx_status status = VX_FAILURE;
+    if ((Reference::isValidReference(this, VX_TYPE_REMAP) == vx_true_e) &&
+         (ownAllocateMemory(context, &memory) == vx_true_e))
+    {
+        if ((dst_x < dst_width) &&
+            (dst_y < dst_height))
+        {
+            vx_float32 *coords[] = {
+                 (vx_float32*)ownFormatMemoryPtr(&memory, 0, dst_x, dst_y, 0),
+                 (vx_float32*)ownFormatMemoryPtr(&memory, 1, dst_x, dst_y, 0),
+            };
+            *coords[0] = src_x;
+            *coords[1] = src_y;
+            // ownWroteToReference(remap);
+            status = VX_SUCCESS;
+            VX_PRINT(VX_ZONE_INFO, "SetCoordValue %ux%u to %f,%f\n", dst_x, dst_y, src_x, src_y);
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Invalid source or destintation values!\n");
+            status = VX_ERROR_INVALID_VALUE;
+        }
+    }
+    else
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Not a valid object!\n");
+        status = VX_ERROR_INVALID_REFERENCE;
+    }
+    return status;
+}
+
+vx_status Remap::getCoordValue(vx_uint32 dst_x, vx_uint32 dst_y, vx_float32 *src_x, vx_float32 *src_y)
+{
+    vx_status status = VX_FAILURE;
+    if (Reference::isValidReference(this, VX_TYPE_REMAP) == vx_true_e)
+    {
+        if ((dst_x < dst_width) &&
+            (dst_y < dst_height))
+        {
+            vx_float32 *coords[] = {
+                 (vx_float32*)ownFormatMemoryPtr(&memory, 0, dst_x, dst_y, 0),
+                 (vx_float32*)ownFormatMemoryPtr(&memory, 1, dst_x, dst_y, 0),
+            };
+            *src_x = *coords[0];
+            *src_y = *coords[1];
+            read_count++;
+            status = VX_SUCCESS;
+
+            VX_PRINT(VX_ZONE_INFO, "GetCoordValue dst[%u,%u] to src[%f,%f]\n", dst_x, dst_y, src_x, src_y);
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Invalid source or destintation values!\n");
+            status = VX_ERROR_INVALID_VALUE;
+        }
+    }
+    else
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Not a valid object!\n");
+        status = VX_ERROR_INVALID_REFERENCE;
+    }
+    return status;
+}
+
 void Remap::destructRemap()
 {
     ownFreeMemory(context, &memory);
 }
+
+/*****************************************************************************/
+/* PUBLIC INTERFACE                                                          */
+/*****************************************************************************/
 
 VX_API_ENTRY vx_remap VX_API_CALL vxCreateRemap(vx_context context,
                               vx_uint32 src_width, vx_uint32 src_height,
@@ -229,86 +314,6 @@ VX_API_ENTRY vx_remap VX_API_CALL vxCreateVirtualRemap(vx_graph graph,
     return remap;
 }
 
-static vx_bool ownIsValidRemap(vx_remap remap)
-{
-    if (Reference::isValidReference(remap, VX_TYPE_REMAP) == vx_true_e)
-    {
-        return vx_true_e;
-    }
-    else
-    {
-        return vx_false_e;
-    }
-}
-
-static vx_status vxSetCoordValue(vx_remap remap, vx_uint32 dst_x, vx_uint32 dst_y,
-                                 vx_float32 src_x, vx_float32 src_y)
-{
-    vx_status status = VX_FAILURE;
-    if ((Reference::isValidReference(remap, VX_TYPE_REMAP) == vx_true_e) &&
-         (ownAllocateMemory(remap->context, &remap->memory) == vx_true_e))
-    {
-        if ((dst_x < remap->dst_width) &&
-            (dst_y < remap->dst_height))
-        {
-            vx_float32 *coords[] = {
-                 (vx_float32*)ownFormatMemoryPtr(&remap->memory, 0, dst_x, dst_y, 0),
-                 (vx_float32*)ownFormatMemoryPtr(&remap->memory, 1, dst_x, dst_y, 0),
-            };
-            *coords[0] = src_x;
-            *coords[1] = src_y;
-            // ownWroteToReference(remap);
-            status = VX_SUCCESS;
-            VX_PRINT(VX_ZONE_INFO, "SetCoordValue %ux%u to %f,%f\n", dst_x, dst_y, src_x, src_y);
-        }
-        else
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Invalid source or destintation values!\n");
-            status = VX_ERROR_INVALID_VALUE;
-        }
-    }
-    else
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Not a valid object!\n");
-        status = VX_ERROR_INVALID_REFERENCE;
-    }
-    return status;
-}
-
-static vx_status vxGetCoordValue(vx_remap remap, vx_uint32 dst_x, vx_uint32 dst_y,
-                                 vx_float32 *src_x, vx_float32 *src_y)
-{
-    vx_status status = VX_FAILURE;
-    if (Reference::isValidReference(remap, VX_TYPE_REMAP) == vx_true_e)
-    {
-        if ((dst_x < remap->dst_width) &&
-            (dst_y < remap->dst_height))
-        {
-            vx_float32 *coords[] = {
-                 (vx_float32*)ownFormatMemoryPtr(&remap->memory, 0, dst_x, dst_y, 0),
-                 (vx_float32*)ownFormatMemoryPtr(&remap->memory, 1, dst_x, dst_y, 0),
-            };
-            *src_x = *coords[0];
-            *src_y = *coords[1];
-            remap->read_count++;
-            status = VX_SUCCESS;
-
-            VX_PRINT(VX_ZONE_INFO, "GetCoordValue dst[%u,%u] to src[%f,%f]\n", dst_x, dst_y, src_x, src_y);
-        }
-        else
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Invalid source or destintation values!\n");
-            status = VX_ERROR_INVALID_VALUE;
-        }
-    }
-    else
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Not a valid object!\n");
-        status = VX_ERROR_INVALID_REFERENCE;
-    }
-    return status;
-}
-
 VX_API_ENTRY vx_status VX_API_CALL vxCopyRemapPatch(vx_remap remap,
                                                     const vx_rectangle_t *rect,
                                                     vx_size user_stride_y,
@@ -349,7 +354,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyRemapPatch(vx_remap remap,
 
     /* bad references */
     if (VX_SUCCESS == status &&
-        ownIsValidRemap(remap) == vx_false_e )
+        Remap::isValidRemap(remap) == vx_false_e )
     {
         status = VX_ERROR_INVALID_REFERENCE;
     }
@@ -418,7 +423,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyRemapPatch(vx_remap remap,
                 for (j = start_x; j < end_x; j++)
                 {
                     vx_coordinates2df_t *coord_ptr = &(ptr[i * stride + j]);
-                    status = vxGetCoordValue(remap, j, i, &coord_ptr->x, &coord_ptr->y);
+                    status = remap->getCoordValue(j, i, &coord_ptr->x, &coord_ptr->y);
                 }
             }
         }
@@ -433,7 +438,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyRemapPatch(vx_remap remap,
                 for (j = start_x; j < end_x; j++)
                 {
                     vx_coordinates2df_t *coord_ptr = &(ptr[i * stride + j]);
-                    status = vxSetCoordValue(remap, j, i, coord_ptr->x, coord_ptr->y);
+                    status = remap->setCoordValue(j, i, coord_ptr->x, coord_ptr->y);
                 }
             }
         }
@@ -485,7 +490,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapRemapPatch(vx_remap remap,
 
     /* bad references */
     if (VX_SUCCESS == status &&
-        ownIsValidRemap(remap) == vx_false_e)
+        Remap::isValidRemap(remap) == vx_false_e)
     {
         status = VX_ERROR_INVALID_REFERENCE;
     }
@@ -551,7 +556,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapRemapPatch(vx_remap remap,
                         for (j = start_x; j < end_x; j++)
                         {
                             vx_coordinates2df_t *coord_ptr = &(buf_ptr[i * stride + j]);
-                            status = vxGetCoordValue(remap, j, i, &coord_ptr->x, &coord_ptr->y);
+                            status = remap->getCoordValue(j, i, &coord_ptr->x, &coord_ptr->y);
                         }
                     }
 
@@ -616,7 +621,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapRemapPatch(vx_remap remap, vx_map_id m
     vx_status status = VX_SUCCESS;
 
     /* bad references */
-    if (ownIsValidRemap(remap) == vx_false_e)
+    if (Remap::isValidRemap(remap) == vx_false_e)
     {
         status = VX_ERROR_INVALID_REFERENCE;
         goto exit;
@@ -663,7 +668,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapRemapPatch(vx_remap remap, vx_map_id m
                     for (j = rect.start_x; j < rect.end_x; j++)
                     {
                         vx_coordinates2df_t *coord_ptr = &(ptr[i * stride + j]);
-                        status = vxSetCoordValue(remap, j, i, coord_ptr->x, coord_ptr->y);
+                        status = remap->setCoordValue(j, i, coord_ptr->x, coord_ptr->y);
                         if(status != VX_SUCCESS)
                         {
                             goto exit;

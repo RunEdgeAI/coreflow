@@ -54,6 +54,24 @@ public:
      */
     ~Threshold();
 
+    /**
+     * @brief Validate threshold type
+     *
+     * @param thresh_type
+     * @return vx_bool
+     * @ingroup group_int_threshold
+     */
+    static vx_bool isValidThresholdType(vx_enum thresh_type);
+
+    /**
+     * @brief Validate theshold data type
+     *
+     * @param data_type
+     * @return vx_bool
+     * @ingroup group_int_threshold
+     */
+    static vx_bool isValidThresholdDataType(vx_enum data_type);
+
     /*! \brief From \ref vx_threshold_type_e */
     vx_enum thresh_type;
     /*! \brief From \ref vx_type_e */

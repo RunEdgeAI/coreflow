@@ -104,6 +104,84 @@ public:
      */
     vx_bool allocateImage();
 
+    /*! \brief Determines which VX_DF_IMAGE are supported in the sample implementation.
+     * \param [in] code The df_image code to test.
+     * \retval vx_bool
+     * \retval vx_true_e The code is supported.
+     * \retval vx_false_e The code is not supported.
+     * \ingroup group_int_image
+     */
+    static vx_bool isSupportedFourcc(vx_df_image code);
+
+    /**
+     * @brief Validate image dimensions
+     *
+     * @param width     width
+     * @param height    height
+     * @param color     color
+     * @return vx_bool
+     * @ingroup group_int_image
+     */
+    static vx_bool isValidDimensions(vx_uint32 width, vx_uint32 height, vx_df_image color);
+
+    /**
+     * @brief Compute patch offset
+     *
+     * @param x     x coord
+     * @param y     y coord
+     * @param addr  image patch addressing
+     * @return vx_uint32
+     * @ingroup group_int_image
+     */
+    static vx_uint32 computePatchOffset(vx_uint32 x, vx_uint32 y, const vx_imagepatch_addressing_t* addr);
+
+    /**
+     * @brief Compute plane offset
+     *
+     * @param image     image
+     * @param x         x coord
+     * @param y         y coord
+     * @param p         plane index
+     * @return vx_uint32
+     * @ingroup group_int_image
+     */
+    static vx_uint32 computePlaneOffset(vx_image image, vx_uint32 x, vx_uint32 y, vx_uint32 p);
+
+    /**
+     * @brief Compute patch range size
+     *
+     * @param range     range
+     * @param addr      image patch addressing
+     * @return vx_uint32
+     * @ingroup group_int_image
+     */
+    static vx_uint32 computePatchRangeSize(vx_uint32 range, const vx_imagepatch_addressing_t* addr);
+
+    /**
+     * @brief Compute plane range size
+     *
+     * @param image     image
+     * @param range     range
+     * @param p         plane index
+     * @return vx_uint32
+     * @ingroup group_int_image
+     */
+    static vx_uint32 computePlaneRangeSize(vx_image image, vx_uint32 range, vx_uint32 p);
+
+    /**
+     * @brief Size of color channel
+     *
+     * @param color     color
+     * @return vx_size
+     * @ingroup group_int_image
+     */
+    static vx_size sizeOfChannel(vx_df_image color);
+
+    /*! \brief Prints the values of the images.
+     * \ingroup group_int_image
+     */
+    static void printImage(vx_image image);
+
     /*! \brief Used to free an image object.
      * Only the data is freed, not the
      * meta-data structure.
@@ -149,19 +227,5 @@ public:
     cl_image_format cl_format;
 #endif
 };
-
-/*! \brief Determines which VX_DF_IMAGE are supported in the sample implementation.
- * \param [in] code The df_image code to test.
- * \retval vx_bool
- * \retval vx_true_e The code is supported.
- * \retval vx_false_e The code is not supported.
- * \ingroup group_int_image
- */
-vx_bool vxIsSupportedFourcc(vx_df_image code);
-
-/*! \brief Prints the values of the images.
- * \ingroup group_int_image
- */
-void vxPrintImage(vx_image image);
 
 #endif /* VX_IMAGE_H */
