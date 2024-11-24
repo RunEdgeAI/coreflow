@@ -16,8 +16,6 @@
 #ifndef VX_GRAPH_H
 #define VX_GRAPH_H
 
-#include <VX/vx.h>
-
 #include "vx_reference.h"
 
 /*!

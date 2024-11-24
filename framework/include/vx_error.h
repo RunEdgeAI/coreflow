@@ -16,7 +16,6 @@
 #ifndef VX_ERROR_H
 #define VX_ERROR_H
 
-#include <VX/vx.h>
 #include "vx_internal.h"
 
 /*!
@@ -29,20 +28,45 @@
  * \brief The Internal Error API.
  */
 
-/*! \brief Creates all the status codes as error objects.
- * \ingroup group_int_error
- */
-// vx_bool ownCreateConstErrors(vx_context_t *context);
 
-/*! \brief Releases an error object.
+/*! \brief The internal representation of the error object.
  * \ingroup group_int_error
  */
-// void ownReleaseErrorInt(vx_error_t **error);
+class Error : public Reference
+{
+public:
+    /**
+     * @brief Construct a new Error object
+     *
+     * @ingroup group_int_error
+     */
+    Error(vx_context context, vx_reference scope);
 
-/*! \brief Creates an Error Object.
- * \ingroup group_int_error
- */
-// vx_error_t *ownAllocateError(vx_context_t *context, vx_status status);
+    /**
+     * @brief Destroy the Error object
+     *
+     * @ingroup group_int_error
+     */
+    ~Error();
+
+    /*! \brief Creates all the status codes as error objects.
+     * \ingroup group_int_error
+     */
+    static vx_bool createConstErrors(vx_context context);
+
+    /*! \brief Creates an Error Object.
+     * \ingroup group_int_error
+     */
+    static vx_error allocateError(vx_context context, vx_status status);
+
+    /*! \brief Releases an error object.
+     * \ingroup group_int_error
+     */
+    static void releaseError(vx_error* error);
+
+    /*! \brief The specific error code contained in this object. */
+    vx_status status;
+};
 
 /*! \brief Matches the status code against all known error objects in the
  * context.
@@ -50,7 +74,6 @@
  * \param [in] status The status code to find.
  * \return Returns a matching error object.
  */
-// vx_error_t *ownGetErrorObject(vx_context_t *context, vx_status status);
+vx_error vxGetErrorObject(vx_context context, vx_status status);
 
 #endif /* VX_ERROR_H */
-

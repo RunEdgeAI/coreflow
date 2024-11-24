@@ -16,58 +16,76 @@
 #include "vx_internal.h"
 #include "vx_error.h"
 
-// void ownReleaseErrorInt(vx_error_t **error)
-// {
-//     ownReleaseReferenceInt((vx_reference *)error, VX_TYPE_ERROR, VX_INTERNAL, NULL);
-// }
+/******************************************************************************/
+/* INTERNAL INTERFACE                                                         */
+/******************************************************************************/
 
-// vx_error_t *ownAllocateError(vx_context_t *context, vx_status status)
-// {
-//     /* PROBLEM: ownCreateReference needs error object to be created already */
-//     vx_error_t *error = (vx_error_t *)ownCreateReference(context, VX_TYPE_ERROR, VX_INTERNAL, &context->base);
-//     if (error)
-//     {
-//         error->status = status;
-//     }
-//     return error;
-// }
+Error::Error(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_ERROR, scope)
+{
 
-// vx_bool ownCreateConstErrors(vx_context_t *context)
-// {
-//     vx_bool ret = vx_true_e;
-//     vx_enum e = 0;
-//     /* create an error object for each status enumeration */
-//     for (e = VX_STATUS_MIN; (e < VX_SUCCESS) && (ret == vx_true_e); e++)
-//     {
-//         if (ownAllocateError(context, e) == NULL)
-//             ret = vx_false_e;
-//     }
-//     return ret;
-// }
+}
 
-// vx_error_t *ownGetErrorObject(vx_context_t *context, vx_status status)
-// {
-//     vx_error_t *error = NULL;
-//     vx_size i = 0ul;
-//     ownSemWait(&context->base.lock);
-//     for (i = 0ul; i < context->num_references; i++)
-//     {
-//         if (context->reftable[i] == NULL)
-//             continue;
+Error::~Error()
+{
+    vx_error ref = this;
+    releaseError(&ref);
+}
 
-//         if (context->reftable[i]->type == VX_TYPE_ERROR)
-//         {
-//             error = (vx_error_t *)context->reftable[i];
-//             if (error->status == status)
-//             {
-//                 break;
-//             }
-//             error = NULL;
-//         }
-//     }
-//     ownSemPost(&context->base.lock);
-//     return error;
-// }
+void Error::releaseError(vx_error* error)
+{
+    Reference::releaseReference((vx_reference *)error, VX_TYPE_ERROR, VX_INTERNAL, nullptr);
+}
+
+vx_error Error::allocateError(vx_context context, vx_status status)
+{
+    vx_error error = (vx_error)Reference::createReference(context, VX_TYPE_ERROR, VX_INTERNAL, context);
+    if (error)
+    {
+        error->status = status;
+    }
+    return error;
+}
+
+vx_bool Error::createConstErrors(vx_context context)
+{
+    vx_bool ret = vx_true_e;
+    vx_enum e = 0;
+    /* create an error object for each status enumeration */
+    for (e = VX_STATUS_MIN; (e < VX_SUCCESS) && (ret == vx_true_e); e++)
+    {
+        if (allocateError(context, e) == nullptr)
+            ret = vx_false_e;
+    }
+    return ret;
+}
+
+/******************************************************************************/
+/* PUBLIC INTERFACE                                                           */
+/******************************************************************************/
+
+VX_API_ENTRY vx_error vxGetErrorObject(vx_context context, vx_status status)
+{
+    vx_error error = nullptr;
+    vx_size i = 0ul;
+    ownSemWait(&context->lock);
+    for (i = 0ul; i < context->num_references; i++)
+    {
+        if (context->reftable[i] == nullptr)
+            continue;
+
+        if (context->reftable[i]->type == VX_TYPE_ERROR)
+        {
+            error = (vx_error)context->reftable[i];
+            if (error->status == status)
+            {
+                break;
+            }
+            error = nullptr;
+        }
+    }
+    ownSemPost(&context->lock);
+    return error;
+}
 
 VX_API_ENTRY vx_status VX_API_CALL vxGetStatus(vx_reference ref)
 {
@@ -81,7 +99,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxGetStatus(vx_reference ref)
     {
         if (ref->type == VX_TYPE_ERROR)
         {
-            vx_error_t *error = (vx_error_t *)ref;
+            vx_error error = (vx_error)ref;
             VX_PRINT(VX_ZONE_INFO, "NOT SUCCESS\n");
             return error->status;
         }

@@ -17,7 +17,6 @@
 #ifndef VX_INLINES_H
 #define VX_INLINES_H
 
-#include <VX/vx.h>
 #include "vx_internal.h"
 
 static VX_INLINE void *ownFormatMemoryPtr(vx_memory_t *memory,

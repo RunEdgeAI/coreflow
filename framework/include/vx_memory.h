@@ -16,7 +16,6 @@
 #ifndef VX_MEMORY_H
 #define VX_MEMORY_H
 
-#include <VX/vx.h>
 #include "vx_internal.h"
 
 /*! \file

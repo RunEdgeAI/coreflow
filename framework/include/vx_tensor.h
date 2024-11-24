@@ -17,7 +17,6 @@
 #ifndef VX_TENSOR_H
 #define VX_TENSOR_H
 
-#include <VX/vx.h>
 #include "vx_internal.h"
 
 /*!

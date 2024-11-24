@@ -17,8 +17,6 @@
 #ifndef VX_IMAGE_H
 #define VX_IMAGE_H
 
-#include <VX/vx.h>
-
 #include "vx_internal.h"
 
 /*!

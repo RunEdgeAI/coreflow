@@ -741,7 +741,7 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContext(void)
                                                   sizeof(vx_work_t),
                                                   Context::workerNode,
                                                   context);
-            // ownCreateConstErrors(context);
+            // Error::createConstErrors(context);
 
             /* initialize modules */
             for (m = 0u; m < VX_INT_MAX_MODULES; m++)

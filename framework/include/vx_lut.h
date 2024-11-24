@@ -17,7 +17,6 @@
 #ifndef VX_LUT_H
 #define VX_LUT_H
 
-#include <VX/vx.h>
 #include "vx_internal.h"
 
 /*!

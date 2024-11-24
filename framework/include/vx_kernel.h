@@ -16,8 +16,6 @@
 #ifndef VX_KERNEL_H
 #define VX_KERNEL_H
 
-#include <VX/vx.h>
-
 #include "vx_internal.h"
 #include "vx_reference.h"
 

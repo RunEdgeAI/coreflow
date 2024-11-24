@@ -15,6 +15,9 @@
 #include "vx_internal.h"
 #include "vx_import.h"
 
+/******************************************************************************/
+/* INTERNAL INTERFACE                                                         */
+/******************************************************************************/
 Import::Import(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_IMPORT, scope),
 import_type(),
 count(0),

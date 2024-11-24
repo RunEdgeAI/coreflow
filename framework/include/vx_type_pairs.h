@@ -16,7 +16,8 @@
 #ifndef VX_TYPE_PAIRS_H
 #define VX_TYPE_PAIRS_H
 
-#include <stdint.h>
+#include <cstdint>
+
 #include <VX/vx.h>
 
 /*! \brief The enum string structure
