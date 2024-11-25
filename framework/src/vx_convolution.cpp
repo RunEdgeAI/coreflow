@@ -79,7 +79,7 @@ VX_API_ENTRY vx_convolution VX_API_CALL vxCreateConvolution(vx_context context, 
         {
             VX_PRINT(VX_ZONE_ERROR, "Failed to create convolution, invalid dimensions\n");
             vxAddLogEntry((vx_reference)context, VX_ERROR_INVALID_DIMENSION, "Invalid dimensions to convolution\n");
-            // convolution = (vx_convolution )ownGetErrorObject((vx_context )context, VX_ERROR_INVALID_DIMENSION);
+            convolution = (vx_convolution)vxGetErrorObject(context, VX_ERROR_INVALID_DIMENSION);
         }
     }
     return convolution;

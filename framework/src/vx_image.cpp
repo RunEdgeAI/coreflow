@@ -260,14 +260,14 @@ vx_image Image::createImage(vx_context context,
             {
                 VX_PRINT(VX_ZONE_ERROR, "Requested Image Dimensions are invalid!\n");
                 vxAddLogEntry((vx_reference)image, VX_ERROR_INVALID_DIMENSION, "Requested Image Dimensions was invalid!\n");
-                // image = (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_DIMENSION);
+                image = (vx_image)vxGetErrorObject(context, VX_ERROR_INVALID_DIMENSION);
             }
         }
         else
         {
             VX_PRINT(VX_ZONE_ERROR, "Requested Image Format was invalid!\n");
             vxAddLogEntry((vx_reference)context, VX_ERROR_INVALID_FORMAT, "Requested Image Format was invalid!\n");
-            // image = (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_FORMAT);
+            image = (vx_image)vxGetErrorObject(context, VX_ERROR_INVALID_FORMAT);
         }
     }
 
@@ -465,8 +465,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImage(vx_context context, vx_uint32 wi
     if ((width == 0) || (height == 0) ||
         (Image::isSupportedFourcc(format) == vx_false_e) || (format == VX_DF_IMAGE_VIRT))
     {
-        return nullptr;
-        // return (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+        return (vx_image)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
     }
     return (vx_image)Image::createImage(context, width, height, format, vx_false_e);
 }
@@ -477,7 +476,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateUniformImage(vx_context context, vx_ui
 
     if (value == nullptr)
     {
-        // return (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+        return (vx_image)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
     }
 
     image = vxCreateImage(context, width, height, format);
@@ -605,7 +604,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateUniformImage(vx_context context, vx_ui
                 {
                     VX_PRINT(VX_ZONE_ERROR, "Failed to set initial image patch on plane %u on const image!\n", p);
                     vxReleaseImage(&image);
-                    // image = (vx_image)ownGetErrorObject(context, VX_FAILURE);
+                    image = (vx_image)vxGetErrorObject(context, VX_FAILURE);
                     break;
                 }
             }
@@ -613,7 +612,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateUniformImage(vx_context context, vx_ui
             {
                 VX_PRINT(VX_ZONE_ERROR, "Failed to get image patch on plane %u in const image!\n",p);
                 vxReleaseImage(&image);
-                // image = (vx_image)ownGetErrorObject(context, VX_FAILURE);
+                image = (vx_image)vxGetErrorObject(context, VX_FAILURE);
                 break;
             }
         } /* for loop */
@@ -655,15 +654,15 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromROI(vx_image image, const vx_
             rect->end_x > image->width ||
             rect->end_y > image->height)
         {
-            // vx_context context = vxGetContext((vx_reference)image);
-            // subimage = (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+            vx_context context = vxGetContext((vx_reference)image);
+            subimage = (vx_image)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
         }
         else if (image->format == VX_DF_IMAGE_U1 && (rect->start_x % 8) != 0)
         {
             VX_PRINT(VX_ZONE_ERROR, "Attempted to create U1 image from ROI not starting at a byte boundary in the"
                      "parent image. U1 subimages must start on byte boundaries in the parent image.\n");
-            // vx_context context = vxGetContext((vx_reference)image);
-            // subimage = (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+            vx_context context = vxGetContext((vx_reference)image);
+            subimage = (vx_image)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
         }
         else
         {
@@ -755,15 +754,15 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromROI(vx_image image, const vx_
             else
             {
                 VX_PRINT(VX_ZONE_ERROR, "Parent image failed to allocate!\n");
-                // vx_context context = vxGetContext((vx_reference)image);
-                // subimage = (vx_image)ownGetErrorObject(context, VX_ERROR_NO_MEMORY);
+                vx_context context = vxGetContext((vx_reference)image);
+                subimage = (vx_image)vxGetErrorObject(context, VX_ERROR_NO_MEMORY);
             }
         }
     }
     else
     {
-        // vx_context context = vxGetContext((vx_reference)image);
-        // subimage = (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+        vx_context context = vxGetContext((vx_reference)image);
+        subimage = (vx_image)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
     }
 
     return (vx_image)subimage;
@@ -788,8 +787,8 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromChannel(vx_image image, vx_en
                         VX_DF_IMAGE_NV12 != image->format &&
                         VX_DF_IMAGE_NV21 != image->format)
                     {
-                        // vx_context context = vxGetContext((vx_reference)image);
-                        // subimage = (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+                        vx_context context = vxGetContext((vx_reference)image);
+                        subimage = (vx_image)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
                         return subimage;
                     }
                     break;
@@ -801,8 +800,8 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromChannel(vx_image image, vx_en
                     if (VX_DF_IMAGE_YUV4 != image->format &&
                         VX_DF_IMAGE_IYUV != image->format)
                     {
-                        // vx_context context = vxGetContext((vx_reference)image);
-                        // subimage = (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+                        vx_context context = vxGetContext((vx_reference)image);
+                        subimage = (vx_image)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
                         return subimage;
                     }
                     break;
@@ -810,8 +809,8 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromChannel(vx_image image, vx_en
 
                 default:
                 {
-                    // vx_context context = vxGetContext((vx_reference)image);
-                    // subimage = (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+                    vx_context context = vxGetContext((vx_reference)image);
+                    subimage = (vx_image)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
                     return subimage;
                 }
             }
@@ -950,14 +949,14 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromChannel(vx_image image, vx_en
         else
         {
             VX_PRINT(VX_ZONE_ERROR, "Parent image failed to allocate!\n");
-            // vx_context context = vxGetContext((vx_reference)image);
-            // subimage = (vx_image)ownGetErrorObject(context, VX_ERROR_NO_MEMORY);
+            vx_context context = vxGetContext((vx_reference)image);
+            subimage = (vx_image)vxGetErrorObject(context, VX_ERROR_NO_MEMORY);
         }
     }
     else
     {
-        // vx_context context = vxGetContext((vx_reference)subimage);
-        // subimage = (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+        vx_context context = vxGetContext((vx_reference)subimage);
+        subimage = (vx_image)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
     }
 
     return (vx_image)subimage;
@@ -969,8 +968,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromHandle(vx_context context, vx
 
     if (Context::isValidImport(memory_type) == vx_false_e)
     {
-        return image;
-        // return (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+        return (vx_image)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
     }
 
     image = vxCreateImage(context, addrs[0].dim_x, addrs[0].dim_y, color);
@@ -990,8 +988,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromHandle(vx_context context, vx
                 (addrs[p].stride_x_bits <= 0 || addrs[p].stride_y < (vx_int32)((addrs[p].stride_x_bits * addrs[p].dim_x + 7) / 8)))
             {
                 vxReleaseImage(&image);
-                return nullptr;
-                // return (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+                return (vx_image)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
             }
 #ifdef OPENVX_USE_OPENCL_INTEROP
             if (context->opencl_context && memory_type == VX_MEMORY_TYPE_OPENCL_BUFFER && ptrs[p])
@@ -1008,8 +1005,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromHandle(vx_context context, vx
                 if (cerr != CL_SUCCESS)
                 {
                     vxReleaseImage(&image);
-                    return nullptr;
-                    // return (vx_image)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+                    return (vx_image)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
                 }
             }
             else

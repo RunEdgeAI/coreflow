@@ -301,7 +301,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxCreateGenericNode(vx_graph graph, vx_kernel k
         {
             VX_PRINT(VX_ZONE_ERROR, "Kernel %p was invalid!\n", kernel);
             vxAddLogEntry((vx_reference)graph, VX_ERROR_INVALID_REFERENCE, "Kernel %p was invalid!\n", kernel);
-            // node = (vx_node_t *)ownGetErrorObject(graph->base.context, VX_ERROR_INVALID_REFERENCE);
+            node = (vx_node)vxGetErrorObject(graph->context, VX_ERROR_INVALID_REFERENCE);
         }
     }
     else

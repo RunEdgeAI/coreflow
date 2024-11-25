@@ -140,14 +140,14 @@ VX_API_ENTRY vx_threshold VX_API_CALL vxCreateThreshold(vx_context context, vx_e
             {
                 VX_PRINT(VX_ZONE_ERROR, "Invalid threshold type\n");
                 vxAddLogEntry(context, VX_ERROR_INVALID_TYPE, "Invalid threshold type\n");
-                // threshold = (vx_threshold )ownGetErrorObject(context, VX_ERROR_INVALID_TYPE);
+                threshold = (vx_threshold)vxGetErrorObject(context, VX_ERROR_INVALID_TYPE);
             }
         }
         else
         {
             VX_PRINT(VX_ZONE_ERROR, "Invalid data type\n");
             vxAddLogEntry(context, VX_ERROR_INVALID_TYPE, "Invalid data type\n");
-            // threshold = (vx_threshold )ownGetErrorObject(context, VX_ERROR_INVALID_TYPE);
+            threshold = (vx_threshold)vxGetErrorObject(context, VX_ERROR_INVALID_TYPE);
         }
     }
 
@@ -456,7 +456,7 @@ VX_API_ENTRY vx_threshold VX_API_CALL vxCreateThresholdForImage(vx_context conte
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid threshold type\n");
         vxAddLogEntry(context, VX_ERROR_INVALID_TYPE, "Invalid threshold type\n");
-        // threshold = (vx_threshold )ownGetErrorObject(context, VX_ERROR_INVALID_TYPE);
+        threshold = (vx_threshold)vxGetErrorObject(context, VX_ERROR_INVALID_TYPE);
     }
 
     if ( ((vxIsValidThresholdFormat  (input_format) == vx_false_e) &&
@@ -466,7 +466,7 @@ VX_API_ENTRY vx_threshold VX_API_CALL vxCreateThresholdForImage(vx_context conte
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid input or output format\n");
         vxAddLogEntry(context, VX_ERROR_INVALID_TYPE, "Invalid input or output format\n");
-        // threshold = (vx_threshold )ownGetErrorObject(context, VX_ERROR_INVALID_TYPE);
+        threshold = (vx_threshold)vxGetErrorObject(context, VX_ERROR_INVALID_TYPE);
     }
 
 
@@ -587,7 +587,7 @@ VX_API_ENTRY vx_threshold VX_API_CALL vxCreateVirtualThresholdForImage(vx_graph 
         }
         else
         {
-            // threshold = (vx_threshold)ownGetErrorObject(graph.context, VX_ERROR_INVALID_PARAMETERS);
+            threshold = (vx_threshold)vxGetErrorObject(graph->context, VX_ERROR_INVALID_PARAMETERS);
         }
     }
     return threshold;

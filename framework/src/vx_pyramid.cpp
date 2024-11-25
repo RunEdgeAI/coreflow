@@ -149,13 +149,13 @@ static vx_pyramid vxCreatePyramidInt(vx_context context,
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid scale %lf for pyramid!\n",scale);
         vxAddLogEntry((vx_reference)context, VX_ERROR_INVALID_PARAMETERS, "Invalid scale %lf for pyramid!\n",scale);
-        // pyramid = (vx_pyramid_t *)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+        pyramid = (vx_pyramid)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
     }
     else if (levels == 0 || levels > 8)
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid number of levels for pyramid!\n", levels);
         vxAddLogEntry((vx_reference)context, VX_ERROR_INVALID_PARAMETERS, "Invalid number of levels for pyramid!\n", levels);
-        // pyramid = (vx_pyramid_t *)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+        pyramid = (vx_pyramid)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
     }
     else
     {
@@ -169,14 +169,14 @@ static vx_pyramid vxCreatePyramidInt(vx_context context,
             {
                 vxAddLogEntry((vx_reference)pyramid, status, "Failed to initialize pyramid\n");
                 vxReleasePyramid((vx_pyramid *)&pyramid);
-                // pyramid = (vx_pyramid_t *)ownGetErrorObject(context, status);
+                pyramid = (vx_pyramid)vxGetErrorObject(context, status);
             }
         }
         else
         {
             VX_PRINT(VX_ZONE_ERROR, "Failed to allocate memory\n");
             vxAddLogEntry((vx_reference)context, VX_ERROR_NO_MEMORY, "Failed to allocate memory\n");
-            // pyramid = (vx_pyramid_t *)ownGetErrorObject(context, VX_ERROR_NO_MEMORY);
+            pyramid = (vx_pyramid)vxGetErrorObject(context, VX_ERROR_NO_MEMORY);
         }
     }
 
@@ -220,7 +220,7 @@ VX_API_ENTRY vx_pyramid VX_API_CALL vxCreatePyramid(vx_context context, vx_size 
     {
         if ((width == 0) || (height == 0) || (format == VX_DF_IMAGE_VIRT))
         {
-            // pyr = (vx_pyramid)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+            pyr = (vx_pyramid)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
         }
         else
         {
@@ -311,7 +311,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxGetPyramidLevel(vx_pyramid pyramid, vx_uint3
         else
         {
             vxAddLogEntry(pyramid, VX_ERROR_INVALID_PARAMETERS, "Failed to get pyramid level %d\n", index);
-            // image = (vx_image_t *)ownGetErrorObject(pyramid->context, VX_ERROR_INVALID_PARAMETERS);
+            image = (vx_image)vxGetErrorObject(pyramid->context, VX_ERROR_INVALID_PARAMETERS);
         }
     }
     return image;

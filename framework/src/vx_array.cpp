@@ -693,12 +693,12 @@ VX_API_ENTRY vx_array VX_API_CALL vxCreateArray(vx_context context, vx_enum item
 
             if (arr == nullptr)
             {
-                // arr = (vx_array)ownGetErrorObject(context, VX_ERROR_NO_MEMORY);
+                arr = (vx_array)vxGetErrorObject(context, VX_ERROR_NO_MEMORY);
             }
         }
         else
         {
-            // arr = (vx_array)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+            arr = (vx_array)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
         }
     }
 
@@ -721,12 +721,12 @@ VX_API_ENTRY vx_array VX_API_CALL vxCreateVirtualArray(vx_graph graph, vx_enum i
             }
             else
             {
-                // arr = (vx_array)ownGetErrorObject(graph->base.context, VX_ERROR_NO_MEMORY);
+                arr = (vx_array)vxGetErrorObject(graph->context, VX_ERROR_NO_MEMORY);
             }
         }
         else
         {
-            // arr = (vx_array)ownGetErrorObject(graph->base.context, VX_ERROR_INVALID_PARAMETERS);
+            arr = (vx_array)vxGetErrorObject(graph->context, VX_ERROR_INVALID_PARAMETERS);
         }
     }
 

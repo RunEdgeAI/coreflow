@@ -1216,7 +1216,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
     if (doc == nullptr) {
         VX_PRINT(VX_ZONE_ERROR, "Could not parse %s\n", xmlfile);
         vxAddLogEntry(context, VX_ERROR_INVALID_PARAMETERS, "Could not parse %s\n", xmlfile);
-        // import = (vx_import)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+        import = (vx_import)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
         return import;
     }
 
@@ -1224,14 +1224,14 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
     if (user_struct_table == nullptr) {
         VX_PRINT(VX_ZONE_ERROR, "Calloc failed\n");
         vxAddLogEntry(context, VX_ERROR_NO_MEMORY, "Calloc failed\n");
-        // import = (vx_import)ownGetErrorObject(context, VX_ERROR_NO_MEMORY);
+        import = (vx_import)vxGetErrorObject(context, VX_ERROR_NO_MEMORY);
         return import;
     }
 
     if (root == nullptr || xmlStrcmp(cur->name, (const xmlChar *)"openvx") != 0) {
         VX_PRINT(VX_ZONE_ERROR, "%s is not wellformed\n", xmlfile);
         vxAddLogEntry(context, VX_ERROR_INVALID_FORMAT, "%s is not wellformed\n", xmlfile);
-        // import = (vx_import)ownGetErrorObject(context, VX_ERROR_INVALID_FORMAT);
+        import = (vx_import)vxGetErrorObject(context, VX_ERROR_INVALID_FORMAT);
         goto exit;
     }
 
@@ -1239,7 +1239,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
     if (total > VX_INT_MAX_REF) {
         VX_PRINT(VX_ZONE_ERROR, "Total references = %d too high for this implementation\n", total);
         vxAddLogEntry(context, VX_ERROR_INVALID_FORMAT, "Total references = %d too high for this implementation\n", total);
-        // import = (vx_import)ownGetErrorObject(context, VX_ERROR_INVALID_FORMAT);
+        import = (vx_import)vxGetErrorObject(context, VX_ERROR_INVALID_FORMAT);
         goto exit;
     }
 
@@ -2150,7 +2150,7 @@ exit_error:
     {
         /* destroy all the references */
         vxAddLogEntry(context, status, "Failure\n");
-        // import = (vx_import)ownGetErrorObject(context, status);
+        import = (vx_import)vxGetErrorObject(context, status);
     } else {
         vx_uint32 r;
         /* scan the array for valid references */
@@ -2166,7 +2166,7 @@ exit_error:
         /* The XML file indicated that there was a different number of references than were imported */
         VX_PRINT(VX_ZONE_ERROR, "Reference count mismatch: xml \"references\" tag=%d, imported=%d\n", total, counted);
         vxAddLogEntry(context, VX_ERROR_NOT_COMPATIBLE, "Reference count mismatch: xml \"references\" tag=%d, imported=%d\n", total, counted);
-        // import = (vx_import)ownGetErrorObject(context, VX_ERROR_NOT_COMPATIBLE);
+        import = (vx_import)vxGetErrorObject(context, VX_ERROR_NOT_COMPATIBLE);
     }
 
 exit:

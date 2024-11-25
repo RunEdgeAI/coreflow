@@ -91,7 +91,7 @@ VX_API_ENTRY vx_reference VX_API_CALL vxGetImportReferenceByIndex(vx_import impo
         {
             VX_PRINT(VX_ZONE_ERROR, "Incorrect index value\n");
             vxAddLogEntry(import->context, VX_ERROR_INVALID_PARAMETERS, "Incorrect index value\n");
-            // ref = (vx_reference_t *)ownGetErrorObject(import->base.context, VX_ERROR_INVALID_PARAMETERS);
+            ref = (vx_reference)vxGetErrorObject(import->context, VX_ERROR_INVALID_PARAMETERS);
         }
     }
     else

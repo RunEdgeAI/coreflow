@@ -118,7 +118,7 @@ VX_API_ENTRY vx_parameter VX_API_CALL vxGetKernelParameterByIndex(vx_kernel kern
         {
             vxAddLogEntry(reinterpret_cast<vx_reference>(kernel), VX_ERROR_INVALID_PARAMETERS, "Index %u out of range for node %s (numparams = %u)!\n",
                     index, kernel->name, kernel->signature.num_parameters);
-            // parameter = (vx_parameter_t *)ownGetErrorObject(kernel->base.context, VX_ERROR_INVALID_PARAMETERS);
+            parameter = (vx_parameter)vxGetErrorObject(kernel->context, VX_ERROR_INVALID_PARAMETERS);
         }
     }
 
@@ -138,7 +138,7 @@ VX_API_ENTRY vx_parameter VX_API_CALL vxGetParameterByIndex(vx_node node, vx_uin
     {
         /* this can probably never happen */
         vxAddLogEntry(reinterpret_cast<vx_reference>(node), VX_ERROR_INVALID_NODE, "Node was created without a kernel! Fatal Error!\n");
-        // param = (vx_parameter_t *)ownGetErrorObject(node->base.context, VX_ERROR_INVALID_NODE);
+        param = (vx_parameter)vxGetErrorObject(node->context, VX_ERROR_INVALID_NODE);
     }
     else
     {
@@ -153,14 +153,14 @@ VX_API_ENTRY vx_parameter VX_API_CALL vxGetParameterByIndex(vx_node node, vx_uin
                 param->kernel = node->kernel;
                 param->kernel->incrementReference(VX_INTERNAL);
                 // if (node->parameters[index])
-                    // ownIncrementReference(node->parameters[index], VX_INTERNAL);
+                    // node->parameters[index]->incrementReference(VX_INTERNAL);
             }
         }
         else
         {
             vxAddLogEntry(reinterpret_cast<vx_reference>(node), VX_ERROR_INVALID_PARAMETERS, "Index %u out of range for node %s (numparams = %u)!\n",
                     index, node->kernel->name, node->kernel->signature.num_parameters);
-            // param = (vx_parameter_t *)ownGetErrorObject(node->base.context, VX_ERROR_INVALID_PARAMETERS);
+            param = (vx_parameter)vxGetErrorObject(node->context, VX_ERROR_INVALID_PARAMETERS);
         }
     }
     VX_PRINT(VX_ZONE_API, "%s: returning %p\n", __FUNCTION__, param);

@@ -128,7 +128,7 @@ VX_API_ENTRY vx_scalar VX_API_CALL vxCreateScalar(vx_context context, vx_enum da
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid type to scalar\n");
         vxAddLogEntry(reinterpret_cast<vx_reference>(context), VX_ERROR_INVALID_TYPE, "Invalid type to scalar\n");
-        // scalar = (vx_scalar)ownGetErrorObject(context, VX_ERROR_INVALID_TYPE);
+        scalar = (vx_scalar)vxGetErrorObject(context, VX_ERROR_INVALID_TYPE);
     }
     else
     {
@@ -154,7 +154,7 @@ VX_API_ENTRY vx_scalar VX_API_CALL vxCreateScalarWithSize(vx_context context, vx
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid type to scalar\n");
         vxAddLogEntry(reinterpret_cast<vx_reference>(context), VX_ERROR_INVALID_TYPE, "Invalid type to scalar\n");
-        // scalar = (vx_scalar)ownGetErrorObject(context, VX_ERROR_INVALID_TYPE);
+        scalar = (vx_scalar)vxGetErrorObject(context, VX_ERROR_INVALID_TYPE);
     }
     else
     {
@@ -181,7 +181,7 @@ VX_API_ENTRY vx_scalar VX_API_CALL vxCreateVirtualScalar(vx_graph graph, vx_enum
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid type to scalar\n");
         vxAddLogEntry(ref, VX_ERROR_INVALID_TYPE, "Invalid type to scalar\n");
-        // scalar = (vx_scalar)ownGetErrorObject(ref->context, VX_ERROR_INVALID_TYPE);
+        scalar = (vx_scalar)vxGetErrorObject(ref->context, VX_ERROR_INVALID_TYPE);
     }
     else
     {

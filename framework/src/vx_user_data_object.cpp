@@ -67,8 +67,7 @@ VX_API_ENTRY vx_user_data_object VX_API_CALL vxCreateUserDataObject(
         if (size < 1U)
         {
             VX_PRINT(VX_ZONE_ERROR, "Invalid size for the user data object.\n");
-            return user_data_object;
-            // user_data_object = (vx_user_data_object)ownGetErrorObject((vx_context)context, (vx_status)VX_ERROR_INVALID_PARAMETERS);
+            user_data_object = (vx_user_data_object)vxGetErrorObject((vx_context)context, (vx_status)VX_ERROR_INVALID_PARAMETERS);
         }
 
         if( nullptr == user_data_object )
@@ -112,8 +111,8 @@ VX_API_ENTRY vx_user_data_object VX_API_CALL vxCreateUserDataObject(
             {
                 user_data_object = nullptr;
                 VX_PRINT(VX_ZONE_ERROR, "Failed to create user data object with error: %d\n", status);
-                // user_data_object = (vx_user_data_object)ownGetErrorObject(
-                //     context, (vx_status)VX_ERROR_INVALID_PARAMETERS);
+                user_data_object = (vx_user_data_object)vxGetErrorObject(
+                    context, (vx_status)VX_ERROR_INVALID_PARAMETERS);
             }
         }
     }
