@@ -70,7 +70,7 @@ VX_API_ENTRY vx_distribution VX_API_CALL vxCreateDistribution(vx_context context
         {
             VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to distribution\n");
             vxAddLogEntry(context, VX_ERROR_INVALID_PARAMETERS, "Invalid parameters to distribution\n");
-            // distribution = (vx_distribution)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+            distribution = (vx_distribution)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
         }
     }
 

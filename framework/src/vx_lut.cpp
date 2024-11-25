@@ -30,7 +30,7 @@ VX_API_ENTRY vx_lut VX_API_CALL vxCreateLUT(vx_context context, vx_enum data_typ
             {
                 VX_PRINT(VX_ZONE_ERROR, "Invalid parameter to LUT\n");
                 vxAddLogEntry(context, VX_ERROR_INVALID_PARAMETERS, "Invalid parameter to LUT\n");
-                // lut = (vx_lut_t *)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+                lut = (vx_lut_t)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
             }
             else
 #endif
@@ -50,7 +50,7 @@ VX_API_ENTRY vx_lut VX_API_CALL vxCreateLUT(vx_context context, vx_enum data_typ
             {
                 VX_PRINT(VX_ZONE_ERROR, "Invalid parameter to LUT\n");
                 vxAddLogEntry(context, VX_ERROR_INVALID_PARAMETERS, "Invalid parameter to LUT\n");
-                // lut = (vx_lut_t *)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+                lut = (vx_lut_t)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
             }
             else
             {
@@ -79,7 +79,7 @@ VX_API_ENTRY vx_lut VX_API_CALL vxCreateLUT(vx_context context, vx_enum data_typ
         {
             VX_PRINT(VX_ZONE_ERROR, "Invalid data type\n");
             vxAddLogEntry(context, VX_ERROR_INVALID_TYPE, "Invalid data type\n");
-            // lut = (vx_lut_t *)ownGetErrorObject(context, VX_ERROR_INVALID_TYPE);
+            lut = (vx_lut_t)vxGetErrorObject(context, VX_ERROR_INVALID_TYPE);
         }
     }
 

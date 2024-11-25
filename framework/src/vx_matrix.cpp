@@ -87,13 +87,13 @@ VX_API_ENTRY vx_matrix VX_API_CALL vxCreateMatrix(vx_context context, vx_enum da
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid data type\n");
         vxAddLogEntry(context, VX_ERROR_INVALID_TYPE, "Invalid data type\n");
-        return matrix; // (vx_matrix)ownGetErrorObject(context, VX_ERROR_INVALID_TYPE);
+        return (vx_matrix)vxGetErrorObject(context, VX_ERROR_INVALID_TYPE);
     }
     if ((columns == 0ul) || (rows == 0ul))
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid dimensions to matrix\n");
         vxAddLogEntry(context, VX_ERROR_INVALID_DIMENSION, "Invalid dimensions to matrix\n");
-        return matrix; // (vx_matrix)ownGetErrorObject(context, VX_ERROR_INVALID_DIMENSION);
+        return (vx_matrix)vxGetErrorObject(context, VX_ERROR_INVALID_DIMENSION);
     }
     matrix = (vx_matrix)Reference::createReference(context, VX_TYPE_MATRIX, VX_EXTERNAL, context);
     if (vxGetStatus((vx_reference)matrix) == VX_SUCCESS && matrix->type == VX_TYPE_MATRIX)
@@ -140,7 +140,7 @@ VX_API_ENTRY vx_matrix VX_API_CALL vxCreateMatrixFromPattern(vx_context context,
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid dimensions to matrix\n");
         vxAddLogEntry(context, VX_ERROR_INVALID_DIMENSION, "Invalid dimensions to matrix\n");
-        return nullptr; //(vx_matrix)ownGetErrorObject(context, VX_ERROR_INVALID_DIMENSION);
+        return (vx_matrix)vxGetErrorObject(context, VX_ERROR_INVALID_DIMENSION);
     }
 
     vx_matrix matrix = vxCreateMatrix(context, VX_TYPE_UINT8, columns, rows);
@@ -179,7 +179,7 @@ VX_API_ENTRY vx_matrix VX_API_CALL vxCreateMatrixFromPattern(vx_context context,
             vxReleaseMatrix(&matrix);
             VX_PRINT(VX_ZONE_ERROR, "Failed to allocate matrix\n");
             vxAddLogEntry(context, VX_ERROR_NO_MEMORY, "Failed to allocate matrix\n");
-            matrix = nullptr; // (vx_matrix)ownGetErrorObject(context, VX_ERROR_NO_MEMORY);
+            matrix = (vx_matrix)vxGetErrorObject(context, VX_ERROR_NO_MEMORY);
         }
     }
 
@@ -203,7 +203,7 @@ VX_API_ENTRY vx_matrix VX_API_CALL vxCreateMatrixFromPatternAndOrigin(vx_context
                 vxReleaseMatrix(&matrix);
                 VX_PRINT(VX_ZONE_ERROR, "Origin point error\n");
                 vxAddLogEntry(context, VX_ERROR_INVALID_PARAMETERS, "Origin point error\n");
-                matrix = nullptr; // (vx_matrix)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+                matrix = (vx_matrix)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
             }
         }
     }

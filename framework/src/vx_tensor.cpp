@@ -168,15 +168,13 @@ VX_API_ENTRY vx_tensor VX_API_CALL vxCreateTensor(
     if (number_of_dims < 1)
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid dimensions for the tensor.\n");
-        return tensor;
-        // return (vx_tensor)ownGetErrorObject((vx_context)context, VX_ERROR_INVALID_DIMENSION);
+        return (vx_tensor)vxGetErrorObject(context, VX_ERROR_INVALID_DIMENSION);
     }
 
     if (!validFormat(data_type, fixed_point_position))
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid format for the tensor.\n");
-        return tensor;
-        // return (vx_tensor)ownGetErrorObject((vx_context)context, VX_ERROR_INVALID_TYPE);
+        return (vx_tensor)vxGetErrorObject(context, VX_ERROR_INVALID_TYPE);
     }
 
     tensor = (vx_tensor)Reference::createReference(context, VX_TYPE_TENSOR, VX_EXTERNAL, context);
@@ -208,27 +206,23 @@ VX_API_ENTRY vx_tensor VX_API_CALL vxCreateTensorFromHandle(vx_context context, 
     if (number_of_dims < 1)
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid dimensions for the tensor.\n");
-        return tensor;
-        // return (vx_tensor)ownGetErrorObject((vx_context)context, VX_ERROR_INVALID_DIMENSION);
+        return (vx_tensor)vxGetErrorObject(context, VX_ERROR_INVALID_DIMENSION);
     }
 
     if (!validFormat(data_type, fixed_point_position))
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid format for the tensor.\n");
-        return tensor;
-        // return (vx_tensor)ownGetErrorObject((vx_context)context, VX_ERROR_INVALID_TYPE);
+        return (vx_tensor)vxGetErrorObject(context, VX_ERROR_INVALID_TYPE);
     }
 
     if (Context::isValidImport(memory_type) == vx_false_e)
     {
-        return tensor;
-        // return (vx_tensor)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+        return (vx_tensor)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
     }
 
     if (stride[0] != Reference::sizeOfType(data_type))
     {
-        return tensor;
-        // return (vx_tensor)ownGetErrorObject(context, VX_ERROR_INVALID_VALUE);
+        return (vx_tensor)vxGetErrorObject(context, VX_ERROR_INVALID_VALUE);
     }
 
     tensor = (vx_tensor)Reference::createReference(context, VX_TYPE_TENSOR, VX_EXTERNAL, context);
@@ -406,25 +400,25 @@ VX_API_ENTRY vx_object_array VX_API_CALL vxCreateImageObjectArrayFromTensor(vx_t
                     else
                     {
                         VX_PRINT(VX_ZONE_ERROR, "Rectangle exceeds tensor dimensions!\n");
-                        // images = (vx_object_array)ownGetErrorObject(tensor->context, VX_ERROR_INVALID_DIMENSION);
+                        images = (vx_object_array)vxGetErrorObject(tensor->context, VX_ERROR_INVALID_DIMENSION);
                     }
                 }
                 else
                 {
                     VX_PRINT(VX_ZONE_ERROR, "Failed to create image array from a non-3d tensor!\n");
-                    // images = (vx_object_array)ownGetErrorObject(tensor->context, VX_ERROR_INVALID_DIMENSION);
+                    images = (vx_object_array)vxGetErrorObject(tensor->context, VX_ERROR_INVALID_DIMENSION);
                 }
             }
             else
             {
                 VX_PRINT(VX_ZONE_ERROR, "Failed to allocate tensor memory!\n");
-                // images = (vx_object_array)ownGetErrorObject(tensor->context, VX_ERROR_NO_MEMORY);
+                images = (vx_object_array)vxGetErrorObject(tensor->context, VX_ERROR_NO_MEMORY);
             }
         }
         else
         {
             VX_PRINT(VX_ZONE_ERROR, "Requested image format does not match tensor type!\n");
-            // images = (vx_object_array)ownGetErrorObject(tensor->context, VX_ERROR_INVALID_FORMAT);
+            images = (vx_object_array)vxGetErrorObject(tensor->context, VX_ERROR_INVALID_FORMAT);
         }
     }
 
@@ -477,7 +471,7 @@ VX_API_ENTRY vx_tensor VX_API_CALL vxCreateTensorFromView(vx_tensor tensor, vx_s
         }
         else
         {
-            // subtensor = (vx_tensor)ownGetErrorObject(tensor->context, VX_ERROR_NO_MEMORY);
+            subtensor = (vx_tensor)vxGetErrorObject(tensor->context, VX_ERROR_NO_MEMORY);
             VX_PRINT(VX_ZONE_ERROR, "Parent tensor failed to allocate!\n");
         }
     }
@@ -514,7 +508,7 @@ VX_API_ENTRY vx_tensor VX_API_CALL vxCreateVirtualTensor(
         else
         {
             VX_PRINT(VX_ZONE_ERROR, "Invalid tensor format.\n");
-            // tensor = (vx_tensor)ownGetErrorObject(graph->context, VX_ERROR_INVALID_FORMAT);
+            tensor = (vx_tensor)vxGetErrorObject(graph->context, VX_ERROR_INVALID_FORMAT);
         }
     }
 

@@ -2449,7 +2449,7 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
     do {
         for (n = 0; n < numNext; n++)
         {
-            // ownPrintNode(graph->nodes[next_nodes[n]]);
+            Node::printNode(graph->nodes[next_nodes[n]]);
         }
 
         /* execute the next nodes */

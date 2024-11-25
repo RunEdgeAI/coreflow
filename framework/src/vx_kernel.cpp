@@ -211,7 +211,7 @@ vx_kernel Kernel::addkernel(vx_context context,
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid Parameters!\n");
         vxAddLogEntry((vx_reference)context, VX_ERROR_INVALID_PARAMETERS, "Invalid Parameters supplied to vxAddKernel or vxAddUserKernel\n");
-        // kernel = (vx_kernel_t *)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+        kernel = (vx_kernel)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
         return kernel;
     }
 
@@ -258,7 +258,7 @@ vx_kernel Kernel::addkernel(vx_context context,
     else
     {
         vxAddLogEntry((vx_reference)context, VX_ERROR_NO_RESOURCES, "No target named %s exists!\n", targetName);
-        // kernel = (vx_kernel_t *)ownGetErrorObject(context, VX_ERROR_NO_RESOURCES);
+        kernel = (vx_kernel)vxGetErrorObject(context, VX_ERROR_NO_RESOURCES);
     }
 
     return kernel;
@@ -485,7 +485,7 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxGetKernelByName(vx_context context, const v
         {
             VX_PRINT(VX_ZONE_ERROR, "Failed to find kernel %s\n", string);
             vxAddLogEntry(reinterpret_cast<vx_reference>(context), VX_ERROR_INVALID_PARAMETERS, "Failed to find kernel %s\n", string);
-            // kern = (vx_kernel_t *)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+            kern = (vx_kernel)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
         }
         else
         {
@@ -538,7 +538,7 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxGetKernelByEnum(vx_context context, vx_enum
         {
             VX_PRINT(VX_ZONE_KERNEL, "Kernel enum %x not found.\n", kernelenum);
             vxAddLogEntry(reinterpret_cast<vx_reference>(context), VX_ERROR_INVALID_PARAMETERS, "Kernel enum %x not found.\n", kernelenum);
-            // kernel = (vx_kernel_t *)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+            kernel = (vx_kernel)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
         }
 
     }

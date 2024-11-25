@@ -325,8 +325,7 @@ vx_object_array ObjectArray::createObjectArray(vx_reference scope, vx_reference 
         if (arr->initObjectArray(exemplar, count) != VX_SUCCESS)
         {
             Reference::releaseReference((vx_reference*)&arr, VX_TYPE_OBJECT_ARRAY, VX_EXTERNAL, nullptr);
-            arr = nullptr;
-            // arr = (vx_object_array)ownGetErrorObject(context, VX_ERROR_NO_MEMORY);
+            arr = (vx_object_array)vxGetErrorObject(context, VX_ERROR_NO_MEMORY);
         }
     }
     return arr;
@@ -383,12 +382,12 @@ VX_API_ENTRY vx_object_array VX_API_CALL vxCreateObjectArray(vx_context context,
 
             if (arr == nullptr)
             {
-                // arr = (vx_object_array)ownGetErrorObject(context, VX_ERROR_NO_MEMORY);
+                arr = (vx_object_array)vxGetErrorObject(context, VX_ERROR_NO_MEMORY);
             }
         }
         else
         {
-            // arr = (vx_object_array)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+            arr = (vx_object_array)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
         }
     }
 
@@ -409,12 +408,12 @@ VX_API_ENTRY vx_object_array VX_API_CALL vxCreateVirtualObjectArray(vx_graph gra
 
             if (arr == nullptr)
             {
-                // arr = (vx_object_array)ownGetErrorObject(graph->context, VX_ERROR_NO_MEMORY);
+                arr = (vx_object_array)vxGetErrorObject(graph->context, VX_ERROR_NO_MEMORY);
             }
         }
         else
         {
-            // arr = (vx_object_array)ownGetErrorObject(graph->context, VX_ERROR_INVALID_PARAMETERS);
+            arr = (vx_object_array)vxGetErrorObject(graph->context, VX_ERROR_INVALID_PARAMETERS);
         }
     }
 
@@ -489,7 +488,7 @@ VX_API_ENTRY vx_reference VX_API_CALL vxGetObjectArrayItem(vx_object_array arr, 
         }
         else
         {
-            // item = (vx_reference)ownGetErrorObject(arr->context, VX_ERROR_INVALID_PARAMETERS);
+            item = (vx_reference)vxGetErrorObject(arr->context, VX_ERROR_INVALID_PARAMETERS);
         }
     }
 

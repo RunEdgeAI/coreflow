@@ -146,7 +146,7 @@ VX_API_ENTRY vx_remap VX_API_CALL vxCreateRemap(vx_context context,
         {
             VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to remap\n");
             vxAddLogEntry(context, VX_ERROR_INVALID_PARAMETERS, "Invalid parameters to remap\n");
-            // remap = (vx_remap_t *)ownGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+            remap = (vx_remap)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
         }
     }
 

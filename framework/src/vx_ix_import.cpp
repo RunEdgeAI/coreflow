@@ -1954,8 +1954,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportObjectsFromMemory(
     }
     if (VX_SUCCESS != status)
     {
-        import = nullptr;
-        // import = (vx_import)ownGetErrorObject(context, status);
+        import = (vx_import)vxGetErrorObject(context, status);
     }
     return import;
 }
