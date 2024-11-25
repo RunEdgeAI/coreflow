@@ -269,16 +269,15 @@ vx_status Context::unloadTarget(vx_uint32 index, vx_bool unload_module)
         {
             /* The ReleaseReference() below errors out if the internal index is 0 */
             target->incrementReference(VX_INTERNAL);
-            if (unload_module)
-            {
-                ownUnloadModule(target->module.handle);
-                target->module.handle = VX_MODULE_INIT;
-            }
-
-            memset(target->module.name, 0, sizeof(target->module.name));
-            Reference::releaseReference((vx_reference*)&target, VX_TYPE_TARGET, VX_INTERNAL, nullptr);
         }
-        status = VX_SUCCESS;
+        if (unload_module)
+        {
+            ownUnloadModule(target->module.handle);
+            target->module.handle = VX_MODULE_INIT;
+        }
+
+        memset(target->module.name, 0, sizeof(target->module.name));
+        status = Reference::releaseReference((vx_reference*)&target, VX_TYPE_TARGET, VX_INTERNAL, nullptr);
     }
 
     return status;
@@ -928,8 +927,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
                 if (context->targets[t]->enabled == vx_true_e)
                 {
                     context->targets[t]->funcs.deinit(context->targets[t]);
-                    context->unloadTarget(t, vx_true_e);
                     context->targets[t]->enabled = vx_false_e;
+                    context->unloadTarget(t, vx_true_e);
                 }
             }
 
@@ -954,12 +953,30 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
 
             ownDestroySem(&context->memory_maps_lock);
 
+            /* @TODO: Temp edit to address stale refs
+             * We are releasing context so release internal references as well
+             */
+            for (r = 0; r < VX_INT_MAX_REF; r++)
+            {
+                vx_reference ref = context->reftable[r];
+                while (ref && ref->internal_count > 1)
+                {
+                    ref->decrementReference(VX_INTERNAL);
+                }
+                if (ref && ref->internal_count > 0)
+                {
+                    VX_PRINT(VX_ZONE_WARNING,"Dangling reference " VX_FMT_REF " of type %s at external count %u, internal count %u\n",
+                             ref, ownGetObjectTypeName(ref->type), ref->external_count, ref->internal_count);
+                    Reference::releaseReference(&ref, ref->type, VX_INTERNAL, nullptr);
+                }
+            }
+
             /* By now, all external and internal references should be removed */
             for (r = 0; r < VX_INT_MAX_REF; r++)
             {
                 if(context->reftable[r])
                 {
-                    // VX_PRINT(VX_ZONE_ERROR,"Reference %d not removed\n", r);
+                    VX_PRINT(VX_ZONE_ERROR,"Reference %p not removed\n", context->reftable[r]);
                 }
             }
 

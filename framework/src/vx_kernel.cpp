@@ -606,6 +606,75 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxAddUserKernel(vx_context c,
                      vx_true_e);
 }
 
+#ifdef OPENVX_KHR_TILING
+VX_API_ENTRY vx_kernel VX_API_CALL vxAddTilingKernel(vx_context context,
+                            vx_char name[VX_MAX_KERNEL_NAME],
+                            vx_enum enumeration,
+                            vx_tiling_kernel_f flexible_func_ptr,
+                            vx_tiling_kernel_f fast_func_ptr,
+                            vx_uint32 num_params,
+                            vx_kernel_input_validate_f input,
+                            vx_kernel_output_validate_f output)
+{
+    vx_kernel kernel = 0;
+    vx_uint32 t = 0;
+    vx_size index = 0;
+    vx_target target = nullptr;
+    vx_char targetName[VX_MAX_TARGET_NAME];
+
+    if (Context::isValidContext(context) == vx_false_e)
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid Context\n");
+        return (vx_kernel)nullptr;
+    }
+    if ((flexible_func_ptr == nullptr && fast_func_ptr == nullptr) ||
+        input == nullptr ||
+        output == nullptr ||
+        num_params > VX_INT_MAX_PARAMS || num_params == 0 ||
+        name == nullptr ||
+        strncmp(name, "",  VX_MAX_KERNEL_NAME) == 0)
+        /* initialize and de-initialize can be nullptr */
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid Parameters!\n");
+        vxAddLogEntry((vx_reference)context, VX_ERROR_INVALID_PARAMETERS, "Invalid Parameters supplied to vxAddKernel\n");
+        return (vx_kernel)nullptr;
+    }
+
+    /* find target to assign this to */
+    index = strnindex(name, ':', VX_MAX_TARGET_NAME);
+    if (index == VX_MAX_TARGET_NAME)
+    {
+        strcpy(targetName,"khronos.tiling");
+    }
+    else
+    {
+        strncpy(targetName, name, index);
+    }
+    VX_PRINT(VX_ZONE_KERNEL, "Deduced Name as %s\n", targetName);
+    for (t = 0u; t < context->num_targets; t++)
+    {
+        target = &context->targets[t];
+        if (strncmp(targetName,target->name, VX_MAX_TARGET_NAME) == 0)
+        {
+            break;
+        }
+        target = nullptr;
+    }
+    if (target && target->funcs.addtilingkernel)
+    {
+        kernel = target->funcs.addtilingkernel(target, name, enumeration, nullptr,
+                                         flexible_func_ptr, fast_func_ptr, num_params, nullptr,
+                                         input, output, nullptr, nullptr);
+        VX_PRINT(VX_ZONE_KERNEL,"Added Kernel %s to Target %s ("VX_FMT_REF")\n", name, target->name, kernel);
+    }
+    else
+    {
+        vxAddLogEntry((vx_reference)context, VX_ERROR_NO_RESOURCES, "No target named %s exists!\n", targetName);
+    }
+    return (vx_kernel)kernel;
+}
+#endif /* OPENVX_KHR_TILING */
+
 VX_API_ENTRY vx_status VX_API_CALL vxFinalizeKernel(vx_kernel kernel)
 {
     vx_status status = VX_SUCCESS;
@@ -701,6 +770,29 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryKernel(vx_kernel kernel, vx_enum attri
                     status = VX_ERROR_INVALID_PARAMETERS;
                 }
                 break;
+#ifdef OPENVX_KHR_TILING
+            case VX_KERNEL_INPUT_NEIGHBORHOOD:
+                if (VX_CHECK_PARAM(ptr, size, vx_neighborhood_size_t, 0x3))
+                {
+                    memcpy(ptr, &kernel->attributes.nhbdinfo, size);
+                }
+                else
+                {
+                    status = VX_ERROR_INVALID_PARAMETERS;
+                }
+                break;
+
+            case VX_KERNEL_OUTPUT_TILE_BLOCK_SIZE:
+                if (VX_CHECK_PARAM(ptr, size, vx_tile_block_size_t, 0x3))
+                {
+                    memcpy(ptr, &kernel->attributes.blockinfo, size);
+                }
+                else
+                {
+                    status = VX_ERROR_INVALID_PARAMETERS;
+                }
+                break;
+#endif /* OPENVX_KHR_TILING */
 #ifdef OPENVX_USE_OPENCL_INTEROP
             case VX_KERNEL_USE_OPENCL:
                 if (VX_CHECK_PARAM(ptr, size, vx_bool, 0x3))
@@ -712,7 +804,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryKernel(vx_kernel kernel, vx_enum attri
                     status = VX_ERROR_INVALID_PARAMETERS;
                 }
                 break;
-#endif
+#endif /* OPENVX_USE_OPENCL_INTEROP */
             default:
                 status = VX_ERROR_NOT_SUPPORTED;
                 break;
@@ -739,6 +831,33 @@ VX_API_ENTRY vx_status VX_API_CALL vxAddParameterToKernel(vx_kernel kernel,
     {
         if (index < kernel->signature.num_parameters)
         {
+#ifdef OPENVX_KHR_TILING
+            if (kern->tilingfast_function)
+            {
+                if (((data_type != VX_TYPE_IMAGE) &&
+                     (data_type != VX_TYPE_SCALAR) &&
+                     (data_type != VX_TYPE_THRESHOLD) &&
+                     (data_type != VX_TYPE_REMAP) &&
+                     (data_type != VX_TYPE_CONVOLUTION) &&
+                     (data_type != VX_TYPE_TENSOR) &&
+                     (data_type != VX_TYPE_ARRAY) &&
+                     (data_type != VX_TYPE_LUT) &&
+                     (data_type != VX_TYPE_MATRIX)) ||
+                    (Parameter::isValidDirection(dir) == vx_false_e) ||
+                    (Parameter::isValidState(state) == vx_false_e))
+                {
+                    status = VX_ERROR_INVALID_PARAMETERS;
+                }
+                else
+                {
+                    kernel->signature.directions[index] = dir;
+                    kernel->signature.types[index] = data_type;
+                    kernel->signature.states[index] = state;
+                    status = VX_SUCCESS;
+                }
+            }
+            else
+#endif /* OPENVX_KHR_TILING */
             {
                 if (((Context::isValidType(data_type) == vx_false_e) ||
                      (Parameter::isValidDirection(dir) == vx_false_e) ||
@@ -878,6 +997,47 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetKernelAttribute(vx_kernel kernel, vx_enu
                 status = VX_ERROR_INVALID_PARAMETERS;
             }
             break;
+#ifdef OPENVX_KHR_TILING
+        case VX_KERNEL_INPUT_NEIGHBORHOOD:
+            if (VX_CHECK_PARAM(ptr, size, vx_neighborhood_size_t, 0x3))
+            {
+                memcpy(&kernel->attributes.nhbdinfo, ptr, size);
+            }
+            else
+            {
+                status = VX_ERROR_INVALID_PARAMETERS;
+            }
+            break;
+        case VX_KERNEL_OUTPUT_TILE_BLOCK_SIZE:
+            if (VX_CHECK_PARAM(ptr, size, vx_tile_block_size_t, 0x3))
+            {
+                memcpy(&kernel->attributes.blockinfo, ptr, size);
+            }
+            else
+            {
+                status = VX_ERROR_INVALID_PARAMETERS;
+            }
+            break;
+        case VX_KERNEL_BORDER:
+            if (VX_CHECK_PARAM(ptr, size, vx_border_t, 0x3))
+            {
+                vx_border_t *border = (vx_border_t *)ptr;
+                if ((border->mode == VX_BORDER_MODE_SELF) ||
+                    (border->mode == VX_BORDER_UNDEFINED))
+                {
+                    memcpy(&kernel->attributes.borders, border, sizeof(vx_border_t));
+                }
+                else
+                {
+                    status = VX_ERROR_INVALID_VALUE;
+                }
+            }
+            else
+            {
+                status = VX_ERROR_INVALID_PARAMETERS;
+            }
+            break;
+#endif /* OPENVX_KHR_TILING */
 #ifdef OPENVX_USE_OPENCL_INTEROP
         case VX_KERNEL_USE_OPENCL:
             if (VX_CHECK_PARAM(ptr, size, vx_bool, 0x3))
@@ -889,7 +1049,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetKernelAttribute(vx_kernel kernel, vx_enu
                 status = VX_ERROR_INVALID_VALUE;
             }
             break;
-#endif
+#endif /* OPENVX_USE_OPENCL_INTEROP */
         default:
             status = VX_ERROR_NOT_SUPPORTED;
             break;

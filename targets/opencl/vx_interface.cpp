@@ -71,9 +71,9 @@ vx_status vxTargetInit(vx_target target)
     cl_int err = 0;
     vx_context context = target->context;
     cl_uint p, d, k;
-    char *vx_incs = getenv("VX_CL_INCLUDE_DIR");
+    char *vx_incs = std::getenv("VX_CL_INCLUDE_DIR");
     //char *vx_incs = "/usr/include -I/home/pi/sample-impl-opencl/include -I/home/pi/sample-impl-opencl/include/VX";
-	char *cl_dirs = getenv("VX_CL_SOURCE_DIR");
+	char *cl_dirs = std::getenv("VX_CL_SOURCE_DIR");
     //char *cl_dirs = "/home/pi/sample-impl-opencl/kernels/opencl";
 	char cl_args[1024];
 

@@ -119,14 +119,14 @@ static int get_vx_zone_index(const char *name)
 
 void vx_set_debug_zone_from_env(void)
 {
-    char *str = getenv("VX_ZONE_MASK");
+    char *str = std::getenv("VX_ZONE_MASK");
     if (str)
     {
         sscanf(str, "%x", &vx_zone_mask);
     }
     else
     {
-        str = getenv("VX_ZONE_LIST");
+        str = std::getenv("VX_ZONE_LIST");
         if (str)
         {
             vx_char *name = nullptr;
