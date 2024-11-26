@@ -16,6 +16,7 @@ cc_library(
         "//kernels/c_model:c_model_kernels",
         "//targets/debug:debug",
         "//targets/extras:extras",
+        "//vxu:corevx-vxu"
     ],
     visibility = ["//visibility:public"]
 )
