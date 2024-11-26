@@ -1,6 +1,6 @@
 # Build shared library for the main project
 cc_shared_library(
-    name = "corevx_shared",
+    name = "openvx",
     deps = [":corevx"],
 )
 
