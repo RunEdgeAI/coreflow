@@ -35,7 +35,6 @@ pyr(nullptr)
 
 Delay::~Delay()
 {
-    destructDelay();
 }
 
 vx_bool Delay::addAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i)
@@ -130,7 +129,7 @@ vx_bool Delay::removeAssociationToDelay(vx_reference value, vx_node n, vx_uint32
     return vx_true_e;
 }
 
-void Delay::destructDelay()
+void Delay::destruct()
 {
     vx_uint32 i = 0;
     vx_delay delay = this;
@@ -148,7 +147,7 @@ void Delay::destructDelay()
 
     for (i = 0; i < delay->count; i++)
     {
-        Reference::releaseReference((vx_reference*)&delay->pyr[i], delay->type, VX_INTERNAL, nullptr);
+        Reference::releaseReference((vx_reference*)&delay->refs[i], delay->type, VX_INTERNAL, nullptr);
     }
 
     if (delay->set)

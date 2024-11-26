@@ -54,7 +54,7 @@ public:
      * @brief Function to destruct the Parameter object
      * @ingroup group_int_parameter
      */
-    void destructParameter();
+    void destruct() override final;
 
     /*! \brief This returns true if the direction is a valid enum
      * \param [in] dir The \ref vx_direction_e enum.

@@ -81,7 +81,7 @@ public:
     /*! \brief Used to completely destroy a node.
      * \ingroup group_int_node
      */
-    void destructNode();
+    void destruct() override final;
 
     /*! \brief Used to remove a node from a graph.
      * \ingroup group_int_node

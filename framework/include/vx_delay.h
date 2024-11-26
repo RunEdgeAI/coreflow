@@ -56,7 +56,7 @@ public:
      * @brief Destruct function for delay objects
      * @ingroup group_int_delay
      */
-    void destructDelay();
+    void destruct() override final;
 
     /*! \brief The number of objects in the delay. */
     vx_size count;

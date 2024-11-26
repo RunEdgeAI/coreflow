@@ -195,7 +195,7 @@ public:
      * @brief Destruct function for array object
      * @ingroup group_int_array
      */
-    void destructArray();
+    void destruct() override final;
 
     /**
      * @brief Print array object

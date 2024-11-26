@@ -37,7 +37,6 @@ subimages()
 
 Tensor::~Tensor()
 {
-    destructTensor();
 }
 
 vx_bool Tensor::isValidTensor(vx_tensor tensor)
@@ -131,7 +130,7 @@ void Tensor::computePositionsFromIndex(vx_size index, const vx_size * start, con
     }
 }
 
-void Tensor::destructTensor()
+void Tensor::destruct()
 {
     /* if it's not imported and does not have a parent, free it */
     if (!parent && addr)

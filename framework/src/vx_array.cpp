@@ -32,7 +32,6 @@ Array::Array(vx_context context, vx_enum type, vx_reference scope) : Reference(c
 
 Array::~Array()
 {
-    destructArray();
 }
 
 vx_array Array::createArray(vx_context context, vx_enum item_type, vx_size capacity, vx_bool is_virtual, vx_enum type)
@@ -49,7 +48,7 @@ vx_array Array::createArray(vx_context context, vx_enum item_type, vx_size capac
     return arr;
 }
 
-void Array::destructArray()
+void Array::destruct()
 {
     ownFreeMemory(context, &memory);
 }

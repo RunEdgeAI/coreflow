@@ -43,7 +43,6 @@ memory_type()
 
 Image::~Image()
 {
-    destructImage();
 }
 
 void Image::initPlane(vx_uint32 index,
@@ -429,7 +428,7 @@ void Image::printImage(vx_image image)
     }
 }
 
-void Image::destructImage()
+void Image::destruct()
 {
     /* if it's not imported and does not have a parent, free it */
     if ((memory_type == VX_MEMORY_TYPE_NONE) && (parent == nullptr))

@@ -54,7 +54,7 @@ public:
     /*! \brief Destroys a convolution.
      * \ingroup group_int_convolution
      */
-    void destructConvolution();
+    void destruct() override final;
 
     /*! \brief The Scale Factor. */
     vx_uint32 scale;

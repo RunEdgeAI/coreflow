@@ -43,7 +43,6 @@ replicated_flags()
 
 Node::~Node()
 {
-    destructNode();
 }
 
 void Node::setParameter(vx_uint32 index, vx_reference value)
@@ -57,7 +56,7 @@ void Node::setParameter(vx_uint32 index, vx_reference value)
     parameters[index] = (vx_reference)value;
 }
 
-void Node::destructNode()
+void Node::destruct()
 {
     vx_uint32 p = 0;
 
@@ -72,10 +71,12 @@ void Node::destructNode()
     {
         vx_status status;
         if ((kernel->user_kernel == vx_true_e) && (local_data_set_by_implementation == vx_false_e))
+        {
             local_data_change_is_enabled = vx_true_e;
+        }
         status = kernel->deinitialize((vx_node)this,
-                                            (vx_reference *)parameters,
-                                            kernel->signature.num_parameters);
+                                      (vx_reference *)parameters,
+                                      kernel->signature.num_parameters);
         local_data_change_is_enabled = vx_false_e;
         if (status != VX_SUCCESS)
         {
@@ -140,7 +141,7 @@ vx_status Node::removeNode()
         }
         ownSemPost(&graph->lock);
         /* If this node is within a graph, release internal reference to graph */
-        if(removedFromGraph)
+        if(vx_true_e == removedFromGraph)
         {
             vx_reference ref = (vx_reference)this;
             status = Reference::releaseReference(&ref, VX_TYPE_NODE, VX_INTERNAL, nullptr);
@@ -153,7 +154,7 @@ vx_status Node::removeNode()
 void Node::printNode(vx_node node)
 {
     if (node)
-        VX_PRINT(VX_ZONE_NODE, "vx_node_t:%p %s:%d affinity:%s\n",
+        VX_PRINT(VX_ZONE_NODE, "vx_node:%p %s:%d affinity:%s\n",
             node,
             node->kernel->name,
             node->kernel->enumeration,

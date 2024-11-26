@@ -27,7 +27,6 @@ Scalar::Scalar(vx_context context, vx_reference scope) : Reference(context, VX_T
 
 Scalar::~Scalar()
 {
-    destructScalar();
 }
 
 void* Scalar::allocateScalarMemory(vx_size size)
@@ -103,7 +102,7 @@ void Scalar::printScalarValue(vx_scalar scalar)
     return;
 } /* printScalarValue() */
 
-void Scalar::destructScalar()
+void Scalar::destruct()
 {
     if (data_addr)
     {

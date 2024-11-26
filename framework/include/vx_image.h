@@ -190,7 +190,7 @@ public:
     /*! \brief Destroys an image
      * \ingroup group_int_image
      */
-    void destructImage();
+    void destruct() override final;
 
     /*! \brief The memory layout definition */
     vx_memory_t    memory;

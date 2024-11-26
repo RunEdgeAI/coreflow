@@ -27,7 +27,6 @@ Parameter::Parameter(vx_context context, vx_reference ref) : Reference(context, 
 
 Parameter::~Parameter()
 {
-    destructParameter();
 }
 
 vx_bool Parameter::isValidDirection(vx_enum dir)
@@ -69,7 +68,7 @@ vx_bool Parameter::isValidState(vx_enum state)
     }
 }
 
-void Parameter::destructParameter()
+void Parameter::destruct()
 {
     if (node)
     {

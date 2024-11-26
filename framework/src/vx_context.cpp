@@ -953,24 +953,6 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
 
             ownDestroySem(&context->memory_maps_lock);
 
-            /* @TODO: Temp edit to address stale refs
-             * We are releasing context so release internal references as well
-             */
-            for (r = 0; r < VX_INT_MAX_REF; r++)
-            {
-                vx_reference ref = context->reftable[r];
-                while (ref && ref->internal_count > 1)
-                {
-                    ref->decrementReference(VX_INTERNAL);
-                }
-                if (ref && ref->internal_count > 0)
-                {
-                    VX_PRINT(VX_ZONE_WARNING,"Dangling reference " VX_FMT_REF " of type %s at external count %u, internal count %u\n",
-                             ref, ownGetObjectTypeName(ref->type), ref->external_count, ref->internal_count);
-                    Reference::releaseReference(&ref, ref->type, VX_INTERNAL, nullptr);
-                }
-            }
-
             /* By now, all external and internal references should be removed */
             for (r = 0; r < VX_INT_MAX_REF; r++)
             {

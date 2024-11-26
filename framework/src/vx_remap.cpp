@@ -27,7 +27,6 @@ Remap::Remap(vx_context context, vx_reference scope) : Reference(context, VX_TYP
 
 Remap::~Remap()
 {
-    destructRemap();
 }
 
 vx_bool Remap::isValidRemap(vx_remap remap)
@@ -108,7 +107,7 @@ vx_status Remap::getCoordValue(vx_uint32 dst_x, vx_uint32 dst_y, vx_float32 *src
     return status;
 }
 
-void Remap::destructRemap()
+void Remap::destruct()
 {
     ownFreeMemory(context, &memory);
 }

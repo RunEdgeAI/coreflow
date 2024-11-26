@@ -312,6 +312,11 @@ vx_reference Reference::createReference(vx_context context, vx_enum type, vx_ref
                 ref = new Import(context, scope);
                 break;
             }
+            case VX_TYPE_ERROR:
+            {
+                ref = new Error(context, scope);
+                break;
+            }
             default:
             {
                 VX_PRINT(VX_ZONE_ERROR, "Unsupported type passed 0x%x\n", type);
@@ -363,6 +368,8 @@ vx_status Reference::releaseReference(vx_reference* r,
                 destructor(ref);
             }
 
+            ref->destruct();
+
             if (ref->context->removeReference(ref) == vx_false_e)
             {
                 status = VX_FAILURE;
@@ -383,6 +390,10 @@ void Reference::initReferenceForDelay(vx_delay d, vx_int32 index)
 {
     delay = d;
     delay_slot_index = index;
+}
+
+void Reference::destruct()
+{
 }
 
 /*****************************************************************************/

@@ -31,10 +31,9 @@ offset_y(0)
 
 Distribution::~Distribution()
 {
-    destructDistribution();
 }
 
-void Distribution::destructDistribution()
+void Distribution::destruct()
 {
     ownFreeMemory(context, &memory);
 }
