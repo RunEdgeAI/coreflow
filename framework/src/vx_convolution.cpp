@@ -27,10 +27,9 @@ Convolution::Convolution(vx_context context, vx_reference scope) : Matrix(contex
 
 Convolution::~Convolution()
 {
-    destructConvolution();
 }
 
-void Convolution::destructConvolution()
+void Convolution::destruct()
 {
     ownFreeMemory(context, &memory);
 }

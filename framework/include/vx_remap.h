@@ -86,7 +86,7 @@ public:
      * @brief Function to destroy a remap object
      * @ingroup group_int_remap
      */
-    void destructRemap();
+    void destruct() override final;
 
     /*! \brief The memory layout */
     vx_memory_t memory;

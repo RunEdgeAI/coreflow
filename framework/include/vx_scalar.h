@@ -70,7 +70,7 @@ public:
      * @brief Function to destroy scalar obj
      * @ingroup group_int_scalar
      */
-    void destructScalar();
+    void destruct() override final;
 
     /*! \brief The atomic type of the scalar */
     vx_enum               data_type;

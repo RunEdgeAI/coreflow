@@ -112,6 +112,12 @@ public:
     */
     void initReferenceForDelay(vx_delay delay, vx_int32 index);
 
+    /**
+     * @brief Destruct reference
+     * @ingroup group_int_reference
+     */
+    virtual void destruct();
+
 #if !DISABLE_ICD_COMPATIBILITY
     /*! \brief Platform for ICD compatibility. */
     struct _vx_platform * platform;

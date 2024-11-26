@@ -29,7 +29,6 @@ refs(nullptr)
 Import::~Import()
 {
 #if defined(OPENVX_USE_XML) || defined(OPENVX_USE_IX)
-    destructImport();
 #endif /* defined(OPENVX_USE_XML) || defined(OPENVX_USE_IX) */
 }
 
@@ -55,7 +54,7 @@ vx_import Import::createImportInt(vx_context context,
     return import;
 }
 
-void Import::destructImport()
+void Import::destruct()
 {
     vx_uint32 i = 0;
     for (i = 0; i < count; i++)

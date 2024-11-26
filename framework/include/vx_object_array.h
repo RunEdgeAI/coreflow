@@ -86,7 +86,7 @@ public:
      * @brief Function to destroy the object array
      * @ingroup group_int_object_array
      */
-    void destructObjectArray();
+    void destruct() override final;
 
     /*! \brief The reference table of array items */
     vx_reference items[VX_INT_MAX_REF];

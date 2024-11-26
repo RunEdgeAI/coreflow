@@ -29,7 +29,6 @@ item_type()
 
 ObjectArray::~ObjectArray()
 {
-    destructObjectArray();
 }
 
 vx_bool ObjectArray::isValidObjectArray(vx_object_array arr)
@@ -331,7 +330,7 @@ vx_object_array ObjectArray::createObjectArray(vx_reference scope, vx_reference 
     return arr;
 }
 
-void ObjectArray::destructObjectArray()
+void ObjectArray::destruct()
 {
     vx_status status = VX_FAILURE;
 

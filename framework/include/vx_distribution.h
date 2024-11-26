@@ -53,7 +53,7 @@ public:
     /*! \brief Destroys a distribution.
      * \ingroup group_int_distribution
      */
-    void destructDistribution();
+    void destruct() override final;
 
     /*! \brief Memory layout */
     vx_memory_t memory;

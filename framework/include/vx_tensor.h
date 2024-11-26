@@ -115,7 +115,7 @@ public:
      * @brief Function to destroy tensor obj
      * @ingroup group_int_tensor
      */
-    void destructTensor();
+    void destruct() override final;
 
     /*! \brief The memory layout definition */
     void *addr;

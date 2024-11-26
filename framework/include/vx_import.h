@@ -66,7 +66,7 @@ public:
     /*! \brief Destroys an Import and it's scoped-objects.
      *  \ingroup group_int_import
      */
-    void destructImport();
+    void destruct() override final;
 
 #endif /* defined(OPENVX_USE_IX) || defined(OPENVX_USE_XML) */
 

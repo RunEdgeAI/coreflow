@@ -250,7 +250,6 @@ delays()
 
 Graph::~Graph()
 {
-    destructGraph();
 }
 
 void Graph::clearVisitation()
@@ -1646,18 +1645,16 @@ vx_bool Graph::postprocessOutput(vx_uint32 n, vx_uint32 p, vx_reference* vref, v
     return vx_true_e;
 } /* postprocessOutput() */
 
-void Graph::destructGraph()
+void Graph::destruct()
 {
-    vx_graph graph = this;
-
-    for (int n = 0; n < VX_INT_MAX_REF; n++)
+    for (vx_uint32 n = 0; n < numNodes; n++)
     {
-        vx_node node = (vx_node)graph->nodes[n];
+        vx_node node = nodes[n];
         /* Interpretation of spec is to release all external references of Nodes when vxReleaseGraph()
            is called AND all graph references count == 0 (garbage collection).
            However, it may be possible that the user would have already released its external reference
            so we need to check. */
-        if(node)
+        if (node)
         {
             node->removeNode();
             if (node->external_count)
@@ -1666,8 +1663,6 @@ void Graph::destructGraph()
             }
         }
     }
-    // execution lock
-    ownDestroySem(&graph->lock);
 }
 
 /******************************************************************************/

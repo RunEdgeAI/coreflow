@@ -162,7 +162,7 @@ public:
      * @brief Destruct function for the Graph object
      * @ingroup group_int_graph
      */
-    void destructGraph();
+    void destruct() override final;
 
     /*! \brief The array of all nodes in this graph */
     vx_node        nodes[VX_INT_MAX_REF];
