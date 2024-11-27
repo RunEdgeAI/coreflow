@@ -161,7 +161,7 @@ VX_API_ENTRY vx_reference VX_API_CALL vxGetImportReferenceByName(vx_import impor
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseImport(vx_import* import)
 {
-    vx_status status = VX_FAILURE;
+    vx_status status = VX_ERROR_INVALID_REFERENCE;
 
     if (import != nullptr)
     {

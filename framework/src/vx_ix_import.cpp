@@ -43,6 +43,10 @@ This implementation does not support exports originating from previous versions!
 // #define DEBUGPRINTF(x,...)
 #define DEBUGPRINTF printf
 
+/******************************************************************************/
+/* INTERNAL INTERFACE                                                         */
+/******************************************************************************/
+
 /* User kernel that calls a graph */
 static vx_status graph_kernel_validate(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[])
 {
@@ -1828,6 +1832,10 @@ static vx_status buildGraphs(vx_context context, const vx_uint8 *ptr, vx_referen
     }
     return status;
 }
+
+/******************************************************************************/
+/* PUBLIC FUNCTIONS                                                           */
+/******************************************************************************/
 
 VX_API_ENTRY vx_import VX_API_CALL vxImportObjectsFromMemory(
     vx_context context,

@@ -133,7 +133,8 @@ vx_uint32 Reference::incrementReference(vx_reftype_e refType)
     if (refType == VX_INTERNAL || refType == VX_BOTH)
         internal_count++;
     count = internal_count + external_count;
-    VX_PRINT(VX_ZONE_REFERENCE, "Incremented Total Reference Count to %u on " VX_FMT_REF "\n", count, this);
+    VX_PRINT(VX_ZONE_REFERENCE, "Incremented Total Reference Count to %u on " VX_FMT_REF
+        " [ext:%d, int:%d]\n", count, this, external_count, internal_count);
     ownSemPost(&lock);
 
     return count;
@@ -169,7 +170,8 @@ vx_uint32 Reference::decrementReference(vx_reftype_e refType)
     }
 
     result = internal_count + external_count;
-    VX_PRINT(VX_ZONE_REFERENCE, "Decremented Total Reference Count to %u on " VX_FMT_REF " type:%08x\n", result, this, type);
+    VX_PRINT(VX_ZONE_REFERENCE, "Decremented Total Reference Count to %u on " VX_FMT_REF
+        " type:%08x [ext:%d, int:%d]\n", result, this, type, external_count, internal_count);
     ownSemPost(&lock);
 
     return result;

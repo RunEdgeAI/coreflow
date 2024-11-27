@@ -62,7 +62,7 @@ public:
     /*! \brief Destroys a pyrmid object.
      * \ingroup group_int_pyramid
      */
-    void destructPyramid();
+    void destruct() override final;
 
     /*! \brief Number of levels in the pyramid */
     vx_size numLevels;
