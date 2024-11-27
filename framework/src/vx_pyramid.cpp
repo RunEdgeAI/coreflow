@@ -27,10 +27,9 @@ Pyramid::Pyramid(vx_context context, vx_reference scope) : Reference(context, VX
 
 Pyramid::~Pyramid()
 {
-    destructPyramid();
 }
 
-void Pyramid::destructPyramid()
+void Pyramid::destruct()
 {
     vx_uint32 i = 0;
     for (i = 0; i < numLevels; i++)

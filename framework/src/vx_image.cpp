@@ -405,7 +405,7 @@ void Image::printImage(vx_image image)
     strncpy(df_image, (char *)&image->format, 4);
     df_image[4] = '\0';
     Reference::printReference(image);
-    VX_PRINT(VX_ZONE_IMAGE, "vx_image_t:%p %s %ux%u (%s)\n", image, df_image, image->width, image->height, (image->constant?"CONSTANT":"MUTABLE"));
+    VX_PRINT(VX_ZONE_IMAGE, "vx_image:%p %s %ux%u (%s)\n", image, df_image, image->width, image->height, (image->constant?"CONSTANT":"MUTABLE"));
     for (p = 0; p < image->planes; p++)
     {
         VX_PRINT(VX_ZONE_IMAGE, "\tplane[%u] ptr:%p dim={%u,%u,%u} stride={%d,%d,%d} stride_x_bits={%u} scale={%u,%u,%u} bounds={%u,%ux%u,%u}\n",

@@ -1647,14 +1647,14 @@ vx_bool Graph::postprocessOutput(vx_uint32 n, vx_uint32 p, vx_reference* vref, v
 
 void Graph::destruct()
 {
-    for (vx_uint32 n = 0; n < numNodes; n++)
+    while (numNodes)
     {
-        vx_node node = nodes[n];
+        vx_node node = nodes[0];
         /* Interpretation of spec is to release all external references of Nodes when vxReleaseGraph()
            is called AND all graph references count == 0 (garbage collection).
            However, it may be possible that the user would have already released its external reference
            so we need to check. */
-        if (node)
+        if (nullptr != node)
         {
             node->removeNode();
             if (node->external_count)

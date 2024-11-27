@@ -49,14 +49,13 @@ This implementation requires that the exporting and importing implementations ha
 #define VX_IX_ID (0x1234C0DE)           /* To identify an export and make sure endian matches etc. */
 #define VX_IX_VERSION ((VX_VERSION << 8) + 1)
 
-struct VXBinHeaderS {                   /* What should be at the start of the binary blob */
+struct VXBinHeader {                   /* What should be at the start of the binary blob */
     vx_uint32 vx_ix_id;                 /* Unique ID */
     vx_uint32 version;                  /* Version of the export/import */
     vx_uint64 length;                   /* Total length of the blob */
     vx_uint32 numrefs;                  /* Number of references originally supplied */
     vx_uint32 actual_numrefs;           /* Actual number of references exported */
 };
-typedef struct VXBinHeaderS VXBinHeader;
 
 #define USES_OFFSET (sizeof(VXBinHeader))/* Where the variable part of the blob starts */
 
@@ -74,14 +73,13 @@ typedef struct VXBinHeaderS VXBinHeader;
 #define OBJECT_EXPORTED (3)             /* Object has already been exported */
 #define OBJECT_DUPLICATE (4)            /* Object is a duplicate supplied by user */
 
-struct VXBinExportRefTableS {
+struct VXBinExportRefTable {
     vx_reference ref;                   /* The reference */
     vx_enum status;                     /* Progress of export */
     vx_enum use;                        /* Use for the reference */
 };
 
-typedef struct VXBinExportRefTableS VXBinExportRefTable;
-struct VXBinExportS {
+struct VXBinExport {
     vx_context context;                 	/* Context supplied by the application */
     const vx_reference *refs;       	/* Refs list supplied by the application */
     const vx_enum *uses;            	/* Uses supplied by the application */
@@ -92,10 +90,13 @@ struct VXBinExportS {
     vx_uint8 *curptr;                   	/* Pointer into buffer for next free location */
     vx_size export_length;              	/* Size in bytes of the buffer */
 };
-typedef struct VXBinExportS VXBinExport;
 
-static vx_uint8 *exports[MAX_CONCURRENT_EXPORTS] = {NULL};
+static vx_uint8 *exports[MAX_CONCURRENT_EXPORTS] = {nullptr};
 static vx_uint32 num_exports = 0;
+
+/******************************************************************************/
+/* INTERNAL INTERFACE                                                         */
+/******************************************************************************/
 
 static int exportToProcess(VXBinExport *xport, vx_size n, int calcSize)
 {
@@ -188,12 +189,12 @@ static int isImmutable(vx_kernel k, vx_uint32 p)
 
 static void malloc_export(VXBinExport *xport)
 {
-    xport->export_buffer = NULL;
+    xport->export_buffer = nullptr;
     /* allocate memory for an export */
     if (xport->export_length && num_exports < MAX_CONCURRENT_EXPORTS)
     {
-        for (int i = 0; i < MAX_CONCURRENT_EXPORTS && NULL == xport->export_buffer; ++i)
-            if (NULL == exports[i])
+        for (int i = 0; i < MAX_CONCURRENT_EXPORTS && nullptr == xport->export_buffer; ++i)
+            if (nullptr == exports[i])
             {
                 xport->export_buffer = (vx_uint8 *)malloc(xport->export_length);
                 exports[i] = xport->export_buffer;
@@ -222,10 +223,10 @@ static vx_uint32 indexOf(const VXBinExport *xport, const vx_reference ref)
        its parent, for example a pyramid level or element of an object array, or that we are looking for the context.
        We test for context specifically to make the search faster, as this could be a frequent case. The type of an
        unfound reference (usually scope) is encoded for error-checking upon import.
-    We also return 0xffffffff if the reference was NULL; this is for optional parameter checking.
+    We also return 0xffffffff if the reference was nullptr; this is for optional parameter checking.
     */
     vx_uint32 i = xport->actual_numrefs + VX_TYPE_CONTEXT;
-    if (ref)    /* Check for NULL: this could be an optional parameter */
+    if (ref)    /* Check for nullptr: this could be an optional parameter */
     {
         if (VX_TYPE_CONTEXT != ref->type)
         {
@@ -278,8 +279,8 @@ static void calculateUses(VXBinExport *xport)
 
 static vx_size putInTable(VXBinExportRefTable *ref_table, const vx_reference newref, vx_size actual_numrefs, vx_enum use)
 {
-    /* If the reference newref is NULL or is already in the table, just return actual_numrefs, else put
-    it in the table and return actual_numrefs + 1. Note that NULL can occur for absent optional parameters
+    /* If the reference newref is nullptr or is already in the table, just return actual_numrefs, else put
+    it in the table and return actual_numrefs + 1. Note that nullptr can occur for absent optional parameters
     and is treated specially during output and so does not appear in the table since it can't have been
     supplied in original list of references passed to the export function as they must pass getStatus(). */
     if (newref)
@@ -341,7 +342,7 @@ static vx_size putInTable(VXBinExportRefTable *ref_table, const vx_reference new
                     actual_numrefs = putInTable(ref_table, (vx_reference)n->kernel, actual_numrefs, kernel_use);
                     for (p = 0; p < n->kernel->signature.num_parameters; ++p)
                     {
-                        /* Add in each parameter. Note that absent optional parameters (NULL) will not end
+                        /* Add in each parameter. Note that absent optional parameters (nullptr) will not end
                         up in the table and have special treatment on output (and input). */
                         actual_numrefs = putInTable(ref_table, n->parameters[p], actual_numrefs, n->kernel->signature.directions[p]);
                         /* If a node is replicated, need to check replicated flags and put parent in the list as well */
@@ -482,7 +483,7 @@ static vx_status exportHeader(VXBinExport *xport, int calcSize)
 {
     vx_status status = VX_SUCCESS;
     vx_size i;
-    if (!calcSize && ((NULL == xport->export_buffer) || xport->actual_numrefs & 0xffffffff00000000U))
+    if (!calcSize && ((nullptr == xport->export_buffer) || xport->actual_numrefs & 0xffffffff00000000U))
     {
         DEBUGPRINTF("No memory\n");
         status = VX_ERROR_NO_MEMORY;
@@ -734,7 +735,7 @@ static vx_status exportImage(VXBinExport *xport, const vx_size n, int calcSize)
             rect.end_y =  rect.start_y + 1;
             for (p = 0U; p < image->planes; ++p)
             {
-                void *base = NULL;
+                void *base = nullptr;
                 vx_imagepatch_addressing_t addr;
                 vx_map_id id;
                 status |= vxMapImagePatch(image, &rect, p, &id, &addr, &base, VX_READ_ONLY, image->memory_type, 0);
@@ -786,7 +787,7 @@ static vx_status exportImage(VXBinExport *xport, const vx_size n, int calcSize)
             */
             for (p = 0U; p < image->planes; ++p)
             {
-                void *base = NULL;
+                void *base = nullptr;
                 vx_uint32 x, y;
                 vx_imagepatch_addressing_t addr;
                 vx_map_id id;
@@ -1057,7 +1058,7 @@ static vx_status exportTensor(VXBinExport *xport, const vx_size i, int calcSize)
     {
         if (VX_IX_USE_EXPORT_VALUES == xport->ref_table[i].use &&
             vx_false_e == tensor->is_virtual &&
-            NULL != tensor->addr &&
+            nullptr != tensor->addr &&
             VX_TYPE_TENSOR != tensor->scope->type)
         {
             vx_uint32 size = tensor->dimensions[tensor->number_of_dimensions - 1] *
@@ -1299,6 +1300,10 @@ static vx_status exportObjects(VXBinExport *xport, int calcSize)
     return status;
 }
 
+/******************************************************************************/
+/* PUBLIC FUNCTIONS                                                           */
+/******************************************************************************/
+
 VX_API_ENTRY vx_status VX_API_CALL vxExportObjectsToMemory (
     vx_context context,
     vx_size numrefs,
@@ -1313,11 +1318,11 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportObjectsToMemory (
             .context = context,
             .refs = refs,
             .uses = uses,
-            .ref_table = NULL,
+            .ref_table = nullptr,
             .numrefs = numrefs,
             .actual_numrefs = numrefs,
-            .export_buffer = NULL,                /* Where the data will go */
-            .curptr = NULL,
+            .export_buffer = nullptr,                /* Where the data will go */
+            .curptr = nullptr,
             .export_length = 0          /* Size of the export */
         };
     vx_size i;                          /* For enumerating the refs and uses */
@@ -1325,10 +1330,10 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportObjectsToMemory (
     /* ----------- Do all the checks ----------- */
     /* Check initial parameters */
     if (VX_SUCCESS != vxGetStatus((vx_reference)context) ||
-        refs == NULL ||     /* no parameters may be NULL */
-        uses == NULL ||
-        ptr == NULL ||
-        length == NULL)
+        refs == nullptr ||     /* no parameters may be nullptr */
+        uses == nullptr ||
+        ptr == nullptr  ||
+        length == nullptr)
     {
         DEBUGPRINTF("Initial invalid parameters...\n");
         retval = VX_ERROR_INVALID_PARAMETERS;
@@ -1586,7 +1591,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportObjectsToMemory (
     else
     {
         /* On failure, clear output values and release any allocated memory */
-        *ptr = NULL;
+        *ptr = nullptr;
         *length = 0;
         vxReleaseExportedMemory(context, (const vx_uint8**)&xport.export_buffer);
     }
@@ -1596,19 +1601,19 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportObjectsToMemory (
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseExportedMemory(vx_context context, const vx_uint8 ** ptr)
 {
     vx_status retval = VX_ERROR_INVALID_PARAMETERS;
-    /* First, check we have some exports to release, that the pointer provided is not NULL, and that
+    /* First, check we have some exports to release, that the pointer provided is not nullptr, and that
         the context is valid. Note that the list of exports is across all contexts */
     if (VX_SUCCESS == vxGetStatus((vx_reference)context) && *ptr && **ptr && num_exports)
     {
         /* next, find the pointer in our list of pointers.*/
-        for (int i = 0; i < MAX_CONCURRENT_EXPORTS && VX_SUCCESS != retval; ++i)
+        for (vx_uint32 i = 0; i < MAX_CONCURRENT_EXPORTS && VX_SUCCESS != retval; ++i)
         {
             if (*ptr == exports[i])
             {
                 /* found it, all good, we can free the memory, zero the pointers and set a successful return value */
                 free((void *)*ptr);
-                *ptr = NULL;
-                exports[i] = NULL;
+                *ptr = nullptr;
+                exports[i] = nullptr;
                 --num_exports;
                 retval = VX_SUCCESS;
             }

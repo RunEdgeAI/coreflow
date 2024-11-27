@@ -91,7 +91,7 @@ void Node::destruct()
         if (ref)
         {
             /* Remove the potential delay association */
-            if (ref->delay!=nullptr)
+            if (ref->delay != nullptr)
             {
                 vx_bool res = Delay::removeAssociationToDelay(ref, this, p);
                 if (res == vx_false_e)
@@ -132,7 +132,7 @@ vx_status Node::removeNode()
                 graph->nodes[i] = graph->nodes[graph->numNodes];
                 graph->nodes[graph->numNodes] = nullptr;
                 /* force the graph to be verified again */
-                graph->reverify = graph->verified;
+                graph->reverify = vx_true_e;
                 graph->verified = vx_false_e;
                 graph->state = VX_GRAPH_STATE_UNVERIFIED;
                 removedFromGraph = vx_true_e;
@@ -141,7 +141,7 @@ vx_status Node::removeNode()
         }
         ownSemPost(&graph->lock);
         /* If this node is within a graph, release internal reference to graph */
-        if(vx_true_e == removedFromGraph)
+        if (vx_true_e == removedFromGraph)
         {
             vx_reference ref = (vx_reference)this;
             status = Reference::releaseReference(&ref, VX_TYPE_NODE, VX_INTERNAL, nullptr);
