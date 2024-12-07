@@ -136,11 +136,7 @@ static vx_status LKTracker(
     vxQueryImage(derivIy, VX_IMAGE_FORMAT, &derivIy_format, sizeof(derivIy_format));
     vxQueryImage(I, VX_IMAGE_FORMAT, &I_format, sizeof(I_format));
 
-    //vxGetValidRegionImage(derivIx,&rect);
-    rect.start_x = 0;
-    rect.start_y = 0;
-    vxQueryImage(derivIx, VX_IMAGE_WIDTH,  &rect.end_x, sizeof(rect.end_x));
-    vxQueryImage(derivIx, VX_IMAGE_HEIGHT, &rect.end_y, sizeof(rect.end_y));
+    vxGetValidRegionImage(derivIx,&rect);
 
     status = VX_SUCCESS;
 
@@ -153,11 +149,7 @@ static vx_status LKTracker(
     vxQueryImage(derivIWinBuf_x, VX_IMAGE_FORMAT, &derivIWinBuf_x_format, sizeof(derivIWinBuf_x_format));
     vxQueryImage(derivIWinBuf_y, VX_IMAGE_FORMAT, &derivIWinBuf_y_format, sizeof(derivIWinBuf_y_format));
 
-    //vxGetValidRegionImage(IWinBuf,&rect);
-    rect.start_x = 0;
-    rect.start_y = 0;
-    vxQueryImage(IWinBuf, VX_IMAGE_WIDTH,  &rect.end_x, sizeof(rect.end_x));
-    vxQueryImage(IWinBuf, VX_IMAGE_HEIGHT, &rect.end_y, sizeof(rect.end_y));
+    vxGetValidRegionImage(IWinBuf,&rect);
 
     status |= vxAccessImagePatch(IWinBuf,        &rect, 0, &IWinBuf_addr,        (void**)&IWinBuf_base,        VX_READ_AND_WRITE);
     status |= vxAccessImagePatch(derivIWinBuf_x, &rect, 0, &derivIWinBuf_x_addr, (void**)&derivIWinBuf_x_base, VX_READ_AND_WRITE);
@@ -347,8 +339,8 @@ static vx_status LKTracker(
         }
     }
 
-    status |= vxUnmapArrayRange(prevPts, prevPtsFirstItem_map_id);
-    status |= vxUnmapArrayRange(nextPts, nextPtsFirstItem_map_id);
+    vxUnmapArrayRange(prevPts, prevPtsFirstItem_map_id);
+    vxUnmapArrayRange(nextPts, nextPtsFirstItem_map_id);
     /* no needs to commit changes in temporary images */
     status |= vxCommitImagePatch(IWinBuf, NULL, 0, &IWinBuf_addr, (void*)IWinBuf_base);
     status |= vxCommitImagePatch(derivIWinBuf_x, NULL, 0, &derivIWinBuf_x_addr, (void*)derivIWinBuf_x_base);
@@ -529,11 +521,6 @@ static vx_status VX_CALLBACK vxOpticalFlowPyrLKKernel(vx_node node, const vx_ref
             }
 
             vxGetValidRegionImage(old_image,&rect);
-//            rect.start_x = 0;
-//            rect.start_y = 0;
-//            vxQueryImage(old_image, VX_IMAGE_WIDTH,  &rect.end_x, sizeof(rect.end_x));
-//            vxQueryImage(old_image, VX_IMAGE_HEIGHT, &rect.end_y, sizeof(rect.end_y));
-
             // printf("%ux%u - %ux%u\n", rec.start_x, rec.start_y, rec.end_x, rec.end_y);
 
             {
@@ -600,6 +587,7 @@ static vx_status VX_CALLBACK vxOpticalFlowPyrLKKernel(vx_node node, const vx_ref
             vxReleaseImage(&new_image);
             vxReleaseImage(&old_image);
         }
+
         vx_map_id prevPtsFirstItem_map_id;
         vx_map_id nextPtsFirstItem_map_id;
         prevPtsFirstItem = NULL;
