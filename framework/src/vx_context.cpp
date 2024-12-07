@@ -956,9 +956,10 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
             /* By now, all external and internal references should be removed */
             for (r = 0; r < VX_INT_MAX_REF; r++)
             {
-                if(context->reftable[r])
+                if (context->reftable[r])
                 {
-                    VX_PRINT(VX_ZONE_ERROR,"Reference %p not removed\n", context->reftable[r]);
+                    VX_PRINT(VX_ZONE_ERROR, "Reference %p, type %x not removed\n",
+                        context->reftable[r], context->reftable[r]->type);
                 }
             }
 
