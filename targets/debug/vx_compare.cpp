@@ -89,15 +89,16 @@ VX_CALLBACK ownCompareImagesKernel(vx_node node, const vx_reference parameters[]
 
             if (VX_SUCCESS == status && vxFindOverlapRectangle(&rect_a, &rect_b, &rect) == vx_true_e)
             {
-                vx_map_id a_map_id = 0;
-                vx_map_id b_map_id = 0;
+                const vx_uint32 planeSize = a_planes;
+                vx_map_id a_map_id[planeSize];
+                vx_map_id b_map_id[planeSize];
 
                 status = VX_SUCCESS;
 
                 for (p = 0; p < a_planes; p++)
                 {
-                    status |= vxMapImagePatch(a, &rect, p, &a_map_id, &a_addrs[p], &a_base_ptrs[p], VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
-                    status |= vxMapImagePatch(b, &rect, p, &b_map_id, &b_addrs[p], &b_base_ptrs[p], VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
+                    status |= vxMapImagePatch(a, &rect, p, &a_map_id[p], &a_addrs[p], &a_base_ptrs[p], VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
+                    status |= vxMapImagePatch(b, &rect, p, &b_map_id[p], &b_addrs[p], &b_base_ptrs[p], VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
                 }
 
                 if (status != VX_SUCCESS)
@@ -128,8 +129,8 @@ VX_CALLBACK ownCompareImagesKernel(vx_node node, const vx_reference parameters[]
                 status |= vxCopyScalar(diffs, &numDiffs, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
                 for (p = 0; p < a_planes; p++)
                 {
-                    status |= vxUnmapImagePatch(a, a_map_id);
-                    status |= vxUnmapImagePatch(b, b_map_id);
+                    status |= vxUnmapImagePatch(a, a_map_id[p]);
+                    status |= vxUnmapImagePatch(b, b_map_id[p]);
                 }
             }
 
