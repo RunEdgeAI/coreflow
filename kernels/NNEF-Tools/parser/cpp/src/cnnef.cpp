@@ -29,12 +29,12 @@ nnef_graph_t nnef_graph_load( const char* path, char *perror )
     bool success = load_graph(path, *nnef_graph, error);
     if ( !success )
     {
-        if ( perror != NULL )
+        if ( perror != nullptr )
         {
             strncpy(perror, error.c_str(), error.length() + 1);
         }
 
-        return NULL;
+        return nullptr;
     }
     return nnef_graph;
 }
@@ -62,7 +62,7 @@ int nnef_graph_infer_shapes( nnef_graph_t graph, char *perror )
 
     if ( !infer_shapes(*nnef_graph, error) )
     {
-        if ( perror != NULL )
+        if ( perror != nullptr )
         {
             strncpy(perror, error.c_str(), error.length() + 1);
         }
@@ -76,13 +76,13 @@ int nnef_graph_allocate_buffers( nnef_graph_t graph, char *perror )
     std::string error;
     Graph *nnef_graph = (Graph *)graph;
 
-    if ( nnef_graph == NULL )
+    if ( nnef_graph == nullptr )
     {
         return 0;
     }
     if ( !nnef::allocate_buffers(*nnef_graph, error) )
     {
-        if ( perror != NULL )
+        if ( perror != nullptr )
         {
             strncpy(perror, error.c_str(), error.length() + 1);
         }
@@ -94,15 +94,15 @@ int nnef_graph_allocate_buffers( nnef_graph_t graph, char *perror )
 int nnef_graph_execute( nnef_graph_t graph, char *perror )
 {
     Graph *nnef_graph = (Graph *)graph;
-    if ( nnef_graph == NULL )
+    if ( nnef_graph == nullptr )
     {
         return 0;
     }
-    
+
     std::string error;
     if ( !nnef::execute(*nnef_graph, error) )
     {
-        if ( perror != NULL )
+        if ( perror != nullptr )
         {
             strncpy(perror, error.c_str(), error.length() + 1);
         }
@@ -115,7 +115,7 @@ size_t nnef_graph_input_names( nnef_graph_t graph, const char** inputs )
 {
     const Graph* nnef_graph = (const Graph*)graph;
 
-    if ( inputs != NULL )
+    if ( inputs != nullptr )
     {
         for ( size_t i = 0; i < nnef_graph->inputs.size(); ++i )
         {
@@ -129,7 +129,7 @@ size_t nnef_graph_output_names( nnef_graph_t graph, const char** outputs )
 {
     const Graph* nnef_graph = (const Graph*)graph;
 
-    if ( outputs != NULL )
+    if ( outputs != nullptr )
     {
         for ( size_t i = 0; i < nnef_graph->outputs.size(); ++i )
         {
@@ -142,13 +142,13 @@ size_t nnef_graph_output_names( nnef_graph_t graph, const char** outputs )
 nnef_tensor_t nnef_graph_find_tensor( nnef_graph_t graph, const char* tensor_name )
 {
     const Graph *nnef_graph = (const Graph*)graph;
-    if ( nnef_graph == NULL )
+    if ( nnef_graph == nullptr )
     {
-        return NULL;
+        return nullptr;
     }
-    
+
     std::map<std::string,Tensor>::const_iterator it = nnef_graph->tensors.find(tensor_name);
-    return it != nnef_graph->tensors.end() ? (nnef_tensor_t)&it->second : NULL;
+    return it != nnef_graph->tensors.end() ? (nnef_tensor_t)&it->second : nullptr;
 }
 
 const char* nnef_graph_name( nnef_graph_t graph )
@@ -167,7 +167,7 @@ nnef_tensor_t nnef_tensor_create(void)
 void nnef_tensor_release( nnef_tensor_t tensor )
 {
     Tensor* nnef_tensor = (Tensor*)tensor;
-    if ( nnef_tensor != NULL )
+    if ( nnef_tensor != nullptr )
     {
         delete nnef_tensor;
     }
@@ -206,15 +206,15 @@ void* nnef_tensor_data( nnef_tensor_t tensor )
 int nnef_tensor_read( const char* path, nnef_tensor_t tensor, char *perror )
 {
     Tensor *nnef_tensor = (Tensor *)tensor;
-    if ( nnef_tensor == NULL )
+    if ( nnef_tensor == nullptr )
     {
         return 0;
     }
-    
+
     std::string error;
     if ( !read_tensor(path, *nnef_tensor, error) )
     {
-        if ( perror != NULL )
+        if ( perror != nullptr )
         {
             strncpy(perror, error.c_str(), error.length() + 1);
         }
@@ -226,15 +226,15 @@ int nnef_tensor_read( const char* path, nnef_tensor_t tensor, char *perror )
 int nnef_tensor_write( const char* path, nnef_tensor_t tensor, char *perror )
 {
     const Tensor *nnef_tensor = (const Tensor *)tensor;
-    if ( nnef_tensor == NULL )
+    if ( nnef_tensor == nullptr )
     {
         return 0;
     }
-    
+
     std::string error;
     if ( !write_tensor(path, *nnef_tensor, error) )
     {
-        if ( perror != NULL )
+        if ( perror != nullptr )
         {
             strncpy(perror, error.c_str(), error.length() + 1);
         }

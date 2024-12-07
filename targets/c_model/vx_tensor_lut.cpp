@@ -1,4 +1,4 @@
-/* 
+/*
 
  * Copyright (c) 2016-2017 The Khronos Group Inc.
  *
@@ -47,7 +47,7 @@ static vx_status VX_CALLBACK tensorTableLookupKernel(vx_node node, const vx_refe
         vx_lut   lut       =    (vx_lut)parameters[LUT_PARAM_LUT];
         vx_tensor dst_tensor =  (vx_tensor)parameters[LUT_PARAM_TENSOR_OUT];
         vx_status status = VX_SUCCESS;
-        void *lut_ptr = NULL;
+        void *lut_ptr = nullptr;
         vx_size count = 0;
         vx_uint32 offset = 0;
         vx_size dims_num;
@@ -142,10 +142,10 @@ vx_kernel_description_t tensor_lut_kernel  = {
     tensorTableLookupKernel,
     tensor_lut_kernel_params, dimof(tensor_lut_kernel_params),
     tensorTableLookupValidator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };
 
 

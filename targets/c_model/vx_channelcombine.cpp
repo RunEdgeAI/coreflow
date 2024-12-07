@@ -202,9 +202,9 @@ vx_kernel_description_t channelcombine_kernel = {
     "org.khronos.openvx.channel_combine",
     vxChannelCombineKernel,
     channel_combine_kernel_params, dimof(channel_combine_kernel_params),
-    NULL,
+    nullptr,
     vxChannelCombineInputValidator,
     vxChannelCombineOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };

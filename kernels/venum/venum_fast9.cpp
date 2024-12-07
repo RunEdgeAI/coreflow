@@ -522,7 +522,7 @@ vx_status vxFast9Corners(vx_image src, vx_scalar sens, vx_scalar nonm, vx_array 
 {
     vx_float32 b = 0.0f;
     vx_imagepatch_addressing_t src_addr = VX_IMAGEPATCH_ADDR_INIT;
-    void *src_base = NULL;
+    void *src_base = nullptr;
     vx_rectangle_t rect;
     vx_uint8 tolerance = 0;
     vx_bool do_nonmax;

@@ -77,7 +77,7 @@ vx_status vxTargetInit(vx_target target)
     //char *cl_dirs = "/home/pi/sample-impl-opencl/kernels/opencl";
 	char cl_args[1024];
 
-    if(NULL == vx_incs)
+    if(nullptr == vx_incs)
         return VX_FAILURE;
 
     snprintf(cl_args, sizeof(cl_args), "-D VX_CL_KERNEL -I %s -I %s %s %s", vx_incs, cl_dirs,
@@ -93,7 +93,7 @@ vx_status vxTargetInit(vx_target target)
 #endif
     );
     printf("flags: %s\n", cl_args);
-    if (cl_dirs == NULL) {
+    if (cl_dirs == nullptr) {
 #ifdef VX_CL_SOURCE_DIR
         const char *sdir = VX_CL_SOURCE_DIR;
         int len = strlen(sdir);
@@ -108,16 +108,16 @@ vx_status vxTargetInit(vx_target target)
     target->priority = VX_TARGET_PRIORITY_OPENCL;
 
     context->num_platforms = CL_MAX_PLATFORMS;
-    err = clGetPlatformIDs(CL_MAX_PLATFORMS, context->platforms, NULL);
+    err = clGetPlatformIDs(CL_MAX_PLATFORMS, context->platforms, nullptr);
     if (err != CL_SUCCESS)
         goto exit;
 
     for (p = 0; p < context->num_platforms; p++) {
         err = clGetDeviceIDs(context->platforms[p], CL_DEVICE_TYPE_ALL,
-            0, NULL, &context->num_devices[p]);
+            0, nullptr, &context->num_devices[p]);
         err = clGetDeviceIDs(context->platforms[p], CL_DEVICE_TYPE_ALL,
             context->num_devices[p] > CL_MAX_DEVICES ? CL_MAX_DEVICES : context->num_devices[p],
-            context->devices[p], NULL);
+            context->devices[p], nullptr);
         if (err == CL_SUCCESS) {
             cl_context_properties props[] = {
                 (cl_context_properties)CL_CONTEXT_PLATFORM,
@@ -129,13 +129,13 @@ vx_status vxTargetInit(vx_target target)
                 cl_bool compiler = CL_FALSE;
                 cl_bool available = CL_FALSE;
                 cl_bool image_support = CL_FALSE;
-                err = clGetDeviceInfo(context->devices[p][d], CL_DEVICE_NAME, sizeof(deviceName), deviceName, NULL);
+                err = clGetDeviceInfo(context->devices[p][d], CL_DEVICE_NAME, sizeof(deviceName), deviceName, nullptr);
                 CL_ERROR_MSG(err, "clGetDeviceInfo");
-                err = clGetDeviceInfo(context->devices[p][d], CL_DEVICE_COMPILER_AVAILABLE, sizeof(cl_bool), &compiler, NULL);
+                err = clGetDeviceInfo(context->devices[p][d], CL_DEVICE_COMPILER_AVAILABLE, sizeof(cl_bool), &compiler, nullptr);
                 CL_ERROR_MSG(err, "clGetDeviceInfo");
-                err = clGetDeviceInfo(context->devices[p][d], CL_DEVICE_AVAILABLE, sizeof(cl_bool), &available, NULL);
+                err = clGetDeviceInfo(context->devices[p][d], CL_DEVICE_AVAILABLE, sizeof(cl_bool), &available, nullptr);
                 CL_ERROR_MSG(err, "clGetDeviceInfo");
-                err = clGetDeviceInfo(context->devices[p][d], CL_DEVICE_IMAGE_SUPPORT, sizeof(cl_bool), &image_support, NULL);
+                err = clGetDeviceInfo(context->devices[p][d], CL_DEVICE_IMAGE_SUPPORT, sizeof(cl_bool), &image_support, nullptr);
                 CL_ERROR_MSG(err, "clGetDeviceInfo");
                 VX_PRINT(VX_ZONE_INFO, "Device %s (compiler=%s) (available=%s) (images=%s)\n", deviceName, (compiler?"TRUE":"FALSE"), (available?"TRUE":"FALSE"), (image_support?"TRUE":"FALSE"));
             }
@@ -151,13 +151,13 @@ vx_status vxTargetInit(vx_target target)
             /* check for supported formats */
             if (err == CL_SUCCESS) {
                 cl_uint f,num_entries = 0u;
-                cl_image_format *formats = NULL;
+                cl_image_format *formats = nullptr;
                 cl_mem_flags flags = CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR;
                 cl_mem_object_type type = CL_MEM_OBJECT_IMAGE2D;
 
-                err = clGetSupportedImageFormats(context->global[p], flags, type, 0, NULL, &num_entries);
+                err = clGetSupportedImageFormats(context->global[p], flags, type, 0, nullptr, &num_entries);
                 formats = (cl_image_format *)malloc(num_entries * sizeof(cl_image_format));
-                err = clGetSupportedImageFormats(context->global[p], flags, type, num_entries, formats, NULL);
+                err = clGetSupportedImageFormats(context->global[p], flags, type, num_entries, formats, nullptr);
                 for (f = 0; f < num_entries; f++) {
                     char order[256];
                     char datat[256];
@@ -234,7 +234,7 @@ vx_status vxTargetInit(vx_target target)
             /* for each kernel */
             for (k = 0; k < num_cl_kernels; k++)
             {
-                char *sources = NULL;
+                char *sources = nullptr;
                 size_t programSze = 0;
 
                 /* load the source file */
@@ -256,8 +256,8 @@ vx_status vxTargetInit(vx_target target)
                         1,
                         (const cl_device_id *)context->devices,
                         (const char *)cl_args,
-                        NULL,
-                        NULL);
+                        nullptr,
+                        nullptr);
                     if (err != CL_SUCCESS)
                     {
                         CL_BUILD_MSG(err, "Build Error");
@@ -292,7 +292,7 @@ vx_status vxTargetInit(vx_target target)
                         err = clCreateKernelsInProgram(cl_kernels[k]->program[p],
                             1,
                             &cl_kernels[k]->kernels[p],
-                            NULL);
+                            nullptr);
                         VX_PRINT(VX_ZONE_INFO, "Found %u cl_kernels in %s (%d)\n", cl_kernels[k]->num_kernels[p], cl_kernels[k]->sourcepath, err);
                         for (k2 = 0; (err == CL_SUCCESS) && (k2 < (cl_int)cl_kernels[k]->num_kernels[p]); k2++)
                         {
@@ -301,13 +301,13 @@ vx_status vxTargetInit(vx_target target)
                             err = clGetKernelInfo(cl_kernels[k]->kernels[p],
                                 CL_KERNEL_FUNCTION_NAME,
                                 0,
-                                NULL,
+                                nullptr,
                                 &size);
                             err = clGetKernelInfo(cl_kernels[k]->kernels[p],
                                 CL_KERNEL_FUNCTION_NAME,
                                 size,
                                 kName,
-                                NULL);
+                                nullptr);
                             VX_PRINT(VX_ZONE_INFO, "Kernel %s\n", kName);
                             if (strncmp(kName, cl_kernels[k]->kernelname, VX_MAX_KERNEL_NAME) == 0)
                             {
@@ -317,7 +317,7 @@ vx_status vxTargetInit(vx_target target)
                                 target->context->num_kernels++;
                                 status = target->kernels[k]->initializeKernel(
                                     cl_kernels[k]->description.enumeration,
-                                    (kfunc == NULL ? vxclCallOpenCLKernel : kfunc),
+                                    (kfunc == nullptr ? vxclCallOpenCLKernel : kfunc),
                                     cl_kernels[k]->description.name,
                                     cl_kernels[k]->description.parameters,
                                     cl_kernels[k]->description.numParams,
@@ -464,7 +464,7 @@ vx_kernel vxTargetAddKernel(vx_target target,
                             vx_kernel_deinitialize_f deinitialize)
 {
     vx_uint32 k = 0u;
-    vx_kernel kernel = NULL;
+    vx_kernel kernel = nullptr;
     for (k = 0; k < VX_INT_MAX_KERNELS; k++)
     {
         kernel = target->kernels[k];
@@ -472,20 +472,20 @@ vx_kernel vxTargetAddKernel(vx_target target,
         {
             kernel->initializeKernel(
                                enumeration, func_ptr, name,
-                               NULL, numParams,
+                               nullptr, numParams,
                                validate, input, output, initialize, deinitialize);
             VX_PRINT(VX_ZONE_KERNEL, "Reserving %s Kernel[%u] for %s\n", target->name, k, kernel->name);
             target->num_kernels++;
             break;
         }
-        kernel = NULL;
+        kernel = nullptr;
     }
     return (vx_kernel)kernel;
 }
 
 vx_cl_kernel_description_t *vxclFindKernel(vx_enum enumeration)
 {
-    vx_cl_kernel_description_t *vxclk = NULL;
+    vx_cl_kernel_description_t *vxclk = nullptr;
     vx_uint32 k;
     for (k = 0; k < num_cl_kernels; k++)
     {
@@ -517,7 +517,7 @@ vx_cl_kernel_description_t *vxclFindKernel(vx_enum enumeration)
 static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_reference parameters[], vx_uint32 num)
 {
     static struct timeval start, start1, end;
-    gettimeofday(&start, NULL);
+    gettimeofday(&start, nullptr);
 
     vx_status status = VX_FAILURE;
     vx_context context = node->context;
@@ -544,7 +544,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         vx_reference ref = node->parameters[pidx];
         vx_enum dir = node->kernel->signature.directions[pidx];
         vx_enum type = node->kernel->signature.types[pidx];
-        vx_memory_t *memory = NULL;
+        vx_memory_t *memory = nullptr;
 
         switch (type)
         {
@@ -623,7 +623,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                     CL_ERROR_MSG(err, "clSetKernelArg");
                     if (dir == VX_INPUT || dir == VX_BIDIRECTIONAL)
                     {
-                        gettimeofday(&start1, NULL);
+                        gettimeofday(&start1, nullptr);
                         err = clEnqueueWriteBuffer(context->queues[plidx][didx],
                                                    memory->hdls[pln],
                                                    CL_TRUE,
@@ -631,9 +631,9 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                                                    ownComputeMemorySize(memory, pln),
                                                    memory->ptrs[pln],
                                                    0,
-                                                   NULL,
+                                                   nullptr,
                                                    &ref->event);
-                        gettimeofday(&end, NULL);
+                        gettimeofday(&end, nullptr);
 
                         double costTime = ((double)end.tv_sec * 1000.0 + (double)end.tv_usec / 1000.0)
                                             - ((double)start1.tv_sec * 1000.0 + (double)start1.tv_usec / 1000.0);
@@ -664,8 +664,8 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                                                   memory->strides[pln][VX_DIM_Y],
                                                   0,
                                                   memory->ptrs[pln],
-                                                  0, NULL,
-                                                  NULL);
+                                                  0, nullptr,
+                                                  nullptr);
                         CL_ERROR_MSG(err, "clEnqueueWriteImage");
                     }
                 }
@@ -709,7 +709,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                                  2,
                                  off_dim,
                                  work_dim,
-                                 NULL,
+                                 nullptr,
                                  we, writeEvents, &node->event);
 
     CL_ERROR_MSG(err, "clEnqueueNDRangeKernel");
@@ -722,7 +722,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
 
         if (dir == VX_OUTPUT || dir == VX_BIDIRECTIONAL)
         {
-            vx_memory_t *memory = NULL;
+            vx_memory_t *memory = nullptr;
 
             switch (type)
             {
@@ -756,13 +756,13 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
             if (memory) {
                 for (pln = 0; pln < memory->nptrs; pln++) {
                     if (memory->cl_type == CL_MEM_OBJECT_BUFFER) {
-                        gettimeofday(&start1, NULL);
+                        gettimeofday(&start1, nullptr);
                         err = clEnqueueReadBuffer(context->queues[plidx][didx],
                             memory->hdls[pln],
                             CL_TRUE, 0, ownComputeMemorySize(memory, pln),
                             memory->ptrs[pln],
-                            0, NULL, NULL);
-                        gettimeofday(&end, NULL);
+                            0, nullptr, nullptr);
+                        gettimeofday(&end, nullptr);
 
                         double costTime = ((double)end.tv_sec * 1000.0 + (double)end.tv_usec / 1000.0)
                                             - ((double)start1.tv_sec * 1000.0 + (double)start1.tv_usec / 1000.0);
@@ -803,7 +803,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         }
     }
     err = clFlush(context->queues[plidx][didx]);
-    gettimeofday(&end, NULL);
+    gettimeofday(&end, nullptr);
 
     double costTime1 = ((double)end.tv_sec * 1000.0 + (double)end.tv_usec / 1000.0)
                         - ((double)start.tv_sec * 1000.0 + (double)start.tv_usec / 1000.0);

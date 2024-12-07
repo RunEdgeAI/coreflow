@@ -173,9 +173,9 @@ vx_kernel_description_t nonlinearfilter_kernel = {
     "org.khronos.openvx.non_linear_filter",
     vxNonLinearFilterKernel,
     filter_kernel_params, dimof(filter_kernel_params),
-    NULL,
+    nullptr,
     vxNonLinearFilterInputValidator,
     vxNonLinearFilterOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };

@@ -174,8 +174,8 @@ vx_status vxChannelCombine(vx_image inputs[4], vx_image output)
         /* write all the channels back out in interleaved format */
         vx_imagepatch_addressing_t src_addrs[4];
         vx_imagepatch_addressing_t dst_addr;
-        void *base_src_ptrs[4] = {NULL, NULL, NULL, NULL};
-        void *base_dst_ptr = NULL;
+        void *base_src_ptrs[4] = {nullptr, nullptr, nullptr, nullptr};
+        void *base_dst_ptr = nullptr;
         vx_uint32 x, y, p;
         vx_uint32 numplanes = 3;
         vx_uint32 wCnt, wStep;
@@ -220,8 +220,8 @@ vx_status vxChannelCombine(vx_image inputs[4], vx_image output)
         {
             vx_imagepatch_addressing_t src_addr;
             vx_imagepatch_addressing_t dst_addr;
-            void *base_src_ptr = NULL;
-            void *base_dst_ptr = NULL;
+            void *base_src_ptr = nullptr;
+            void *base_dst_ptr = nullptr;
 
             // get the plane
             vx_map_id map_id_p = 0;
@@ -244,8 +244,8 @@ vx_status vxChannelCombine(vx_image inputs[4], vx_image output)
         {
             vx_imagepatch_addressing_t src_addr;
             vx_imagepatch_addressing_t dst_addr;
-            void *base_src_ptr = NULL;
-            void *base_dst_ptr = NULL;
+            void *base_src_ptr = nullptr;
+            void *base_dst_ptr = nullptr;
             vx_uint32 wCnt;
 
             // get the plane
@@ -280,9 +280,9 @@ vx_status vxChannelCombine(vx_image inputs[4], vx_image output)
             vx_imagepatch_addressing_t src0_addr;
             vx_imagepatch_addressing_t src1_addr;
             vx_imagepatch_addressing_t dst_addr;
-            void *base_src0_ptr = NULL;
-            void *base_src1_ptr = NULL;
-            void *base_dst_ptr = NULL;
+            void *base_src0_ptr = nullptr;
+            void *base_src1_ptr = nullptr;
+            void *base_dst_ptr = nullptr;
             vx_uint32 wCnt;
 
             // get the plane
@@ -330,10 +330,10 @@ vx_status vxChannelCombine(vx_image inputs[4], vx_image output)
         vx_imagepatch_addressing_t src1_addr;
         vx_imagepatch_addressing_t src2_addr;
         vx_imagepatch_addressing_t dst_addr;
-        void *base_src0_ptr = NULL;
-        void *base_src1_ptr = NULL;
-        void *base_src2_ptr = NULL;
-        void *base_dst_ptr = NULL;
+        void *base_src0_ptr = nullptr;
+        void *base_src1_ptr = nullptr;
+        void *base_src2_ptr = nullptr;
+        void *base_dst_ptr = nullptr;
         vx_uint32 wCnt;
 
         vx_map_id map_id_0 = 0;
@@ -397,8 +397,8 @@ static vx_status vxCopyPlaneToImage(vx_image src,
                                      vx_uint32 x_subsampling,
                                      vx_image dst)
 {
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_imagepatch_addressing_t src_addr = {0};
     vx_imagepatch_addressing_t dst_addr = {0};
     vx_rectangle_t src_rect, dst_rect;

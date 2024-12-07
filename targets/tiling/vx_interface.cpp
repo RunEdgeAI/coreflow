@@ -73,10 +73,10 @@ vx_tiling_kernel_t *tiling_kernels[] =
 static vx_bool ownIsValidContext_tiling(vx_context context)
 {
     vx_bool ret = vx_false_e;
-    if ((context != NULL) &&
+    if ((context != nullptr) &&
         (context->base.magic == VX_MAGIC) &&
         (context->base.type == VX_TYPE_CONTEXT) &&
-        (context->base.context == NULL))
+        (context->base.context == nullptr))
     {
         ret = vx_true_e; /* this is the top level context */
     }
@@ -120,23 +120,23 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxAddTilingKernelEx(vx_context c,
     vx_kernel kernel = 0;
     vx_uint32 t = 0;
     vx_size index = 0;
-    vx_target_t *target = NULL;
+    vx_target_t *target = nullptr;
     vx_char targetName[VX_MAX_TARGET_NAME];
 
     if (ownIsValidContext_tiling(context) == vx_false_e)
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid Context\n");
-        return (vx_kernel)NULL;
+        return (vx_kernel)nullptr;
     }
-    if  ( ((validate == NULL) && (input == NULL || output == NULL)) ||
+    if  ( ((validate == nullptr) && (input == nullptr || output == nullptr)) ||
         num_params > VX_INT_MAX_PARAMS || num_params == 0 ||
-        name == NULL ||
+        name == nullptr ||
         strncmp(name, "",  VX_MAX_KERNEL_NAME) == 0)
-        /* initialize and de-initialize can be NULL */
+        /* initialize and de-initialize can be nullptr */
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid Parameters!\n");
         vxAddLogEntry((vx_reference)c, VX_ERROR_INVALID_PARAMETERS, "Invalid Parameters supplied to vxAddKernel\n");
-        return (vx_kernel)NULL;
+        return (vx_kernel)nullptr;
     }
 
     /* find target to assign this to */
@@ -157,7 +157,7 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxAddTilingKernelEx(vx_context c,
         {
             break;
         }
-        target = NULL;
+        target = nullptr;
     }
     if (target && target->funcs.addtilingkernel)
     {
@@ -305,7 +305,7 @@ vx_status vxTargetSupports(vx_target target,
 
             strncpy(targetKernelName, target->kernels[k].name, VX_MAX_KERNEL_NAME);
             kernel = strtok(targetKernelName, ":");
-            if (kernel == NULL)
+            if (kernel == nullptr)
                 kernel = def;
 
             if (strncmp(kernelName, kernel, VX_MAX_KERNEL_NAME) == 0)
@@ -341,7 +341,7 @@ vx_action vxTargetProcess(vx_target target, vx_node_t *nodes[], vx_size startInd
             vx_size num_replicas = 0;
             vx_uint32 param;
             vx_uint32 num_parameters = nodes[n]->kernel->signature.num_parameters;
-            vx_reference parameters[VX_INT_MAX_PARAMS] = { NULL };
+            vx_reference parameters[VX_INT_MAX_PARAMS] = { nullptr };
 
             for (param = 0; param < num_parameters; ++param)
             {
@@ -457,7 +457,7 @@ vx_kernel vxTargetAddKernel(vx_target target,
                             vx_kernel_deinitialize_f deinitialize)
 {
     vx_uint32 k = 0u;
-    vx_kernel_t *kernel = NULL;
+    vx_kernel_t *kernel = nullptr;
     // ownSemWait(&target->base.lock);
     for (k = 0; k < VX_INT_MAX_KERNELS; k++)
     {
@@ -467,13 +467,13 @@ vx_kernel vxTargetAddKernel(vx_target target,
             ownInitializeKernel(target->base.context,
                                kernel,
                                enumeration, func_ptr, name,
-                               NULL, numParams,
+                               nullptr, numParams,
                                validate, input, output, initialize, deinitialize);
             VX_PRINT(VX_ZONE_KERNEL, "Reserving %s Kernel[%u] for %s\n", target->name, k, kernel->name);
             target->num_kernels++;
             break;
         }
-        kernel = NULL;
+        kernel = nullptr;
     }
     // ownSemPost(&target->base.lock);
     return (vx_kernel)kernel;
@@ -494,7 +494,7 @@ vx_kernel vxTargetAddTilingKernel(vx_target target,
                             vx_kernel_deinitialize_f deinitialize)
 {
     vx_uint32 k = 0u;
-    vx_kernel_t *kernel = NULL;
+    vx_kernel_t *kernel = nullptr;
     for (k = 0; k < VX_INT_MAX_KERNELS; k++)
     {
         kernel = &(target->kernels[k]);
@@ -503,12 +503,12 @@ vx_kernel vxTargetAddTilingKernel(vx_target target,
             kernel->tilingfast_function = fast_func_ptr;
             kernel->tilingflexible_function = flexible_func_ptr;
 
-            if (function == NULL)
+            if (function == nullptr)
             {
                 ownInitializeKernel(target->base.context,
                                    kernel,
                                    enumeration, vxTilingKernel, name,
-                                   NULL, numParams,
+                                   nullptr, numParams,
                                    validate, input, output, initialize, deinitialize);
             }
             else //Kernel with more than one node like HalfScaleGaussian
@@ -516,14 +516,14 @@ vx_kernel vxTargetAddTilingKernel(vx_target target,
                 ownInitializeKernel(target->base.context,
                                    kernel,
                                    enumeration, function, name,
-                                   NULL, numParams,
+                                   nullptr, numParams,
                                    validate, input, output, initialize, deinitialize);
             }
             VX_PRINT(VX_ZONE_KERNEL, "Reserving %s Kernel[%u] for %s\n", target->name, k, kernel->name);
             target->num_kernels++;
             break;
         }
-        kernel = NULL;
+        kernel = nullptr;
     }
     return (vx_kernel)kernel;
 }
@@ -536,7 +536,7 @@ static vx_status vxGetPatchToTile(vx_image image, vx_rectangle_t *rect, vx_tile_
 
     for (p = 0; p < img->planes; p++)
     {
-        tile->base[p] = NULL;
+        tile->base[p] = nullptr;
         if(image->constant == 1)
             status = vxAccessImagePatch(image, rect, p, &tile->addr[p], (void **)&tile->base[p], VX_READ_ONLY);
         else
@@ -564,7 +564,7 @@ static void* ownAllocateTensorMemory_tiling(vx_tensor tensor)
 {
     vx_size total_size = ownSizeOfType(tensor->data_type);
 
-    if (tensor->addr == NULL)
+    if (tensor->addr == nullptr)
     {
         for (vx_uint32 i = 0; i < tensor->number_of_dimensions; i++)
         {
@@ -583,7 +583,7 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
     vx_uint32 ty = 0u, tx = 0u, p = 0u;
     vx_rectangle_t rect;
     vx_tile_ex_t tiles[VX_INT_MAX_PARAMS];
-    void *params[VX_INT_MAX_PARAMS] = {NULL};
+    void *params[VX_INT_MAX_PARAMS] = {nullptr};
     vx_enum dirs[VX_INT_MAX_PARAMS];
     vx_enum types[VX_INT_MAX_PARAMS];
     size_t scalars[VX_INT_MAX_PARAMS];
@@ -593,7 +593,7 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
     vx_uint32 height = 0u, width = 0u;
     vx_border_t borders = {VX_BORDER_UNDEFINED, 0};
     vx_neighborhood_size_t nbhd;
-    void *tile_memory = NULL;
+    void *tile_memory = nullptr;
     vx_size size = 0;
 
     vx_tile_threshold_t threshold[VX_INT_MAX_PARAMS];
@@ -628,7 +628,7 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
             vxQueryNode(node, VX_NODE_INPUT_NEIGHBORHOOD, &tiles[p].neighborhood, sizeof(vx_neighborhood_size_t));
             images[p] = (vx_image)parameters[p];
             tiles[p].is_Null = 0;
-            if (images[p] == NULL)
+            if (images[p] == nullptr)
                 tiles[p].is_Null = 1;
             vxQueryImage(images[p], VX_IMAGE_WIDTH, &tiles[p].image.width, sizeof(vx_uint32));
             vxQueryImage(images[p], VX_IMAGE_HEIGHT, &tiles[p].image.height, sizeof(vx_uint32));
@@ -709,7 +709,7 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
         {
             tensor[p] = (vx_tensor)parameters[p];
 
-            if (tensor[p]->addr == NULL)
+            if (tensor[p]->addr == nullptr)
                 ownAllocateTensorMemory_tiling(tensor[p]);
 
             params[p] = tensor[p]->addr;
@@ -759,7 +759,7 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
         status = vxGetValidRegionImage(images[0], &rect);
         for (p = 0u; p < num; p++)
         {
-            if (types[p] == VX_TYPE_IMAGE && images[p] != NULL && dirs[p] == VX_INPUT)
+            if (types[p] == VX_TYPE_IMAGE && images[p] != nullptr && dirs[p] == VX_INPUT)
             {
                 tiles[p].tile_x = 0;
                 tiles[p].tile_y = 0;
@@ -782,7 +782,7 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
         status = vxGetValidRegionImage(images[0], &rect);
         for (p = 0u; p < num; p++)
         {
-            if (types[p] == VX_TYPE_IMAGE && images[p] != NULL)
+            if (types[p] == VX_TYPE_IMAGE && images[p] != nullptr)
             {
                 tiles[p].tile_x = 0;
                 tiles[p].tile_y = 0;
@@ -798,7 +798,7 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
         rect.end_y = height;
         for (p = 0u; p < num; p++)
         {
-            if (types[p] == VX_TYPE_IMAGE && images[p] != NULL)
+            if (types[p] == VX_TYPE_IMAGE && images[p] != nullptr)
             {
                 tiles[p].tile_x = 0;
                 tiles[p].tile_y = 0;
@@ -863,7 +863,7 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
     {
         if (types[p] == VX_TYPE_IMAGE)
         {
-            if (dirs[p] == VX_INPUT && images[p] != NULL)
+            if (dirs[p] == VX_INPUT && images[p] != nullptr)
             {
                 status |= vxSetTileToPatch(images[p], 0, &tiles[p]);
             }
@@ -877,7 +877,7 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
             arrays[p]->memory.ptrs[0] = array_t[p].ptr;
             arrays[p]->num_items = array_t[p].num_items;
         }
-        else if (types[p] == VX_TYPE_SCALAR && dirs[p] == VX_OUTPUT && scalar[p] != NULL)
+        else if (types[p] == VX_TYPE_SCALAR && dirs[p] == VX_OUTPUT && scalar[p] != nullptr)
         {
             scalar[p]->data.size = scalars[p];
         }

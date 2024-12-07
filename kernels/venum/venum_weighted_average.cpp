@@ -23,8 +23,8 @@ vx_status vxWeightedAverage(vx_image img1, vx_scalar alpha, vx_image img2, vx_im
 {
 	vx_uint32 y, x, width = 0, height = 0;
 	vx_float32 scale = 0.0f;
-	void *dst_base = NULL;
-	void *src_base[2] = { NULL, NULL };
+	void *dst_base = nullptr;
+	void *src_base[2] = { nullptr, nullptr };
 	vx_imagepatch_addressing_t dst_addr, src_addr[2];
 	vx_rectangle_t rect;
 	vx_df_image img1_format = 0;
@@ -60,7 +60,7 @@ vx_status vxWeightedAverage(vx_image img1, vx_scalar alpha, vx_image img2, vx_im
             int32x4_t src02;
             int32x4_t src11;
             int32x4_t src12;
-			
+
 			uint8x8_t src0_8x8 = vld1_u8(src0p);
 			uint16x8_t src0_16x8 = vmovl_u8 (src0_8x8);
 			int32x4x2_t src0_32x4x2 =
@@ -72,7 +72,7 @@ vx_status vxWeightedAverage(vx_image img1, vx_scalar alpha, vx_image img2, vx_im
 			};
 			src01 = src0_32x4x2.val[0];
 			src02 = src0_32x4x2.val[1];
-			
+
 			uint8x8_t src1_8x8_data = vld1_u8(src1p);
 			uint16x8_t src1_16x8 = vmovl_u8 (src1_8x8_data);
 			int32x4x2_t src1_32x4x2 =
@@ -84,7 +84,7 @@ vx_status vxWeightedAverage(vx_image img1, vx_scalar alpha, vx_image img2, vx_im
 			};
 			src11 = src1_32x4x2.val[0];
 			src12 = src1_32x4x2.val[1];
-			
+
 			int32x4_t result1 = vcvtq_s32_f32(vaddq_f32(vmulq_f32(scale_f1, vcvtq_f32_s32(src11)), vmulq_f32(scale_f, vcvtq_f32_s32(src01))));
 			int32x4_t result2 = vcvtq_s32_f32(vaddq_f32(vmulq_f32(scale_f1, vcvtq_f32_s32(src12)), vmulq_f32(scale_f, vcvtq_f32_s32(src02))));
 			uint8x8_t result = vmovn_u16(vcombine_u16(vmovn_u32(vreinterpretq_u32_s32 (result1)),vmovn_u32(vreinterpretq_u32_s32 (result2))));
@@ -99,7 +99,7 @@ vx_status vxWeightedAverage(vx_image img1, vx_scalar alpha, vx_image img2, vx_im
 			vx_int32 src1 = *src1p;
 			vx_int32 result = (vx_int32)((1 - scale) * (vx_float32)src1 + scale * (vx_float32)src0);
 			*dstp = (vx_uint8)result;
-			
+
 			src0p += src_addr[0].stride_x;
 			src1p += src_addr[1].stride_x;
 			dstp += dst_addr.stride_x;

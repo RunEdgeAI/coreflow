@@ -154,10 +154,10 @@ vx_kernel_description_t absdiff_kernel = {
     "org.khronos.openvx.absdiff",
     vxAbsDiffKernel,
     absdiff_kernel_params, dimof(absdiff_kernel_params),
-    NULL,
+    nullptr,
     vxAbsDiffInputValidator,
     vxAbsDiffOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 

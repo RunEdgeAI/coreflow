@@ -215,11 +215,11 @@ vx_kernel_description_t warp_affine_kernel = {
     "org.khronos.openvx.warp_affine",
     vxWarpAffineKernel,
     warp_kernel_params, dimof(warp_kernel_params),
-    NULL,
+    nullptr,
     vxWarpAffineInputValidator,
     vxWarpOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 vx_kernel_description_t warp_perspective_kernel = {
@@ -227,9 +227,9 @@ vx_kernel_description_t warp_perspective_kernel = {
     "org.khronos.openvx.warp_perspective",
     vxWarpPerspectiveKernel,
     warp_kernel_params, dimof(warp_kernel_params),
-    NULL,
+    nullptr,
     vxWarpPerspectiveInputValidator,
     vxWarpOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };

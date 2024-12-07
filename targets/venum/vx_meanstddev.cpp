@@ -105,10 +105,10 @@ vx_kernel_description_t mean_stddev_kernel = {
     "org.khronos.openvx.mean_stddev",
     vxMeanStdDevKernel,
     mean_stddev_kernel_params, dimof(mean_stddev_kernel_params),
-    NULL,
+    nullptr,
     vxMeanStdDevInputValidator,
     vxMeanStdDevOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 

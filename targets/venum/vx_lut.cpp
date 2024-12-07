@@ -125,11 +125,11 @@ vx_kernel_description_t lut_kernel = {
     "org.khronos.openvx.table_lookup",
     vxTableLookupKernel,
     lut_kernel_params, dimof(lut_kernel_params),
-    NULL,
+    nullptr,
     vxTableLookupInputValidator,
     vxTableLookupOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 

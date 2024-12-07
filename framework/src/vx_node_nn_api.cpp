@@ -207,7 +207,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxROIPoolingLayer(
         vx_size size_of_roi_params,
         vx_tensor output_arr)
 {
-    vx_node node = NULL;
+    vx_node node = nullptr;
 
     if (size_of_roi_params == sizeof(vx_enum))
     {

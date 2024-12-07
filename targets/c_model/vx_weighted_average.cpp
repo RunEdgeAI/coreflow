@@ -175,9 +175,9 @@ vx_kernel_description_t weightedaverage_kernel = {
     "org.khronos.openvx.weighted_average",
     vxWeightedAverageKernel,
     weightedaverage_kernel_params, dimof(weightedaverage_kernel_params),
-    NULL,
+    nullptr,
     vxWeightedAverageInputValidator,
     vxWeightedAverageOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };

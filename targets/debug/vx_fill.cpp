@@ -37,7 +37,7 @@ vx_status VX_CALLBACK ownFillImageKernel(vx_node node, const vx_reference parame
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node && NULL != parameters && num == dimof(fill_image_kernel_params))
+    if (nullptr != node && nullptr != parameters && num == dimof(fill_image_kernel_params))
     {
         vx_int32 i = 0;
         vx_uint32 x = 0u;
@@ -61,7 +61,7 @@ vx_status VX_CALLBACK ownFillImageKernel(vx_node node, const vx_reference parame
 
         for (p = 0u; p < planes; p++)
         {
-            void* ptr = NULL;
+            void* ptr = nullptr;
             vx_imagepatch_addressing_t addr = VX_IMAGEPATCH_ADDR_INIT;
             vx_map_id map_id = 0;
             vx_rectangle_t rect;
@@ -96,7 +96,7 @@ vx_status VX_CALLBACK ownFillImageKernel(vx_node node, const vx_reference parame
                 vxAddLogEntry((vx_reference)node, VX_FAILURE, "Failed to get image patch for " VX_FMT_REF "\n", image);
             }
         } // for planes
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return status;
 } /* ownFillImageKernel() */
@@ -106,7 +106,7 @@ vx_status VX_CALLBACK own_fill_image_validator(vx_node node, const vx_reference 
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node && NULL != parameters && num == dimof(fill_image_kernel_params) && NULL != metas)
+    if (nullptr != node && nullptr != parameters && num == dimof(fill_image_kernel_params) && nullptr != metas)
     {
         vx_parameter param1 = vxGetParameterByIndex(node, 0); /* input scalar */
         vx_parameter param2 = vxGetParameterByIndex(node, 1);
@@ -150,19 +150,19 @@ vx_status VX_CALLBACK own_fill_image_validator(vx_node node, const vx_reference 
                 }
             }
 
-            if (NULL != scalar)
+            if (nullptr != scalar)
                 vxReleaseScalar(&scalar);
 
-            if (NULL != image)
+            if (nullptr != image)
                 vxReleaseImage(&image);
         }
 
-        if (NULL != param1)
+        if (nullptr != param1)
             vxReleaseParameter(&param1);
 
-        if (NULL != param2)
+        if (nullptr != param2)
             vxReleaseParameter(&param2);
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return status;
 } /* own_fill_image_validator() */
@@ -174,8 +174,8 @@ vx_kernel_description_t fill_image_kernel =
     ownFillImageKernel,
     fill_image_kernel_params, dimof(fill_image_kernel_params),
     own_fill_image_validator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };

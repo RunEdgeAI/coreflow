@@ -203,11 +203,11 @@ vx_kernel_description_t lbp_kernel = {
     "org.khronos.openvx.lbp",
     vxLBPKernel,
     lbp_kernel_params, dimof(lbp_kernel_params),
-    NULL,
+    nullptr,
     vxLBPInputValidator,
     vxLBPOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 

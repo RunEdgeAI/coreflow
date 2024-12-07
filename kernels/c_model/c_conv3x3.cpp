@@ -73,8 +73,8 @@ static vx_int32 vx_convolve8with16(void *base, vx_uint32 x, vx_uint32 y, vx_imag
 vx_status vxConvolution3x3(vx_image src, vx_image dst, vx_int16 conv[3][3], const vx_border_t *borders)
 {
     vx_uint32 y, x;
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_rectangle_t rect;
     vx_enum dst_format = VX_DF_IMAGE_VIRT;
@@ -116,7 +116,7 @@ vx_status vxConvolution3x3(vx_image src, vx_image dst, vx_int16 conv[3][3], cons
         }
     }
 
-    status |= vxCommitImagePatch(src, NULL, 0, &src_addr, src_base);
+    status |= vxCommitImagePatch(src, nullptr, 0, &src_addr, src_base);
     status |= vxCommitImagePatch(dst, &rect, 0, &dst_addr, dst_base);
     return status;
 }

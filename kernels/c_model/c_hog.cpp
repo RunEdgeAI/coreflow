@@ -50,7 +50,7 @@ vx_status vxHogCells(vx_image img, vx_scalar cell_width, vx_scalar cell_height, 
     status |= vxCopyScalar(cell_height, &cell_h, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     status |= vxCopyScalar(num_bins, &num_orientations, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
 
-    void *src_base = NULL;
+    void *src_base = nullptr;
     vx_imagepatch_addressing_t src_addr;
     vx_rectangle_t rect;
     status |= vxGetValidRegionImage(img, &rect);
@@ -58,8 +58,8 @@ vx_status vxHogCells(vx_image img, vx_scalar cell_width, vx_scalar cell_height, 
     width = src_addr.dim_x;
     height = src_addr.dim_y;
 
-    void* magnitudes_data = NULL;
-    void* bins_data = NULL;
+    void* magnitudes_data = nullptr;
+    void* bins_data = nullptr;
     vx_size magnitudes_dim_num = 0, magnitudes_dims[MAX_NUM_OF_DIMENSIONS] = { 0 }, magnitudes_strides[MAX_NUM_OF_DIMENSIONS] = { 0 };
     vx_size bins_dim_num = 0, bins_dims[MAX_NUM_OF_DIMENSIONS] = { 0 }, bins_strides[MAX_NUM_OF_DIMENSIONS] = { 0 };
 
@@ -120,9 +120,9 @@ vx_status vxHogCells(vx_image img, vx_scalar cell_width, vx_scalar cell_height, 
 vx_status vxHogFeatures(vx_image img, vx_tensor magnitudes, vx_tensor bins, vx_array hog_params, vx_scalar hog_param_size, vx_tensor features)
 {
     vx_status status;
-    void* magnitudes_data = NULL;
-    void* bins_data = NULL;
-    void* features_data = NULL;
+    void* magnitudes_data = nullptr;
+    void* bins_data = nullptr;
+    void* features_data = nullptr;
     vx_uint32 block_index_count = 0;
 
     vx_size hog_param_size_t;
@@ -135,7 +135,7 @@ vx_status vxHogFeatures(vx_image img, vx_tensor magnitudes, vx_tensor bins, vx_a
     status |= AllocatePatch(features, &features_dim_num, features_dims, features_strides, &features_data, VX_WRITE_ONLY);
 
     vx_size hog_params_stride = 0;
-    void *hog_params_ptr = NULL;
+    void *hog_params_ptr = nullptr;
     vx_map_id hog_params_map_id;
     vx_size hog_params_length;
     vxQueryArray(hog_params, VX_ARRAY_NUMITEMS, &hog_params_length, sizeof(hog_params_length));
@@ -148,7 +148,7 @@ vx_status vxHogFeatures(vx_image img, vx_tensor magnitudes, vx_tensor bins, vx_a
 
     vx_rectangle_t src_rect;
     vx_imagepatch_addressing_t src_addr = VX_IMAGEPATCH_ADDR_INIT;
-    void *src_base = NULL;
+    void *src_base = nullptr;
     status |= vxGetValidRegionImage(img, &src_rect);
     status |= vxAccessImagePatch(img, &src_rect, 0, &src_addr, (void **)&src_base, VX_READ_AND_WRITE);
     width = src_addr.dim_x;

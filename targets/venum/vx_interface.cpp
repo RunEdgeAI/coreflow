@@ -148,13 +148,13 @@ vx_status vxTargetSupports(vx_target target,
 
             strncpy(targetKernelName, target->kernels[k].name, VX_MAX_KERNEL_NAME);
             kernel = strtok(targetKernelName, ":");
-            if (kernel == NULL)
+            if (kernel == nullptr)
                 kernel = def;
 
 #if defined(EXPERIMENTAL_USE_VARIANTS)
-            variant = strtok(NULL, ":");
+            variant = strtok(nullptr, ":");
 
-            if (variant == NULL)
+            if (variant == nullptr)
                 variant = def;
 #endif
             if (strncmp(kernelName, kernel, VX_MAX_KERNEL_NAME) == 0
@@ -194,7 +194,7 @@ vx_action vxTargetProcess(vx_target target, vx_node_t *nodes[], vx_size startInd
             vx_size num_replicas = 0;
             vx_uint32 param;
             vx_uint32 num_parameters = nodes[n]->kernel->signature.num_parameters;
-            vx_reference parameters[VX_INT_MAX_PARAMS] = { NULL };
+            vx_reference parameters[VX_INT_MAX_PARAMS] = { nullptr };
 
             for (param = 0; param < num_parameters; ++param)
             {
@@ -310,7 +310,7 @@ vx_kernel vxTargetAddKernel(vx_target target,
                             vx_kernel_deinitialize_f deinitialize)
 {
     vx_uint32 k = 0u;
-    vx_kernel_t *kernel = NULL;
+    vx_kernel_t *kernel = nullptr;
     // ownSemWait(&target->base.lock);
     for (k = 0; k < VX_INT_MAX_KERNELS; k++)
     {
@@ -320,13 +320,13 @@ vx_kernel vxTargetAddKernel(vx_target target,
             ownInitializeKernel(target->base.context,
                                kernel,
                                enumeration, func_ptr, name,
-                               NULL, numParams,
+                               nullptr, numParams,
                                validate, input, output, initialize, deinitialize);
             VX_PRINT(VX_ZONE_KERNEL, "Reserving %s Kernel[%u] for %s\n", target->name, k, kernel->name);
             target->num_kernels++;
             break;
         }
-        kernel = NULL;
+        kernel = nullptr;
     }
     // ownSemPost(&target->base.lock);
     return (vx_kernel)kernel;
@@ -343,7 +343,7 @@ vx_kernel vxTargetAddTilingKernel(vx_target target,
                             vx_kernel_output_validate_f output)
 {
     vx_uint32 k = 0u;
-    vx_kernel_t *kernel = NULL;
+    vx_kernel_t *kernel = nullptr;
     for (k = 0; k < VX_INT_MAX_KERNELS; k++)
     {
         kernel = &(target->kernels[k]);
@@ -353,13 +353,13 @@ vx_kernel vxTargetAddTilingKernel(vx_target target,
             ownInitializeKernel(target->base.context,
                                kernel,
                                enumeration, vxTilingKernel, name,
-                               NULL, numParams,
-                               NULL, input, output, NULL, NULL);
+                               nullptr, numParams,
+                               nullptr, input, output, nullptr, nullptr);
             VX_PRINT(VX_ZONE_KERNEL, "Reserving %s Kernel[%u] for %s\n", target->name, k, kernel->name);
             target->num_kernels++;
             break;
         }
-        kernel = NULL;
+        kernel = nullptr;
     }
     return (vx_kernel)kernel;
 }
@@ -371,7 +371,7 @@ static vx_status vxGetPatchToTile(vx_image image, vx_rectangle_t *rect, vx_tile_
     vx_image_t *img = (vx_image_t *)image;
     for (p = 0; p < img->planes; p++)
     {
-        tile->base[p] = NULL;
+        tile->base[p] = nullptr;
         status = vxAccessImagePatch(image, rect, 0, &tile->addr[p], (void **)&tile->base[p], VX_READ_AND_WRITE);
     }
     return status;
@@ -396,7 +396,7 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
     vx_uint32 ty = 0u, tx = 0u, p = 0u;
     vx_rectangle_t rect;
     vx_tile_t tiles[VX_INT_MAX_PARAMS];
-    void *params[VX_INT_MAX_PARAMS] = {NULL};
+    void *params[VX_INT_MAX_PARAMS] = {nullptr};
     vx_enum dirs[VX_INT_MAX_PARAMS];
     vx_enum types[VX_INT_MAX_PARAMS];
     size_t scalars[VX_INT_MAX_PARAMS];
@@ -406,7 +406,7 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
     vx_uint32 height = 0u, width = 0u;
     vx_border_t borders = {VX_BORDER_UNDEFINED, 0};
     vx_neighborhood_size_t nbhd;
-    void *tile_memory = NULL;
+    void *tile_memory = nullptr;
     vx_size size = 0;
 
     /* Do the following:

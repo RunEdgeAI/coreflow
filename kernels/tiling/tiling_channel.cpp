@@ -33,8 +33,8 @@ void ChannelCombine_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT]
     vx_uint32 low_x = out->tile_x;
     vx_uint32 high_x = out->tile_x + out->tile_block.width;
 
-    void *base_src_ptrs[4] = { NULL };
-    void *base_dst_ptr[4] = { NULL };
+    void *base_src_ptrs[4] = { nullptr };
+    void *base_dst_ptr[4] = { nullptr };
 
     base_src_ptrs[0] = in[0]->base[0];
     base_src_ptrs[1] = in[1]->base[0];
@@ -312,8 +312,8 @@ void ChannelCombine_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTR
     vx_uint32 low_x = out->tile_x;
     vx_uint32 high_x = vxTileWidth(out, 0);
 
-    void *base_src_ptrs[4] = { NULL };
-    void *base_dst_ptr[4] = { NULL };
+    void *base_src_ptrs[4] = { nullptr };
+    void *base_dst_ptr[4] = { nullptr };
 
     base_src_ptrs[0] = in[0]->base[0];
     base_src_ptrs[1] = in[1]->base[0];

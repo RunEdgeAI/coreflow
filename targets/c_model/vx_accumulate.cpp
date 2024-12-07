@@ -326,11 +326,11 @@ vx_kernel_description_t accumulate_kernel = {
     "org.khronos.openvx.accumulate",
     vxAccumulateKernel,
     accumulate_kernel_params, dimof(accumulate_kernel_params),
-    NULL,
+    nullptr,
     vxAccumulateInputValidator,
     vxAccumulateOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 vx_kernel_description_t accumulate_weighted_kernel = {
@@ -338,11 +338,11 @@ vx_kernel_description_t accumulate_weighted_kernel = {
     "org.khronos.openvx.accumulate_weighted",
     vxAccumulateWeightedKernel,
     accumulate_scaled_kernel_params, dimof(accumulate_scaled_kernel_params),
-    NULL,
+    nullptr,
     vxAccumulateWeightedInputValidator,
     vxAccumulateOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 vx_kernel_description_t accumulate_square_kernel = {
@@ -350,10 +350,10 @@ vx_kernel_description_t accumulate_square_kernel = {
     "org.khronos.openvx.accumulate_square",
     vxAccumulateSquareKernel,
     accumulate_scaled_kernel_params, dimof(accumulate_scaled_kernel_params),
-    NULL,
+    nullptr,
     vxAccumulateSquaredInputValidator,
     vxAccumulateOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 

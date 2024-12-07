@@ -145,8 +145,8 @@ static void yuv2yuv_601to709(vx_uint8 y0, vx_uint8 cb0, vx_uint8 cr0,
 vx_status vxConvertColor(vx_image src, vx_image dst)
 {
     vx_imagepatch_addressing_t src_addr[4], dst_addr[4];
-    void *src_base[4] = {NULL};
-    void *dst_base[4] = {NULL};
+    void *src_base[4] = {nullptr};
+    void *dst_base[4] = {nullptr};
     vx_uint32 y, x, p;
     vx_df_image src_format, dst_format;
     vx_size src_planes, dst_planes;
@@ -635,7 +635,7 @@ vx_status vxConvertColor(vx_image src, vx_image dst)
     status = VX_SUCCESS;
     for (p = 0; p < src_planes; p++)
     {
-        status |= vxCommitImagePatch(src, NULL, p, &src_addr[p], src_base[p]);
+        status |= vxCommitImagePatch(src, nullptr, p, &src_addr[p], src_base[p]);
     }
     for (p = 0; p < dst_planes; p++)
     {

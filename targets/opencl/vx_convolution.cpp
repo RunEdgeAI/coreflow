@@ -83,7 +83,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         ownComputeMemorySize(memory, pln),
         memory->ptrs[pln],
         0,
-        NULL,
+        nullptr,
         &ref->event);
 
     //Set bordermode
@@ -125,8 +125,8 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         matrix_size,
         _conv_mat,
         0,
-        NULL,
-        NULL);
+        nullptr,
+        nullptr);
 
     err = clSetKernelArg(kernel, argidx++, sizeof(cl_mem), &conv_mat);
 
@@ -155,7 +155,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         2,
         off_dim,
         work_dim,
-        NULL,
+        nullptr,
         we, writeEvents, &node->event);
 
     clFinish(context->queues[plidx][didx]);
@@ -171,7 +171,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         memory->hdls[pln],
         CL_TRUE, 0, ownComputeMemorySize(memory, pln),
         memory->ptrs[pln],
-        0, NULL, NULL);
+        0, nullptr, nullptr);
 
     CL_ERROR_MSG(err, "clEnqueueReadBuffer");
 
@@ -325,11 +325,11 @@ vx_cl_kernel_description_t convolution_kernel = {
     "org.khronos.openvx.custom_convolution",
     vxConvolveKernel,
     convolution_kernel_params, dimof(convolution_kernel_params),
-    NULL,
+    nullptr,
     vxConvolveInputValidator,
     vxConvolveOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     },
     /* VX_CL_SOURCE_DIR"" FILE_JOINER */"vx_convolve.cl",
     "vx_Convolve",
@@ -337,6 +337,6 @@ vx_cl_kernel_description_t convolution_kernel = {
     INIT_KERNELS,
     INIT_NUMKERNELS,
     INIT_RETURNS,
-    NULL,
+    nullptr,
 };
 

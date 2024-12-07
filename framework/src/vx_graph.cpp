@@ -194,7 +194,7 @@ void vxContaminateGraphs(vx_reference ref)
         ownSemWait(&context->lock);
         for (r = 0u; r < context->num_references; r++)
         {
-            if (context->reftable[r] == NULL)
+            if (context->reftable[r] == nullptr)
                 continue;
             if (context->reftable[r]->type == VX_TYPE_GRAPH)
             {
@@ -337,7 +337,7 @@ void Graph::findNextNodes(
         {
             vx_enum dir = nodes[n]->kernel->signature.directions[p];
             vx_reference ref =  nodes[n]->parameters[p];
-            if (((dir == VX_OUTPUT) || (dir == VX_BIDIRECTIONAL)) && (ref != NULL))
+            if (((dir == VX_OUTPUT) || (dir == VX_BIDIRECTIONAL)) && (ref != nullptr))
             {
                 /* send the max possible nodes */
                 n1 = dimof(poss_next) - numPoss;
@@ -516,7 +516,7 @@ vx_status Graph::traverseGraph(vx_uint32 parentIndex,
             vx_enum dir = nodes[thisIndex]->kernel->signature.directions[p];
             vx_reference ref = nodes[thisIndex]->parameters[p];
 
-            if (dir != VX_INPUT && ref != NULL)
+            if (dir != VX_INPUT && ref != nullptr)
             {
                 VX_PRINT(VX_ZONE_GRAPH, "[traverse] node[%u].parameter[%u] = " VX_FMT_REF "\n", thisIndex, p, ref);
                 /* send the maximum number of possible nodes to find */

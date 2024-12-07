@@ -376,7 +376,7 @@ vx_kernel_description_t harris_kernel =
     "org.khronos.openvx.harris_corners",
     vxHarrisCornersKernel,
     harris_kernel_params, dimof(harris_kernel_params),
-    NULL,
+    nullptr,
     vxHarrisInputValidator,
     vxHarrisOutputValidator,
     vxHarrisInitializer,

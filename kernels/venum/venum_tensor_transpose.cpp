@@ -12,8 +12,8 @@ vx_status TransposeTensorKernelImpl(vx_tensor in1, vx_scalar sc_dim1, vx_scalar 
 {
     vx_status status = VX_SUCCESS;
 
-    void* in1_data = NULL;
-    void* out_data = NULL;
+    void* in1_data = nullptr;
+    void* out_data = nullptr;
 
     vx_size dim1, dim2;
 

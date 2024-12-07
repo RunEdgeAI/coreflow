@@ -412,8 +412,8 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
 {
     vx_uint32 x = 0, y = 0;
 
-    void *src_base[4] = {NULL};
-    void *dst_base[4] = {NULL};
+    void *src_base[4] = {nullptr};
+    void *dst_base[4] = {nullptr};
 
     vx_tile_ex_t *in = (vx_tile_ex_t *)parameters[0];
     vx_tile_ex_t *out = (vx_tile_ex_t *)parameters[1];
@@ -700,9 +700,9 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
                 }
             }
 
-            vx_uint8 *crcb = NULL;
-            vx_uint8 *cb[4] = { NULL };
-            vx_uint8 *cr[4] = { NULL };
+            vx_uint8 *crcb = nullptr;
+            vx_uint8 *cb[4] = { nullptr };
+            vx_uint8 *cr[4] = { nullptr };
             for (y = low_y; y < high_y; y += 2)
             {
                 for (x = low_x; x < high_x; x += 2)
@@ -1746,8 +1746,8 @@ void ConvertColor_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRIC
     vx_uint32 low_x = out->tile_x;
     vx_uint32 high_x = vxTileWidth(out, 0);
 
-    void *src_base[4] = { NULL };
-    void *dst_base[4] = { NULL };
+    void *src_base[4] = { nullptr };
+    void *dst_base[4] = { nullptr };
 
     src_base[0] = in->base[0];
     dst_base[0] = out->base[0];

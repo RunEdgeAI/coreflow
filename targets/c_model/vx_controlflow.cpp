@@ -31,7 +31,7 @@ static vx_status VX_CALLBACK vxScalarOperationParamsValidator(vx_node node, cons
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL == node || NULL == parameters || num != dimof(scalar_operation_kernel_params) || NULL == metas)
+    if (nullptr == node || nullptr == parameters || num != dimof(scalar_operation_kernel_params) || nullptr == metas)
     {
         return status;
     }
@@ -360,10 +360,10 @@ vx_kernel_description_t scalar_operation_kernel = {
     vxScalarOperationKernel,
     scalar_operation_kernel_params, dimof(scalar_operation_kernel_params),
     vxScalarOperationParamsValidator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };
 
 
@@ -378,7 +378,7 @@ static vx_status VX_CALLBACK vxSelectParamsValidator(vx_node node, const vx_refe
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL == node || NULL == parameters || num != dimof(select_kernel_params) || NULL == metas)
+    if (nullptr == node || nullptr == parameters || num != dimof(select_kernel_params) || nullptr == metas)
     {
         return status;
     }
@@ -558,8 +558,8 @@ vx_kernel_description_t select_kernel = {
     vxSelectKernel,
     select_kernel_params, dimof(select_kernel_params),
     vxSelectParamsValidator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };

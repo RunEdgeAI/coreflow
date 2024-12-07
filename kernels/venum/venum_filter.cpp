@@ -157,8 +157,8 @@ static vx_uint32 readMaskedRectangle_U8(const void *base,
 vx_status vxMedian3x3_U1(vx_image src, vx_image dst, vx_border_t *borders)
 {
     vx_uint32 y, x;
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_df_image format = 0;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_rectangle_t rect;
@@ -199,7 +199,7 @@ vx_status vxMedian3x3_U1(vx_image src, vx_image dst, vx_border_t *borders)
         }
     }
 
-    status |= vxCommitImagePatch(src, NULL, 0, &src_addr, src_base);
+    status |= vxCommitImagePatch(src, nullptr, 0, &src_addr, src_base);
     status |= vxCommitImagePatch(dst, &rect, 0, &dst_addr, dst_base);
 
     return status;
@@ -210,8 +210,8 @@ vx_status vxMedian3x3_U1(vx_image src, vx_image dst, vx_border_t *borders)
 vx_status vxMedian3x3_U8(vx_image src, vx_image dst, vx_border_t *borders)
 {
     vx_uint32 y, x;
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_rectangle_t rect;
     vx_uint32 low_x = 0, low_y = 0, high_x, high_y;
@@ -375,8 +375,8 @@ static vx_int16 box[3][3] = {
 vx_status vxBox3x3(vx_image src, vx_image dst, vx_border_t *bordermode)
 {
     vx_uint32 y, x;
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_rectangle_t rect;
     vx_enum dst_format = VX_DF_IMAGE_VIRT;
@@ -578,8 +578,8 @@ vx_status vxBox3x3(vx_image src, vx_image dst, vx_border_t *bordermode)
 vx_status vxGaussian3x3(vx_image src, vx_image dst, vx_border_t *bordermode)
 {
     vx_uint32 y, x;
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_rectangle_t rect;
     vx_enum dst_format = VX_DF_IMAGE_VIRT;

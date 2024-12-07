@@ -108,8 +108,8 @@ static vx_uint32 readMaskedRectangle(const void *base,
 vx_status vxNonLinearFilter(vx_scalar function, vx_image src, vx_matrix mask, vx_image dst, vx_border_t *border)
 {
     vx_uint32 y, x;
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_df_image format = 0;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_rectangle_t rect;
@@ -187,7 +187,7 @@ vx_status vxNonLinearFilter(vx_scalar function, vx_image src, vx_matrix mask, vx
         }
     }
 
-    status |= vxCommitImagePatch(src, NULL, 0, &src_addr, src_base);
+    status |= vxCommitImagePatch(src, nullptr, 0, &src_addr, src_base);
     status |= vxCommitImagePatch(dst, &rect, 0, &dst_addr, dst_base);
 
     return status;

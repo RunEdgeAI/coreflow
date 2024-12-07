@@ -277,9 +277,9 @@ vx_kernel_description_t multiply_kernel = {
     "org.khronos.openvx.multiply",
     vxMultiplyKernel,
     multiply_kernel_params, dimof(multiply_kernel_params),
-    NULL,
+    nullptr,
     vxMultiplyInputValidator,
     vxMultiplyOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };

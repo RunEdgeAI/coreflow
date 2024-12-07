@@ -192,10 +192,10 @@ vx_status vx_test_framework_load_kernel_node(int argc, char *argv[])
                     if (xyz)
                     {
                         vx_size size = 0;
-                        void *ptr = NULL;
+                        void *ptr = nullptr;
                         status = vxQueryNode(xyz, VX_NODE_LOCAL_DATA_SIZE, &size, sizeof(size));
                         status = vxQueryNode(xyz, VX_NODE_LOCAL_DATA_PTR, &ptr, sizeof(ptr));
-                        if (status == VX_SUCCESS && size == XYZ_DATA_AREA && ptr != NULL)
+                        if (status == VX_SUCCESS && size == XYZ_DATA_AREA && ptr != nullptr)
                         {
                             printf("Node private size=" VX_FMT_SIZE " ptr=%p\n",size,ptr);
                             status = VX_SUCCESS;
@@ -425,7 +425,7 @@ vx_status vx_test_framework_virtualimage(int argc, char *argv[])
             vx_image output = vxCreateImage(context, width, height, VX_DF_IMAGE_U8);
             vx_node nodes[2];
             vx_imagepatch_addressing_t addr;
-            void *base = NULL;
+            void *base = nullptr;
             vx_uint8 pixels[2];
 
             vx_rectangle_t rect = {0, 0, width, height};
@@ -1086,16 +1086,16 @@ vx_status vx_test_graph_bikegray(int argc, char *argv[])
             vxCreateImage(context, w2, h2, VX_DF_IMAGE_U8),              /* 20: Diff */
         };
         vx_lut lut = vxCreateLUT(context, VX_TYPE_UINT8, 256);
-        vx_uint8 *tmp = NULL;
-        vx_int32 *histogram = NULL;
+        vx_uint8 *tmp = nullptr;
+        vx_int32 *histogram = nullptr;
         vx_distribution dist = vxCreateDistribution(context, windows, 0, range);
         vx_float32 mean = 0.0f, stddev = 0.0f;
         vx_scalar s_mean = vxCreateScalar(context, VX_TYPE_FLOAT32, &mean);
         vx_scalar s_stddev = vxCreateScalar(context, VX_TYPE_FLOAT32, &stddev);
         vx_threshold thresh = vxCreateThreshold(context, VX_THRESHOLD_TYPE_BINARY, VX_TYPE_UINT8);
         vx_int32 lo = 140;
-        vx_scalar minVal = vxCreateScalar(context, VX_TYPE_UINT8, NULL);
-        vx_scalar maxVal = vxCreateScalar(context, VX_TYPE_UINT8, NULL);
+        vx_scalar minVal = vxCreateScalar(context, VX_TYPE_UINT8, nullptr);
+        vx_scalar maxVal = vxCreateScalar(context, VX_TYPE_UINT8, nullptr);
         vx_array minLoc = vxCreateArray(context, VX_TYPE_COORDINATES2D, 1);
         vx_array maxLoc = vxCreateArray(context, VX_TYPE_COORDINATES2D, 1);
         vx_threshold hyst = vxCreateThreshold(context, VX_THRESHOLD_TYPE_RANGE, VX_TYPE_UINT8);
@@ -1268,7 +1268,7 @@ vx_status vx_test_graph_bikegray(int argc, char *argv[])
 exit:
         //vx_print_log((vx_reference)context);
         /* Deregister log callback */
-        vxRegisterLogCallback(context, NULL, vx_false_e);
+        vxRegisterLogCallback(context, nullptr, vx_false_e);
         vxReleaseRemap(&table);
         vxReleaseScalar(&sshift);
         vxReleaseScalar(&snoshift);
@@ -1682,8 +1682,8 @@ vx_status vx_test_graph_bitwise(int argc, char *argv[])
             vx_rectangle_t rect = {0, 0, width, height};
             vx_imagepatch_addressing_t image0_addr;
             vx_imagepatch_addressing_t image1_addr;
-            void *base0 = NULL;
-            void *base1 = NULL;
+            void *base0 = nullptr;
+            void *base1 = nullptr;
             /* The images to test are now at images[2], ... images[N - 1]. */
             subtest_t subtests[] = {
                 OPX(and),
@@ -1736,7 +1736,7 @@ vx_status vx_test_graph_bitwise(int argc, char *argv[])
             for (i = 0; i < dimof(subtests); i++)
             {
                 vx_imagepatch_addressing_t image_addr;
-                void *base = NULL;
+                void *base = nullptr;
                 v0 = v0_start;
                 v1 = v1_start;
 
@@ -1797,7 +1797,7 @@ static vx_image vx_create_image_valuecovering(vx_context context, vx_df_image fo
     vx_image image = vxCreateImage(context, width, height, format);
     vx_rectangle_t rect = {0, 0, width, height};
     vx_imagepatch_addressing_t addr;
-    void *base = NULL;
+    void *base = nullptr;
     vx_status status = vxAccessImagePatch(image, &rect, 0, &addr, &base, VX_READ_AND_WRITE);
     vx_uint32 x, y;
     vx_uint32 period_counter = 0;
@@ -1956,7 +1956,7 @@ vx_status vx_test_graph_arit(int argc, char *argv[])
          */
         { a_add, vxuAdd, 1, "vxuAdd" },
         { a_sub, vxuSubtract, 1, "vxuSubtract" },
-        { a_mult, NULL, dimof(test_scales), "vxuMult" }
+        { a_mult, nullptr, dimof(test_scales), "vxuMult" }
     };
 
     /*
@@ -2029,7 +2029,7 @@ vx_status vx_test_graph_arit(int argc, char *argv[])
                        {
                            vx_float32 scale = test_scales[iscale];
                            vx_imagepatch_addressing_t dest_addr;
-                           void *base0 = NULL, *base1 = NULL, *dbase = NULL;
+                           void *base0 = nullptr, *base1 = nullptr, *dbase = nullptr;
                            vx_uint32 x, y;
 
                            dest_image = vxCreateImage(context, width, height, dest_format);
@@ -2097,9 +2097,9 @@ vx_status vx_test_graph_arit(int argc, char *argv[])
                              }
                            }
 
-                           vxCommitImagePatch(dest_image, NULL, 0, &dest_addr, dbase);
-                           vxCommitImagePatch(src1_image, NULL, 0, &image1_addr, base1);
-                           vxCommitImagePatch(src0_image, NULL, 0, &image0_addr, base0);
+                           vxCommitImagePatch(dest_image, nullptr, 0, &dest_addr, dbase);
+                           vxCommitImagePatch(src1_image, nullptr, 0, &image1_addr, base1);
+                           vxCommitImagePatch(src0_image, nullptr, 0, &image0_addr, base0);
 
                            vxReleaseImage(&dest_image);
                        }
@@ -2171,8 +2171,8 @@ vx_status vx_test_graph_corners(int argc, char *argv[])
                 vxFReadImageNode(graph, "./tests/raw/shapes.pgm", images[0]),
                 vxGaussian3x3Node(graph, images[0], images[1]),
                 vxFWriteImageNode(graph, images[1], "oshapes_blurred.pgm"),
-                vxHarrisCornersNode(graph, images[1], scalars[0], scalars[1], scalars[2], ws, bs, harris_arr, NULL),
-                vxFastCornersNode(graph, images[1], scalars[3], vx_false_e, fast_arr, NULL),
+                vxHarrisCornersNode(graph, images[1], scalars[0], scalars[1], scalars[2], ws, bs, harris_arr, nullptr),
+                vxFastCornersNode(graph, images[1], scalars[3], vx_false_e, fast_arr, nullptr),
             };
             CHECK_ALL_ITEMS(nodes, n, status, exit);
             status = vxVerifyGraph(graph);
@@ -2573,7 +2573,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
             vx_uint8 mylut[256] = {0};
             vx_uint32 y, x, cscale = 16;
             vx_imagepatch_addressing_t addr = {0};
-            void *base = NULL;
+            void *base = nullptr;
             vx_rectangle_t rect;
             vx_image virts[] = {
                     vxCreateVirtualImage(graph, 0, 0, VX_DF_IMAGE_VIRT), /* no specified dimension or format */
@@ -2747,7 +2747,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
             }
             vxCommitImagePatch(images[0], &rect, 0, &addr, base);
 
-            base = NULL;
+            base = nullptr;
             vxGetValidRegionImage(images[2],&rect);
             vxAccessImagePatch(images[2], &rect, 0, &addr, &base, VX_WRITE_ONLY);
             for (y = 0u; y < addr.dim_y; y+=addr.step_y) {
@@ -2758,7 +2758,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
             }
             vxCommitImagePatch(images[2], &rect, 0, &addr, base);
 
-            base = NULL;
+            base = nullptr;
             vxGetValidRegionImage(images[3],&rect);
             vxAccessImagePatch(images[3], &rect, 0, &addr, &base, VX_WRITE_ONLY);
             for (y = 0u; y < addr.dim_y; y+=addr.step_y) {
@@ -2769,7 +2769,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
             }
             vxCommitImagePatch(images[3], &rect, 0, &addr, base);
 
-            base = NULL;
+            base = nullptr;
             vxGetValidRegionImage(images[4],&rect);
             vxAccessImagePatch(images[4], &rect, 0, &addr, &base, VX_WRITE_ONLY);
             for (y = 0u; y < addr.dim_y; y+=addr.step_y) {
@@ -2780,7 +2780,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
             }
             vxCommitImagePatch(images[4], &rect, 0, &addr, base);
 
-            base = NULL;
+            base = nullptr;
             vxGetValidRegionImage(images[5],&rect);
             vxAccessImagePatch(images[5], &rect, 0, &addr, &base, VX_WRITE_ONLY);
             for (y = 0u; y < addr.dim_y; y+=addr.step_y) {
@@ -2791,7 +2791,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
             }
             vxCommitImagePatch(images[5], &rect, 0, &addr, base);
 
-            base = NULL;
+            base = nullptr;
             vxGetValidRegionImage(images[6],&rect);
             vxAccessImagePatch(images[6], &rect, 0, &addr, &base, VX_WRITE_ONLY);
             for (y = 0u; y < addr.dim_y; y+=addr.step_y) {
@@ -2804,7 +2804,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
             }
             vxCommitImagePatch(images[6], &rect, 0, &addr, base);
 
-            base = NULL;
+            base = nullptr;
             vxGetValidRegionImage(images[7],&rect);
             vxAccessImagePatch(images[7], &rect, 0, &addr, &base, VX_WRITE_ONLY);
             for (y = 0u; y < addr.dim_y; y+=addr.step_y) {
@@ -2820,7 +2820,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
 
             /* 422 interleaved types*/
             for(int i=8; i<=9; i++) {
-                base = NULL;
+                base = nullptr;
                 vxGetValidRegionImage(images[i],&rect);
                 vxAccessImagePatch(images[i], &rect, 0, &addr, &base, VX_WRITE_ONLY);
                 for (y = 0u; y < addr.dim_y; y+=addr.step_y) {
@@ -2836,7 +2836,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
             /* 3 plane types */
             for(int i=10; i<=11; i++) {
                 for(int p=0; p<=2; p++) {
-                    base = NULL;
+                    base = nullptr;
                     vxGetValidRegionImage(images[i],&rect);
                     vxAccessImagePatch(images[i], &rect, p, &addr, &base, VX_WRITE_ONLY);
                     for (y = 0u; y < addr.dim_y; y+=addr.step_y) {
@@ -2851,7 +2851,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
 
             /* semiplanar image types */
             for(int i=12; i<=13; i++) {
-                base = NULL;
+                base = nullptr;
                 vxGetValidRegionImage(images[i],&rect);
                 vxAccessImagePatch(images[i], &rect, 0, &addr, &base, VX_WRITE_ONLY);
                 for (y = 0u; y < addr.dim_y; y+=addr.step_y) {
@@ -2861,7 +2861,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
                     }
                 }
                 vxCommitImagePatch(images[i], &rect, 0, &addr, base);
-                base = NULL;
+                base = nullptr;
                 vxAccessImagePatch(images[i], &rect, 1, &addr, &base, VX_WRITE_ONLY);
                 //todo not sure about chroma semiplane
                 for (y = 0u; y < addr.dim_y; y+=addr.step_y) {

@@ -333,7 +333,7 @@ static vx_bool read_pixel(void *base, vx_imagepatch_addressing_t *addr, vx_uint3
     bx = x < 0 ? 0 : x >= src_width ? src_width - 1 : (vx_uint32)x;
     by = y < 0 ? 0 : y >= src_height ? src_height - 1 : (vx_uint32)y;
 
-    vx_uint8 *new_ptr = NULL;
+    vx_uint8 *new_ptr = nullptr;
     vx_uint32 offset = (addr->stride_y * by + addr->stride_x * bx);
     new_ptr = (vx_uint8 *)base;
     bpixel = &new_ptr[offset];
@@ -549,7 +549,7 @@ vx_tiling_kernel_t remap_kernel =
 {
     "org.khronos.openvx.tiling_remap",
     VX_KERNEL_REMAP,
-    NULL,
+    nullptr,
     Remap_image_tiling_flexible,
     Remap_image_tiling_fast,
     4,
@@ -557,11 +557,11 @@ vx_tiling_kernel_t remap_kernel =
       { VX_INPUT,  VX_TYPE_REMAP,  VX_PARAMETER_STATE_REQUIRED },
       { VX_INPUT,  VX_TYPE_SCALAR, VX_PARAMETER_STATE_OPTIONAL },
       { VX_OUTPUT, VX_TYPE_IMAGE,  VX_PARAMETER_STATE_REQUIRED } },
-    NULL,
+    nullptr,
     vxRemapInputValidator,
     vxRemapOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     { 16, 16 },
     { -1, 1, -1, 1 },
     { VX_BORDER_MODE_UNDEFINED, 0 },

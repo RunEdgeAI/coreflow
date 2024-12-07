@@ -78,7 +78,7 @@ vx_int32 vx_rng_uniform(vx_int32 a, vx_int32 b) { return a == b ? a : (vx_int32)
 
 static void vxAddArrayItems_tiling(vx_tile_array_t *arr, vx_size count, const void *ptr, vx_size stride)
 {
-    if ((count > 0) && (ptr != NULL) && (stride >= arr->item_size))
+    if ((count > 0) && (ptr != nullptr) && (stride >= arr->item_size))
     {
         if (arr->num_items + count <= arr->capacity)
         {
@@ -146,7 +146,7 @@ void HoughLinesP_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
         vx_array nzloc = vxCreateArray(context_houghlines_internal, VX_TYPE_COORDINATES2D, width * height);
 
         vx_size accum_stride = 0;
-        void *accum_ptr = NULL;
+        void *accum_ptr = nullptr;
         vx_map_id accum_map_id;
         for (int i = 0; i < numrho * numangle; i++)
         {
@@ -165,7 +165,7 @@ void HoughLinesP_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
         }
 
         vx_size trigtab_stride = 0;
-        void *trigtab_ptr = NULL;
+        void *trigtab_ptr = nullptr;
         vx_map_id trigtab_map_id;
         vxMapArrayRange(trigtab, 0, numangle * 2, &trigtab_map_id, &trigtab_stride, &trigtab_ptr, VX_READ_AND_WRITE, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
         vx_float32 *trigtab_p = (vx_float32 *)trigtab_ptr;
@@ -192,11 +192,11 @@ void HoughLinesP_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
         }
 
         vx_size nzloc_stride = 0;
-        void *nzloc_ptr = NULL;
+        void *nzloc_ptr = nullptr;
         vx_map_id nzloc_map_id;
 
         vx_size mask_stride = 0;
-        void *mask_ptr = NULL;
+        void *mask_ptr = nullptr;
         vx_map_id mask_map_id;
 
         vxMapArrayRange(mask, 0, width * height, &mask_map_id, &mask_stride, &mask_ptr, VX_READ_AND_WRITE, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
@@ -230,7 +230,7 @@ void HoughLinesP_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
             nzloc_p[idx] = nzloc_p[nzcount - 1];
 
             // check if it has been excluded already (i.e. belongs to some other line)
-            if (mdata0 != NULL && !mdata0[i*width + j])
+            if (mdata0 != nullptr && !mdata0[i*width + j])
                 continue;
 
             // update accumulator, find the most probable line
@@ -474,7 +474,7 @@ void HoughLinesP_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT
     vx_array nzloc = vxCreateArray(context_houghlines_internal, VX_TYPE_COORDINATES2D, width * height);
 
     vx_size accum_stride = 0;
-    void *accum_ptr = NULL;
+    void *accum_ptr = nullptr;
     vx_map_id accum_map_id;
     for (int i = 0; i < numrho * numangle; i++)
     {
@@ -493,7 +493,7 @@ void HoughLinesP_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT
     }
 
     vx_size trigtab_stride = 0;
-    void *trigtab_ptr = NULL;
+    void *trigtab_ptr = nullptr;
     vx_map_id trigtab_map_id;
     vxMapArrayRange(trigtab, 0, numangle * 2, &trigtab_map_id, &trigtab_stride, &trigtab_ptr, VX_READ_AND_WRITE, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
     vx_float32 *trigtab_p = (vx_float32 *)trigtab_ptr;
@@ -569,11 +569,11 @@ void HoughLinesP_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT
     }
 
     vx_size nzloc_stride = 0;
-    void *nzloc_ptr = NULL;
+    void *nzloc_ptr = nullptr;
     vx_map_id nzloc_map_id;
 
     vx_size mask_stride = 0;
-    void *mask_ptr = NULL;
+    void *mask_ptr = nullptr;
     vx_map_id mask_map_id;
 
     vxMapArrayRange(mask, 0, width * height, &mask_map_id, &mask_stride, &mask_ptr, VX_READ_AND_WRITE, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
@@ -600,7 +600,7 @@ void HoughLinesP_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT
         nzloc_p[idx] = nzloc_p[nzcount - 1];
 
         // check if it has been excluded already (i.e. belongs to some other line)
-        if (mdata0 != NULL && !mdata0[i*width + j])
+        if (mdata0 != nullptr && !mdata0[i*width + j])
             continue;
 
         // update accumulator, find the most probable line

@@ -147,11 +147,11 @@ vx_kernel_description_t phase_kernel =
     "org.khronos.openvx.phase",
     vxPhaseKernel,
     phase_kernel_params, dimof(phase_kernel_params),
-    NULL,
+    nullptr,
     vxPhaseInputValidator,
     vxPhaseOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 

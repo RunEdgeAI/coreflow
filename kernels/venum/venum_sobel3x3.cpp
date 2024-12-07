@@ -84,8 +84,8 @@ static vx_int16 sobel_y[3][3] = {
 static vx_status vxConvolution3x3(vx_image src, vx_image dst, const vx_border_t *bordermode,vx_uint8 vx_x,vx_uint8 vx_y)
 {
     vx_uint32 y,x;
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_rectangle_t rect;
     vx_enum dst_format = VX_DF_IMAGE_VIRT;

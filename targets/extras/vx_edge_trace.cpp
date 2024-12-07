@@ -49,8 +49,8 @@ vx_status ownEdgeTrace(vx_image norm, vx_threshold threshold, vx_image output)
     vx_uint32 y = 0;
     vx_int32 lower = 0;
     vx_int32 upper = 0;
-    void* norm_base = NULL;
-    void* output_base = NULL;
+    void* norm_base = nullptr;
+    void* output_base = nullptr;
     vx_imagepatch_addressing_t norm_addr = VX_IMAGEPATCH_ADDR_INIT;
     vx_imagepatch_addressing_t output_addr = VX_IMAGEPATCH_ADDR_INIT;
     vx_map_id norm_map_id = 0;
@@ -79,7 +79,7 @@ vx_status ownEdgeTrace(vx_image norm, vx_threshold threshold, vx_image output)
         vx_uint32(*tracing_stack)[2] = (vx_uint32 (*)[2])malloc(output_addr.dim_y * output_addr.dim_x * sizeof *tracing_stack);
         vx_uint32(*stack_top)[2] = tracing_stack;
 
-        if (NULL == tracing_stack)
+        if (nullptr == tracing_stack)
             return VX_ERROR_NO_MEMORY;
 
         for (y = 0; y < norm_addr.dim_y; y++)
@@ -184,7 +184,7 @@ vx_status VX_CALLBACK ownEdgeTraceKernel(vx_node node, const vx_reference parame
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node && NULL != parameters && num == dimof(edge_trace_kernel_params))
+    if (nullptr != node && nullptr != parameters && num == dimof(edge_trace_kernel_params))
     {
         vx_image     norm      = (vx_image)parameters[0];
         vx_threshold threshold = (vx_threshold)parameters[1];
@@ -204,7 +204,7 @@ vx_status VX_CALLBACK set_edge_trace_valid_rectangle(
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node && index < dimof(edge_trace_kernel_params) && NULL != input_valid && NULL != output_valid)
+    if (nullptr != node && index < dimof(edge_trace_kernel_params) && nullptr != input_valid && nullptr != output_valid)
     {
         output_valid[0]->start_x = input_valid[0]->start_x;
         output_valid[0]->start_y = input_valid[0]->start_y;
@@ -224,9 +224,9 @@ vx_status VX_CALLBACK own_edge_trace_validator(
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     (void)parameters;
 
-    if (NULL != node &&
+    if (nullptr != node &&
         num == dimof(edge_trace_kernel_params) &&
-        NULL != metas)
+        nullptr != metas)
     {
         vx_parameter param1 = 0;
         vx_parameter param2 = 0;
@@ -285,18 +285,18 @@ vx_status VX_CALLBACK own_edge_trace_validator(
             }
         }
 
-        if (NULL != norm)
+        if (nullptr != norm)
             vxReleaseImage(&norm);
 
-        if (NULL != threshold)
+        if (nullptr != threshold)
             vxReleaseThreshold(&threshold);
 
-        if (NULL != param1)
+        if (nullptr != param1)
             vxReleaseParameter(&param1);
 
-        if (NULL != param2)
+        if (nullptr != param2)
             vxReleaseParameter(&param2);
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return status;
 } /* own_edge_trace_validator() */
@@ -308,8 +308,8 @@ vx_kernel_description_t edge_trace_kernel =
     ownEdgeTraceKernel,
     edge_trace_kernel_params, dimof(edge_trace_kernel_params),
     own_edge_trace_validator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };

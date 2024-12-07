@@ -711,8 +711,8 @@ vx_status vxSubtraction(vx_image in0, vx_image in1, vx_scalar policy_param, vx_i
 {
     vx_enum overflow_policy = -1;
     vx_uint32 y, x, width = 0, height = 0;
-    void *dst_base = NULL;
-    void *src_base[2] = { NULL, NULL };
+    void *dst_base = nullptr;
+    void *src_base[2] = { nullptr, nullptr };
     vx_imagepatch_addressing_t dst_addr, src_addr[2];
     vx_rectangle_t rect;
     vx_df_image in0_format = 0;
@@ -810,8 +810,8 @@ vx_status vxAddition(vx_image in0, vx_image in1, vx_scalar policy_param, vx_imag
 {
     vx_enum overflow_policy = -1;
     vx_uint32 y, x, width = 0, height = 0;
-    void *dst_base   = NULL;
-    void *src_base[2] = {NULL, NULL};
+    void *dst_base   = nullptr;
+    void *src_base[2] = {nullptr, nullptr};
     vx_imagepatch_addressing_t dst_addr, src_addr[2];
     vx_rectangle_t rect;
     vx_df_image in0_format = 0;

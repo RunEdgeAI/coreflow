@@ -22,9 +22,9 @@ vx_status vxMagnitude(vx_image grad_x, vx_image grad_y, vx_image output)
     vx_status status = VX_FAILURE;
     vx_uint32 y, x;
     vx_df_image format = 0;
-    vx_uint8 *dst_base   = NULL;
-    vx_int16 *src_base_x = NULL;
-    vx_int16 *src_base_y = NULL;
+    vx_uint8 *dst_base   = nullptr;
+    vx_int16 *src_base_x = nullptr;
+    vx_int16 *src_base_y = nullptr;
     vx_imagepatch_addressing_t dst_addr, src_addr_x, src_addr_y;
     vx_rectangle_t rect;
     vx_uint32 value;

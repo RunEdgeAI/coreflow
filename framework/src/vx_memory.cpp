@@ -32,7 +32,7 @@ vx_bool ownFreeMemory(vx_context context, vx_memory_t *memory)
                 VX_PRINT(VX_ZONE_INFO, "Freeing %p\n", memory->ptrs[p]);
                 free(memory->ptrs[p]);
                 ownDestroySem(&memory->locks[p]);
-                memory->ptrs[p] = NULL;
+                memory->ptrs[p] = nullptr;
             }
         }
         memory->allocated = vx_false_e;
@@ -84,7 +84,7 @@ vx_bool ownAllocateMemory(vx_context context, vx_memory_t *memory)
             }
             /* don't presume that memory should be zeroed */
             memory->ptrs[p] = (vx_uint8*)malloc(size);
-            if (memory->ptrs[p] == NULL)
+            if (memory->ptrs[p] == nullptr)
             {
                 vx_uint32 pi;
                 VX_PRINT(VX_ZONE_ERROR, "Failed to allocated " VX_FMT_SIZE " bytes\n", size);
@@ -94,7 +94,7 @@ vx_bool ownAllocateMemory(vx_context context, vx_memory_t *memory)
                 {
                     VX_PRINT(VX_ZONE_INFO, "Freeing %p\n", memory->ptrs[pi]);
                     free(memory->ptrs[pi]);
-                    memory->ptrs[pi] = NULL;
+                    memory->ptrs[pi] = nullptr;
                 }
                 break;
             }

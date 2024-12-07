@@ -49,7 +49,7 @@ vx_status VX_CALLBACK ownEuclideanNonMaxSuppressionHarrisKernel(vx_node node, co
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node && NULL != parameters && num == dimof(euclidean_nonmaxsuppression_harris_kernel_params))
+    if (nullptr != node && nullptr != parameters && num == dimof(euclidean_nonmaxsuppression_harris_kernel_params))
     {
         vx_image  src = (vx_image) parameters[0];
         vx_scalar thr = (vx_scalar)parameters[1];
@@ -70,7 +70,7 @@ vx_status VX_CALLBACK set_euclidean_nonmaxsuppression_harris_valid_rectangle(
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node && index < dimof(euclidean_nonmaxsuppression_harris_kernel_params) && NULL != input_valid && NULL != output_valid)
+    if (nullptr != node && index < dimof(euclidean_nonmaxsuppression_harris_kernel_params) && nullptr != input_valid && nullptr != output_valid)
     {
         output_valid[0]->start_x = input_valid[0]->start_x;
         output_valid[0]->start_y = input_valid[0]->start_y;
@@ -90,9 +90,9 @@ vx_status VX_CALLBACK own_euclidean_nonmaxsuppresson_harris_validator(
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     (void)parameters;
 
-    if (NULL != node &&
+    if (nullptr != node &&
         num == dimof(euclidean_nonmaxsuppression_harris_kernel_params) &&
-        NULL != metas)
+        nullptr != metas)
     {
         vx_parameter param1 = 0;
         vx_parameter param2 = 0;
@@ -177,24 +177,24 @@ vx_status VX_CALLBACK own_euclidean_nonmaxsuppresson_harris_validator(
             }
         }
 
-        if (NULL != src)
+        if (nullptr != src)
             vxReleaseImage(&src);
 
-        if (NULL != strength_threshold)
+        if (nullptr != strength_threshold)
             vxReleaseScalar(&strength_threshold);
 
-        if (NULL != min_distance)
+        if (nullptr != min_distance)
             vxReleaseScalar(&min_distance);
 
-        if (NULL != param1)
+        if (nullptr != param1)
             vxReleaseParameter(&param1);
 
-        if (NULL != param2)
+        if (nullptr != param2)
             vxReleaseParameter(&param2);
 
-        if (NULL != param3)
+        if (nullptr != param3)
             vxReleaseParameter(&param3);
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return status;
 } /* own_euclidean_nonmaxsuppresson_harris_validator() */
@@ -206,10 +206,10 @@ vx_kernel_description_t euclidean_nonmaxsuppression_harris_kernel =
     ownEuclideanNonMaxSuppressionHarrisKernel,
     euclidean_nonmaxsuppression_harris_kernel_params, dimof(euclidean_nonmaxsuppression_harris_kernel_params),
     own_euclidean_nonmaxsuppresson_harris_validator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };
 
 
@@ -228,7 +228,7 @@ vx_status VX_CALLBACK ownNonMaxSuppressionKernel(vx_node node, const vx_referenc
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node && NULL != parameters && num == dimof(nonmaxsuppression_kernel_params))
+    if (nullptr != node && nullptr != parameters && num == dimof(nonmaxsuppression_kernel_params))
     {
         vx_image i_mag  = (vx_image)parameters[0];
         vx_image i_ang  = (vx_image)parameters[1];
@@ -250,7 +250,7 @@ vx_status VX_CALLBACK set_nonmaxsuppression_valid_rectangle(
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node && index <= dimof(nonmaxsuppression_kernel_params) && NULL != input_valid && NULL != output_valid)
+    if (nullptr != node && index <= dimof(nonmaxsuppression_kernel_params) && nullptr != input_valid && nullptr != output_valid)
     {
         vx_border_t borders = { VX_BORDER_UNDEFINED, { { 0 } } };
         vx_uint32   border_size = 0;
@@ -292,10 +292,10 @@ vx_status VX_CALLBACK own_nonmaxsuppresson_validator(
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node &&
-        NULL != parameters &&
+    if (nullptr != node &&
+        nullptr != parameters &&
         num == dimof(nonmaxsuppression_kernel_params) &&
-        NULL != metas)
+        nullptr != metas)
     {
         vx_parameter param1 = 0;
         vx_parameter param2 = 0;
@@ -358,18 +358,18 @@ vx_status VX_CALLBACK own_nonmaxsuppresson_validator(
             }
         }
 
-        if (NULL != mag)
+        if (nullptr != mag)
             vxReleaseImage(&mag);
 
-        if (NULL != ang)
+        if (nullptr != ang)
             vxReleaseImage(&ang);
 
-        if (NULL != param1)
+        if (nullptr != param1)
             vxReleaseParameter(&param1);
 
-        if (NULL != param2)
+        if (nullptr != param2)
             vxReleaseParameter(&param2);
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return status;
 } /* own_nonmaxsuppresson_validator() */
@@ -381,8 +381,8 @@ vx_kernel_description_t nonmaxsuppression_kernel =
     ownNonMaxSuppressionKernel,
     nonmaxsuppression_kernel_params, dimof(nonmaxsuppression_kernel_params),
     own_nonmaxsuppresson_validator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };

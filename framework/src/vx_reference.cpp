@@ -86,7 +86,7 @@ vx_bool Reference::isValidReference(vx_reference ref)
     }
     else
     {
-        VX_PRINT(VX_ZONE_ERROR, "Reference was NULL\n");
+        VX_PRINT(VX_ZONE_ERROR, "Reference was nullptr\n");
         VX_BACKTRACE(VX_ZONE_WARNING);
     }
 
@@ -116,7 +116,7 @@ vx_bool Reference::isValidReference(vx_reference ref, vx_enum type)
     }
     else
     {
-        VX_PRINT(VX_ZONE_WARNING, "Reference was NULL\n");
+        VX_PRINT(VX_ZONE_WARNING, "Reference was nullptr\n");
         VX_BACKTRACE(VX_ZONE_WARNING);
     }
 

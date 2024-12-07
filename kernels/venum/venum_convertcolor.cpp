@@ -414,8 +414,8 @@ static void yuv2rgb_bt709V(vx_float32* y, vx_float32* cb, vx_float32* cr,
 vx_status vxConvertColor(vx_image src, vx_image dst)
 {
     vx_imagepatch_addressing_t src_addr[4], dst_addr[4];
-    void *src_base[4] = {NULL};
-    void *dst_base[4] = {NULL};
+    void *src_base[4] = {nullptr};
+    void *dst_base[4] = {nullptr};
     vx_uint32 y, x, p;
     vx_df_image src_format, dst_format;
     vx_size src_planes, dst_planes;
@@ -712,9 +712,9 @@ vx_status vxConvertColor(vx_image src, vx_image dst)
                 }
             }
 
-            vx_uint8 *crcb = NULL;
-            vx_uint8 *cb[4] = { NULL };
-            vx_uint8 *cr[4] = { NULL };
+            vx_uint8 *crcb = nullptr;
+            vx_uint8 *cb[4] = { nullptr };
+            vx_uint8 *cr[4] = { nullptr };
             for (y = 0; y < height; y+=2)
             {
                 for (x = 0; x < width; x+=2)

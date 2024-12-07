@@ -23,10 +23,10 @@
 
 vx_status ownFWriteImage(vx_image input, vx_array file)
 {
-    FILE* fp = NULL;
-    vx_char* ext = NULL;
+    FILE* fp = nullptr;
+    vx_char* ext = nullptr;
     size_t wrote = 0ul;
-    vx_char* filename = NULL;
+    vx_char* filename = nullptr;
     vx_size filename_stride = 0;
     vx_uint32 p;
     vx_uint32 y;
@@ -37,7 +37,7 @@ vx_status ownFWriteImage(vx_image input, vx_array file)
     vx_uint32 width;
     vx_uint32 height;
     vx_size planes;
-    vx_uint8* src[4] = { NULL, NULL, NULL, NULL };
+    vx_uint8* src[4] = { nullptr, nullptr, nullptr, nullptr };
     vx_imagepatch_addressing_t addr[4] =
     {
         VX_IMAGEPATCH_ADDR_INIT,
@@ -60,7 +60,7 @@ vx_status ownFWriteImage(vx_image input, vx_array file)
     }
 
     fp = fopen(filename, "wb+");
-    if (fp == NULL)
+    if (fp == nullptr)
     {
         vxUnmapArrayRange(file, fname_map_id);
         vxAddLogEntry((vx_reference)file, VX_FAILURE, "Failed to open file %s\n",filename);
@@ -105,7 +105,7 @@ vx_status ownFWriteImage(vx_image input, vx_array file)
         for (y = 0u; y < height; y += addr[p].step_y)
         {
             vx_uint32 i = 0;
-            vx_uint8* ptr = NULL;
+            vx_uint8* ptr = nullptr;
             uint8_t value = 0u;
 
             if (y < sy || y >= ey)
@@ -164,18 +164,18 @@ vx_status ownFWriteImage(vx_image input, vx_array file)
 
 vx_status ownFReadImage(vx_array file, vx_image output)
 {
-    vx_char* filepath = NULL;
-    vx_char* filename = NULL;
+    vx_char* filepath = nullptr;
+    vx_char* filename = nullptr;
     vx_size filename_stride = 0;
-    vx_uint8* src = NULL;
+    vx_uint8* src = nullptr;
     vx_uint32 p = 0u;
     vx_uint32 y = 0u;
     vx_size planes = 0u;
     vx_imagepatch_addressing_t addr = VX_IMAGEPATCH_ADDR_INIT;
     vx_df_image format = VX_DF_IMAGE_VIRT;
-    FILE* fp = NULL;
+    FILE* fp = nullptr;
     vx_char tmp[VX_MAX_FILE_NAME] = { 0 };
-    vx_char* ext = NULL;
+    vx_char* ext = nullptr;
     vx_rectangle_t rect;
     vx_uint32 width = 0;
     vx_uint32 height = 0;
@@ -191,7 +191,7 @@ vx_status ownFReadImage(vx_array file, vx_image output)
     }
 
     fp = fopen(filepath, "rb");
-    if (fp == NULL)
+    if (fp == nullptr)
     {
         vxAddLogEntry((vx_reference)file, VX_FAILURE, "Failed to open file %s\n",filename);
         return VX_FAILURE;
@@ -235,7 +235,7 @@ vx_status ownFReadImage(vx_array file, vx_image output)
 
     for (p = 0; p < planes; p++)
     {
-        src = NULL;
+        src = nullptr;
         status |= vxMapImagePatch(output, &rect, p, &image_map_id, &addr, (void**)&src, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
         if (VX_SUCCESS == status)
         {

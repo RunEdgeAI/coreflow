@@ -135,7 +135,7 @@ static const vx_uint8 bottom_left[8] =
 
 static void vxAddArrayItems_tiling(vx_tile_array_t *arr, vx_size count, const void *ptr, vx_size stride)
 {
-    if ((count > 0) && (ptr != NULL) && (stride >= arr->item_size))
+    if ((count > 0) && (ptr != nullptr) && (stride >= arr->item_size))
     {
         if (arr->num_items + count <= arr->capacity)
         {

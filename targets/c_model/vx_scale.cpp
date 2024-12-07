@@ -56,7 +56,7 @@ static vx_status VX_CALLBACK vxScaleImageKernel(vx_node node, const vx_reference
         vx_image  dst_image = (vx_image)parameters[1];
         vx_scalar stype     = (vx_scalar)parameters[2];
         vx_border_t bordermode = { VX_BORDER_UNDEFINED, {{ 0 }} };
-        vx_float64 *interm = NULL;
+        vx_float64 *interm = nullptr;
         vx_size size = 0ul;
 
         vxQueryNode(node, VX_NODE_BORDER, &bordermode, sizeof(bordermode));
@@ -253,11 +253,11 @@ vx_kernel_description_t scale_image_kernel =
     "org.khronos.openvx.scale_image",
     vxScaleImageKernel,
     scale_kernel_params, dimof(scale_kernel_params),
-    NULL,
+    nullptr,
     vxScaleImageInputValidator,
     vxScaleImageOutputValidator,
     vxScaleImageInitializer,
-    NULL,
+    nullptr,
 };
 
 
@@ -389,14 +389,14 @@ static vx_convolution vxCreateGaussian5x5Convolution(vx_context context)
     if (status != VX_SUCCESS)
     {
         vxReleaseConvolution(&conv);
-        return NULL;
+        return nullptr;
     }
 
     status = vxSetConvolutionAttribute(conv, VX_CONVOLUTION_SCALE, (void *)&gaussian5x5scale, sizeof(vx_uint32));
     if (status != VX_SUCCESS)
     {
         vxReleaseConvolution(&conv);
-        return NULL;
+        return nullptr;
     }
     return conv;
 }
@@ -541,7 +541,7 @@ vx_kernel_description_t halfscale_gaussian_kernel =
     "org.khronos.openvx.halfscale_gaussian",
     vxHalfscaleGaussianKernel,
     scale_kernel_params, dimof(scale_kernel_params),
-    NULL,
+    nullptr,
     vxHalfscaleGaussianInputValidator,
     vxHalfscaleGaussianOutputValidator,
     vxHalfscaleGaussianInitializer,

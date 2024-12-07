@@ -37,14 +37,14 @@ vx_status VX_CALLBACK ownImageListerKernel(vx_node node, const vx_reference para
 {
     vx_status status = VX_FAILURE;
 
-    if (NULL != node && NULL != parameters && num == dimof(image_lister_kernel_params))
+    if (nullptr != node && nullptr != parameters && num == dimof(image_lister_kernel_params))
     {
         vx_uint32 x;
         vx_uint32 y;
         vx_image src = (vx_image)parameters[0];
         vx_array arr = (vx_array)parameters[1];
         vx_scalar s_num_points = (vx_scalar)parameters[2];
-        void* src_base = NULL;
+        void* src_base = nullptr;
         vx_imagepatch_addressing_t src_addr = VX_IMAGEPATCH_ADDR_INIT;
         vx_map_id src_map_id = 0;
         vx_rectangle_t rect;
@@ -123,7 +123,7 @@ vx_status VX_CALLBACK ownImageListerKernel(vx_node node, const vx_reference para
             status |= vxCopyScalar(s_num_points, &num_corners, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
 
         status |= vxUnmapImagePatch(src, src_map_id);
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return status;
 } /* ownImageListerKernel() */
@@ -136,9 +136,9 @@ vx_status VX_CALLBACK own_image_lister_validator(
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     (void)parameters;
 
-    if (NULL != node &&
+    if (nullptr != node &&
         num == dimof(image_lister_kernel_params) &&
-        NULL != metas)
+        nullptr != metas)
     {
         vx_parameter param = 0;
         vx_image     src = 0;
@@ -178,17 +178,17 @@ vx_status VX_CALLBACK own_image_lister_validator(
             }
 
             /* validate output scalar (optional) */
-            if (VX_SUCCESS == status && NULL != metas[2])
+            if (VX_SUCCESS == status && nullptr != metas[2])
             {
                 vx_enum type = VX_TYPE_SIZE;
                 status |= vxSetMetaFormatAttribute(metas[2], VX_SCALAR_TYPE, &type, sizeof(type));
             }
         }
 
-        if (NULL != src)
+        if (nullptr != src)
             vxReleaseImage(&src);
 
-        if (NULL != param)
+        if (nullptr != param)
             vxReleaseParameter(&param);
     }
 
@@ -202,8 +202,8 @@ vx_kernel_description_t image_lister_kernel =
     ownImageListerKernel,
     image_lister_kernel_params, dimof(image_lister_kernel_params),
     own_image_lister_validator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };

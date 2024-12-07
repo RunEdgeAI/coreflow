@@ -23,7 +23,7 @@ vx_status vxTableLookup(vx_image src, vx_lut lut, vx_image dst)
     vx_enum type = 0;
     vx_rectangle_t rect;
     vx_imagepatch_addressing_t src_addr, dst_addr;
-    void *src_base = NULL, *dst_base = NULL, *lut_ptr = NULL;
+    void *src_base = nullptr, *dst_base = nullptr, *lut_ptr = nullptr;
     vx_uint32 y = 0, x = 0;
     vx_size count = 0;
     vx_uint32 offset = 0;

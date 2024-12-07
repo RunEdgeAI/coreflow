@@ -55,8 +55,8 @@ static vx_int32 vx_uint8_compare(const void *p1, const void *p2)
 vx_status vxErode3x3_U8(vx_image src, vx_image dst, vx_border_t *borders)
 {
     vx_uint32 y, x, low_y = 0, low_x = 0, high_y, high_x;
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_rectangle_t rect;
 
@@ -199,8 +199,8 @@ vx_status vxErode3x3_U8(vx_image src, vx_image dst, vx_border_t *borders)
 vx_status vxDilate3x3_U8(vx_image src, vx_image dst, vx_border_t *borders)
 {
     vx_uint32 y, x, low_y = 0, low_x = 0, high_y, high_x;
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_rectangle_t rect;
 
@@ -341,8 +341,8 @@ vx_status vxDilate3x3_U8(vx_image src, vx_image dst, vx_border_t *borders)
 static vx_status vxMorphology3x3_U1(vx_image src, vx_image dst, vx_uint8 (*op)(vx_uint8, vx_uint8), const vx_border_t *borders)
 {
     vx_uint32 y, x, low_y = 0, low_x = 0, high_y, high_x, shift_x_u1;
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_df_image format = 0;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_rectangle_t rect;
@@ -383,7 +383,7 @@ static vx_status vxMorphology3x3_U1(vx_image src, vx_image dst, vx_uint8 (*op)(v
         }
     }
 
-    status |= vxCommitImagePatch(src, NULL, 0, &src_addr, src_base);
+    status |= vxCommitImagePatch(src, nullptr, 0, &src_addr, src_base);
     status |= vxCommitImagePatch(dst, &rect, 0, &dst_addr, dst_base);
 
     return status;

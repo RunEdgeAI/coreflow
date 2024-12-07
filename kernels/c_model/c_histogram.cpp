@@ -21,8 +21,8 @@ vx_status vxHistogram(vx_image src, vx_distribution dist)
 {
     vx_rectangle_t src_rect;
     vx_imagepatch_addressing_t src_addr = VX_IMAGEPATCH_ADDR_INIT;
-    void* src_base = NULL;
-    void* dist_ptr = NULL;
+    void* src_base = nullptr;
+    void* dist_ptr = nullptr;
     vx_df_image format = 0;
     vx_uint32 x = 0;
     vx_uint32 y = 0;
@@ -93,8 +93,8 @@ vx_status vxEqualizeHist(vx_image src, vx_image dst)
 {
     vx_uint32 x;
     vx_uint32 y;
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_imagepatch_addressing_t src_addr = VX_IMAGEPATCH_ADDR_INIT;
     vx_imagepatch_addressing_t dst_addr = VX_IMAGEPATCH_ADDR_INIT;
     vx_rectangle_t rect;

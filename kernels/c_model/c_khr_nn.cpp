@@ -1099,9 +1099,9 @@ static pwl_table *createPwlNormLut(vx_float32 beta)
     vx_int16 table_size = 3 * (PWL_NORM_NUM_SEGMENTS + 1);
     vx_int16* table = (vx_int16*)malloc(table_size * sizeof(vx_int16));
     vx_float32* tmp_table = (vx_float32*)malloc(table_size * sizeof(vx_float32));
-    if (table == NULL || tmp_table == NULL)
+    if (table == nullptr || tmp_table == nullptr)
     {
-        return NULL;
+        return nullptr;
     }
 
     //Ranges
@@ -1138,9 +1138,9 @@ static pwl_table *createPwlNormLut(vx_float32 beta)
     free(tmp_table);
 
     pwl_table *result = (pwl_table *) malloc(sizeof(pwl_table));
-    if (result == NULL)
+    if (result == nullptr)
     {
-        return NULL;
+        return nullptr;
     }
     result->lut = table;
     result->quantization = 14;
@@ -1152,9 +1152,9 @@ static pwl_table *createPwlNormLut(vx_float32 beta)
 
 static void destroyPwlLutN(pwl_table *table)
 {
-    if (table != NULL)
+    if (table != nullptr)
     {
-        if (table->lut != NULL)
+        if (table->lut != nullptr)
         {
             free(table->lut);
         }
@@ -1200,7 +1200,7 @@ vx_status NNNormalizationKernelImpl(vx_tensor inputs, vx_scalar type_scalar, vx_
 
     // Host code - create the PWC LUT
     pwl_table *table = createPwlNormLut(beta_f);
-    if (table == NULL)
+    if (table == nullptr)
     {
         return VX_ERROR_NO_MEMORY;
     }

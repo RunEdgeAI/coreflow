@@ -32,8 +32,8 @@ static vx_status vxBinaryU8S16OverflowOp(vx_image in0, vx_image in1, vx_scalar p
 {
     vx_enum overflow_policy = -1;
     vx_uint32 y, x, width = 0, height = 0;
-    void *dst_base   = NULL;
-    void *src_base[2] = {NULL, NULL};
+    void *dst_base   = nullptr;
+    void *src_base[2] = {nullptr, nullptr};
     vx_imagepatch_addressing_t dst_addr, src_addr[2];
     vx_rectangle_t rect;
     vx_df_image in0_format = 0;
@@ -102,8 +102,8 @@ static vx_status vxBinaryU8S16OverflowOp(vx_image in0, vx_image in1, vx_scalar p
                 *(vx_int16 *)dstp = (vx_int16)final_result_value;
         }
     }
-    status |= vxCommitImagePatch(in0, NULL, 0, &src_addr[0], src_base[0]);
-    status |= vxCommitImagePatch(in1, NULL, 0, &src_addr[1], src_base[1]);
+    status |= vxCommitImagePatch(in0, nullptr, 0, &src_addr[0], src_base[0]);
+    status |= vxCommitImagePatch(in1, nullptr, 0, &src_addr[1], src_base[1]);
     status |= vxCommitImagePatch(output, &rect, 0, &dst_addr, dst_base);
 
     return status;

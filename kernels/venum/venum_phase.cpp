@@ -97,9 +97,9 @@ vx_status vxPhase(vx_image grad_x, vx_image grad_y, vx_image output)
     vx_uint32 x;
     vx_uint32 y;
     vx_df_image format = 0;
-    vx_uint8* dst_base = NULL;
-    void* src_base_x   = NULL;
-    void* src_base_y   = NULL;
+    vx_uint8* dst_base = nullptr;
+    void* src_base_x   = nullptr;
+    void* src_base_y   = nullptr;
     vx_imagepatch_addressing_t src_addr_x = VX_IMAGEPATCH_ADDR_INIT;
     vx_imagepatch_addressing_t src_addr_y = VX_IMAGEPATCH_ADDR_INIT;
     vx_imagepatch_addressing_t dst_addr   = VX_IMAGEPATCH_ADDR_INIT;

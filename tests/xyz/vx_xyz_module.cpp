@@ -164,7 +164,7 @@ vx_status VX_CALLBACK XYZKernel(vx_node node, const vx_reference *parameters, vx
         vx_scalar scalar = (vx_scalar)parameters[1];
         vx_image output = (vx_image)parameters[2];
         vx_array temp  = (vx_array)parameters[3];
-        void *buf, *in = NULL, *out = NULL;
+        void *buf, *in = nullptr, *out = nullptr;
         vx_uint32 y, x;
         vx_int32 value = 0;
         vx_imagepatch_addressing_t addr1, addr2;

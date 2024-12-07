@@ -805,7 +805,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxTensorMultiplyNode(vx_graph graph, vx_tensor 
         (vx_reference)output,
     };
 
-    vx_node node = NULL;
+    vx_node node = nullptr;
 
     node = vxCreateNodeByStructure(graph, VX_KERNEL_TENSOR_MULTIPLY, params, dimof(params));
 
@@ -828,7 +828,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxTensorAddNode(vx_graph graph, vx_tensor input
         (vx_reference)output,
     };
 
-    vx_node node = NULL;
+    vx_node node = nullptr;
 
     node = vxCreateNodeByStructure(graph, VX_KERNEL_TENSOR_ADD, params, dimof(params));
 
@@ -850,7 +850,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxTensorSubtractNode(vx_graph graph, vx_tensor 
         (vx_reference)output,
     };
 
-    vx_node node = NULL;
+    vx_node node = nullptr;
 
     node = vxCreateNodeByStructure(graph, VX_KERNEL_TENSOR_SUBTRACT, params, dimof(params));
 

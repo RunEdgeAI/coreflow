@@ -19,8 +19,8 @@
 vx_status vxAccumulate(vx_image input, vx_image accum)
 {
     vx_uint32 y, x, width = 0, height = 0;
-    void *dst_base = NULL;
-    void *src_base = NULL;
+    void *dst_base = nullptr;
+    void *src_base = nullptr;
     vx_imagepatch_addressing_t dst_addr, src_addr;
     vx_rectangle_t rect;
     vx_status status = VX_SUCCESS;
@@ -42,7 +42,7 @@ vx_status vxAccumulate(vx_image input, vx_image accum)
             *dstp = (vx_int16)(res);
         }
     }
-    status |= vxCommitImagePatch(input, NULL, 0, &src_addr, src_base);
+    status |= vxCommitImagePatch(input, nullptr, 0, &src_addr, src_base);
     status |= vxCommitImagePatch(accum, &rect, 0, &dst_addr, dst_base);
 
     return status;
@@ -52,8 +52,8 @@ vx_status vxAccumulate(vx_image input, vx_image accum)
 vx_status vxAccumulateWeighted(vx_image input, vx_scalar scalar, vx_image accum)
 {
     vx_uint32 y, x, width = 0, height = 0;
-    void *dst_base = NULL;
-    void *src_base = NULL;
+    void *dst_base = nullptr;
+    void *src_base = nullptr;
     vx_imagepatch_addressing_t dst_addr, src_addr;
     vx_rectangle_t rect;
     vx_float32 alpha = 0.0f;
@@ -76,7 +76,7 @@ vx_status vxAccumulateWeighted(vx_image input, vx_scalar scalar, vx_image accum)
             *dstp = (vx_uint8)(((1 - alpha) * (*dstp)) + ((alpha) * (vx_uint16)(*srcp)));
         }
     }
-    status |= vxCommitImagePatch(input, NULL, 0, &src_addr, src_base);
+    status |= vxCommitImagePatch(input, nullptr, 0, &src_addr, src_base);
     status |= vxCommitImagePatch(accum, &rect, 0, &dst_addr, dst_base);
 
     return status;
@@ -86,8 +86,8 @@ vx_status vxAccumulateWeighted(vx_image input, vx_scalar scalar, vx_image accum)
 vx_status vxAccumulateSquare(vx_image input, vx_scalar scalar, vx_image accum)
 {
     vx_uint32 y, x, width = 0, height = 0;
-    void *dst_base = NULL;
-    void *src_base = NULL;
+    void *dst_base = nullptr;
+    void *src_base = nullptr;
     vx_imagepatch_addressing_t dst_addr, src_addr;
     vx_rectangle_t rect;
     vx_uint32 shift = 0u;
@@ -112,7 +112,7 @@ vx_status vxAccumulateSquare(vx_image input, vx_scalar scalar, vx_image accum)
             *dstp = (vx_int16)(res);
         }
     }
-    status |= vxCommitImagePatch(input, NULL, 0, &src_addr, src_base);
+    status |= vxCommitImagePatch(input, nullptr, 0, &src_addr, src_base);
     status |= vxCommitImagePatch(accum, &rect, 0, &dst_addr, dst_base);
 
     return status;

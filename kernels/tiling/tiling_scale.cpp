@@ -38,7 +38,7 @@ static vx_bool read_pixel(void *base, vx_imagepatch_addressing_t *addr, vx_uint3
     bx = x < 0 ? 0 : x >= src_width ? src_width - 1 : (vx_uint32)x;
     by = y < 0 ? 0 : y >= src_height ? src_height - 1 : (vx_uint32)y;
 
-    vx_uint8 *new_ptr = NULL;
+    vx_uint8 *new_ptr = nullptr;
     vx_uint32 offset = (addr->stride_y * by + addr->stride_x * bx);
     new_ptr = (vx_uint8*)base;
     bpixel = &new_ptr[offset];
@@ -110,8 +110,8 @@ static void read_pixel_v(void *base, vx_imagepatch_addressing_t *addr, vx_uint32
         }
     }
 
-    vx_uint8 *bpixel = NULL;
-    vx_uint8 *new_ptr = NULL;
+    vx_uint8 *bpixel = nullptr;
+    vx_uint8 *new_ptr = nullptr;
     vx_uint32 offset = 0;
     if(flag_1 == 0)
     {
@@ -167,7 +167,7 @@ static vx_bool read_pixel_16s(void *base, vx_imagepatch_addressing_t *addr, vx_u
     bx = x < 0 ? 0 : src_width ? src_width - 1 : (vx_uint32)x;
     by = y < 0 ? 0 : y >= src_height ? src_height - 1 : (vx_uint32)y;
 
-    vx_int16 *new_ptr = NULL;
+    vx_int16 *new_ptr = nullptr;
     vx_uint32 offset = (addr->stride_y * by + addr->stride_x * bx);
     new_ptr = (vx_int16*)base;
     bpixel = &new_ptr[offset];
@@ -198,7 +198,7 @@ static vx_bool read_pixel_1u(void *base, vx_imagepatch_addressing_t *addr, vx_ui
     bx = x < (vx_int32)shift_x_u1 ? shift_x_u1 : x >= src_width ? src_width - 1 : (vx_uint32)x;
     by = y < 0 ? 0 : y >= src_height ? src_height - 1 : (vx_uint32)y;
 
-    vx_uint8 *new_ptr = NULL;
+    vx_uint8 *new_ptr = nullptr;
     vx_uint32 offset = ((addr->stride_y * ((addr->scale_y * by) / VX_SCALE_UNITY)) +
                        (addr->stride_x_bits * ((addr->scale_x * bx) / VX_SCALE_UNITY)) / 8u);
     new_ptr = (vx_uint8*)base;

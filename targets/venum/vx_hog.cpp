@@ -159,11 +159,11 @@ vx_kernel_description_t hogcells_kernel = {
     "org.khronos.openvx.hog_cells",
     vxHogCellsKernel,
     hogcells_kernel_params, dimof(hogcells_kernel_params),
-    NULL,
+    nullptr,
     vxHogCellsInputValidator,
     vxHogCellsOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 static vx_status VX_CALLBACK vxHogFeaturesKernel(vx_node node, const vx_reference *parameters, vx_uint32 num)
@@ -341,9 +341,9 @@ vx_kernel_description_t hogfeatures_kernel = {
     "org.khronos.openvx.hog_features",
     vxHogFeaturesKernel,
     hogfeatures_kernel_params, dimof(hogfeatures_kernel_params),
-    NULL,
+    nullptr,
     vxHogFeaturesInputValidator,
     vxHogFeaturesOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };

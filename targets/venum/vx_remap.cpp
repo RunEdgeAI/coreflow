@@ -575,8 +575,8 @@ static vx_status VX_CALLBACK vxRemapKernel(vx_node node, const vx_reference para
         vx_scalar stype    = (vx_scalar)parameters[2];
         vx_image dst_image = (vx_image)parameters[3];
         vx_enum policy     = 0;
-        void *src_base     = NULL;
-        void *dst_base     = NULL;
+        void *src_base     = nullptr;
+        void *dst_base     = nullptr;
         vx_uint32 y        = 0u;
         vx_uint32 x        = 0u;
         vx_uint32 width    = 0u;
@@ -764,9 +764,9 @@ vx_kernel_description_t remap_kernel =
     "org.khronos.openvx.remap",
     vxRemapKernel,
     remap_kernel_params, dimof(remap_kernel_params),
-    NULL,
+    nullptr,
     vxRemapInputValidator,
     vxRemapOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };

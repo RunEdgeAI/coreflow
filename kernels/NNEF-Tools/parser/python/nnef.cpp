@@ -55,7 +55,7 @@ struct NNEF_Identifier
 
 static PyTypeObject NNEF_Identifier_Type =
 {
-    PyVarObject_HEAD_INIT(NULL, 0)
+    PyVarObject_HEAD_INIT(nullptr, 0)
     "_nnef.Identifier",      /* tp_name */
     sizeof(NNEF_Identifier), /* tp_basicsize */
     0,                       /* tp_itemsize */
@@ -205,24 +205,24 @@ struct GraphCallback : public nnef::Parser::Callback
     virtual void beginGraph( const nnef::Prototype& proto, const nnef::Dictionary<nnef::Prototype>& fragments )
     {
         PyObject* name = PY_STRING_FROM_CSTR(proto.name().c_str());
-        
+
         this->tensors = PyDict_New();
         this->operations = PyList_New(0);
-        
+
         PyObject* inputs = PyList_New(proto.paramCount());
         for ( size_t i = 0; i < proto.paramCount(); ++i )
         {
             PyList_SetItem(inputs, i, PY_STRING_FROM_CSTR(proto.param(i).name().c_str()));
         }
-        
+
         PyObject* outputs = PyList_New(proto.resultCount());
         for ( size_t i = 0; i < proto.resultCount(); ++i )
         {
             PyList_SetItem(outputs, i, PY_STRING_FROM_CSTR(proto.result(i).name().c_str()));
         }
-        
+
         this->graph = PyObject_CallObject(Graph, PyTuple_Pack(5, name, tensors, operations, inputs, outputs));
-        
+
         if ( qis )
         {
             quant = nnef::QuantParser::parse(qis, qfn, fragments);
@@ -245,7 +245,7 @@ struct GraphCallback : public nnef::Parser::Callback
                     PyDict_SetItemString(quantization, qit.first.c_str(), buildPyObjectFromValue(qit.second));
                 }
             }
-            
+
             PyObject* tensor = PyObject_CallObject(Tensor, PyTuple_Pack(5, name, dtype, shape, data, quantization));
             PyDict_SetItemString(tensors, it.first.c_str(), tensor);
         }
@@ -258,7 +258,7 @@ struct GraphCallback : public nnef::Parser::Callback
         PyObject* inputs = PyList_New(0);
         PyObject* outputs = PyList_New(0);
         PyObject* dtype = args.count("?") ? PY_STRING_FROM_CSTR(args.at("?").string().c_str()) : buildPyNone();
-        
+
         for ( size_t i = 0; i < proto.paramCount(); ++i )
         {
             auto& param = proto.param(i);
@@ -278,7 +278,7 @@ struct GraphCallback : public nnef::Parser::Callback
             auto& value = args.at(result.name());
             PyList_Append(outputs, PyTuple_Pack(2, PY_STRING_FROM_CSTR(result.name().c_str()), buildPyObjectFromValue(value)));
         }
-        
+
         attribs = PyObject_CallObject(OrderedDict, PyTuple_Pack(1, attribs));
         inputs = PyObject_CallObject(OrderedDict, PyTuple_Pack(1, inputs));
         outputs = PyObject_CallObject(OrderedDict, PyTuple_Pack(1, outputs));
@@ -306,11 +306,11 @@ static PyObject* parse( PyObject* self, PyObject* args, PyObject* kwargs, bool i
     const char* stdlib = nullptr;
     PyObject* lower = nullptr;
 
-    static const char* kwlist[] = { "", "quantization", "stdlib", "lowered", NULL };
+    static const char* kwlist[] = { "", "quantization", "stdlib", "lowered", nullptr };
 
 	if ( !PyArg_ParseTupleAndKeywords(args, kwargs, "s|zzO!", (char**)kwlist, &input, &quant, &stdlib, &PyList_Type, &lower) )
     {
-        return NULL;
+        return nullptr;
     }
 
     std::ifstream gfs, qfs;
@@ -323,7 +323,7 @@ static PyObject* parse( PyObject* self, PyObject* args, PyObject* kwargs, bool i
         {
             const std::string message = "Could not open file: " + std::string(input);
             PyErr_SetString(NNEF_Error, message.c_str());
-            return NULL;
+            return nullptr;
         }
 
         if ( quant )
@@ -333,7 +333,7 @@ static PyObject* parse( PyObject* self, PyObject* args, PyObject* kwargs, bool i
             {
                 const std::string message = "Could not open file: " + std::string(quant);
                 PyErr_SetString(NNEF_Error, message.c_str());
-                return NULL;
+                return nullptr;
             }
         }
     }
@@ -348,13 +348,13 @@ static PyObject* parse( PyObject* self, PyObject* args, PyObject* kwargs, bool i
 
     std::istream& gis = isFile ? (std::istream&)gfs : (std::istream&)gss;
     std::istream& qis = isFile ? (std::istream&)qfs : (std::istream&)qss;
-    
+
     std::string stdlib_source;
     if ( stdlib )
     {
         stdlib_source = stdlib;
     }
-    
+
     std::set<std::string> lowered;
     for ( Py_ssize_t i = 0; i < PyList_Size(lower); ++i )
     {
@@ -363,11 +363,11 @@ static PyObject* parse( PyObject* self, PyObject* args, PyObject* kwargs, bool i
         {
             const std::string message = "Paremeter 'lowered' must be a list of strings";
             PyErr_SetString(NNEF_Error, message.c_str());
-            return NULL;
+            return nullptr;
         }
         lowered.insert(PY_STRING_AS_CSTR(item));
     }
-    
+
     nnef::CompParser parser(stdlib_source, lowered);
 
     GraphCallback callback(qis, isFile ? quant : "quantization");
@@ -380,12 +380,12 @@ static PyObject* parse( PyObject* self, PyObject* args, PyObject* kwargs, bool i
     catch ( nnef::Error e )
     {
         PyErr_SetString(NNEF_Error, buildErrorString(e).c_str());
-		return NULL;
+		return nullptr;
     }
     catch ( std::invalid_argument e )
     {
         PyErr_SetString(PyExc_ValueError, e.what());
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -400,17 +400,17 @@ static PyObject* parseString( PyObject* self, PyObject* args, PyObject* kwargs )
 }
 
 
-static PyMethodDef NNEF_Methods[] = 
+static PyMethodDef NNEF_Methods[] =
 {
     { "parse_file", (PyCFunction)parseFile, METH_VARARGS | METH_KEYWORDS, "Parse the contents of a file" },
     { "parse_string", (PyCFunction)parseString, METH_VARARGS | METH_KEYWORDS, "Parse the contents of a string" },
- 	{ NULL, NULL, 0, NULL }
+ 	{ nullptr, nullptr, 0, nullptr }
 };
 
 
 #if PY_MAJOR_VERSION >= 3
 
-static struct PyModuleDef nnef_module = 
+static struct PyModuleDef nnef_module =
 {
     PyModuleDef_HEAD_INIT,
     "_nnef",
@@ -424,7 +424,7 @@ static struct PyModuleDef nnef_module =
 
 #if PY_MAJOR_VERSION >= 3
 #define INIT_FUNC_NAME PyInit__nnef
-#define RETURN_ERROR return NULL
+#define RETURN_ERROR return nullptr
 #else
 #define INIT_FUNC_NAME init_nnef
 #define RETURN_ERROR return
@@ -443,12 +443,12 @@ PyMODINIT_FUNC INIT_FUNC_NAME(void)
 #else
     PyObject* module = Py_InitModule("_nnef", NNEF_Methods);
 #endif
-	if ( module == NULL )
+	if ( module == nullptr )
 	{
 		RETURN_ERROR;
 	}
 
-	NNEF_Error = PyErr_NewException((char*)"_nnef.Error", NULL, NULL);
+	NNEF_Error = PyErr_NewException((char*)"_nnef.Error", nullptr, nullptr);
 	Py_INCREF(NNEF_Error);
 	PyModule_AddObject(module, "Error", NNEF_Error);
 
@@ -467,11 +467,11 @@ PyMODINIT_FUNC INIT_FUNC_NAME(void)
     Operation = makeNamedTuple("Operation", { "name", "attribs", "inputs", "outputs", "dtype" });
     Py_INCREF(Operation);
     PyModule_AddObject(module, "Operation", Operation);
-    
+
     Graph = makeNamedTuple("Graph", { "name", "tensors", "operations", "inputs", "outputs" });
     Py_INCREF(Graph);
     PyModule_AddObject(module, "Graph", Graph);
-    
+
 #if PY_MAJOR_VERSION >= 3
 	return module;
 #endif
