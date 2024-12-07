@@ -706,7 +706,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapTensorPatch(vx_tensor tensor, vx_map_i
     if (tensor->context->findMemoryMap((vx_reference)tensor, map_id) != vx_true_e)
     {
         status = VX_ERROR_INVALID_PARAMETERS;
-        VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to unmap image patch\n");
+        VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to unmap tensor patch\n");
         return status;
     }
 
