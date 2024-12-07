@@ -33,7 +33,7 @@ vx_status vxMeanStdDev_U8(vx_image input, vx_scalar mean, vx_scalar stddev)
     vx_rectangle_t rect;
     vx_imagepatch_addressing_t addrs = VX_IMAGEPATCH_ADDR_INIT;
     vx_map_id map_id = 0;
-    void *base_ptr = NULL;
+    void *base_ptr = nullptr;
     vx_uint32 x, y;
     vx_status status  = VX_SUCCESS;
 
@@ -188,7 +188,7 @@ vx_status vxMeanStdDev_U1(vx_image input, vx_scalar mean, vx_scalar stddev)
     vx_rectangle_t rect;
     vx_imagepatch_addressing_t addrs = VX_IMAGEPATCH_ADDR_INIT;
     vx_map_id map_id = 0;
-    void *base_ptr = NULL;
+    void *base_ptr = nullptr;
     vx_uint32 x, y, width, height, shift_x_u1;
     vx_status status  = VX_SUCCESS;
 
@@ -653,7 +653,7 @@ static void calcMinMaxLocs16(vx_int16 *src_base, vx_imagepatch_addressing_t *src
 vx_status vxMinMaxLoc(vx_image input, vx_scalar minVal, vx_scalar maxVal, vx_array minLoc, vx_array maxLoc, vx_scalar minCount, vx_scalar maxCount)
 {
     vx_uint32 y, x;
-    void *src_base = NULL;
+    void *src_base = nullptr;
     vx_imagepatch_addressing_t src_addr = VX_IMAGEPATCH_ADDR_INIT;
     vx_rectangle_t rect;
     vx_df_image format;

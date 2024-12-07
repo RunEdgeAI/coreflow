@@ -291,7 +291,7 @@ VX_INT_API void Context::removeAccessor(vx_uint32 index)
         {
             free(accessors[index].ptr);
         }
-        if (accessors[index].extra_data != NULL)
+        if (accessors[index].extra_data != nullptr)
         {
             free(accessors[index].extra_data);
         }
@@ -381,7 +381,7 @@ vx_bool Context::workerNode(vx_threadpool_worker_t *worker)
     /* turn on access to virtual memory */
     for (p = 0u; p < node->kernel->signature.num_parameters; p++)
     {
-        if (node->parameters[p] == NULL) continue;
+        if (node->parameters[p] == nullptr) continue;
         if (node->parameters[p]->is_virtual == vx_true_e)
         {
             node->parameters[p]->is_accessible = vx_true_e;
@@ -395,7 +395,7 @@ vx_bool Context::workerNode(vx_threadpool_worker_t *worker)
     /* turn on access to virtual memory */
     for (p = 0u; p < node->kernel->signature.num_parameters; p++)
     {
-        if (node->parameters[p] == NULL) continue;
+        if (node->parameters[p] == nullptr) continue;
         if (node->parameters[p]->is_virtual == vx_true_e)
         {
             // determine who is the last thread to release...
@@ -424,7 +424,7 @@ vx_value_t Context::workerGraph(void *arg)
     {
         vx_graph g = 0;
         vx_status s = VX_FAILURE;
-        vx_value_set_t *data = NULL;
+        vx_value_set_t *data = nullptr;
         if (ownReadQueue(&proc->input, &data) == vx_true_e)
         {
             g = (vx_graph)data->v1;
@@ -459,10 +459,10 @@ VX_INT_API vx_bool Context::addAccessor(
         {
             VX_PRINT(VX_ZONE_CONTEXT, "Found open accessors[%u]\n", a);
             /* Allocation requested */
-            if (size > 0ul && ptr == NULL)
+            if (size > 0ul && ptr == nullptr)
             {
                 accessors[a].ptr = malloc(size);
-                if (accessors[a].ptr == NULL)
+                if (accessors[a].ptr == nullptr)
                     return vx_false_e;
                 accessors[a].allocated = vx_true_e;
             }
@@ -531,7 +531,7 @@ VX_INT_API vx_bool Context::memoryMap(
                 if (size != 0)
                 {
                     buf = (vx_uint8*)malloc(size);
-                    if (buf == NULL)
+                    if (buf == nullptr)
                     {
                         ownSemPost(&memory_maps_lock);
                         return vx_false_e;
@@ -626,7 +626,7 @@ VX_INT_API void Context::memoryUnmap(vx_uint32 map_id)
     {
         if (memory_maps[map_id].used == vx_true_e)
         {
-            if (memory_maps[map_id].ptr != NULL)
+            if (memory_maps[map_id].ptr != nullptr)
             {
                 /* freeing mapped buffer */
                 free(memory_maps[map_id].ptr);

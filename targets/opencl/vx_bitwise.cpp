@@ -171,7 +171,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                                        ownComputeMemorySize(memory, pln),
                                        memory->ptrs[pln],
                                        0,
-                                       NULL,
+                                       nullptr,
                                        &ref->event);
         }
     }
@@ -193,7 +193,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                                  2,
                                  off_dim,
                                  work_dim,
-                                 NULL,
+                                 nullptr,
                                  we, writeEvents, &node->event);
 
     clFinish(context->queues[plidx][didx]);
@@ -209,7 +209,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
     else  // Not kernel
         ref = node->parameters[1];
 
-    vx_memory_t *memory = NULL;
+    vx_memory_t *memory = nullptr;
 
     memory = &((vx_image)ref)->memory;
 
@@ -217,7 +217,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         memory->hdls[pln],
         CL_TRUE, 0, ownComputeMemorySize(memory, pln),
         memory->ptrs[pln],
-        0, NULL, NULL);
+        0, nullptr, nullptr);
 
     CL_ERROR_MSG(err, "clEnqueueReadBuffer");
 
@@ -264,8 +264,8 @@ static vx_uint8 vx_xor_op(vx_uint8 a, vx_uint8 b)
 static vx_status vxBinaryU1Op(vx_image in1, vx_image in2, vx_image output, bitwiseOp op)
 {
     vx_uint32 y, x, width, height;
-    void *dst_base   = NULL;
-    void *src_base[2] = {NULL, NULL};
+    void *dst_base   = nullptr;
+    void *src_base[2] = {nullptr, nullptr};
     vx_imagepatch_addressing_t dst_addr, src_addr[2];
     vx_rectangle_t rect;
     vx_status status = VX_SUCCESS;
@@ -293,8 +293,8 @@ static vx_status vxBinaryU1Op(vx_image in1, vx_image in2, vx_image output, bitwi
             *dst = (*dst & ~mask) | pixel;
         }
     }
-    status |= vxCommitImagePatch(in1, NULL, 0, &src_addr[0], src_base[0]);
-    status |= vxCommitImagePatch(in2, NULL, 0, &src_addr[1], src_base[1]);
+    status |= vxCommitImagePatch(in1, nullptr, 0, &src_addr[0], src_base[0]);
+    status |= vxCommitImagePatch(in2, nullptr, 0, &src_addr[1], src_base[1]);
     status |= vxCommitImagePatch(output, &rect, 0, &dst_addr, dst_base);
 
     return status;
@@ -322,11 +322,11 @@ vx_cl_kernel_description_t and_kernel = {
         "org.khronos.openvx.and",
         vxAndKernel,
         binary_bitwise_kernel_params, dimof(binary_bitwise_kernel_params),
-        NULL,
+        nullptr,
         vxBinaryBitwiseInputValidator,
         vxBinaryBitwiseOutputValidator,
-        NULL,
-        NULL,
+        nullptr,
+        nullptr,
     },
     /* VX_CL_SOURCE_DIR"" FILE_JOINER */"vx_and.cl",
     "vx_and",
@@ -334,7 +334,7 @@ vx_cl_kernel_description_t and_kernel = {
     INIT_KERNELS,
     INIT_NUMKERNELS,
     INIT_RETURNS,
-    NULL,
+    nullptr,
 };
 
 static vx_status VX_CALLBACK vxOrKernel(vx_node node, const vx_reference *parameters, vx_uint32 num)
@@ -359,11 +359,11 @@ vx_cl_kernel_description_t orr_kernel = {
         "org.khronos.openvx.or",
         vxOrKernel,
         binary_bitwise_kernel_params, dimof(binary_bitwise_kernel_params),
-        NULL,
+        nullptr,
         vxBinaryBitwiseInputValidator,
         vxBinaryBitwiseOutputValidator,
-        NULL,
-        NULL,
+        nullptr,
+        nullptr,
     },
     /* VX_CL_SOURCE_DIR"" FILE_JOINER */"vx_orr.cl",
     "vx_orr",
@@ -371,7 +371,7 @@ vx_cl_kernel_description_t orr_kernel = {
     INIT_KERNELS,
     INIT_NUMKERNELS,
     INIT_RETURNS,
-    NULL,
+    nullptr,
 };
 
 static vx_status VX_CALLBACK vxXorKernel(vx_node node, const vx_reference *parameters, vx_uint32 num)
@@ -396,11 +396,11 @@ vx_cl_kernel_description_t xor_kernel = {
         "org.khronos.openvx.xor",
         vxXorKernel,
         binary_bitwise_kernel_params, dimof(binary_bitwise_kernel_params),
-        NULL,
+        nullptr,
         vxBinaryBitwiseInputValidator,
         vxBinaryBitwiseOutputValidator,
-        NULL,
-        NULL,
+        nullptr,
+        nullptr,
     },
     /* VX_CL_SOURCE_DIR"" FILE_JOINER */"vx_xor.cl",
     "vx_xor",
@@ -408,7 +408,7 @@ vx_cl_kernel_description_t xor_kernel = {
     INIT_KERNELS,
     INIT_NUMKERNELS,
     INIT_RETURNS,
-    NULL,
+    nullptr,
 };
 
 /* The Not kernel is an unary operator, requiring separate validators. */
@@ -475,8 +475,8 @@ vx_status vxNotU1(vx_image input, vx_image output)
 {
     vx_uint32 y, x, width = 0, height = 0;
     vx_df_image format = 0;
-    void *dst_base = NULL;
-    void *src_base = NULL;
+    void *dst_base = nullptr;
+    void *src_base = nullptr;
     vx_imagepatch_addressing_t dst_addr, src_addr;
     vx_rectangle_t rect;
     vx_status status = VX_SUCCESS;
@@ -501,7 +501,7 @@ vx_status vxNotU1(vx_image input, vx_image output)
             *dst = (*dst & ~mask) | pixel;
         }
     }
-    status |= vxCommitImagePatch(input, NULL, 0, &src_addr, src_base);
+    status |= vxCommitImagePatch(input, nullptr, 0, &src_addr, src_base);
     status |= vxCommitImagePatch(output, &rect, 0, &dst_addr, dst_base);
 
     return status;
@@ -527,11 +527,11 @@ vx_cl_kernel_description_t not_kernel = {
         "org.khronos.openvx.not",
         vxNotKernel,
         unary_bitwise_kernel_params, dimof(unary_bitwise_kernel_params),
-        NULL,
+        nullptr,
         vxUnaryBitwiseInputValidator,
         vxUnaryBitwiseOutputValidator,
-        NULL,
-        NULL,
+        nullptr,
+        nullptr,
     },
     /* VX_CL_SOURCE_DIR"" FILE_JOINER */"vx_not.cl",
     "vx_not",
@@ -539,5 +539,5 @@ vx_cl_kernel_description_t not_kernel = {
     INIT_KERNELS,
     INIT_NUMKERNELS,
     INIT_RETURNS,
-    NULL,
+    nullptr,
 };

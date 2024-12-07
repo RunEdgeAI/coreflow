@@ -36,7 +36,7 @@ static size_t flines(FILE *fp)
     if (fp) {
         char line[CL_MAX_LINESIZE];
         fseek(fp, 0, SEEK_SET);
-        while (fgets(line, sizeof(line), fp) != NULL) {
+        while (fgets(line, sizeof(line), fp) != nullptr) {
             numLines++;
         }
         //printf("%lu lines in file %p\n",numLines,fp);
@@ -122,11 +122,11 @@ cl_int clPrintError(cl_int err, const char *label, const char *function, const c
 
 char *clLoadSources(char *filename, size_t *programSize)
 {
-    FILE *pFile = NULL;
-    char *programSource = NULL;
+    FILE *pFile = nullptr;
+    char *programSource = nullptr;
     VX_PRINT(VX_ZONE_INFO, "Reading source file %s\n", filename);
     pFile = fopen((char *)filename, "rb");
-    if (pFile != NULL && programSize)
+    if (pFile != nullptr && programSize)
     {
         // obtain file size:
         fseek(pFile, 0, SEEK_END);
@@ -135,11 +135,11 @@ char *clLoadSources(char *filename, size_t *programSize)
 
         int size = *programSize + 1;
         programSource = (char*)malloc(sizeof(char)*(size));
-        if (programSource == NULL)
+        if (programSource == nullptr)
         {
             fclose(pFile);
             free(programSource);
-            return NULL;
+            return nullptr;
         }
 
         fread(programSource, sizeof(char), *programSize, pFile);
@@ -177,11 +177,11 @@ static int name_sort(const struct dirent **a, const struct dirent **b)
 cl_program vxLoadProgram(cl_context context, const char *src_dir, cl_int *perr)
 {
     cl_program program;
-    struct dirent **names = NULL;
+    struct dirent **names = nullptr;
     int i, f, num_lines = 0, cur_line = 0;
     int num_files = scandir(src_dir, &names, &vx_source_filter, &name_sort);
-    size_t *lengths = NULL, lineSize = CL_MAX_LINESIZE;
-    char **source = NULL;
+    size_t *lengths = nullptr, lineSize = CL_MAX_LINESIZE;
+    char **source = nullptr;
     printf("Matched %d files\n", num_files);
     for (f = 0; f < num_files; f++) {
         if (names[f]->d_name) {
@@ -211,7 +211,7 @@ cl_program vxLoadProgram(cl_context context, const char *src_dir, cl_int *perr)
             if (fp) {
                 printf("Reading from file %s\n", pathname);
                 do {
-                    if (fgets(source[cur_line], lengths[cur_line], fp) == NULL)
+                    if (fgets(source[cur_line], lengths[cur_line], fp) == nullptr)
                         break;
                     // trim to exact lengths
                     lengths[cur_line] = strlen(source[cur_line]);
@@ -237,12 +237,12 @@ cl_program vxLoadProgram(cl_context context, const char *src_dir, cl_int *perr)
     if (perr != CL_SUCCESS) {
         cl_int err = 0;
         size_t src_size = 0;
-        char *src = NULL;
-        err = clGetProgramInfo(program, CL_PROGRAM_SOURCE, 0, NULL, &src_size);
+        char *src = nullptr;
+        err = clGetProgramInfo(program, CL_PROGRAM_SOURCE, 0, nullptr, &src_size);
         CL_ERROR_MSG(err, "clGetProgramInfo");
         printf("Source Code has %zu bytes\n", src_size);
         src = (char *)malloc(src_size);
-        err = clGetProgramInfo(program, CL_PROGRAM_SOURCE, src_size, src, NULL);
+        err = clGetProgramInfo(program, CL_PROGRAM_SOURCE, src_size, src, nullptr);
         CL_ERROR_MSG(err, "clGetProgramInfo");
         printf("%s", src);
         free(src);

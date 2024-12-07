@@ -36,8 +36,8 @@ static int vx_uint8_compare(const void *p1, const void *p2)
 vx_status vxMedian3x3(vx_image src, vx_image dst, vx_border_t *borders)
 {
     vx_uint32 y, x;
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_df_image format = 0;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_rectangle_t rect;
@@ -78,7 +78,7 @@ vx_status vxMedian3x3(vx_image src, vx_image dst, vx_border_t *borders)
         }
     }
 
-    status |= vxCommitImagePatch(src, NULL, 0, &src_addr, src_base);
+    status |= vxCommitImagePatch(src, nullptr, 0, &src_addr, src_base);
     status |= vxCommitImagePatch(dst, &rect, 0, &dst_addr, dst_base);
 
     return status;

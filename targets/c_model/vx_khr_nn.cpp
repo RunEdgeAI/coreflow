@@ -77,7 +77,7 @@ static VX_INLINE tensor_desc_t getTensorDesc(vx_tensor t)
 
 static VX_INLINE tensor_desc_t getOptionalTensorDesc(vx_tensor t)
 {
-    const tensor_desc_t null_tensor_desc = { 0, NULL, NULL };
+    const tensor_desc_t null_tensor_desc = { 0, nullptr, nullptr };
 
     return t ? getTensorDesc(t) : null_tensor_desc;
 }
@@ -246,7 +246,7 @@ vx_status VX_CALLBACK nnConvolutionKernel(vx_node node, const vx_reference *para
             fmt,
             input->addr, input_td,
             weights->addr, weight_td,
-            (biases ? biases->addr : NULL), bias_td,
+            (biases ? biases->addr : nullptr), bias_td,
             pad_x, pad_y,
             stride_x, stride_y,
             overflow == VX_CONVERT_POLICY_WRAP,
@@ -477,11 +477,11 @@ vx_kernel_description_t nn_convolution_kernel = {
     "org.khronos.nn_extension.convolution_layer",
 	nnConvolutionKernel,
     nn_convolution_kernel_params, dimof(nn_convolution_kernel_params),
-	NULL,
+	nullptr,
     nnConvolutionInputValidator,
     nnConvolutionOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 
@@ -762,11 +762,11 @@ vx_kernel_description_t nn_pooling_kernel = {
     "org.khronos.nn_extension.pooling_layer",
     nnPoolingKernel,
     nn_pooling_kernel_params, dimof(nn_pooling_kernel_params),
-	NULL,
+	nullptr,
     nnPoolingInputValidator,
     nnPoolingOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 
@@ -828,7 +828,7 @@ static vx_status VX_CALLBACK nnFullyConnectedKernel(vx_node node, const vx_refer
             fmt,
             input->addr, input_td,
             weights->addr, weight_td,
-            (biases ? biases->addr : NULL), bias_td,
+            (biases ? biases->addr : nullptr), bias_td,
             overflow == VX_CONVERT_POLICY_WRAP,
             rounding == VX_ROUND_POLICY_TO_NEAREST_EVEN,
             output_ptr, output_td);
@@ -1050,11 +1050,11 @@ vx_kernel_description_t nn_fully_connected_kernel = {
     "org.khronos.nn_extension.fully_connected_layer",
     nnFullyConnectedKernel,
     nn_fully_connected_kernel_params, dimof(nn_fully_connected_kernel_params),
-	NULL,
+	nullptr,
     nnFullyConnectedInputValidator,
     nnFullyConnectedOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 
@@ -1195,11 +1195,11 @@ vx_kernel_description_t nn_softmax_kernel = {
     "org.khronos.nn_extension.softmax_layer",
     nnSoftmaxKernel,
     nn_softmax_kernel_params, dimof(nn_softmax_kernel_params),
-	NULL,
+	nullptr,
 	nnSoftmaxInputValidator,
 	nnSoftmaxOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 
@@ -1339,11 +1339,11 @@ vx_kernel_description_t nn_norm_kernel = {
     "org.khronos.nn_extension.normalization_layer",
     nnNormalizationKernel,
     nn_norm_kernel_params, dimof(nn_norm_kernel_params),
-	NULL,
+	nullptr,
     nnNormalizationInputValidator,
     nnNormalizationOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 
@@ -1540,7 +1540,7 @@ vx_kernel_description_t nn_activation_kernel = {
     nnActivationKernel,
     nn_activation_kernel_params, dimof(nn_activation_kernel_params),
     nnActivationValidator,
-    NULL, NULL, NULL, NULL,
+    nullptr, nullptr, nullptr, nullptr,
 };
 
 
@@ -1756,7 +1756,7 @@ vx_kernel_description_t nn_roipooling_kernel = {
     nnROIPoolingKernel,
     nn_roipooling_kernel_params, dimof(nn_roipooling_kernel_params),
     nnROIPoolingValidator,
-    NULL, NULL, NULL, NULL,
+    nullptr, nullptr, nullptr, nullptr,
 };
 
 
@@ -1854,7 +1854,7 @@ static vx_status VX_CALLBACK nnDeconvolutionKernel(
             fmt,
             input->addr, in_td,
             weights->addr, weight_td,
-            (biases ? biases->addr : NULL), bias_td,
+            (biases ? biases->addr : nullptr), bias_td,
             pad_x, pad_y,
             upscale_x, upscale_y,
             overflow == VX_CONVERT_POLICY_WRAP,
@@ -2074,7 +2074,7 @@ vx_kernel_description_t nn_deconvolution_kernel = {
     nnDeconvolutionKernel,
     nn_deconvolution_kernel_params, dimof(nn_deconvolution_kernel_params),
     nnDeconvolutionValidator,
-    NULL, NULL, NULL, NULL,
+    nullptr, nullptr, nullptr, nullptr,
 };
 
 #endif /* OPENVX_USE_NN */

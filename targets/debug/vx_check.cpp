@@ -47,7 +47,7 @@ vx_status VX_CALLBACK ownCheckImageKernel(vx_node node, const vx_reference param
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node && NULL != parameters && num == dimof(check_image_kernel_params))
+    if (nullptr != node && nullptr != parameters && num == dimof(check_image_kernel_params))
     {
         vx_int32 i = 0;
         vx_uint32 x = 0u;
@@ -75,7 +75,7 @@ vx_status VX_CALLBACK ownCheckImageKernel(vx_node node, const vx_reference param
         {
             for (p = 0u; (p < planes); p++)
             {
-                void* ptr = NULL;
+                void* ptr = nullptr;
 
                 status |= vxMapImagePatch(image, &rect, p, &map_id, &addr, &ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
 
@@ -125,7 +125,7 @@ vx_status VX_CALLBACK ownCheckImageKernel(vx_node node, const vx_reference param
         {
             status = VX_FAILURE;
         }
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return status;
 } // ownCheckImageKernel()
@@ -135,7 +135,7 @@ vx_status VX_CALLBACK own_check_image_validator(vx_node node, const vx_reference
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node && NULL != parameters && num == dimof(check_image_kernel_params) && NULL != metas)
+    if (nullptr != node && nullptr != parameters && num == dimof(check_image_kernel_params) && nullptr != metas)
     {
         vx_parameter param = vxGetParameterByIndex(node, 1); /* input scalar */
 
@@ -164,13 +164,13 @@ vx_status VX_CALLBACK own_check_image_validator(vx_node node, const vx_reference
                 }
             }
 
-            if (NULL != scalar)
+            if (nullptr != scalar)
                 vxReleaseScalar(&scalar);
         }
 
-        if (NULL != param)
+        if (nullptr != param)
             vxReleaseParameter(&param);
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return VX_SUCCESS;
 } /* own_check_image_validator() */
@@ -189,7 +189,7 @@ vx_status VX_CALLBACK ownCheckArrayKernel(vx_node node, const vx_reference param
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node && NULL != parameters && num == dimof(check_array_kernel_params))
+    if (nullptr != node && nullptr != parameters && num == dimof(check_array_kernel_params))
     {
         vx_array arr = (vx_array)parameters[0];
         vx_scalar fill = (vx_scalar)parameters[1];
@@ -199,7 +199,7 @@ vx_status VX_CALLBACK ownCheckArrayKernel(vx_node node, const vx_reference param
         vx_size item_size = 0ul;
         vx_size stride = 0ul;
         vx_uint32 errors = 0;
-        void* ptr = NULL;
+        void* ptr = nullptr;
         vx_size i = 0;
         vx_size j = 0;
         vx_map_id map_id = 0;
@@ -253,7 +253,7 @@ vx_status VX_CALLBACK ownCheckArrayKernel(vx_node node, const vx_reference param
         {
             status = VX_FAILURE;
         }
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return status;
 } // ownCheckArrayKernel()
@@ -263,7 +263,7 @@ vx_status VX_CALLBACK own_check_array_validator(vx_node node, const vx_reference
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node && NULL != parameters && num == dimof(check_array_kernel_params) && NULL != metas)
+    if (nullptr != node && nullptr != parameters && num == dimof(check_array_kernel_params) && nullptr != metas)
     {
         vx_parameter param1 = vxGetParameterByIndex(node, 0); /* input array */
         vx_parameter param2 = vxGetParameterByIndex(node, 1); /* input scalar */
@@ -300,19 +300,19 @@ vx_status VX_CALLBACK own_check_array_validator(vx_node node, const vx_reference
                 }
             }
 
-            if (NULL != arr)
+            if (nullptr != arr)
                 vxReleaseArray(&arr);
 
-            if (NULL != scalar)
+            if (nullptr != scalar)
                 vxReleaseScalar(&scalar);
         }
 
-        if (NULL != param1)
+        if (nullptr != param1)
             vxReleaseParameter(&param1);
 
-        if (NULL != param2)
+        if (nullptr != param2)
             vxReleaseParameter(&param2);
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return VX_SUCCESS;
 } /* own_check_array_validator() */
@@ -325,10 +325,10 @@ vx_kernel_description_t check_image_kernel =
     ownCheckImageKernel,
     check_image_kernel_params, dimof(check_image_kernel_params),
     own_check_image_validator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };
 
 vx_kernel_description_t check_array_kernel =
@@ -338,8 +338,8 @@ vx_kernel_description_t check_array_kernel =
     ownCheckArrayKernel,
     check_array_kernel_params, dimof(check_array_kernel_params),
     own_check_array_validator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };

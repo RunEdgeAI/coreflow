@@ -52,8 +52,8 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
     }
     if (format == VX_DF_IMAGE_U8)
     {
-        vx_uint8 *maskCurr = NULL;
-        vx_uint8 *maskLeftTop = NULL;
+        vx_uint8 *maskCurr = nullptr;
+        vx_uint8 *maskLeftTop = nullptr;
         uint8x16_t vOne16 = vdupq_n_u8(1);
         uint8x8_t vOne8 = vdup_n_u8(1);
         for (y = low_height; y < height; y++)
@@ -61,7 +61,7 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
             vx_uint8 *srcCurr = (vx_uint8 *)in->base[0] + in->tile_x + y * in->addr[0].stride_y + border;
             vx_uint8 *dstCurr = (vx_uint8 *)out->base[0] + out->tile_x + y * out->addr[0].stride_y + border;
             vx_uint8 *leftTop = (vx_uint8 *)in->base[0] + in->tile_x + (y - border) * in->addr[0].stride_y;
-            if (mask->is_Null == 0)  //mask is not NULL
+            if (mask->is_Null == 0)  //mask is not nullptr
             {
                 maskCurr = mask->base[0] + y * mask->addr[0].stride_y + border;
                 maskLeftTop = mask->base[0] + (y - border) * mask->addr[0].stride_y;
@@ -95,7 +95,7 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
                         else
                         {
                             vNeighborCurr = vld1q_u8(leftTop + j * in->addr[0].stride_y + i);
-                            if (mask->is_Null == 0)  //mask is not NULL
+                            if (mask->is_Null == 0)  //mask is not nullptr
                             {
                                 uint8x16_t vMaskNeighborCurr = vld1q_u8(maskLeftTop + j * mask->addr[0].stride_y + i);
                                 vMaskNeighborCurr = vsubq_u8(vOne16, vorrq_u8(vMaskNeighborCurr, vMaskCurr));
@@ -111,7 +111,7 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
                 srcCurr += 16;
                 dstCurr += 16;
                 leftTop += 16;
-                if (mask->is_Null == 0)  //mask is not NULL
+                if (mask->is_Null == 0)  //mask is not nullptr
                 {
                     maskCurr += 16;
                     maskLeftTop += 16;
@@ -129,7 +129,7 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
             {
                 uint8x8_t _mask_8x8_o;
                 vx_uint8 *_maskp_o;
-                if (mask->is_Null == 0)  //mask is not NULL
+                if (mask->is_Null == 0)  //mask is not nullptr
                 {
                     _maskp_o = (vx_uint8 *)mask->base[0] + y*mask->addr[0].stride_y + x*mask->addr[0].stride_x;
                     _mask_8x8_o = vld1_u8(_maskp_o);
@@ -158,7 +158,7 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
                         int16x8_t neighbor_val_16x8 = vld1q_s16(neighbor);
                         uint8x8_t _mask_8x8_i;
                         vx_uint8 *_maskp_i;
-                        if (mask->is_Null == 0)  //mask is not NULL
+                        if (mask->is_Null == 0)  //mask is not nullptr
                         {
                             _maskp_i = (vx_uint8 *)mask->base[0] + (y + j)*mask->addr[0].stride_y + (x + i)*mask->addr[0].stride_x;
                             _mask_8x8_i = vld1_u8(_maskp_i);

@@ -32,7 +32,7 @@ vx_bool ownCreateSem(vx_sem_t *sem, vx_uint32 count)
     VX_PRINT(VX_ZONE_OSAL, "sem_init(%p,%u)=>%d errno=%d\n",sem,count,ret,errno);
     if (ret == 0)
 #elif defined(_WIN32) || defined(UNDER_CE)
-    *sem = CreateSemaphore(NULL, count, count, NULL);
+    *sem = CreateSemaphore(nullptr, count, count, nullptr);
     if (*sem)
 #endif
         return vx_true_e;
@@ -84,7 +84,7 @@ vx_bool ownSemPost(vx_sem_t *sem)
     VX_PRINT(VX_ZONE_OSAL, "sem_post(%p)=>%d errno=%d\n", sem, ret, errno);
     if (ret == 0)
 #elif defined(_WIN32) || defined(UNDER_CE)
-    if (ReleaseSemaphore(*sem, 1, NULL) == TRUE)
+    if (ReleaseSemaphore(*sem, 1, nullptr) == TRUE)
 #endif
         return vx_true_e;
     else
@@ -178,7 +178,7 @@ vx_bool ownInitEvent(vx_internal_event_t *e, vx_bool autoreset)
 {
 #if defined(__linux__) || defined(__ANDROID__) || defined(__QNX__) || defined(__CYGWIN__) || defined(__APPLE__)
     int err = 0;
-    err |= pthread_mutex_init(&e->mutex, NULL);
+    err |= pthread_mutex_init(&e->mutex, nullptr);
     err |= pthread_condattr_init(&e->attr);
     err |= pthread_cond_init(&e->cond, &e->attr);
     e->set = vx_false_e;
@@ -188,8 +188,8 @@ vx_bool ownInitEvent(vx_internal_event_t *e, vx_bool autoreset)
     BOOL manual = TRUE;
     if (autoreset)
         manual = FALSE;
-    *e = CreateEvent(NULL, manual, FALSE, NULL);
-    if (*e != NULL)
+    *e = CreateEvent(nullptr, manual, FALSE, nullptr);
+    if (*e != nullptr)
 #endif
         return vx_true_e;
     else
@@ -205,7 +205,7 @@ vx_bool ownWaitEventInternal(vx_internal_event_t *e, vx_uint32 ms)
     {
         struct timespec time_spec;
         struct timeval now;
-        gettimeofday(&now, NULL);
+        gettimeofday(&now, nullptr);
         time_spec.tv_sec = now.tv_sec + (ms / 1000);
         time_spec.tv_nsec = (now.tv_usec * 1000) + ((ms%1000) * 1000000);
         if (time_spec.tv_nsec > BILLION) {
@@ -309,7 +309,7 @@ void ownSleepThread(vx_uint32 milliseconds)
     struct timespec rtsp;
     rtsp.tv_sec = 0;
     rtsp.tv_nsec = milliseconds * 100000;
-    nanosleep(&rtsp, NULL);
+    nanosleep(&rtsp, nullptr);
 #elif defined(_WIN32) || defined(UNDER_CE)
     Sleep(milliseconds);
 #endif
@@ -319,9 +319,9 @@ vx_thread_t ownCreateThread(vx_thread_f func, void *arg)
 {
     vx_thread_t thread = 0;
 #if defined(__linux__) || defined(__ANDROID__) || defined(__QNX__) || defined(__CYGWIN__) || defined(__APPLE__)
-    pthread_create(&thread, NULL, (pthread_f)func, arg);
+    pthread_create(&thread, nullptr, (pthread_f)func, arg);
 #elif defined(_WIN32) || defined(UNDER_CE)
-    thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)func, arg, CREATE_SUSPENDED, NULL);
+    thread = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)func, arg, CREATE_SUSPENDED, nullptr);
     if (thread)
         ResumeThread(thread);
 #endif
@@ -331,7 +331,7 @@ vx_thread_t ownCreateThread(vx_thread_f func, void *arg)
 
 void ownDestroyThreadpool(vx_threadpool_t **ppool)
 {
-    vx_threadpool_t *pool = (ppool ? *ppool : NULL);
+    vx_threadpool_t *pool = (ppool ? *ppool : nullptr);
     if (pool)
     {
         uint32_t i;
@@ -343,14 +343,14 @@ void ownDestroyThreadpool(vx_threadpool_t **ppool)
             ownStopCapture(&pool->workers[i].perf);
             pool->workers[i].handle = 0;
             ownDestroyQueue(&pool->workers[i].queue);
-            pool->workers[i].queue = (vx_queue_t *)NULL;
+            pool->workers[i].queue = (vx_queue_t *)nullptr;
         }
         free(pool->workers);
-        pool->workers = (vx_threadpool_worker_t *)NULL;
+        pool->workers = (vx_threadpool_worker_t *)nullptr;
         ownDestroySem(&pool->sem);
         ownDeinitEvent(&pool->completed);
         free(pool);
-        *ppool = NULL;
+        *ppool = nullptr;
     }
 }
 
@@ -606,12 +606,12 @@ void ownInitQueue(vx_queue_t *q)
 
 void ownDestroyQueue(vx_queue_t **pq)
 {
-    vx_queue_t *q = (pq ? *pq : NULL);
+    vx_queue_t *q = (pq ? *pq : nullptr);
     if (q)
     {
         ownDeinitQueue(q);
         free(q);
-        *pq = NULL;
+        *pq = nullptr;
     }
 }
 
@@ -690,7 +690,7 @@ vx_bool ownReadQueue(vx_queue_t *q, vx_value_set_t **data)
                 if (q->end_index != -1) // not empty
                 {
                     *data = q->data[q->start_index];
-                    q->data[q->start_index] = NULL;
+                    q->data[q->start_index] = nullptr;
                     q->start_index = (q->start_index + 1)%VX_INT_MAX_QUEUE_DEPTH;
                     red = vx_true_e;
                     if (q->start_index == q->end_index) // wrapped to empty

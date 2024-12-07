@@ -21,8 +21,8 @@
 vx_status vxConvolve(vx_image src, vx_convolution conv, vx_image dst, vx_border_t *bordermode)
 {
     vx_int32 y, x, i;
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_rectangle_t rect;
     vx_size conv_width, conv_height;
@@ -107,7 +107,7 @@ vx_status vxConvolve(vx_image src, vx_convolution conv, vx_image dst, vx_border_
         }
     }
 
-    status |= vxCommitImagePatch(src, NULL, 0, &src_addr, src_base);
+    status |= vxCommitImagePatch(src, nullptr, 0, &src_addr, src_base);
     status |= vxCommitImagePatch(dst, &rect, 0, &dst_addr, dst_base);
 
     return status;

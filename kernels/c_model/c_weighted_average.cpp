@@ -22,8 +22,8 @@ vx_status vxWeightedAverage(vx_image img1, vx_scalar alpha, vx_image img2, vx_im
 {
     vx_uint32 y, x, width = 0, height = 0;
     vx_float32 scale = 0.0f;
-    void *dst_base = NULL;
-    void *src_base[2] = { NULL, NULL };
+    void *dst_base = nullptr;
+    void *src_base[2] = { nullptr, nullptr };
     vx_imagepatch_addressing_t dst_addr, src_addr[2];
     vx_rectangle_t rect;
     vx_df_image img1_format = 0;

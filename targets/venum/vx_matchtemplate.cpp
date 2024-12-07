@@ -165,9 +165,9 @@ vx_kernel_description_t match_template_kernel =
     "org.khronos.openvx.match_template",
     vxMatchTemplateKernel,
     match_template_kernel_params, dimof(match_template_kernel_params),
-    NULL,
+    nullptr,
     vxMatchTemplateInputValidator,
     vxMatchTemplateOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };

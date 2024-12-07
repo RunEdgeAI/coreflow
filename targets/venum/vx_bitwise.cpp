@@ -141,11 +141,11 @@ vx_kernel_description_t and_kernel = {
     "org.khronos.openvx.and",
     vxAndKernel,
     binary_bitwise_kernel_params, dimof(binary_bitwise_kernel_params),
-    NULL,
+    nullptr,
     vxBinaryBitwiseInputValidator,
     vxBinaryBitwiseOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 static vx_status VX_CALLBACK vxOrKernel(vx_node node, const vx_reference *parameters, vx_uint32 num)
@@ -167,11 +167,11 @@ vx_kernel_description_t or_kernel = {
     "org.khronos.openvx.or",
     vxOrKernel,
     binary_bitwise_kernel_params, dimof(binary_bitwise_kernel_params),
-    NULL,
+    nullptr,
     vxBinaryBitwiseInputValidator,
     vxBinaryBitwiseOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 static vx_status VX_CALLBACK vxXorKernel(vx_node node, const vx_reference *parameters, vx_uint32 num)
@@ -193,11 +193,11 @@ vx_kernel_description_t xor_kernel = {
     "org.khronos.openvx.xor",
     vxXorKernel,
     binary_bitwise_kernel_params, dimof(binary_bitwise_kernel_params),
-    NULL,
+    nullptr,
     vxBinaryBitwiseInputValidator,
     vxBinaryBitwiseOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 /* The Not kernel is an unary operator, requiring separate validators. */
@@ -278,9 +278,9 @@ vx_kernel_description_t not_kernel = {
     "org.khronos.openvx.not",
     vxNotKernel,
     unary_bitwise_kernel_params, dimof(unary_bitwise_kernel_params),
-    NULL,
+    nullptr,
     vxUnaryBitwiseInputValidator,
     vxUnaryBitwiseOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };

@@ -189,9 +189,9 @@ vx_kernel_description_t tensor_transpose_kernel  = {
     tensorTansposeKernel,
     tensor_transpose_kernel_params, dimof(tensor_transpose_kernel_params),
     tensorTransposeValidator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };
 

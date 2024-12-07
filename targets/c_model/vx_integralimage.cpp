@@ -100,11 +100,11 @@ vx_kernel_description_t integral_image_kernel = {
     "org.khronos.openvx.integral_image",
     vxIntegralImageKernel,
     integral_image_kernel_params, dimof(integral_image_kernel_params),
-    NULL,
+    nullptr,
     vxIntegralInputValidator,
     vxIntegralOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 

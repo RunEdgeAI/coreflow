@@ -160,10 +160,10 @@ vx_kernel_description_t bilateral_filter_kernel  = {
     vxBilateralFilterKernel,
     bilateral_filter_kernel_params, dimof(bilateral_filter_kernel_params),
     vxBilateralFilterValidator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };
 
 

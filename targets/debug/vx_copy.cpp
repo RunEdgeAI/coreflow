@@ -43,7 +43,7 @@ vx_status VX_CALLBACK ownCopyImagePtrKernel(vx_node node, const vx_reference par
 {
     vx_status status = VX_FAILURE;
 
-    if (NULL != node && NULL != parameters && num == dimof(copy_image_ptr_kernel_params))
+    if (nullptr != node && nullptr != parameters && num == dimof(copy_image_ptr_kernel_params))
     {
         vx_scalar input = (vx_scalar)parameters[0];
         vx_image output = (vx_image)parameters[1];
@@ -53,12 +53,12 @@ vx_status VX_CALLBACK ownCopyImagePtrKernel(vx_node node, const vx_reference par
         vx_uint32 y = 0;
         vx_uint32 len = 0;
         vx_size planes = 0;
-        void* src = NULL;
-        void* dst = NULL;
+        void* src = nullptr;
+        void* dst = nullptr;
         vx_imagepatch_addressing_t dst_addr = VX_IMAGEPATCH_ADDR_INIT;
         vx_map_id map_id = 0;
         vx_rectangle_t rect;
-        vx_uint8* srcp = NULL;
+        vx_uint8* srcp = nullptr;
 
         status = VX_SUCCESS; // assume success until an error occurs.
 
@@ -116,7 +116,7 @@ vx_param_description_t copy_image_kernel_params[] =
 static
 vx_status VX_CALLBACK ownCopyImageKernel(vx_node node, const vx_reference parameters[], vx_uint32 num)
 {
-    if (NULL != node && NULL != parameters && num == dimof(copy_image_kernel_params))
+    if (nullptr != node && nullptr != parameters && num == dimof(copy_image_kernel_params))
     {
         vx_image input  = (vx_image)parameters[0];
         vx_image output = (vx_image)parameters[1];
@@ -130,7 +130,7 @@ vx_status VX_CALLBACK own_copy_image_validator(vx_node node, const vx_reference 
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node && NULL != parameters && num == dimof(copy_image_kernel_params) && NULL != metas)
+    if (nullptr != node && nullptr != parameters && num == dimof(copy_image_kernel_params) && nullptr != metas)
     {
         vx_parameter param = vxGetParameterByIndex(node, 0); /* input image */
 
@@ -160,13 +160,13 @@ vx_status VX_CALLBACK own_copy_image_validator(vx_node node, const vx_reference 
                     status = VX_ERROR_INVALID_PARAMETERS;
             }
 
-            if (NULL != input)
+            if (nullptr != input)
                 vxReleaseImage(&input);
         }
 
-        if (NULL != param)
+        if (nullptr != param)
             vxReleaseParameter(&param);
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return VX_SUCCESS;
 } /* own_copy_image_validator() */
@@ -185,7 +185,7 @@ vx_param_description_t copy_array_kernel_params[] =
 static
 vx_status VX_CALLBACK ownCopyArrayKernel(vx_node node, const vx_reference parameters[], vx_uint32 num)
 {
-    if (NULL != node && NULL != parameters && num == dimof(copy_array_kernel_params))
+    if (nullptr != node && nullptr != parameters && num == dimof(copy_array_kernel_params))
     {
         vx_array src = (vx_array)parameters[0];
         vx_array dst = (vx_array)parameters[1];
@@ -199,7 +199,7 @@ vx_status VX_CALLBACK own_copy_array_validator(vx_node node, const vx_reference 
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node && NULL != parameters && num == dimof(copy_image_kernel_params) && NULL != metas)
+    if (nullptr != node && nullptr != parameters && num == dimof(copy_image_kernel_params) && nullptr != metas)
     {
         vx_parameter param = vxGetParameterByIndex(node, 0);
 
@@ -226,15 +226,15 @@ vx_status VX_CALLBACK own_copy_array_validator(vx_node node, const vx_reference 
                     status = VX_ERROR_INVALID_PARAMETERS;
             }
 
-            if (NULL != input)
+            if (nullptr != input)
                 vxReleaseArray(&input);
         }
         else
             status = VX_ERROR_INVALID_PARAMETERS;
 
-        if (NULL != param)
+        if (nullptr != param)
             vxReleaseParameter(&param);
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return status;
 } /* own_copy_array_validator() */
@@ -258,10 +258,10 @@ vx_kernel_description_t copy_image_ptr_kernel =
     ownCopyImagePtrKernel,
     copy_image_ptr_kernel_params, dimof(copy_image_ptr_kernel_params),
     own_all_pass_validator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };
 
 vx_kernel_description_t copy_image_kernel =
@@ -271,10 +271,10 @@ vx_kernel_description_t copy_image_kernel =
     ownCopyImageKernel,
     copy_image_kernel_params, dimof(copy_image_kernel_params),
     own_copy_image_validator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };
 
 vx_kernel_description_t copy_array_kernel =
@@ -284,8 +284,8 @@ vx_kernel_description_t copy_array_kernel =
     ownCopyArrayKernel,
     copy_array_kernel_params, dimof(copy_array_kernel_params),
     own_copy_array_validator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };

@@ -42,7 +42,7 @@ vx_status vxHoughLinesP(vx_image img, vx_array param_hough_lines_array, vx_array
     vx_coordinates2d_t pt;
 
     vx_size param_hough_lines_array_stride = 0;
-    void *param_hough_lines_array_ptr = NULL;
+    void *param_hough_lines_array_ptr = nullptr;
     vx_map_id param_hough_lines_array_map_id;
     vx_size param_hough_lines_array_length;
 
@@ -67,7 +67,7 @@ vx_status vxHoughLinesP(vx_image img, vx_array param_hough_lines_array, vx_array
 
     vx_rectangle_t src_rect, src_full_rect = {0, 0, width, height};
     vx_imagepatch_addressing_t src_addr = VX_IMAGEPATCH_ADDR_INIT;
-    void *src_base = NULL;
+    void *src_base = nullptr;
 
     status = vxGetValidRegionImage(img, &src_rect);
     status |= vxAccessImagePatch(img, &src_full_rect, 0, &src_addr, (void **)&src_base, VX_READ_AND_WRITE);
@@ -84,7 +84,7 @@ vx_status vxHoughLinesP(vx_image img, vx_array param_hough_lines_array, vx_array
     vx_array nzloc = vxCreateArray(context_houghlines_internal, VX_TYPE_COORDINATES2D, width * height);
 
     vx_size accum_stride = 0;
-    void *accum_ptr = NULL;
+    void *accum_ptr = nullptr;
     vx_map_id accum_map_id;
 
     for (int i = 0; i < numrho * numangle; i++)
@@ -104,7 +104,7 @@ vx_status vxHoughLinesP(vx_image img, vx_array param_hough_lines_array, vx_array
     }
 
     vx_size trigtab_stride = 0;
-    void *trigtab_ptr = NULL;
+    void *trigtab_ptr = nullptr;
     vx_map_id trigtab_map_id;
     vxMapArrayRange(trigtab, 0, numangle * 2, &trigtab_map_id, &trigtab_stride, &trigtab_ptr, VX_READ_AND_WRITE, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
     vx_float32 *trigtab_p = (vx_float32 *)trigtab_ptr;
@@ -141,11 +141,11 @@ vx_status vxHoughLinesP(vx_image img, vx_array param_hough_lines_array, vx_array
     }
 
     vx_size nzloc_stride = 0;
-    void *nzloc_ptr = NULL;
+    void *nzloc_ptr = nullptr;
     vx_map_id nzloc_map_id;
 
     vx_size mask_stride = 0;
-    void *mask_ptr = NULL;
+    void *mask_ptr = nullptr;
     vx_map_id mask_map_id;
 
     vxMapArrayRange(mask, 0, width * height, &mask_map_id, &mask_stride, &mask_ptr, VX_READ_AND_WRITE, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);

@@ -142,11 +142,11 @@ vx_kernel_description_t box3x3_kernel = {
     "org.khronos.openvx.box_3x3:default",
     vxBox3x3Kernel,
     filter_kernel_params, dimof(filter_kernel_params),
-    NULL,
+    nullptr,
     vxFilterInputValidator,
     vxFilterOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 vx_kernel_description_t box3x3_kernel_2 = {
@@ -154,11 +154,11 @@ vx_kernel_description_t box3x3_kernel_2 = {
     "org.khronos.openvx.box_3x3:duplicate",
     vxBox3x3Kernel,
     filter_kernel_params, dimof(filter_kernel_params),
-    NULL,
+    nullptr,
     vxFilterInputValidator,
     vxFilterOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 vx_kernel_description_t median3x3_kernel = {
@@ -166,11 +166,11 @@ vx_kernel_description_t median3x3_kernel = {
     "org.khronos.openvx.median_3x3",
     vxMedian3x3Kernel,
     filter_kernel_params, dimof(filter_kernel_params),
-    NULL,
+    nullptr,
     vxFilterInputValidator,
     vxFilterOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 vx_kernel_description_t gaussian3x3_kernel = {
@@ -178,9 +178,9 @@ vx_kernel_description_t gaussian3x3_kernel = {
     "org.khronos.openvx.gaussian_3x3",
     vxGaussian3x3Kernel,
     filter_kernel_params, dimof(filter_kernel_params),
-    NULL,
+    nullptr,
     vxFilterInputValidator,
     vxFilterOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };

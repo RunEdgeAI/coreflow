@@ -360,7 +360,7 @@ vx_kernel_description_t canny_kernel =
     "org.khronos.openvx.canny_edge_detector",
     vxCannyEdgeKernel,
     canny_kernel_params, dimof(canny_kernel_params),
-    NULL,
+    nullptr,
     vxCannyEdgeInputValidator,
     vxCannyEdgeOutputValidator,
     vxCannyEdgeInitializer,

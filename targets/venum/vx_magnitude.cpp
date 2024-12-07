@@ -124,10 +124,10 @@ vx_kernel_description_t magnitude_kernel = {
     "org.khronos.openvx.magnitude",
     vxMagnitudeKernel,
     magnitude_kernel_params, dimof(magnitude_kernel_params),
-    NULL,
+    nullptr,
     vxMagnitudeInputValidator,
     vxMagnitudeOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 

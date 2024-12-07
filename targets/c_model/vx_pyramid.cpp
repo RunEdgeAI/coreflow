@@ -55,14 +55,14 @@ static vx_convolution vxCreateGaussian5x5Convolution(vx_context context)
     if (status != VX_SUCCESS)
     {
         vxReleaseConvolution(&conv);
-        return NULL;
+        return nullptr;
     }
 
     status = vxSetConvolutionAttribute(conv, VX_CONVOLUTION_SCALE, (void *)&gaussian5x5scale, sizeof(vx_uint32));
     if (status != VX_SUCCESS)
     {
         vxReleaseConvolution(&conv);
-        return NULL;
+        return nullptr;
     }
     return conv;
 }
@@ -92,8 +92,8 @@ static vx_status ownCopyImage(vx_image input, vx_image output)
     for (p = 0; p < planes && status == VX_SUCCESS; p++)
     {
         status = VX_SUCCESS;
-        src = NULL;
-        dst = NULL;
+        src = nullptr;
+        dst = nullptr;
 
         status |= vxMapImagePatch(input, &src_rect, p, &map_id1, &src_addr, &src, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, 0);
         status |= vxMapImagePatch(output, &dst_rect, p, &map_id2, &dst_addr, &dst, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST, 0);
@@ -232,8 +232,8 @@ static void auxReadRect(const void *base, const vx_imagepatch_addressing_t *addr
 static vx_status replicateConvolve(vx_image src, vx_convolution conv, vx_image dst, vx_border_t *bordermode)
 {
     vx_int32 y, x, i;
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_rectangle_t rect;
 
@@ -348,7 +348,7 @@ static vx_status replicateConvolve(vx_image src, vx_convolution conv, vx_image d
         }
     }
 
-    status |= vxCommitImagePatch(src, NULL, 0, &src_addr, src_base);
+    status |= vxCommitImagePatch(src, nullptr, 0, &src_addr, src_base);
     status |= vxCommitImagePatch(dst, &rect, 0, &dst_addr, dst_base);
 
     return status;
@@ -368,8 +368,8 @@ static vx_status upsampleImage(vx_context context, vx_uint32 width, vx_uint32 he
     vx_imagepatch_addressing_t tmp_addr = VX_IMAGEPATCH_ADDR_INIT;
     vx_imagepatch_addressing_t filling_addr = VX_IMAGEPATCH_ADDR_INIT;
     vx_map_id tmp_map_id, filling_map_id;
-    void *tmp_base = NULL;
-    void *filling_base = NULL;
+    void *tmp_base = nullptr;
+    void *filling_base = nullptr;
 
     status = vxGetValidRegionImage(tmp, &tmp_rect);
     status |= vxMapImagePatch(tmp, &tmp_rect, 0, &tmp_map_id, &tmp_addr, (void **)&tmp_base, VX_READ_AND_WRITE, VX_MEMORY_TYPE_HOST, 0);
@@ -422,7 +422,7 @@ static vx_status upsampleImage(vx_context context, vx_uint32 width, vx_uint32 he
     vx_rectangle_t upsample_rect;
     vx_imagepatch_addressing_t upsample_addr = VX_IMAGEPATCH_ADDR_INIT;
     vx_map_id upsample_map_id;
-    void * upsample_base = NULL;
+    void * upsample_base = nullptr;
     vx_df_image upsample_format;
 
     status |= vxQueryImage(upsample, VX_IMAGE_FORMAT, &upsample_format, sizeof(upsample_format));
@@ -668,7 +668,7 @@ vx_kernel_description_t gaussian_pyramid_kernel =
     "org.khronos.openvx.gaussian_pyramid",
     vxGaussianPyramidKernel,
     gaussian_pyramid_kernel_params, dimof(gaussian_pyramid_kernel_params),
-    NULL,
+    nullptr,
     vxGaussianPyramidInputValidator,
     vxGaussianPyramidOutputValidator,
     vxGaussianPyramidInitializer,
@@ -965,7 +965,7 @@ vx_kernel_description_t laplacian_pyramid_kernel =
     "org.khronos.openvx.laplacian_pyramid",
     vxLaplacianPyramidKernel,
     laplacian_pyramid_kernel_params, dimof(laplacian_pyramid_kernel_params),
-    NULL,
+    nullptr,
     vxLaplacianPyramidInputValidator,
     vxLaplacianPyramidOutputValidator,
     vxLaplacianPyramidInitializer,
@@ -1239,7 +1239,7 @@ vx_kernel_description_t laplacian_reconstruct_kernel =
     "org.khronos.openvx.laplacian_reconstruct",
     vxLaplacianReconstructKernel,
     laplacian_reconstruct_kernel_params, dimof(laplacian_reconstruct_kernel_params),
-    NULL,
+    nullptr,
     vxLaplacianReconstructInputValidator,
     vxLaplacianReconstructOutputValidator,
     vxLaplacianReconstructInitializer,

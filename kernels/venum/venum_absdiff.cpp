@@ -21,8 +21,8 @@
 vx_status vxAbsDiff(vx_image in1, vx_image in2, vx_image output)
 {
     vx_uint32 y, x, width = 0, height = 0;
-    void *dst_base   = NULL;
-    void *src_base[2] = {NULL, NULL};
+    void *dst_base   = nullptr;
+    void *src_base[2] = {nullptr, nullptr};
     vx_imagepatch_addressing_t dst_addr, src_addr[2];
     vx_rectangle_t rect, r_in1, r_in2;
     vx_df_image format, dst_format;

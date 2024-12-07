@@ -38,9 +38,9 @@ vx_status ownNorm(vx_image input_x, vx_image input_y, vx_scalar norm_type, vx_im
     vx_uint32 x;
     vx_uint32 y;
     vx_df_image format = 0;
-    vx_float32* dst_base   = NULL;
-    vx_float32* src_base_x = NULL;
-    vx_float32* src_base_y = NULL;
+    vx_float32* dst_base   = nullptr;
+    vx_float32* src_base_x = nullptr;
+    vx_float32* src_base_y = nullptr;
     vx_imagepatch_addressing_t src_addr_x = VX_IMAGEPATCH_ADDR_INIT;
     vx_imagepatch_addressing_t src_addr_y = VX_IMAGEPATCH_ADDR_INIT;
     vx_imagepatch_addressing_t dst_addr   = VX_IMAGEPATCH_ADDR_INIT;
@@ -101,7 +101,7 @@ vx_param_description_t norm_kernel_params[] =
 static
 vx_status VX_CALLBACK ownNormKernel(vx_node node, const vx_reference parameters[], vx_uint32 num)
 {
-    if (NULL != node && NULL != parameters && num == dimof(norm_kernel_params))
+    if (nullptr != node && nullptr != parameters && num == dimof(norm_kernel_params))
     {
         vx_image  input_x   = (vx_image)parameters[0];
         vx_image  input_y   = (vx_image)parameters[1];
@@ -109,7 +109,7 @@ vx_status VX_CALLBACK ownNormKernel(vx_node node, const vx_reference parameters[
         vx_image  output    = (vx_image)parameters[3];
 
         return ownNorm(input_x, input_y, norm_type, output);
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return VX_ERROR_INVALID_PARAMETERS;
 } /* ownNormKernel() */
@@ -122,7 +122,7 @@ vx_status VX_CALLBACK set_norm_valid_rectangle(
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node && index < dimof(norm_kernel_params) && NULL != input_valid && NULL != output_valid)
+    if (nullptr != node && index < dimof(norm_kernel_params) && nullptr != input_valid && nullptr != output_valid)
     {
         if (input_valid[0]->start_x > input_valid[1]->end_x ||
             input_valid[0]->end_x   < input_valid[1]->start_x ||
@@ -153,9 +153,9 @@ vx_status VX_CALLBACK own_norm_validator(
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     (void)parameters;
 
-    if (NULL != node &&
+    if (nullptr != node &&
         num == dimof(norm_kernel_params) &&
-        NULL != metas)
+        nullptr != metas)
     {
         vx_parameter param1 = 0;
         vx_parameter param2 = 0;
@@ -244,24 +244,24 @@ vx_status VX_CALLBACK own_norm_validator(
             }
         }
 
-        if (NULL != norm_type)
+        if (nullptr != norm_type)
             vxReleaseScalar(&norm_type);
 
-        if (NULL != dx)
+        if (nullptr != dx)
             vxReleaseImage(&dx);
 
-        if (NULL != dy)
+        if (nullptr != dy)
             vxReleaseImage(&dy);
 
-        if (NULL != param1)
+        if (nullptr != param1)
             vxReleaseParameter(&param1);
 
-        if (NULL != param2)
+        if (nullptr != param2)
             vxReleaseParameter(&param2);
 
-        if (NULL != param3)
+        if (nullptr != param3)
             vxReleaseParameter(&param3);
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return status;
 } /* own_norm_validator() */
@@ -273,8 +273,8 @@ vx_kernel_description_t norm_kernel =
     ownNormKernel,
     norm_kernel_params, dimof(norm_kernel_params),
     own_norm_validator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };

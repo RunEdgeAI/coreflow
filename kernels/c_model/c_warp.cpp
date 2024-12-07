@@ -90,8 +90,8 @@ static vx_status vxWarpGeneric(vx_image src_image, vx_matrix matrix, vx_scalar s
                                const vx_border_t *borders, transform_f transform)
 {
     vx_status status = VX_SUCCESS;
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_imagepatch_addressing_t src_addr = VX_IMAGEPATCH_ADDR_INIT;
     vx_imagepatch_addressing_t dst_addr = VX_IMAGEPATCH_ADDR_INIT;
     vx_uint32 dst_width;

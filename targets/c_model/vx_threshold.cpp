@@ -176,9 +176,9 @@ vx_kernel_description_t threshold_kernel = {
     "org.khronos.openvx.threshold",
     vxThresholdKernel,
     threshold_kernel_params, dimof(threshold_kernel_params),
-    NULL,
+    nullptr,
     vxThresholdInputValidator,
     vxThresholdOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };

@@ -279,7 +279,7 @@ vx_status vxMatchTemplateEntry(const vx_image source_image,
     vx_rectangle_t source_rect, template_rect;
     status |= vxGetValidRegionImage(source_image, &source_rect);
     if( status != VX_SUCCESS ) return status;
-    src = NULL;
+    src = nullptr;
     status = vxMapImagePatch(source_image, &source_rect, 0, &source_map_id, &addr, &src, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, 0);
     if( status != VX_SUCCESS ) return status;
 
@@ -292,7 +292,7 @@ vx_status vxMatchTemplateEntry(const vx_image source_image,
 
     status |= vxGetValidRegionImage(template_image, &template_rect);
     if( status != VX_SUCCESS ) return status;
-    src = NULL;
+    src = nullptr;
     status = vxMapImagePatch(template_image, &template_rect, 0, &template_map_id, &template_addr, &src, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, 0);
     if( status != VX_SUCCESS ) return status;
     for (i = 0; i < template_height; i++)
@@ -332,8 +332,8 @@ vx_status matchTemplate_HAMMING(const vx_image source_image, vx_uint32 src_width
     vx_map_id result_map_id = 0;
     vx_rectangle_t rect;
     vx_rectangle_t result_rect;
-    vx_uint8 *src = NULL;
-    vx_int16 *result_src = NULL;
+    vx_uint8 *src = nullptr;
+    vx_int16 *result_src = nullptr;
     vx_size source_x = 0;
     status |= vxGetValidRegionImage(source_image, &rect);
     status |= vxMapImagePatch(source_image, &rect, 0, &map_id, &addr, (void**)&src, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
@@ -462,8 +462,8 @@ vx_status matchTemplate_COMPARE_L1(const vx_image source_image, vx_uint32 src_wi
     vx_map_id result_map_id = 0;
     vx_rectangle_t rect;
     vx_rectangle_t result_rect;
-    vx_uint8 *src = NULL;
-    vx_int16 *result_src = NULL;
+    vx_uint8 *src = nullptr;
+    vx_int16 *result_src = nullptr;
     vx_size source_x = 0;
     status |= vxGetValidRegionImage(source_image, &rect);
     status |= vxMapImagePatch(source_image, &rect, 0, &map_id, &addr, (void**)&src, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
@@ -594,8 +594,8 @@ vx_status matchTemplate_COMPARE_L2(const vx_image source_image, vx_uint32 src_wi
     vx_map_id result_map_id = 0;
     vx_rectangle_t rect;
     vx_rectangle_t result_rect;
-    vx_uint8 *src = NULL;
-    vx_int16 *result_src = NULL;
+    vx_uint8 *src = nullptr;
+    vx_int16 *result_src = nullptr;
     vx_size source_x = 0;
     status |= vxGetValidRegionImage(source_image, &rect);
     status |= vxMapImagePatch(source_image, &rect, 0, &map_id, &addr, (void**)&src, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
@@ -728,8 +728,8 @@ vx_status matchTemplate_CCORR(const vx_image source_image, vx_uint32 src_width, 
     vx_map_id result_map_id = 0;
     vx_rectangle_t rect;
     vx_rectangle_t result_rect;
-    vx_uint8 *src = NULL;
-    vx_int16 *result_src = NULL;
+    vx_uint8 *src = nullptr;
+    vx_int16 *result_src = nullptr;
     vx_size source_x = 0;
     status |= vxGetValidRegionImage(source_image, &rect);
     status |= vxMapImagePatch(source_image, &rect, 0, &map_id, &addr, (void**)&src, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
@@ -854,8 +854,8 @@ vx_status matchTemplate_COMPARE_L2_NORM(const vx_image source_image, vx_uint32 s
     vx_map_id result_map_id = 0;
     vx_rectangle_t rect;
     vx_rectangle_t result_rect;
-    vx_uint8 *src = NULL;
-    vx_int16 *result_src = NULL;
+    vx_uint8 *src = nullptr;
+    vx_int16 *result_src = nullptr;
     vx_size source_x = 0;
     status |= vxGetValidRegionImage(source_image, &rect);
     status |= vxMapImagePatch(source_image, &rect, 0, &map_id, &addr, (void**)&src, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
@@ -1055,8 +1055,8 @@ vx_status matchTemplate_COMPARE_CCORR_NORM(const vx_image source_image, vx_uint3
     vx_map_id result_map_id = 0;
     vx_rectangle_t rect;
     vx_rectangle_t result_rect;
-    vx_uint8 *src = NULL;
-    vx_int16 *result_src = NULL;
+    vx_uint8 *src = nullptr;
+    vx_int16 *result_src = nullptr;
     vx_size source_x = 0;
     status |= vxGetValidRegionImage(source_image, &rect);
     status |= vxMapImagePatch(source_image, &rect, 0, &map_id, &addr, (void**)&src, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);

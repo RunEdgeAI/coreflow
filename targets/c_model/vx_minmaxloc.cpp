@@ -155,11 +155,11 @@ vx_kernel_description_t minmaxloc_kernel = {
     "org.khronos.openvx.minmaxloc",
     vxMinMaxLocKernel,
     minmaxloc_kernel_params, dimof(minmaxloc_kernel_params),
-    NULL,
+    nullptr,
     vxMinMaxLocInputValidator,
     vxMinMaxLocOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 

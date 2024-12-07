@@ -24,9 +24,9 @@ vx_status vxNonMaxSuppression(vx_image input, vx_image mask, vx_scalar win_size,
     vx_int32 height, width, shift_x_u1 = 0;
     vx_df_image format = 0, mask_format = 0;
     vx_uint8 mask_data = 0;
-    void *src_base = NULL;
-    void *mask_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *mask_base = nullptr;
+    void *dst_base = nullptr;
 
     vx_imagepatch_addressing_t src_addr = VX_IMAGEPATCH_ADDR_INIT;
     vx_imagepatch_addressing_t dst_addr = VX_IMAGEPATCH_ADDR_INIT;
@@ -39,7 +39,7 @@ vx_status vxNonMaxSuppression(vx_image input, vx_image mask, vx_scalar win_size,
     status  = vxGetValidRegionImage(input, &src_rect);
     status |= vxMapImagePatch(input,  &src_rect, 0, &src_map_id, &src_addr, &src_base, VX_READ_ONLY,  VX_MEMORY_TYPE_HOST, 0);
     status |= vxMapImagePatch(output, &src_rect, 0, &dst_map_id, &dst_addr, &dst_base, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST, 0);
-    if (mask != NULL)
+    if (mask != nullptr)
     {
         status |= vxMapImagePatch(mask, &src_rect, 0, &mask_map_id, &mask_addr, (void **)&mask_base, VX_READ_AND_WRITE, VX_MEMORY_TYPE_HOST, 0);
         status |= vxQueryImage(mask, VX_IMAGE_FORMAT, &mask_format, sizeof(mask_format));
@@ -61,7 +61,7 @@ vx_status vxNonMaxSuppression(vx_image input, vx_image mask, vx_scalar win_size,
         for (vx_int32 y = border; y < (height - border); y++)
         {
             vx_uint8 *_mask;
-            if (mask != NULL)
+            if (mask != nullptr)
             {
                 _mask = (vx_uint8 *)vxFormatImagePatchAddress2d(mask_base, x + shift_x_u1, y, &mask_addr);
                 if (mask_format == VX_DF_IMAGE_U1)
@@ -89,7 +89,7 @@ vx_status vxNonMaxSuppression(vx_image input, vx_image mask, vx_scalar win_size,
                     for (vx_int32 j = -border; j <= border; j++)
                     {
                         void *neighbor = vxFormatImagePatchAddress2d(src_base, x + i, y + j, &src_addr);
-            			if (mask != NULL)
+            			if (mask != nullptr)
             			{
             				_mask = (vx_uint8 *)vxFormatImagePatchAddress2d(mask_base, x + i + shift_x_u1, y + j, &mask_addr);
                             if (mask_format == VX_DF_IMAGE_U1)
@@ -131,7 +131,7 @@ vx_status vxNonMaxSuppression(vx_image input, vx_image mask, vx_scalar win_size,
     }
     status |= vxUnmapImagePatch(input, src_map_id);
     status |= vxUnmapImagePatch(output, dst_map_id);
-    if (mask != NULL)
+    if (mask != nullptr)
     {
         status |= vxUnmapImagePatch(mask, mask_map_id);
     }

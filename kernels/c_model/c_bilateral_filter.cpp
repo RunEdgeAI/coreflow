@@ -77,7 +77,7 @@ static void getMinMax(void* src, vx_size* src_strides, vx_size* dims, vx_size nu
 
 static void releaseRes(void *pData)
 {
-    if (NULL != pData)
+    if (nullptr != pData)
     {
         free(pData);
     }
@@ -87,7 +87,7 @@ static void releaseRes(void *pData)
 static vx_status calcColorWeight(vx_uint8 cn, vx_float64 gauss_color_coeff, vx_float32 **color_weight)
 {
     vx_float32 *tmp_weight = (vx_float32 *)malloc(cn * COLOR_WEIGHT_SIZE_PER_CHANNEL * sizeof(vx_float32));
-    if (NULL == tmp_weight)
+    if (nullptr == tmp_weight)
     {
         return VX_ERROR_NO_MEMORY;
     }
@@ -106,7 +106,7 @@ static vx_status calcSpaceWeight(vx_int32 diameter, vx_float64 gauss_space_coeff
 {
     vx_int32 radius = diameter / 2;
     vx_float32 *tmp_weight = (vx_float32 *)malloc(diameter * diameter * sizeof(vx_float32));
-    if (NULL == tmp_weight)
+    if (nullptr == tmp_weight)
     {
         return VX_ERROR_NO_MEMORY;
     }
@@ -140,8 +140,8 @@ static vx_status bilateralFilter_8u(void* src, vx_size* src_strides, vx_size* di
     vx_int32 radius = diameter/2;
     vx_enum border_mode = bordermode->mode;
     vx_int32 low_x, low_y, high_x, high_y;
-    vx_float32 *color_weight = NULL;
-    vx_float32 *space_weight = NULL;
+    vx_float32 *color_weight = nullptr;
+    vx_float32 *space_weight = nullptr;
     vx_uint8 cn = num_of_dims == 2 ? 1 : 3;
 
     vx_float64 gauss_color_coeff = -0.5/(sigma_color*sigma_color);
@@ -321,7 +321,7 @@ static vx_status bilateralFilter_s16(void* src, vx_size* src_strides, vx_size* d
     len = (vx_float32)(maxVal - minVal) * cn;
     kExpNumBins = kExpNumBinsPerChannel * cn;
     color_weight = (vx_float32 *)malloc((kExpNumBins + 2) * sizeof(vx_float32));
-    if (NULL == color_weight)
+    if (nullptr == color_weight)
     {
         return VX_ERROR_NO_MEMORY;
     }
@@ -340,7 +340,7 @@ static vx_status bilateralFilter_s16(void* src, vx_size* src_strides, vx_size* d
         }
     }
     //calculation space weight
-    space_weight = NULL;
+    space_weight = nullptr;
     status = calcSpaceWeight(diameter, gauss_space_coeff, &space_weight);
     if (status != VX_SUCCESS)
     {

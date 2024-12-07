@@ -207,11 +207,11 @@ vx_kernel_description_t add_kernel = {
     "org.khronos.openvx.add",
     vxAdditionKernel,
     add_subtract_kernel_params, dimof(add_subtract_kernel_params),
-    NULL,
+    nullptr,
     vxAddSubtractInputValidator,
     vxAddSubtractOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 static vx_status VX_CALLBACK vxSubtractionKernel(vx_node node, const vx_reference parameters[], vx_uint32 num)
@@ -234,10 +234,10 @@ vx_kernel_description_t subtract_kernel = {
     "org.khronos.openvx.subtract",
     vxSubtractionKernel,
     add_subtract_kernel_params, dimof(add_subtract_kernel_params),
-    NULL,
+    nullptr,
     vxAddSubtractInputValidator,
     vxAddSubtractOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 

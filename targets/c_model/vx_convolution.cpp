@@ -172,10 +172,10 @@ vx_kernel_description_t convolution_kernel = {
     "org.khronos.openvx.custom_convolution",
     vxConvolveKernel,
     convolution_kernel_params, dimof(convolution_kernel_params),
-    NULL,
+    nullptr,
     vxConvolveInputValidator,
     vxConvolveOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 

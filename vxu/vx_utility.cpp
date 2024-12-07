@@ -361,8 +361,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxuMeanStdDev(vx_context context, vx_image in
     vx_graph graph = vxCreateGraph(context);
     if (vxGetStatus((vx_reference)graph) == VX_SUCCESS)
     {
-        vx_scalar s_mean = vxCreateScalar(context, VX_TYPE_FLOAT32, NULL);
-        vx_scalar s_stddev = vxCreateScalar(context, VX_TYPE_FLOAT32, NULL);
+        vx_scalar s_mean = vxCreateScalar(context, VX_TYPE_FLOAT32, nullptr);
+        vx_scalar s_stddev = vxCreateScalar(context, VX_TYPE_FLOAT32, nullptr);
         vx_node node = vxMeanStdDevNode(graph, input, s_mean, s_stddev);
         if (vxGetStatus((vx_reference)node)==VX_SUCCESS)
         {

@@ -36,7 +36,7 @@ static
 vx_status VX_CALLBACK ownSobel3x3Kernel(vx_node node, const vx_reference parameters[], vx_uint32 num)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
-    if (NULL != node && NULL != parameters && num == dimof(sobel3x3_kernel_params))
+    if (nullptr != node && nullptr != parameters && num == dimof(sobel3x3_kernel_params))
     {
         vx_border_t bordermode;
         vx_image input  = (vx_image)parameters[0];
@@ -56,7 +56,7 @@ vx_status VX_CALLBACK own_sobel3x3_validator(vx_node node, const vx_reference pa
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node && NULL != parameters && num == dimof(sobel3x3_kernel_params) && NULL != metas)
+    if (nullptr != node && nullptr != parameters && num == dimof(sobel3x3_kernel_params) && nullptr != metas)
     {
         vx_parameter param1 = vxGetParameterByIndex(node, 0);
         vx_parameter param2 = vxGetParameterByIndex(node, 1);
@@ -90,39 +90,39 @@ vx_status VX_CALLBACK own_sobel3x3_validator(vx_node node, const vx_reference pa
             {
                 vx_enum dst_format = VX_DF_IMAGE_S16;
 
-                if (NULL == metas[1] && NULL == metas[2])
+                if (nullptr == metas[1] && nullptr == metas[2])
                     status = VX_ERROR_INVALID_PARAMETERS;
 
-                if (VX_SUCCESS == status && NULL != metas[1])
+                if (VX_SUCCESS == status && nullptr != metas[1])
                 {
-                    /* if optional parameter non NULL */
+                    /* if optional parameter non nullptr */
                     status |= vxSetMetaFormatAttribute(metas[1], VX_IMAGE_WIDTH,  &src_width,  sizeof(src_width));
                     status |= vxSetMetaFormatAttribute(metas[1], VX_IMAGE_HEIGHT, &src_height, sizeof(src_height));
                     status |= vxSetMetaFormatAttribute(metas[1], VX_IMAGE_FORMAT, &dst_format, sizeof(dst_format));
                 }
 
-                if (VX_SUCCESS == status && NULL != metas[2])
+                if (VX_SUCCESS == status && nullptr != metas[2])
                 {
-                    /* if optional parameter non NULL */
+                    /* if optional parameter non nullptr */
                     status |= vxSetMetaFormatAttribute(metas[2], VX_IMAGE_WIDTH,  &src_width,  sizeof(src_width));
                     status |= vxSetMetaFormatAttribute(metas[2], VX_IMAGE_HEIGHT, &src_height, sizeof(src_height));
                     status |= vxSetMetaFormatAttribute(metas[2], VX_IMAGE_FORMAT, &dst_format, sizeof(dst_format));
                 }
             }
 
-            if (NULL != input)
+            if (nullptr != input)
                 vxReleaseImage(&input);
 
-            if (NULL != param1)
+            if (nullptr != param1)
                 vxReleaseParameter(&param1);
 
-            if (NULL != param2)
+            if (nullptr != param2)
                 vxReleaseParameter(&param2);
 
-            if (NULL != param3)
+            if (nullptr != param3)
                 vxReleaseParameter(&param3);
         }
-    } /* if ptrs non NULL */
+    } /* if ptrs non nullptr */
 
     return status;
 } /* own_sobel3x3_validator() */
@@ -134,8 +134,8 @@ vx_kernel_description_t sobel3x3_kernel =
     ownSobel3x3Kernel,
     sobel3x3_kernel_params, dimof(sobel3x3_kernel_params),
     own_sobel3x3_validator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };

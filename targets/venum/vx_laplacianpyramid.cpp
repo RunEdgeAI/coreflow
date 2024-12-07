@@ -40,14 +40,14 @@ static vx_convolution vxCreateGaussian5x5Convolution(vx_context context)
     if (status != VX_SUCCESS)
     {
         vxReleaseConvolution(&conv);
-        return NULL;
+        return nullptr;
     }
 
     status = vxSetConvolutionAttribute(conv, VX_CONVOLUTION_SCALE, (void *)&gaussian5x5scale, sizeof(vx_uint32));
     if (status != VX_SUCCESS)
     {
         vxReleaseConvolution(&conv);
-        return NULL;
+        return nullptr;
     }
     return conv;
 }
@@ -77,8 +77,8 @@ static vx_status ownCopyImage(vx_image input, vx_image output)
     for (p = 0; p < planes && status == VX_SUCCESS; p++)
     {
         status = VX_SUCCESS;
-        src = NULL;
-        dst = NULL;
+        src = nullptr;
+        dst = nullptr;
 
         status |= vxMapImagePatch(input, &src_rect, p, &map_id1, &src_addr, &src, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, 0);
         status |= vxMapImagePatch(output, &dst_rect, p, &map_id2, &dst_addr, &dst, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST, 0);
@@ -133,8 +133,8 @@ static vx_status xLaplacianPyramidupsampleImage(vx_context context, vx_uint32 wi
     vx_imagepatch_addressing_t tmp_addr = VX_IMAGEPATCH_ADDR_INIT;
     vx_imagepatch_addressing_t filling_addr = VX_IMAGEPATCH_ADDR_INIT;
     vx_map_id tmp_map_id, filling_map_id;
-    void *tmp_base = NULL;
-    void *filling_base = NULL;
+    void *tmp_base = nullptr;
+    void *filling_base = nullptr;
 
     status = vxGetValidRegionImage(tmp, &tmp_rect);
     status |= vxMapImagePatch(tmp, &tmp_rect, 0, &tmp_map_id, &tmp_addr, (void **)&tmp_base, VX_READ_AND_WRITE, VX_MEMORY_TYPE_HOST, 0);
@@ -174,7 +174,7 @@ static vx_status xLaplacianPyramidupsampleImage(vx_context context, vx_uint32 wi
     vx_rectangle_t upsample_rect;
     vx_imagepatch_addressing_t upsample_addr = VX_IMAGEPATCH_ADDR_INIT;
     vx_map_id upsample_map_id;
-    void * upsample_base = NULL;
+    void * upsample_base = nullptr;
     vx_df_image upsample_format;
 
     status |= vxQueryImage(upsample, VX_IMAGE_FORMAT, &upsample_format, sizeof(upsample_format));
@@ -498,7 +498,7 @@ vx_kernel_description_t laplacian_pyramid_kernel =
     "org.khronos.openvx.laplacian_pyramid",
     vxLaplacianPyramidKernel,
     laplacian_pyramid_kernel_params, dimof(laplacian_pyramid_kernel_params),
-    NULL,
+    nullptr,
     vxLaplacianPyramidInputValidator,
     vxLaplacianPyramidOutputValidator,
     vxLaplacianPyramidInitializer,

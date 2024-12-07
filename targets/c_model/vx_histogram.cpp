@@ -186,11 +186,11 @@ vx_kernel_description_t histogram_kernel = {
     "org.khronos.openvx.histogram",
     vxHistogramKernel,
     histogram_kernel_params, dimof(histogram_kernel_params),
-    NULL,
+    nullptr,
     vxHistogramInputValidator,
     vxHistogramOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 vx_kernel_description_t equalize_hist_kernel = {
@@ -198,10 +198,10 @@ vx_kernel_description_t equalize_hist_kernel = {
     "org.khronos.openvx.equalize_histogram",
     vxEqualizeHistKernel,
     equalize_hist_kernel_params, dimof(equalize_hist_kernel_params),
-    NULL,
+    nullptr,
     vxEqualizeHistInputValidator,
     vxEqualizeHistOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 

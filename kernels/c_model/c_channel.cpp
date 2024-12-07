@@ -27,8 +27,8 @@ vx_status vxChannelCombine(vx_image inputs[4], vx_image output)
         /* write all the channels back out in interleaved format */
         vx_imagepatch_addressing_t src_addrs[4];
         vx_imagepatch_addressing_t dst_addr;
-        void *base_src_ptrs[4] = {NULL, NULL, NULL, NULL};
-        void *base_dst_ptr = NULL;
+        void *base_src_ptrs[4] = {nullptr, nullptr, nullptr, nullptr};
+        void *base_dst_ptr = nullptr;
         uint32_t x, y, p;
         uint32_t numplanes = 3;
 
@@ -51,7 +51,7 @@ vx_status vxChannelCombine(vx_image inputs[4], vx_image output)
                     (uint8_t*)vxFormatImagePatchAddress2d(base_src_ptrs[0], x, y, &src_addrs[0]),
                     (uint8_t*)vxFormatImagePatchAddress2d(base_src_ptrs[1], x, y, &src_addrs[1]),
                     (uint8_t*)vxFormatImagePatchAddress2d(base_src_ptrs[2], x, y, &src_addrs[2]),
-                    NULL,
+                    nullptr,
                 };
                 uint8_t *dst = (uint8_t*)vxFormatImagePatchAddress2d(base_dst_ptr, x, y, &dst_addr);
                 dst[0] = planes[0][0];
@@ -80,8 +80,8 @@ vx_status vxChannelCombine(vx_image inputs[4], vx_image output)
         {
             vx_imagepatch_addressing_t src_addr;
             vx_imagepatch_addressing_t dst_addr;
-            void *base_src_ptr = NULL;
-            void *base_dst_ptr = NULL;
+            void *base_src_ptr = nullptr;
+            void *base_dst_ptr = nullptr;
 
             // get the plane
             vxAccessImagePatch(inputs[p], &rect, 0, &src_addr, &base_src_ptr, VX_READ_ONLY);
@@ -114,8 +114,8 @@ vx_status vxChannelCombine(vx_image inputs[4], vx_image output)
         {
             vx_imagepatch_addressing_t src_addr;
             vx_imagepatch_addressing_t dst_addr;
-            void *base_src_ptr = NULL;
-            void *base_dst_ptr = NULL;
+            void *base_src_ptr = nullptr;
+            void *base_dst_ptr = nullptr;
 
             // get the plane
             vxAccessImagePatch(inputs[0], &rect, 0, &src_addr, &base_src_ptr, VX_READ_ONLY);
@@ -142,9 +142,9 @@ vx_status vxChannelCombine(vx_image inputs[4], vx_image output)
             vx_imagepatch_addressing_t src0_addr;
             vx_imagepatch_addressing_t src1_addr;
             vx_imagepatch_addressing_t dst_addr;
-            void *base_src0_ptr = NULL;
-            void *base_src1_ptr = NULL;
-            void *base_dst_ptr = NULL;
+            void *base_src0_ptr = nullptr;
+            void *base_src1_ptr = nullptr;
+            void *base_dst_ptr = nullptr;
 
             // get the plane
             vxAccessImagePatch(inputs[1], &rect, 0, &src0_addr, &base_src0_ptr, VX_READ_ONLY);
@@ -180,10 +180,10 @@ vx_status vxChannelCombine(vx_image inputs[4], vx_image output)
         vx_imagepatch_addressing_t src1_addr;
         vx_imagepatch_addressing_t src2_addr;
         vx_imagepatch_addressing_t dst_addr;
-        void *base_src0_ptr = NULL;
-        void *base_src1_ptr = NULL;
-        void *base_src2_ptr = NULL;
-        void *base_dst_ptr = NULL;
+        void *base_src0_ptr = nullptr;
+        void *base_src1_ptr = nullptr;
+        void *base_src2_ptr = nullptr;
+        void *base_dst_ptr = nullptr;
 
         vxAccessImagePatch(inputs[0], &rect, 0, &src0_addr, &base_src0_ptr, VX_READ_ONLY);
         vxAccessImagePatch(inputs[1], &rect, 0, &src1_addr, &base_src1_ptr, VX_READ_ONLY);
@@ -226,8 +226,8 @@ static vx_status vxCopyPlaneToImage(vx_image src,
                                      vx_uint32 x_subsampling,
                                      vx_image dst)
 {
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_imagepatch_addressing_t src_addr = {0};
     vx_imagepatch_addressing_t dst_addr = {0};
     vx_rectangle_t src_rect, dst_rect;
@@ -261,7 +261,7 @@ static vx_status vxCopyPlaneToImage(vx_image src,
             }
             vxCommitImagePatch(dst, &dst_rect, 0, &dst_addr, dst_base);
         }
-        vxCommitImagePatch(src, NULL, src_plane, &src_addr, src_base);
+        vxCommitImagePatch(src, nullptr, src_plane, &src_addr, src_base);
     }
     return status;
 }

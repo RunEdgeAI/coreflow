@@ -40,7 +40,7 @@ vx_status VX_CALLBACK ownScharr3x3Kernel(vx_node node, const vx_reference parame
 {
     vx_status status = VX_FAILURE;
 
-    if (NULL != node && NULL != parameters && num == dimof(scharr3x3_kernel_params))
+    if (nullptr != node && nullptr != parameters && num == dimof(scharr3x3_kernel_params))
     {
         vx_uint32 i;
         vx_uint32 x;
@@ -50,9 +50,9 @@ vx_status VX_CALLBACK ownScharr3x3Kernel(vx_node node, const vx_reference parame
         vx_image grad_x = (vx_image)parameters[1];
         vx_image grad_y = (vx_image)parameters[2];
 
-        vx_uint8* src_base   = NULL;
-        vx_int16* dst_base_x = NULL;
-        vx_int16* dst_base_y = NULL;
+        vx_uint8* src_base   = nullptr;
+        vx_int16* dst_base_x = nullptr;
+        vx_int16* dst_base_y = nullptr;
 
         vx_imagepatch_addressing_t src_addr   = VX_IMAGEPATCH_ADDR_INIT;
         vx_imagepatch_addressing_t dst_addr_x = VX_IMAGEPATCH_ADDR_INIT;
@@ -66,7 +66,7 @@ vx_status VX_CALLBACK ownScharr3x3Kernel(vx_node node, const vx_reference parame
         vx_rectangle_t rect;
         vx_border_t borders = { VX_BORDER_UNDEFINED, {{ 0 }} };
 
-        if (NULL == src || (NULL == grad_x && NULL == grad_y))
+        if (nullptr == src || (nullptr == grad_x && nullptr == grad_y))
         {
             return VX_ERROR_INVALID_PARAMETERS;
         }
@@ -75,10 +75,10 @@ vx_status VX_CALLBACK ownScharr3x3Kernel(vx_node node, const vx_reference parame
 
         status |= vxMapImagePatch(src, &rect, 0, &src_map_id, &src_addr, (void**)&src_base, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
 
-        if (NULL != grad_x)
+        if (nullptr != grad_x)
             status |= vxMapImagePatch(grad_x, &rect, 0, &grad_x_map_id, &dst_addr_x, (void**)&dst_base_x, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
 
-        if (NULL != grad_y)
+        if (nullptr != grad_y)
             status |= vxMapImagePatch(grad_y, &rect, 0, &grad_y_map_id, &dst_addr_y, (void**)&dst_base_y, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
 
         status |= vxQueryNode(node, VX_NODE_BORDER, &borders, sizeof(borders));
@@ -142,12 +142,12 @@ vx_status VX_CALLBACK ownScharr3x3Kernel(vx_node node, const vx_reference parame
 
         status |= vxUnmapImagePatch(src, src_map_id);
 
-        if (NULL != grad_x)
+        if (nullptr != grad_x)
             status |= vxUnmapImagePatch(grad_x, grad_x_map_id);
 
-        if (NULL != grad_y)
+        if (nullptr != grad_y)
             status |= vxUnmapImagePatch(grad_y, grad_y_map_id);
-    } /* if ptrs non NULL */
+    } /* if ptrs non nullptr */
 
     return status;
 } /* ownScharr3x3Kernel() */
@@ -160,7 +160,7 @@ vx_status VX_CALLBACK set_scharr3x3_valid_rectangle(
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node && index < dimof(scharr3x3_kernel_params) && NULL != input_valid && NULL != output_valid)
+    if (nullptr != node && index < dimof(scharr3x3_kernel_params) && nullptr != input_valid && nullptr != output_valid)
     {
         vx_border_t borders = { VX_BORDER_UNDEFINED, { { 0 } } };
 
@@ -179,7 +179,7 @@ vx_status VX_CALLBACK set_scharr3x3_valid_rectangle(
             else
                 status = VX_ERROR_NOT_IMPLEMENTED;
         }
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return status;
 } /* set_scharr3x3_valid_rectangle() */
@@ -192,9 +192,9 @@ vx_status VX_CALLBACK own_scharr3x3_validator(
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     (void)parameters;
 
-    if (NULL != node &&
+    if (nullptr != node &&
         num == dimof(scharr3x3_kernel_params) &&
-        NULL != metas)
+        nullptr != metas)
     {
         vx_parameter param = 0;
         vx_image     src = 0;
@@ -228,17 +228,17 @@ vx_status VX_CALLBACK own_scharr3x3_validator(
                     vx_enum dst_format = VX_DF_IMAGE_S16;
                     vx_border_t borders = { VX_BORDER_UNDEFINED, { { 0 } } };
 
-                    if (NULL != metas[1])
+                    if (nullptr != metas[1])
                     {
-                        /* if optional parameter non NULL */
+                        /* if optional parameter non nullptr */
                         status |= vxSetMetaFormatAttribute(metas[1], VX_IMAGE_WIDTH, &src_width, sizeof(src_width));
                         status |= vxSetMetaFormatAttribute(metas[1], VX_IMAGE_HEIGHT, &src_height, sizeof(src_height));
                         status |= vxSetMetaFormatAttribute(metas[1], VX_IMAGE_FORMAT, &dst_format, sizeof(dst_format));
                     }
 
-                    if (NULL != metas[2])
+                    if (nullptr != metas[2])
                     {
-                        /* if optional parameter non NULL */
+                        /* if optional parameter non nullptr */
                         status |= vxSetMetaFormatAttribute(metas[2], VX_IMAGE_WIDTH, &src_width, sizeof(src_width));
                         status |= vxSetMetaFormatAttribute(metas[2], VX_IMAGE_HEIGHT, &src_height, sizeof(src_height));
                         status |= vxSetMetaFormatAttribute(metas[2], VX_IMAGE_FORMAT, &dst_format, sizeof(dst_format));
@@ -252,10 +252,10 @@ vx_status VX_CALLBACK own_scharr3x3_validator(
                         {
                             vx_kernel_image_valid_rectangle_f callback = &set_scharr3x3_valid_rectangle;
 
-                            if (NULL != metas[1])
+                            if (nullptr != metas[1])
                                 status |= vxSetMetaFormatAttribute(metas[1], VX_VALID_RECT_CALLBACK, &callback, sizeof(callback));
 
-                            if (NULL != metas[2])
+                            if (nullptr != metas[2])
                                 status |= vxSetMetaFormatAttribute(metas[2], VX_VALID_RECT_CALLBACK, &callback, sizeof(callback));
                         }
                         else
@@ -267,12 +267,12 @@ vx_status VX_CALLBACK own_scharr3x3_validator(
         else
             status = VX_ERROR_INVALID_PARAMETERS;
 
-        if (NULL != src)
+        if (nullptr != src)
             vxReleaseImage(&src);
 
-        if (NULL != param)
+        if (nullptr != param)
             vxReleaseParameter(&param);
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return status;
 } /* own_scharr3x3_validator() */
@@ -284,10 +284,10 @@ vx_kernel_description_t scharr3x3_kernel =
     ownScharr3x3Kernel,
     scharr3x3_kernel_params, dimof(scharr3x3_kernel_params),
     own_scharr3x3_validator,
-    NULL,
-    NULL,
-    NULL,
-    NULL
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr
 };
 
 
@@ -371,7 +371,7 @@ vx_status VX_CALLBACK ownSobelMxNKernel(vx_node node, const vx_reference paramet
 {
     vx_status status = VX_FAILURE;
 
-    if (NULL != node && NULL != parameters && num == dimof(sobelMxN_kernel_params))
+    if (nullptr != node && nullptr != parameters && num == dimof(sobelMxN_kernel_params))
     {
         vx_uint32 x;
         vx_uint32 y;
@@ -381,11 +381,11 @@ vx_status VX_CALLBACK ownSobelMxNKernel(vx_node node, const vx_reference paramet
         vx_uint32 high_x;
         vx_uint32 low_y;
         vx_uint32 high_y;
-        vx_uint8*   src_base = NULL;
-        vx_float32* dst_base_x = NULL;
-        vx_float32* dst_base_y = NULL;
-        vx_int16*   opx = NULL;
-        vx_int16*   opy = NULL;
+        vx_uint8*   src_base = nullptr;
+        vx_float32* dst_base_x = nullptr;
+        vx_float32* dst_base_y = nullptr;
+        vx_int16*   opx = nullptr;
+        vx_int16*   opy = nullptr;
         vx_imagepatch_addressing_t src_addr   = VX_IMAGEPATCH_ADDR_INIT;
         vx_imagepatch_addressing_t dst_addr_x = VX_IMAGEPATCH_ADDR_INIT;
         vx_imagepatch_addressing_t dst_addr_y = VX_IMAGEPATCH_ADDR_INIT;
@@ -400,7 +400,7 @@ vx_status VX_CALLBACK ownSobelMxNKernel(vx_node node, const vx_reference paramet
         vx_image  grad_x = (vx_image)parameters[2];
         vx_image  grad_y = (vx_image)parameters[3];
 
-        if (NULL == src || (NULL == grad_x && NULL == grad_y))
+        if (nullptr == src || (nullptr == grad_x && nullptr == grad_y))
         {
             return VX_ERROR_INVALID_PARAMETERS;
         }
@@ -428,10 +428,10 @@ vx_status VX_CALLBACK ownSobelMxNKernel(vx_node node, const vx_reference paramet
 
         status |= vxMapImagePatch(src, &rect, 0, &src_map_id, &src_addr, (void**)&src_base, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
 
-        if (NULL != grad_x)
+        if (nullptr != grad_x)
             status |= vxMapImagePatch(grad_x, &rect, 0, &grad_x_map_id, &dst_addr_x, (void**)&dst_base_x, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
 
-        if (NULL != grad_y)
+        if (nullptr != grad_y)
             status |= vxMapImagePatch(grad_y, &rect, 0, &grad_y_map_id, &dst_addr_y, (void**)&dst_base_y, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
 
         status |= vxQueryNode(node, VX_NODE_BORDER, &borders, sizeof(borders));
@@ -469,16 +469,16 @@ vx_status VX_CALLBACK ownSobelMxNKernel(vx_node node, const vx_reference paramet
                         sum_y += opy[i] * square[i];
                     }
 
-                    if (NULL != dst_base_x)
+                    if (nullptr != dst_base_x)
                         out_x = (vx_float32*)vxFormatImagePatchAddress2d(dst_base_x, x, y, &dst_addr_x);
 
-                    if (NULL != dst_base_y)
+                    if (nullptr != dst_base_y)
                         out_y = (vx_float32*)vxFormatImagePatchAddress2d(dst_base_y, x, y, &dst_addr_y);
 
-                    if (NULL != out_x)
+                    if (nullptr != out_x)
                         *out_x = (vx_float32)sum_x;
 
-                    if (NULL != out_y)
+                    if (nullptr != out_y)
                         *out_y = (vx_float32)sum_y;
                 } // for x
             } // for y
@@ -487,7 +487,7 @@ vx_status VX_CALLBACK ownSobelMxNKernel(vx_node node, const vx_reference paramet
         status |= vxUnmapImagePatch(src, src_map_id);
         status |= vxUnmapImagePatch(grad_x, grad_x_map_id);
         status |= vxUnmapImagePatch(grad_y, grad_y_map_id);
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return status;
 } /* ownSobelMxNKernel() */
@@ -500,7 +500,7 @@ vx_status VX_CALLBACK set_sobelMxN_valid_rectangle(
 {
     vx_status status = VX_FAILURE;
 
-    if (NULL != node && index < dimof(sobelMxN_kernel_params) && NULL != input_valid && NULL != output_valid)
+    if (nullptr != node && index < dimof(sobelMxN_kernel_params) && nullptr != input_valid && nullptr != output_valid)
     {
         vx_parameter   param = 0;
         vx_scalar      win = 0;
@@ -549,12 +549,12 @@ vx_status VX_CALLBACK set_sobelMxN_valid_rectangle(
                 status = VX_ERROR_INVALID_PARAMETERS;
         }
 
-        if (NULL != win)
+        if (nullptr != win)
             vxReleaseScalar(&win);
 
-        if (NULL != param)
+        if (nullptr != param)
             vxReleaseParameter(&param);
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return status;
 } /* set_sobelMxN_valid_rectangle() */
@@ -567,9 +567,9 @@ vx_status VX_CALLBACK own_sobelMxN_validator(
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     (void)parameters;
 
-    if (NULL != node &&
+    if (nullptr != node &&
         num == dimof(sobelMxN_kernel_params) &&
-        NULL != metas)
+        nullptr != metas)
     {
         vx_parameter param1 = 0;
         vx_parameter param2 = 0;
@@ -642,17 +642,17 @@ vx_status VX_CALLBACK own_sobelMxN_validator(
                 vx_df_image dst_format = VX_DF_IMAGE_F32;
                 vx_border_t borders = { VX_BORDER_UNDEFINED, { { 0 } } };
 
-                if (NULL != metas[2])
+                if (nullptr != metas[2])
                 {
-                    /* if optional parameter non NULL */
+                    /* if optional parameter non nullptr */
                     status |= vxSetMetaFormatAttribute(metas[2], VX_IMAGE_WIDTH, &src_width, sizeof(src_width));
                     status |= vxSetMetaFormatAttribute(metas[2], VX_IMAGE_HEIGHT, &src_height, sizeof(src_height));
                     status |= vxSetMetaFormatAttribute(metas[2], VX_IMAGE_FORMAT, &dst_format, sizeof(dst_format));
                 }
 
-                if (NULL != metas[3])
+                if (nullptr != metas[3])
                 {
-                    /* if optional parameter non NULL */
+                    /* if optional parameter non nullptr */
                     status |= vxSetMetaFormatAttribute(metas[3], VX_IMAGE_WIDTH, &src_width, sizeof(src_width));
                     status |= vxSetMetaFormatAttribute(metas[3], VX_IMAGE_HEIGHT, &src_height, sizeof(src_height));
                     status |= vxSetMetaFormatAttribute(metas[3], VX_IMAGE_FORMAT, &dst_format, sizeof(dst_format));
@@ -664,10 +664,10 @@ vx_status VX_CALLBACK own_sobelMxN_validator(
                 {
                     vx_kernel_image_valid_rectangle_f callback = &set_sobelMxN_valid_rectangle;
 
-                    if (NULL != metas[2])
+                    if (nullptr != metas[2])
                         status |= vxSetMetaFormatAttribute(metas[2], VX_VALID_RECT_CALLBACK, &callback, sizeof(callback));
 
-                    if (NULL != metas[3])
+                    if (nullptr != metas[3])
                         status |= vxSetMetaFormatAttribute(metas[3], VX_VALID_RECT_CALLBACK, &callback, sizeof(callback));
                 }
             }
@@ -675,18 +675,18 @@ vx_status VX_CALLBACK own_sobelMxN_validator(
         else
             status = VX_ERROR_INVALID_PARAMETERS;
 
-        if (NULL != src)
+        if (nullptr != src)
             vxReleaseImage(&src);
 
-        if (NULL != win)
+        if (nullptr != win)
             vxReleaseScalar(&win);
 
-        if (NULL != param1)
+        if (nullptr != param1)
             vxReleaseParameter(&param1);
 
-        if (NULL != param2)
+        if (nullptr != param2)
             vxReleaseParameter(&param2);
-    } /* if input ptrs != NULL */
+    } /* if input ptrs != nullptr */
 
     return status;
 } /* own_sobelMxN_validator() */
@@ -698,9 +698,9 @@ vx_kernel_description_t sobelMxN_kernel =
     ownSobelMxNKernel,
     sobelMxN_kernel_params, dimof(sobelMxN_kernel_params),
     own_sobelMxN_validator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };
 

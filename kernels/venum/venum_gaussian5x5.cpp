@@ -23,8 +23,8 @@
 static vx_status Gaussian5x5_U8_U8(vx_image src, vx_image dst, vx_border_t *bordermode)
 {
     vx_int32 y, x, i;
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_rectangle_t rect;
     vx_size conv_width = 5, conv_height = 5;
@@ -315,8 +315,8 @@ static vx_status Gaussian5x5_U8_U8(vx_image src, vx_image dst, vx_border_t *bord
 static vx_status Gaussian5x5_U8_S16(vx_image src, vx_image dst, vx_border_t *bordermode)
 {
     vx_int32 y, x, i;
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_rectangle_t rect;
     vx_size conv_width = 5, conv_height = 5;

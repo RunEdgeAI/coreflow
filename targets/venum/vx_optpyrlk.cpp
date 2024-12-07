@@ -97,8 +97,8 @@ static vx_status LKTracker(
     */
     vx_size prevPts_stride = 0;
     vx_size nextPts_stride = 0;
-    void* prevPtsFirstItem = NULL;
-    void* nextPtsFirstItem = NULL;
+    void* prevPtsFirstItem = nullptr;
+    void* nextPtsFirstItem = nullptr;
     vx_map_id prevPtsFirstItem_map_id;
     vx_map_id nextPtsFirstItem_map_id;
     vxQueryArray(prevPts, VX_ARRAY_NUMITEMS, &list_length, sizeof(list_length));
@@ -421,9 +421,9 @@ static vx_status VX_CALLBACK vxOpticalFlowPyrLKKernel(vx_node node, const vx_ref
 
         vx_bool use_initial_estimate_b;
         vx_float32 pyramid_scale;
-        vx_keypoint_t* initialPt = NULL;
+        vx_keypoint_t* initialPt = nullptr;
         vx_keypoint_t_optpyrlk_internal* prevPt;
-        vx_keypoint_t_optpyrlk_internal* nextPt = NULL;
+        vx_keypoint_t_optpyrlk_internal* nextPt = nullptr;
 
         vxCopyScalar(use_initial_estimate,&use_initial_estimate_b,VX_READ_ONLY,VX_MEMORY_TYPE_HOST);
 
@@ -443,7 +443,7 @@ static vx_status VX_CALLBACK vxOpticalFlowPyrLKKernel(vx_node node, const vx_ref
             vx_map_id initialPtsFirstItem_map_id;
             vx_map_id prevPtsFirstItem_map_id;
 
-            prevPtsFirstItem = NULL;
+            prevPtsFirstItem = nullptr;
             vxMapArrayRange(prevPts, 0, list_length, &prevPtsFirstItem_map_id, &prevPts_stride, &prevPtsFirstItem,
                                VX_READ_AND_WRITE, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
             prevPt = (vx_keypoint_t_optpyrlk_internal*)prevPtsFirstItem;
@@ -457,7 +457,7 @@ static vx_status VX_CALLBACK vxOpticalFlowPyrLKKernel(vx_node node, const vx_ref
                     if (list_length2 != list_length)
                         return VX_ERROR_INVALID_PARAMETERS;
 
-                    initialPtsFirstItem = NULL;
+                    initialPtsFirstItem = nullptr;
                     vxMapArrayRange(estimatedPts, 0, list_length, &initialPtsFirstItem_map_id, &estimatedPts_stride, &initialPtsFirstItem,
                                        VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
                     initialPt = (vx_keypoint_t*)initialPtsFirstItem;
@@ -471,7 +471,7 @@ static vx_status VX_CALLBACK vxOpticalFlowPyrLKKernel(vx_node node, const vx_ref
             }
             else
             {
-                nextPtsFirstItem = NULL;
+                nextPtsFirstItem = nullptr;
                 vxMapArrayRange(nextPts, 0, list_length, &nextPtsFirstItem_map_id,  &nextPts_stride, &nextPtsFirstItem,
                                 VX_READ_AND_WRITE, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
                 nextPt = (vx_keypoint_t_optpyrlk_internal*)nextPtsFirstItem;
@@ -598,8 +598,8 @@ static vx_status VX_CALLBACK vxOpticalFlowPyrLKKernel(vx_node node, const vx_ref
         }
         vx_map_id prevPtsFirstItem_map_id;
         vx_map_id nextPtsFirstItem_map_id;
-        prevPtsFirstItem = NULL;
-        nextPtsFirstItem = NULL;
+        prevPtsFirstItem = nullptr;
+        nextPtsFirstItem = nullptr;
 
         vxMapArrayRange(prevPts, 0, list_length, &prevPtsFirstItem_map_id, &prevPts_stride, &prevPtsFirstItem,
                         VX_READ_AND_WRITE, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
@@ -825,9 +825,9 @@ vx_kernel_description_t optpyrlk_kernel =
     "org.khronos.openvx.optical_flow_pyr_lk",
     vxOpticalFlowPyrLKKernel,
     optpyrlk_kernel_params, dimof(optpyrlk_kernel_params),
-    NULL,
+    nullptr,
     vxOpticalFlowPyrLKInputValidator,
     vxOpticalFlowPyrLKOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };

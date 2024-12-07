@@ -144,11 +144,11 @@ vx_kernel_description_t min_kernel = {
     "org.khronos.openvx.min",
     vxMinKernel,
     min_max_kernel_params, dimof(min_max_kernel_params),
-    NULL,
+    nullptr,
     vxMinMaxInputValidator,
     vxMinMaxOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 static vx_status VX_CALLBACK vxMaxKernel(vx_node node, const vx_reference parameters[], vx_uint32 num)
@@ -170,9 +170,9 @@ vx_kernel_description_t max_kernel = {
     "org.khronos.openvx.max",
     vxMaxKernel,
     min_max_kernel_params, dimof(min_max_kernel_params),
-    NULL,
+    nullptr,
     vxMinMaxInputValidator,
     vxMinMaxOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };

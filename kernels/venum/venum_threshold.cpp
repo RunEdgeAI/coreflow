@@ -25,8 +25,8 @@ vx_status vxThreshold_U8(vx_image src_image, vx_threshold threshold, vx_image ds
     vx_rectangle_t rect;
     vx_imagepatch_addressing_t src_addr;
     vx_imagepatch_addressing_t dst_addr;
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_uint32 y = 0;
     vx_uint32 x = 0;
     vx_pixel_value_t value;
@@ -241,8 +241,8 @@ vx_status vxThreshold_U1(vx_image src_image, vx_threshold threshold, vx_image ds
     vx_rectangle_t rect;
     vx_imagepatch_addressing_t src_addr;
     vx_imagepatch_addressing_t dst_addr;
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_uint32 y = 0;
     vx_uint32 x = 0;
     vx_pixel_value_t value;
@@ -349,7 +349,7 @@ vx_status vxThreshold_U1(vx_image src_image, vx_threshold threshold, vx_image ds
         }//end for
     }//end for
 
-    status |= vxCommitImagePatch(src_image, NULL, 0, &src_addr, src_base);
+    status |= vxCommitImagePatch(src_image, nullptr, 0, &src_addr, src_base);
     status |= vxCommitImagePatch(dst_image, &rect, 0, &dst_addr, dst_base);
 
     return status;

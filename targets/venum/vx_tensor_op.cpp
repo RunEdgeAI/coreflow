@@ -49,9 +49,9 @@ static vx_status tensorElementwiseBinaryMathOp(
         enum ElementwiseTensorMathOp op,
         vx_tensor in0,
         vx_tensor in1,
-        vx_scalar scale_sc,     // optional, only !NULL for Mul
+        vx_scalar scale_sc,     // optional, only !nullptr for Mul
         vx_scalar overflow_sc,
-        vx_scalar rounding_sc,  // optional, only !NULL for Mul
+        vx_scalar rounding_sc,  // optional, only !nullptr for Mul
         vx_tensor out)
 {
     float scale = 0.f;
@@ -369,10 +369,10 @@ vx_kernel_description_t tensor_multiply_kernel = {
     tensorMultiplyKernel,
 	tensor_multiply_kernel_params, dimof(tensor_multiply_kernel_params),
 	tensorMultiplyValidator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };
 
 typedef enum _addsub_params_e {
@@ -397,9 +397,9 @@ static vx_status VX_CALLBACK tensorAddKernel(vx_node node, const vx_reference *p
                 ELEMENTWISE_TENSOR_ADD,
                 in0,
                 in1,
-                NULL,
+                nullptr,
                 overflow_sc,
-                NULL,
+                nullptr,
                 out);
     }
 
@@ -445,10 +445,10 @@ vx_kernel_description_t tensor_add_kernel = {
     tensorAddKernel,
     tensor_addsub_kernel_params, dimof(tensor_addsub_kernel_params),
     tensorAddSubValidator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };
 
 static vx_status VX_CALLBACK tensorSubtractKernel(vx_node node, const vx_reference *parameters, vx_uint32 num)
@@ -464,9 +464,9 @@ static vx_status VX_CALLBACK tensorSubtractKernel(vx_node node, const vx_referen
                 ELEMENTWISE_TENSOR_SUB,
                 in0,
                 in1,
-                NULL,
+                nullptr,
                 overflow_sc,
-                NULL,
+                nullptr,
                 out);
     }
 
@@ -482,9 +482,9 @@ vx_kernel_description_t tensor_subtract_kernel = {
     tensorSubtractKernel,
     tensor_addsub_kernel_params, dimof(tensor_addsub_kernel_params),
     tensorAddSubValidator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };
 

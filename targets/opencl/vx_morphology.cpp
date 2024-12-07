@@ -76,7 +76,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         ownComputeMemorySize(memory, pln),
         memory->ptrs[pln],
         0,
-        NULL,
+        nullptr,
         &ref->event);
 
     //Set bordermode
@@ -123,7 +123,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         2,
         off_dim,
         work_dim,
-        NULL,
+        nullptr,
         we, writeEvents, &node->event);
 
     clFinish(context->queues[plidx][didx]);
@@ -141,7 +141,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         memory->hdls[pln],
         CL_TRUE, 0, ownComputeMemorySize(memory, pln),
         memory->ptrs[pln],
-        0, NULL, NULL);
+        0, nullptr, nullptr);
 
     CL_ERROR_MSG(err, "clEnqueueReadBuffer");
 
@@ -181,8 +181,8 @@ static vx_uint8 max_op(vx_uint8 a, vx_uint8 b)
 static vx_status vxMorphology3x3_U1(vx_image src, vx_image dst, vx_uint8 (*op)(vx_uint8, vx_uint8), const vx_border_t *borders)
 {
     vx_uint32 y, x, low_y = 0, low_x = 0, high_y, high_x, shift_x_u1;
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_df_image format = 0;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_rectangle_t rect;
@@ -223,7 +223,7 @@ static vx_status vxMorphology3x3_U1(vx_image src, vx_image dst, vx_uint8 (*op)(v
         }
     }
 
-    status |= vxCommitImagePatch(src, NULL, 0, &src_addr, src_base);
+    status |= vxCommitImagePatch(src, nullptr, 0, &src_addr, src_base);
     status |= vxCommitImagePatch(dst, &rect, 0, &dst_addr, dst_base);
 
     return status;
@@ -328,11 +328,11 @@ vx_cl_kernel_description_t erode3x3_kernel = {
     "org.khronos.openvx.erode_3x3",
     vxErode3x3Kernel,
     morphology_kernel_params, dimof(morphology_kernel_params),
-    NULL,
+    nullptr,
     vxMorphologyInputValidator,
     vxMorphologyOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     },
     /* VX_CL_SOURCE_DIR"" FILE_JOINER */"vx_erode3x3.cl",
     "vx_erode3x3",
@@ -340,7 +340,7 @@ vx_cl_kernel_description_t erode3x3_kernel = {
     INIT_KERNELS,
     INIT_NUMKERNELS,
     INIT_RETURNS,
-    NULL,
+    nullptr,
 };
 
 vx_cl_kernel_description_t dilate3x3_kernel = {
@@ -349,11 +349,11 @@ vx_cl_kernel_description_t dilate3x3_kernel = {
     "org.khronos.openvx.dilate_3x3",
     vxDilate3x3Kernel,
     morphology_kernel_params, dimof(morphology_kernel_params),
-    NULL,
+    nullptr,
     vxMorphologyInputValidator,
     vxMorphologyOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     },
     /* VX_CL_SOURCE_DIR"" FILE_JOINER */"vx_dilate3x3.cl",
     "vx_dilate3x3",
@@ -361,7 +361,7 @@ vx_cl_kernel_description_t dilate3x3_kernel = {
     INIT_KERNELS,
     INIT_NUMKERNELS,
     INIT_RETURNS,
-    NULL,
+    nullptr,
 };
 
 

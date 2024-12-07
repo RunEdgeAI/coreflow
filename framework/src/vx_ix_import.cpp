@@ -242,7 +242,7 @@ static void importBytes(VXBinObjectHeader *hdr, void * dest, const vx_size lengt
         }
         else
         {
-            hdr->curptr = NULL;
+            hdr->curptr = nullptr;
         }
     }
 }
@@ -321,7 +321,7 @@ static vx_status importImage(vx_context context, const vx_uint8 *ptr, vx_referen
             /* First, check that the parent scope is present, and if not, import it */
             if (checkIndex(ptr, header.scope))
             {
-                if (NULL == ref_table[header.scope])
+                if (nullptr == ref_table[header.scope])
                 {
                     status = importObject(context, ptr, ref_table, header.scope);
                 }
@@ -332,7 +332,7 @@ static vx_status importImage(vx_context context, const vx_uint8 *ptr, vx_referen
                     importVxUint32(&header, &rect.start_y);
                     importVxUint32(&header, &rect.end_x);
                     importVxUint32(&header, &rect.end_y);
-                    if (NULL == ref_table[n])
+                    if (nullptr == ref_table[n])
                     {
                         ref_table[n] = (vx_reference)vxCreateImageFromROI((vx_image)ref_table[header.scope], &rect);
                         status = vxGetStatus(ref_table[n]);
@@ -359,7 +359,7 @@ static vx_status importImage(vx_context context, const vx_uint8 *ptr, vx_referen
             /* First, check that the parent scope is present, and if not, import it */
             if (checkIndex(ptr, header.scope))
             {
-                if (NULL == ref_table[header.scope])
+                if (nullptr == ref_table[header.scope])
                 {
                     status = importObject(context, ptr, ref_table, header.scope);
                 }
@@ -367,7 +367,7 @@ static vx_status importImage(vx_context context, const vx_uint8 *ptr, vx_referen
                 {
                     vx_enum channel;
                     importVxEnum(&header, &channel);
-                    if (NULL == ref_table[n])
+                    if (nullptr == ref_table[n])
                     {
                         ref_table[n] = (vx_reference)vxCreateImageFromChannel((vx_image)ref_table[header.scope], channel);
                         status = vxGetStatus(ref_table[n]);
@@ -396,7 +396,7 @@ static vx_status importImage(vx_context context, const vx_uint8 *ptr, vx_referen
                 importVxUint32(&header, &width);
                 importVxUint32(&header, &height);
                 importVxDfImage(&header, &format);
-                if (NULL == ref_table[n])
+                if (nullptr == ref_table[n])
                 {
                     ref_table[n] = (vx_reference)vxCreateUniformImage(context, width, height, format,
                                                                     (const vx_pixel_value_t *)header.curptr);
@@ -426,7 +426,7 @@ static vx_status importImage(vx_context context, const vx_uint8 *ptr, vx_referen
                 importVxDfImage(&header, &format);
                 importVxUint32(&header, &planes);
                 importVxEnum(&header, &memory_type);
-                if (NULL == ref_table[n])
+                if (nullptr == ref_table[n])
                 {
                     vx_uint32 p;
                     for (p = 0; p < planes; ++p)
@@ -438,7 +438,7 @@ static vx_status importImage(vx_context context, const vx_uint8 *ptr, vx_referen
                         addrs[p].stride_y = stride_y;
                         addrs[p].dim_x = width;
                         addrs[p].dim_y = height;
-                        ptrs[p] = NULL;
+                        ptrs[p] = nullptr;
                     }
                     ref_table[n] = (vx_reference)vxCreateImageFromHandle(context, format, addrs, ptrs, memory_type);
                     status = vxGetStatus(ref_table[n]);
@@ -454,7 +454,7 @@ static vx_status importImage(vx_context context, const vx_uint8 *ptr, vx_referen
                 importVxUint32(&header, &height);
                 importVxDfImage(&header, &format);
                 importVxUint32(&header, &data);
-                if (NULL == ref_table[n])
+                if (nullptr == ref_table[n])
                 {
                     if (header.is_virtual)
                     {
@@ -496,7 +496,7 @@ static vx_status importImage(vx_context context, const vx_uint8 *ptr, vx_referen
                                 rect.start_x, rect.end_x, rect.start_y, rect.end_y);
                     for (p = 0U; p < image->planes && VX_SUCCESS == status; ++p)
                     {
-                        void *base = NULL;
+                        void *base = nullptr;
                         vx_uint32 x, y;
                         vx_imagepatch_addressing_t addr;
                         vx_map_id id;
@@ -592,7 +592,7 @@ static vx_status importLUT(vx_context context, const vx_uint8 *ptr, vx_reference
     importVxEnum(&header, &item_type);
     importVxUint32(&header, &offset);
     importVxUint32(&header, &size);
-    if (NULL == ref_table[n])
+    if (nullptr == ref_table[n])
     {   /* create object */
         ref_table[n] = (vx_reference)vxCreateLUT(context, item_type, num_items);
         if (header.is_virtual)
@@ -645,7 +645,7 @@ static vx_status importDistribution(vx_context context, const vx_uint8 *ptr, vx_
     importVxInt32(&header, &offset_x);
     importVxUint32(&header, &range_x);
     importVxUint32(&header, &size);
-    if (NULL == ref_table[n])
+    if (nullptr == ref_table[n])
     {   /* create object */
         ref_table[n] = (vx_reference)vxCreateDistribution(context, bins, offset_x, range_x);
         if (header.is_virtual)
@@ -709,7 +709,7 @@ static vx_status importThreshold(vx_context context, const vx_uint8 *ptr, vx_ref
     importVxInt32(&header, &true_value);
     importVxInt32(&header, &false_value);
     status = VX_ERROR_NOT_SUPPORTED;
-    if (NULL == ref_table[n])
+    if (nullptr == ref_table[n])
     {
         vx_threshold threshold = (vx_threshold)Reference::createReference(context, VX_TYPE_THRESHOLD, VX_EXTERNAL, context);
         status = vxGetStatus((vx_reference)threshold);
@@ -781,7 +781,7 @@ static vx_status importMatrix(vx_context context, const vx_uint8 *ptr, vx_refere
     importVxCoordinates2dT(&header, &origin);
     importVxEnum(&header, &pattern);
     importVxUint32(&header, &size);
-    if (NULL == ref_table[n])
+    if (nullptr == ref_table[n])
     {   /* create object */
         ref_table[n] = (vx_reference)vxCreateMatrix(context, data_type, columns, rows);
         if (header.is_virtual)
@@ -836,7 +836,7 @@ static vx_status importConvolution(vx_context context, const vx_uint8 *ptr, vx_r
     importVxUint32(&header, &rows);
     importVxUint32(&header, &scale);
     importVxUint32(&header, &size);
-    if (NULL == ref_table[n])
+    if (nullptr == ref_table[n])
     {   /* create object */
         ref_table[n] = (vx_reference)vxCreateConvolution(context, columns, rows);
         if (header.is_virtual)
@@ -902,7 +902,7 @@ static vx_status importScalar(vx_context context, const vx_uint8 *ptr, vx_refere
     if (VX_SUCCESS == status)
     {
         importVxUint32(&header, &size);
-        if (NULL == ref_table[n])
+        if (nullptr == ref_table[n])
         {   /* create object */
             ref_table[n] = (vx_reference)vxCreateScalar(context, data_type, header.curptr);
             if (header.is_virtual)
@@ -978,7 +978,7 @@ static vx_status importArray(vx_context context, const vx_uint8 *ptr, vx_referen
     if (VX_SUCCESS == status)
     {
         importVxUint32(&header, &size);
-        if (NULL == ref_table[n])
+        if (nullptr == ref_table[n])
         {   /* create object */
             if (header.is_virtual)
             {
@@ -1031,7 +1031,7 @@ static vx_status importRemap(vx_context context, const vx_uint8 *ptr, vx_referen
     importVxUint32(&header, &dst_width);
     importVxUint32(&header, &dst_height);
     importVxUint32(&header, &size);
-    if (NULL == ref_table[n])
+    if (nullptr == ref_table[n])
     {   /* create object */
         ref_table[n] = (vx_reference)vxCreateRemap(context, src_width, src_height, dst_width, dst_height);
         if (header.is_virtual)
@@ -1090,7 +1090,7 @@ static vx_status importObjectArray(vx_context context, const vx_uint8 *ptr, vx_r
         return status;      /* quick exit if we don't want to import this at present */
     }
 
-    if (NULL == ref_table[n])
+    if (nullptr == ref_table[n])
     {
         if (VX_TYPE_TENSOR == parent_type)
         {
@@ -1107,7 +1107,7 @@ static vx_status importObjectArray(vx_context context, const vx_uint8 *ptr, vx_r
             importVxDfImage(&header, &format);
             if (checkIndex(ptr, tensor_ix))
             {
-                if (NULL == ref_table[tensor_ix])
+                if (nullptr == ref_table[tensor_ix])
                 {
                     status = importObject(context, ptr, ref_table, tensor_ix);
                 }
@@ -1130,7 +1130,7 @@ static vx_status importObjectArray(vx_context context, const vx_uint8 *ptr, vx_r
             const vx_uint8 *ixcurptr = header.curptr;
             importVxUint32(&header, &exemplar_ix);        /* First item in array as exemplar, don't increment curptr */
             header.curptr = ixcurptr;
-            if (checkIndex(ptr, exemplar_ix) && NULL == ref_table[exemplar_ix])
+            if (checkIndex(ptr, exemplar_ix) && nullptr == ref_table[exemplar_ix])
             {
                 status = importObject(context, ptr, ref_table, exemplar_ix);    /* import exemplar */
                 if (VX_SUCCESS == status)
@@ -1148,7 +1148,7 @@ static vx_status importObjectArray(vx_context context, const vx_uint8 *ptr, vx_r
                     status = vxGetStatus(ref_table[n]);
                     vxReleaseReference(&ref_table[exemplar_ix]);/* Release the exemplar */
                 }
-                ref_table[exemplar_ix] = NULL;              /* make entry zero as we will set it to new value */
+                ref_table[exemplar_ix] = nullptr;              /* make entry zero as we will set it to new value */
             }
             else
             {
@@ -1211,7 +1211,7 @@ static vx_status importPyramid(vx_context context, const vx_uint8 *ptr, vx_refer
     importVxDfImage(&header, &format);
     importVxFloat32(&header, &scale);
     importVxUint32(&header, &num_levels);
-    if (NULL == ref_table[n])
+    if (nullptr == ref_table[n])
     {
         if (header.is_virtual)
         {
@@ -1275,9 +1275,9 @@ static vx_status importDelay(vx_context context, const vx_uint8 *ptr, vx_referen
     ixcurptr = header.curptr;
     importVxUint32(&header, &exemplar_ix);            /* First item in array as examplar, don't increment curptr */
     header.curptr = ixcurptr;
-    if (NULL == ref_table[n])
+    if (nullptr == ref_table[n])
     {
-        if (checkIndex(ptr, exemplar_ix) && NULL == ref_table[exemplar_ix])
+        if (checkIndex(ptr, exemplar_ix) && nullptr == ref_table[exemplar_ix])
         {
             status = importObject(context, ptr, ref_table, exemplar_ix);    /* import exemplar */
             if (VX_SUCCESS == status)
@@ -1291,7 +1291,7 @@ static vx_status importDelay(vx_context context, const vx_uint8 *ptr, vx_referen
                 }
                 vxReleaseReference(&ref_table[exemplar_ix]);/* Release the exemplar */
             }
-            ref_table[exemplar_ix] = NULL;              /* make entry zero as we will set it to new value */
+            ref_table[exemplar_ix] = nullptr;              /* make entry zero as we will set it to new value */
         }
         else
             status = VX_ERROR_INVALID_PARAMETERS;       /* References in an object array can't be supplied by user */
@@ -1365,13 +1365,13 @@ static vx_status importTensor(vx_context context, const vx_uint8 *ptr, vx_refere
             stride[dim] = dim_stride;
         }
         importVxUint32(&header, &size);
-        if (NULL == ref_table[n])
+        if (nullptr == ref_table[n])
         {
             /* Now check to see if this is a tensor from view */
             if (VX_TYPE_TENSOR == getObjectType(ptr, header.scope))
             {
                 /* First, make sure parent is imported */
-                if (NULL == ref_table[header.scope])
+                if (nullptr == ref_table[header.scope])
                     status = importObject(context, ptr, ref_table, header.scope);
                 if (VX_SUCCESS == status)
                 {
@@ -1472,7 +1472,7 @@ static vx_status importKernel(vx_context context, const vx_uint8 *ptr, vx_refere
             importVxEnum(&header, &types[p]);
             importVxEnum(&header, &states[p]);
         }
-        if (NULL == ref_table[n])
+        if (nullptr == ref_table[n])
         {
             /* Not already in place, we must find the kernel */
             if (VX_KERNEL_BASE(VX_ID_USER,0) == (VX_KERNEL_BASE(VX_ID_USER,0) & enumeration))
@@ -1598,7 +1598,7 @@ static vx_status importObjectsOfType(vx_context context, const vx_uint8 *ptr, vx
     for (i = 0; i < getHeader(ptr)->actual_numrefs && VX_SUCCESS == status; ++i)
     {
         /* Only process objects we haven't already processed */
-        if (NULL == ref_table[i] &&
+        if (nullptr == ref_table[i] &&
             (VX_TYPE_INVALID == vx_type || getObjectType(ptr, i) == vx_type)
            )
         {
@@ -1615,7 +1615,7 @@ static vx_status importObjectArraysFromTensor(vx_context context, const vx_uint8
     for (i = 0; i < getHeader(ptr)->actual_numrefs && VX_SUCCESS == status; ++i)
     {
         /* Only process objects we haven't already processed */
-        if (NULL == ref_table[i] &&
+        if (nullptr == ref_table[i] &&
             (VX_TYPE_OBJECT_ARRAY == getObjectType(ptr, i))
            )
         {
@@ -1711,7 +1711,7 @@ static vx_status buildGraphs(vx_context context, const vx_uint8 *ptr, vx_referen
                             vx_uint32 param_ix;
                             importVxUint32(&header, &param_ix);
                             if (0xFFFFFFFF == param_ix)     /* Optional parameter */
-                                status = vxSetParameterByIndex(node, p, NULL);
+                                status = vxSetParameterByIndex(node, p, nullptr);
                             else if (checkIndex(ptr, param_ix))
                                 status = vxSetParameterByIndex(node, p, ref_table[param_ix]);
                             else
@@ -1780,7 +1780,7 @@ static vx_status buildGraphs(vx_context context, const vx_uint8 *ptr, vx_referen
                         importVxUint32(&header, &(g->parameters[c].index));
                     }
                 }
-                if (NULL == header.curptr)
+                if (nullptr == header.curptr)
                     status = VX_FAILURE;
             }
             else
@@ -1846,7 +1846,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportObjectsFromMemory(
     vx_size length)
 {
     vx_uint32 checksum = 0;
-    vx_import import = NULL;
+    vx_import import = nullptr;
     vx_status status = VX_SUCCESS;
     /* Perform initial checks */
     const VXBinHeader *header = getHeader(ptr);
@@ -1857,9 +1857,9 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportObjectsFromMemory(
     }
     if ((VX_IX_VERSION == header->version && checksum != *(vx_uint32 *)curptr) ||   /* only check checksum if version match */
         VX_SUCCESS != vxGetStatus((vx_reference)context) ||
-        NULL == refs ||
-        NULL == uses ||
-        NULL == ptr ||
+        nullptr == refs ||
+        nullptr == uses ||
+        nullptr == ptr ||
         length <= sizeof(VXBinHeader) ||
         VX_IX_ID != header->vx_ix_id ||
         VX_IX_VERSION < header->version ||      /* Should always be backwards compatible */
@@ -1878,7 +1878,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportObjectsFromMemory(
     {
         vx_uint32 i;
         const vx_enum * header_uses = getUses(ptr);
-        for (i = 0; i < numrefs && NULL == import; ++i)
+        for (i = 0; i < numrefs && nullptr == import; ++i)
         {
             if (uses[i] != header_uses[i] || (VX_IX_USE_APPLICATION_CREATE == uses[i] && VX_SUCCESS != vxGetStatus(refs[i])))
             {
@@ -1896,7 +1896,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportObjectsFromMemory(
             for (i = 0; i < numrefs; ++i)
             {
                 if (VX_IX_USE_APPLICATION_CREATE != uses[i])
-                    ref_table[i] = NULL;
+                    ref_table[i] = nullptr;
                 else
                     ref_table[i] = refs[i];
             }

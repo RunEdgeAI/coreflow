@@ -1,4 +1,4 @@
-/* 
+/*
 
  * Copyright (c) 2016-2017 The Khronos Group Inc.
  *
@@ -91,7 +91,7 @@ static vx_status VX_CALLBACK tensorMultiplyMatrixKernel(vx_node node, const vx_r
         Multiply2DMatrixesImpl(
                 src1_tensor->addr, strides1, dim1,
                 src2_tensor->addr, strides2, dim2,
-                src3_tensor ? src3_tensor->addr : NULL, strides3,
+                src3_tensor ? src3_tensor->addr : nullptr, strides3,
                 out_ptr, out_strides,
                 dst_tensor->data_type);
 
@@ -201,10 +201,10 @@ vx_kernel_description_t tensor_matrix_multiply_kernel  = {
     tensorMultiplyMatrixKernel,
     tensor_matrix_multiply_kernel_params, dimof(tensor_matrix_multiply_kernel_params),
     tensorMatrixMultiplyValidator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };
 
 

@@ -203,7 +203,7 @@ static vx_status vxNearestScaling(vx_image src_image, vx_image dst_image, const 
 {
     vx_status status = VX_SUCCESS;
     vx_int32 x1,y1,x2,y2;
-    void *src_base = NULL, *dst_base = NULL;
+    void *src_base = nullptr, *dst_base = nullptr;
     vx_rectangle_t src_rect, dst_rect;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_uint32 w1 = 0, h1 = 0, w2 = 0, h2 = 0;
@@ -347,7 +347,7 @@ static vx_status vxNearestScaling_U1(vx_image src_image, vx_image dst_image, con
 {
     vx_status status = VX_SUCCESS;
     vx_int32 x1, y1, x2, y2;
-    void *src_base = NULL, *dst_base = NULL;
+    void *src_base = nullptr, *dst_base = nullptr;
     vx_rectangle_t src_rect, dst_rect;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_uint32 w1 = 0, h1 = 0, w2 = 0, h2 = 0;
@@ -400,7 +400,7 @@ static vx_status vxNearestScaling_U1(vx_image src_image, vx_image dst_image, con
         }
     }
 
-    status |= vxCommitImagePatch(src_image, NULL, 0, &src_addr, src_base);
+    status |= vxCommitImagePatch(src_image, nullptr, 0, &src_addr, src_base);
     status |= vxCommitImagePatch(dst_image, &dst_rect, 0, &dst_addr, dst_base);
 
     return VX_SUCCESS;
@@ -410,7 +410,7 @@ static vx_status vxBilinearScaling(vx_image src_image, vx_image dst_image, const
 {
     vx_status status = VX_SUCCESS;
     vx_int32 x2,y2;
-    void *src_base = NULL, *dst_base = NULL;
+    void *src_base = nullptr, *dst_base = nullptr;
     vx_rectangle_t src_rect, dst_rect;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_uint32 w1 = 0, h1 = 0, w2 = 0, h2 = 0;
@@ -863,7 +863,7 @@ static vx_status vxBilinearScaling_U1(vx_image src_image, vx_image dst_image, co
 {
     vx_status status = VX_SUCCESS;
     vx_int32 x2, y2;
-    void *src_base = NULL, *dst_base = NULL;
+    void *src_base = nullptr, *dst_base = nullptr;
     vx_rectangle_t src_rect, dst_rect;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_uint32 w1 = 0, h1 = 0, w2 = 0, h2 = 0;
@@ -954,7 +954,7 @@ static vx_status vxBilinearScaling_U1(vx_image src_image, vx_image dst_image, co
         }
     }
 
-    status |= vxCommitImagePatch(src_image, NULL, 0, &src_addr, src_base);
+    status |= vxCommitImagePatch(src_image, nullptr, 0, &src_addr, src_base);
     status |= vxCommitImagePatch(dst_image, &dst_rect, 0, &dst_addr, dst_base);
 
     return VX_SUCCESS;
@@ -964,7 +964,7 @@ static vx_status vxBilinearScaling_U1(vx_image src_image, vx_image dst_image, co
 static vx_status vxAreaScaling(vx_image src_image, vx_image dst_image, const vx_border_t *borders, vx_float64 *interm, vx_size size)
 {
     vx_status status = VX_SUCCESS;
-    void *src_base = NULL, *dst_base = NULL;
+    void *src_base = nullptr, *dst_base = nullptr;
     vx_rectangle_t src_rect, dst_rect;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_uint32 by, bx, y, x, yi, xi, gcd_w, gcd_h, r1w, r1h, r2w, r2h, r_w, b_w, b_h;
@@ -1065,7 +1065,7 @@ static vx_status vxAreaScaling(vx_image src_image, vx_image dst_image, const vx_
         }
     }
 
-    status |= vxCommitImagePatch(src_image, NULL, 0, &src_addr, src_base);
+    status |= vxCommitImagePatch(src_image, nullptr, 0, &src_addr, src_base);
     status |= vxCommitImagePatch(dst_image, &dst_rect, 0, &dst_addr, dst_base);
     return VX_SUCCESS;
 }

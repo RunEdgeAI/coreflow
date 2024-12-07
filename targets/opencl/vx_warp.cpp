@@ -83,7 +83,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         ownComputeMemorySize(memory, pln),
         memory->ptrs[pln],
         0,
-        NULL,
+        nullptr,
         &ref->event);
 
     //Set Output
@@ -134,8 +134,8 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         matrix_size * sizeof(vx_float32),
         m,
         0,
-        NULL,
-        NULL);
+        nullptr,
+        nullptr);
 
     err = clSetKernelArg(kernel, argidx++, sizeof(cl_mem), &mat);
 
@@ -163,7 +163,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         2,
         off_dim,
         work_dim,
-        NULL,
+        nullptr,
         we, writeEvents, &node->event);
 
     clFinish(context->queues[plidx][didx]);
@@ -179,7 +179,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         memory->hdls[pln],
         CL_TRUE, 0, ownComputeMemorySize(memory, pln),
         memory->ptrs[pln],
-        0, NULL, NULL);
+        0, nullptr, nullptr);
 
     CL_ERROR_MSG(err, "clEnqueueReadBuffer");
 
@@ -428,8 +428,8 @@ static vx_status vxWarpGeneric(vx_image src_image, vx_matrix matrix, vx_scalar s
                                   const vx_border_t *borders, transform_f transform)
 {
     vx_status status = VX_SUCCESS;
-    void *src_base = NULL;
-    void *dst_base = NULL;
+    void *src_base = nullptr;
+    void *dst_base = nullptr;
     vx_imagepatch_addressing_t src_addr = VX_IMAGEPATCH_ADDR_INIT;
     vx_imagepatch_addressing_t dst_addr = VX_IMAGEPATCH_ADDR_INIT;
     vx_uint32 dst_width;
@@ -587,11 +587,11 @@ vx_cl_kernel_description_t warp_affine_kernel = {
         "org.khronos.openvx.warp_affine",
         vxWarpAffineKernel,
         warp_kernel_params, dimof(warp_kernel_params),
-        NULL,
+        nullptr,
         vxWarpAffineInputValidator,
         vxWarpOutputValidator,
-        NULL,
-        NULL,
+        nullptr,
+        nullptr,
     },
     /* VX_CL_SOURCE_DIR"" FILE_JOINER */"vx_warp_affine.cl",
     "warp_affine",
@@ -599,7 +599,7 @@ vx_cl_kernel_description_t warp_affine_kernel = {
     INIT_KERNELS,
     INIT_NUMKERNELS,
     INIT_RETURNS,
-    NULL,
+    nullptr,
 };
 
 vx_cl_kernel_description_t warp_perspective_kernel = {
@@ -608,11 +608,11 @@ vx_cl_kernel_description_t warp_perspective_kernel = {
         "org.khronos.openvx.warp_perspective",
         vxWarpPerspectiveKernel,
         warp_kernel_params, dimof(warp_kernel_params),
-        NULL,
+        nullptr,
         vxWarpPerspectiveInputValidator,
         vxWarpOutputValidator,
-        NULL,
-        NULL,
+        nullptr,
+        nullptr,
     },
     /* VX_CL_SOURCE_DIR"" FILE_JOINER */"vx_warp_perspective.cl",
     "warp_perspective",
@@ -620,5 +620,5 @@ vx_cl_kernel_description_t warp_perspective_kernel = {
     INIT_KERNELS,
     INIT_NUMKERNELS,
     INIT_RETURNS,
-    NULL,
+    nullptr,
 };

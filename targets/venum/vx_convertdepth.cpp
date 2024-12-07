@@ -229,9 +229,9 @@ vx_kernel_description_t convertdepth_kernel = {
     "org.khronos.openvx.convertdepth",
     vxConvertDepthKernel,
     convertdepth_kernel_params, dimof(convertdepth_kernel_params),
-    NULL,
+    nullptr,
     vxConvertDepthInputValidator,
     vxConvertDepthOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };

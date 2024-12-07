@@ -172,9 +172,9 @@ vx_kernel_description_t fast9_kernel = {
     "org.khronos.openvx.fast_corners",
     vxFast9CornersKernel,
     fast9_kernel_params, dimof(fast9_kernel_params),
-    NULL,
+    nullptr,
     vxFast9InputValidator,
     vxFast9OutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };

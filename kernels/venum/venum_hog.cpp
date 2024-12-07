@@ -34,7 +34,7 @@
 
 #ifndef min
 #define min(a,b) (a<b?a:b)
-#endif 
+#endif
 // nodeless version of the Hog Cells kernel
 vx_status vxHogCells(vx_image img, vx_scalar cell_width, vx_scalar cell_height, vx_scalar num_bins, vx_tensor magnitudes, vx_tensor bins)
 {
@@ -51,7 +51,7 @@ vx_status vxHogCells(vx_image img, vx_scalar cell_width, vx_scalar cell_height, 
     status |= vxCopyScalar(cell_height, &cell_h, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     status |= vxCopyScalar(num_bins, &num_orientations, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
 
-    void *src_base = NULL;
+    void *src_base = nullptr;
     vx_imagepatch_addressing_t src_addr;
     vx_rectangle_t rect;
     status |= vxGetValidRegionImage(img, &rect);
@@ -60,8 +60,8 @@ vx_status vxHogCells(vx_image img, vx_scalar cell_width, vx_scalar cell_height, 
     width = src_addr.dim_x;
     height = src_addr.dim_y;
 
-    void* magnitudes_data = NULL;
-    void* bins_data = NULL;
+    void* magnitudes_data = nullptr;
+    void* bins_data = nullptr;
     vx_size magnitudes_dim_num = 0, magnitudes_dims[MAX_NUM_OF_DIMENSIONS] = { 0 }, magnitudes_strides[MAX_NUM_OF_DIMENSIONS] = { 0 };
     vx_size bins_dim_num = 0, bins_dims[MAX_NUM_OF_DIMENSIONS] = { 0 }, bins_strides[MAX_NUM_OF_DIMENSIONS] = { 0 };
 
@@ -70,7 +70,7 @@ vx_status vxHogCells(vx_image img, vx_scalar cell_width, vx_scalar cell_height, 
 
     vx_float32 num_div_360 = (float)num_orientations / 360.0f;
     vx_int32 num_cellw = (vx_int32)floor(((vx_float64)width) / ((vx_float64)cell_w));// can vcvts_s32_f32()
-    
+
     vx_float32 gx_0, gx_1, gx_2, gx_3;
     vx_float32 gy_0, gy_1, gy_2, gy_3;
     float32x4_t magnitude_f32x4;
@@ -84,7 +84,7 @@ vx_status vxHogCells(vx_image img, vx_scalar cell_width, vx_scalar cell_height, 
     float32_t pi_3_14 = 180 / 3.14159265;
     vx_int32 roiw4 = width >= 3 ? width - 3 : 0;
     for (vx_int32 j = 0; j < height; j++) {
-        
+
         int32x4_t celly_s32x4 = vdupq_n_s32(j/cell_h);
         vx_int32 y1 = j - 1 < 0 ? 0 : j - 1;
         vx_int32 y2 = j + 1 >= height ? height - 1 : j + 1;
@@ -92,29 +92,29 @@ vx_status vxHogCells(vx_image img, vx_scalar cell_width, vx_scalar cell_height, 
         vx_uint8 *src_base_y_y1 = (vx_uint8 *)src_base + y1*src_addr.stride_y;
         vx_uint8 *src_base_y_y2 = (vx_uint8 *)src_base + y2*src_addr.stride_y;
         int i = 0;
-        for (; i < roiw4; i+=4) 
-        {            
+        for (; i < roiw4; i+=4)
+        {
             vx_int32 x1 = i - 1 < 0 ? 0 : i - 1;
             vx_int32 x2 = i + 1 >= width ? width - 1 : i + 1;
-            gx_0 = *(src_base_y + x2) - *(src_base_y + x1); 
-                    
+            gx_0 = *(src_base_y + x2) - *(src_base_y + x1);
+
             x1 = i < 0 ? 0 : i;
             x2 = i + 2 >= width ? width - 1 : i+2;
             gx_1 = *(src_base_y + x2) - *(src_base_y + x1);
-            
+
             x1 = i + 1 < 0 ? 0 : i + 1;
             x2 = i+3 >= width ? width - 1 : i+3;
-            gx_2 = *(src_base_y + x2) - *(src_base_y + x1); 
-            
+            gx_2 = *(src_base_y + x2) - *(src_base_y + x1);
+
             x1 = i+2 < 0 ? 0 : i+2;
             x2 = i+4 >= width ? width - 1 : i+4;
-            gx_3 = *(src_base_y + x2) - *(src_base_y + x1); 
+            gx_3 = *(src_base_y + x2) - *(src_base_y + x1);
 
             gy_0 = *(src_base_y_y2 + i) - *(src_base_y_y1 + i);
             gy_1 = *(src_base_y_y2 + i + 1) - *(src_base_y_y1 + i + 1);
             gy_2 = *(src_base_y_y2 + i + 2) - *(src_base_y_y1 + i + 2);
             gy_3 = *(src_base_y_y2 + i + 3) - *(src_base_y_y1 + i + 3);
-                        
+
             //calculating mag and orientation
             magnitude_f32x4 = vsetq_lane_f32(sqrtf(gx_0*gx_0 + gy_0*gy_0) / cell_wxh, magnitude_f32x4, 0);
             magnitude_f32x4 = vsetq_lane_f32(sqrtf(gx_1*gx_1 + gy_1*gy_1) / cell_wxh, magnitude_f32x4, 1);
@@ -124,11 +124,11 @@ vx_status vxHogCells(vx_image img, vx_scalar cell_width, vx_scalar cell_height, 
             orientation_f32x4 = vsetq_lane_f32(fmod(atan2f(gy_1, gx_1) * pi_3_14, 360), orientation_f32x4, 1);
             orientation_f32x4 = vsetq_lane_f32(fmod(atan2f(gy_2, gx_2) * pi_3_14, 360), orientation_f32x4, 2);
             orientation_f32x4 = vsetq_lane_f32(fmod(atan2f(gy_3, gx_3) * pi_3_14, 360), orientation_f32x4, 3);
-            
+
             uint32x4_t lt0 = vcltq_f32(orientation_f32x4, vdupq_n_f32(0.0));
             float32x4_t orientation_f32x4_360 = vaddq_f32(orientation_f32x4, vdupq_n_f32(360.0));
             orientation_f32x4 = vbslq_f32(lt0, orientation_f32x4_360, orientation_f32x4);
-            
+
             //calculating bin.
             int32x4_t bin_s32x4 = vcvtq_s32_f32(vmulq_f32(orientation_f32x4, num_div_360_f32x4));
 
@@ -138,31 +138,31 @@ vx_status vxHogCells(vx_image img, vx_scalar cell_width, vx_scalar cell_height, 
             cellx_s32x4 = vsetq_lane_s32((i+3)/cell_w, cellx_s32x4, 3);
             int32x4_t magnitudes_index_s32x4 = vaddq_s32(vmulq_s32(celly_s32x4, num_cellw_s32x4), cellx_s32x4);
             int32x4_t bins_index_s32x4 = vaddq_s32(vmulq_s32(magnitudes_index_s32x4, num_orientations_s32x4), bin_s32x4);
-            
+
             void *mag_ptr = (vx_int8 *)magnitudes_data + vgetq_lane_s32(magnitudes_index_s32x4, 0)*2;
             *(vx_int16 *)(mag_ptr) = *(vx_int16 *)(mag_ptr) + vgetq_lane_f32(magnitude_f32x4, 0);
-            
+
             mag_ptr = (vx_int8 *)magnitudes_data + vgetq_lane_s32(magnitudes_index_s32x4, 1)*2;
             *(vx_int16 *)(mag_ptr) = *(vx_int16 *)(mag_ptr) + vgetq_lane_f32(magnitude_f32x4, 1);
-            
+
             mag_ptr = (vx_int8 *)magnitudes_data + vgetq_lane_s32(magnitudes_index_s32x4, 2)*2;
             *(vx_int16 *)(mag_ptr) = *(vx_int16 *)(mag_ptr) + vgetq_lane_f32(magnitude_f32x4, 2);
-            
+
             mag_ptr = (vx_int8 *)magnitudes_data + vgetq_lane_s32(magnitudes_index_s32x4, 3)*2;
             *(vx_int16 *)(mag_ptr) = *(vx_int16 *)(mag_ptr) + vgetq_lane_f32(magnitude_f32x4, 3);
 
             vx_int16 *bins_ptr = (vx_int16 *)bins_data + vgetq_lane_s32(bins_index_s32x4, 0);
             *bins_ptr = *bins_ptr + vgetq_lane_f32(magnitude_f32x4, 0);
-            
+
             bins_ptr = (vx_int16 *)bins_data + vgetq_lane_s32(bins_index_s32x4, 1);
             *bins_ptr = *bins_ptr + vgetq_lane_f32(magnitude_f32x4, 1);
-            
+
             bins_ptr = (vx_int16 *)bins_data + vgetq_lane_s32(bins_index_s32x4, 2);
             *bins_ptr = *bins_ptr + vgetq_lane_f32(magnitude_f32x4, 2);
-            
+
             bins_ptr = (vx_int16 *)bins_data + vgetq_lane_s32(bins_index_s32x4, 3);
             *bins_ptr = *bins_ptr + vgetq_lane_f32(magnitude_f32x4, 3);
-            
+
         }
         for (; i < width; i++) {
             vx_int32 x1 = i - 1 < 0 ? 0 : i - 1;
@@ -211,9 +211,9 @@ vx_status vxHogCells(vx_image img, vx_scalar cell_width, vx_scalar cell_height, 
 vx_status vxHogFeatures(vx_image img, vx_tensor magnitudes, vx_tensor bins, vx_array hog_params, vx_scalar hog_param_size, vx_tensor features)
 {
     vx_status status;
-    void* magnitudes_data = NULL;
-    void* bins_data = NULL;
-    void* features_data = NULL;
+    void* magnitudes_data = nullptr;
+    void* bins_data = nullptr;
+    void* features_data = nullptr;
     vx_uint32 block_index_count = 0;
 
     vx_size hog_param_size_t;
@@ -226,7 +226,7 @@ vx_status vxHogFeatures(vx_image img, vx_tensor magnitudes, vx_tensor bins, vx_a
     status |= AllocatePatch(features, &features_dim_num, features_dims, features_strides, &features_data, VX_WRITE_ONLY);
 
     vx_size hog_params_stride = 0;
-    void *hog_params_ptr = NULL;
+    void *hog_params_ptr = nullptr;
     vx_map_id hog_params_map_id;
     vx_size hog_params_length;
     vxQueryArray(hog_params, VX_ARRAY_NUMITEMS, &hog_params_length, sizeof(hog_params_length));
@@ -239,7 +239,7 @@ vx_status vxHogFeatures(vx_image img, vx_tensor magnitudes, vx_tensor bins, vx_a
 
     vx_rectangle_t src_rect;
     vx_imagepatch_addressing_t src_addr = VX_IMAGEPATCH_ADDR_INIT;
-    void *src_base = NULL;
+    void *src_base = nullptr;
     status |= vxGetValidRegionImage(img, &src_rect);
     status |= vxAccessImagePatch(img, &src_rect, 0, &src_addr, (void **)&src_base, VX_READ_AND_WRITE);
     width = src_addr.dim_x;
@@ -258,12 +258,12 @@ vx_status vxHogFeatures(vx_image img, vx_tensor magnitudes, vx_tensor bins, vx_a
 
     // The below for-loop implements the following for each window:
     // 1. Normalizes the histograms at block level using it's cells' magnitudes (L2-Sys)
-    // 2. Calculates HoG Descriptors for each window of the image, which is 
+    // 2. Calculates HoG Descriptors for each window of the image, which is
     // the concatenated descriptors of all the blocks contained in it.
     //
-    // Note: Windows in an image, blocks in a window and cells in a block, 
-    // are all processed in a row-major order. Cell bins are addressed in row-major 
-    // spanning the entire image. E.g. An image 24x16 has 6 cells of size 8x8. Bin Idx 0-8 
+    // Note: Windows in an image, blocks in a window and cells in a block,
+    // are all processed in a row-major order. Cell bins are addressed in row-major
+    // spanning the entire image. E.g. An image 24x16 has 6 cells of size 8x8. Bin Idx 0-8
     // for top left cell, 9-17 for next cell to the right, 18-26 for last cell on top row.
     // For next row, cell's Bin Idx are 27-35, 36-44, 44-52.
     for (vx_int32 winH = 0; winH < num_windowsH; winH++)
@@ -301,7 +301,7 @@ vx_status vxHogFeatures(vx_image img, vx_tensor magnitudes, vx_tensor bins, vx_a
                     // For a block with 4 cells with mag m: sqrt( m1^2 + m2^2 + m3^2 + m4^2)
                     sum = sqrtf(sum + 0.00000000000001f);
 
-                    // Calculate HoG Descriptor for the current block from its cell histograms 
+                    // Calculate HoG Descriptor for the current block from its cell histograms
                     for (vx_int32 y = 0; y < cells_per_block_h; y++)
                     {
                         for (vx_int32 x = 0; x < cells_per_block_w; x++)

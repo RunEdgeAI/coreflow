@@ -32,7 +32,7 @@ static
 vx_status VX_CALLBACK vxCopyKernel(vx_node node, const vx_reference parameters[], vx_uint32 num)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
-    if (NULL != node && NULL != parameters && num == dimof(copy_kernel_params))
+    if (nullptr != node && nullptr != parameters && num == dimof(copy_kernel_params))
     {
         vx_reference input  = parameters[0];
         vx_reference output = parameters[1];
@@ -46,7 +46,7 @@ vx_status VX_CALLBACK vxCopyNodeValidator(vx_node node, const vx_reference param
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node && NULL != parameters && num == dimof(copy_kernel_params) && NULL != metas)
+    if (nullptr != node && nullptr != parameters && num == dimof(copy_kernel_params) && nullptr != metas)
     {
         vx_parameter param = vxGetParameterByIndex(node, 0);
 
@@ -56,11 +56,11 @@ vx_status VX_CALLBACK vxCopyNodeValidator(vx_node node, const vx_reference param
 
             status = vxQueryParameter(param, VX_PARAMETER_REF, &input, sizeof(vx_reference));
 
-            if (NULL != input)
+            if (nullptr != input)
                 vxReleaseReference(&input);
         }
 
-        if (NULL != param)
+        if (nullptr != param)
             vxReleaseParameter(&param);
     }
     return status;
@@ -73,8 +73,8 @@ vx_kernel_description_t copy_kernel =
     vxCopyKernel,
     copy_kernel_params, dimof(copy_kernel_params),
     vxCopyNodeValidator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };

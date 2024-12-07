@@ -23,8 +23,8 @@
 vx_status vxConvertDepthU1(vx_image input, vx_image output, vx_scalar spol, vx_scalar sshf)
 {
     vx_uint32 y, x, width = 0, height = 0;
-    void *dst_base = NULL;
-    void *src_base = NULL;
+    void *dst_base = nullptr;
+    void *src_base = nullptr;
     vx_imagepatch_addressing_t dst_addr, src_addr;
     vx_rectangle_t rect;
     vx_enum format[2];
@@ -224,7 +224,7 @@ vx_status vxConvertDepthU1(vx_image input, vx_image output, vx_scalar spol, vx_s
             }
         }
     }
-    status |= vxCommitImagePatch(input, NULL, 0, &src_addr, src_base);
+    status |= vxCommitImagePatch(input, nullptr, 0, &src_addr, src_base);
     status |= vxCommitImagePatch(output, &rect, 0, &dst_addr, dst_base);
 
     return status;
@@ -340,8 +340,8 @@ static vx_status vxConDeptS16U8(void *src_base,void *dst_base,vx_uint32 height,v
 vx_status vxConvertDepth(vx_image input, vx_image output, vx_scalar spol, vx_scalar sshf)
 {
     vx_uint32 y, x;
-    void *dst_base = NULL;
-    void *src_base = NULL;
+    void *dst_base = nullptr;
+    void *src_base = nullptr;
     vx_imagepatch_addressing_t dst_addr, src_addr;
     vx_rectangle_t rect;
     vx_enum format[2];

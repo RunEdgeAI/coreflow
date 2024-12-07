@@ -62,7 +62,7 @@ vx_status VX_CALLBACK set_laplacian3x3_valid_rectangle(
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node && index < dimof(laplacian3x3_kernel_params) && NULL != input_valid && NULL != output_valid)
+    if (nullptr != node && index < dimof(laplacian3x3_kernel_params) && nullptr != input_valid && nullptr != output_valid)
     {
         vx_border_t borders = { VX_BORDER_UNDEFINED, { { 0 } } };
 
@@ -81,7 +81,7 @@ vx_status VX_CALLBACK set_laplacian3x3_valid_rectangle(
             else
                 status = VX_ERROR_NOT_IMPLEMENTED;
         }
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return status;
 } /* set_laplacian3x3_valid_rectangle() */
@@ -94,9 +94,9 @@ vx_status VX_CALLBACK own_laplacian3x3_validator(
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     (void)parameters;
 
-    if (NULL != node &&
+    if (nullptr != node &&
         num == dimof(laplacian3x3_kernel_params) &&
-        NULL != metas)
+        nullptr != metas)
     {
         vx_parameter param = 0;
         vx_image     src   = 0;
@@ -163,12 +163,12 @@ vx_status VX_CALLBACK own_laplacian3x3_validator(
         else
             status = VX_ERROR_INVALID_PARAMETERS;
 
-        if (NULL != src)
+        if (nullptr != src)
             vxReleaseImage(&src);
 
-        if (NULL != param)
+        if (nullptr != param)
             vxReleaseParameter(&param);
-    } /* if input ptrs != NULL */
+    } /* if input ptrs != nullptr */
 
     return status;
 } /* own_laplacian3x3_validator() */
@@ -180,8 +180,8 @@ vx_kernel_description_t laplacian3x3_kernel =
     ownLaplacian3x3Kernel,
     laplacian3x3_kernel_params, dimof(laplacian3x3_kernel_params),
     own_laplacian3x3_validator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };

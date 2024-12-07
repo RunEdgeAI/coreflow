@@ -47,7 +47,7 @@ vx_status VX_CALLBACK ownFWriteImageKernel(vx_node node, const vx_reference para
 {
     vx_status status = VX_FAILURE;
 
-    if (NULL != node && NULL != parameters && num == dimof(fwrite_image_kernel_params))
+    if (nullptr != node && nullptr != parameters && num == dimof(fwrite_image_kernel_params))
     {
         vx_image input = (vx_image)parameters[0];
         vx_array file  = (vx_array)parameters[1];
@@ -62,7 +62,7 @@ vx_status VX_CALLBACK own_fwrite_image_validator(vx_node node, const vx_referenc
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node && NULL != parameters && num == dimof(fwrite_image_kernel_params) && NULL != metas)
+    if (nullptr != node && nullptr != parameters && num == dimof(fwrite_image_kernel_params) && nullptr != metas)
     {
         vx_parameter param1 = 0;
         vx_parameter param2 = 0;
@@ -109,7 +109,7 @@ vx_status VX_CALLBACK own_fwrite_image_validator(vx_node node, const vx_referenc
                 if (VX_SUCCESS == status)
                 {
                     vx_map_id map_id = 0;
-                    vx_char* filename = NULL;
+                    vx_char* filename = nullptr;
                     vx_size filename_stride = 0;
 
                     status |= vxMapArrayRange(fname, 0, VX_MAX_FILE_NAME, &map_id, &filename_stride, (void**)&filename, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
@@ -132,21 +132,21 @@ vx_status VX_CALLBACK own_fwrite_image_validator(vx_node node, const vx_referenc
                 }
             }
 
-            if (NULL != image)
+            if (nullptr != image)
                 vxReleaseImage(&image);
 
-            if (NULL != fname)
+            if (nullptr != fname)
                 vxReleaseArray(&fname);
         }
         else
             status = VX_ERROR_INVALID_PARAMETERS;
 
-        if (NULL != param1)
+        if (nullptr != param1)
             vxReleaseParameter(&param1);
 
-        if (NULL != param2)
+        if (nullptr != param2)
             vxReleaseParameter(&param2);
-    } /* if ptrs non NULL */
+    } /* if ptrs non nullptr */
 
     return status;
 } /* own_fwrite_image_validator() */
@@ -167,7 +167,7 @@ vx_status VX_CALLBACK ownFWriteArrayKernel(vx_node node, const vx_reference para
 {
     vx_status status = VX_FAILURE;
 
-    if (NULL != node && NULL != parameters && num == dimof(fwrite_array_kernel_params))
+    if (nullptr != node && nullptr != parameters && num == dimof(fwrite_array_kernel_params))
     {
         vx_array arr  = (vx_array)parameters[0];
         vx_array file = (vx_array)parameters[1];
@@ -175,10 +175,10 @@ vx_status VX_CALLBACK ownFWriteArrayKernel(vx_node node, const vx_reference para
         vx_size num_items;
         vx_size item_size;
         vx_size stride;
-        void* arrptr = NULL;
-        vx_char* filename = NULL;
+        void* arrptr = nullptr;
+        vx_char* filename = nullptr;
         vx_size filename_stride = 0;
-        FILE* fp = NULL;
+        FILE* fp = nullptr;
         vx_size i;
         vx_map_id fname_map_id = 0;
         vx_map_id arr_map_id = 0;
@@ -192,7 +192,7 @@ vx_status VX_CALLBACK ownFWriteArrayKernel(vx_node node, const vx_reference para
         }
 
         fp = fopen(filename, "wb+");
-        if (fp == NULL)
+        if (fp == nullptr)
         {
             vxUnmapArrayRange(file, fname_map_id);
             vxAddLogEntry((vx_reference)file, VX_FAILURE, "Failed to open file %s\n", filename);
@@ -249,7 +249,7 @@ vx_status VX_CALLBACK ownFReadImageKernel(vx_node node, const vx_reference param
 {
     vx_status status = VX_FAILURE;
 
-    if (NULL != node && NULL != parameters && num == dimof(fread_image_kernel_params))
+    if (nullptr != node && nullptr != parameters && num == dimof(fread_image_kernel_params))
     {
         vx_array file   = (vx_array)parameters[0];
         vx_image output = (vx_image)parameters[1];
@@ -265,7 +265,7 @@ vx_status VX_CALLBACK own_fread_image_validator(vx_node node, const vx_reference
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node && NULL != parameters && num == dimof(fwrite_image_kernel_params) && NULL != metas)
+    if (nullptr != node && nullptr != parameters && num == dimof(fwrite_image_kernel_params) && nullptr != metas)
     {
         vx_parameter param = 0;
 
@@ -282,8 +282,8 @@ vx_status VX_CALLBACK own_fread_image_validator(vx_node node, const vx_reference
                 VX_SUCCESS == vxGetStatus((vx_reference)fname))
             {
                 vx_map_id map_id = 0;
-                vx_char* filepath = NULL;
-                vx_char* filename = NULL;
+                vx_char* filepath = nullptr;
+                vx_char* filename = nullptr;
                 vx_size filename_stride = 0;
 
                 status |= vxMapArrayRange(fname, 0, VX_MAX_FILE_NAME, &map_id, &filename_stride, (void**)&filepath, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
@@ -296,15 +296,15 @@ vx_status VX_CALLBACK own_fread_image_validator(vx_node node, const vx_reference
                     }
                     else
                     {
-                        vx_char* ext = NULL;
-                        FILE* fp = NULL;
+                        vx_char* ext = nullptr;
+                        FILE* fp = nullptr;
                         vx_char tmp[VX_MAX_FILE_NAME];
                         vx_uint32 width = 0;
                         vx_uint32 height = 0;
                         vx_df_image format = VX_DF_IMAGE_VIRT;
 
                         fp = fopen(filepath, "rb");
-                        if (fp != NULL)
+                        if (fp != nullptr)
                         {
                             filename = strrchr(filepath, '/');
                             if (filename)
@@ -399,7 +399,7 @@ vx_status VX_CALLBACK own_fread_image_validator(vx_node node, const vx_reference
                             vxSetMetaFormatAttribute(metas[1], VX_IMAGE_FORMAT, &format, sizeof(format));
                         }
 
-                        if (NULL != fp)
+                        if (nullptr != fp)
                             fclose(fp);
                     } // if filename is non empty
                 }
@@ -411,13 +411,13 @@ vx_status VX_CALLBACK own_fread_image_validator(vx_node node, const vx_reference
             else
                 status = VX_ERROR_INVALID_PARAMETERS;
 
-            if (NULL != fname)
+            if (nullptr != fname)
                 vxReleaseArray(&fname);
         }
 
-        if (NULL != param)
+        if (nullptr != param)
             vxReleaseParameter(&param);
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return status;
 } /* own_fread_image_validator() */
@@ -438,7 +438,7 @@ vx_status VX_CALLBACK ownFReadArrayKernel(vx_node node, const vx_reference param
 {
     vx_status status = VX_FAILURE;
 
-    if (NULL != node && NULL != parameters && num == dimof(fread_array_kernel_params))
+    if (nullptr != node && nullptr != parameters && num == dimof(fread_array_kernel_params))
     {
         vx_array file = (vx_array)parameters[0];
         vx_array arr  = (vx_array)parameters[1];
@@ -447,9 +447,9 @@ vx_status VX_CALLBACK ownFReadArrayKernel(vx_node node, const vx_reference param
         vx_size item_size;
         vx_size arr_capacity;
         vx_size arr_item_size;
-        vx_char* filename = NULL;
+        vx_char* filename = nullptr;
         vx_size filename_stride = 0;
-        FILE* fp = NULL;
+        FILE* fp = nullptr;
         vx_map_id map_id = 0;
 
         status = vxMapArrayRange(file, 0, VX_MAX_FILE_NAME, &map_id, &filename_stride, (void**)&filename, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
@@ -461,7 +461,7 @@ vx_status VX_CALLBACK ownFReadArrayKernel(vx_node node, const vx_reference param
         }
 
         fp = fopen(filename, "wb+");
-        if (fp == NULL)
+        if (fp == nullptr)
         {
             vxUnmapArrayRange(file, map_id);
             vxAddLogEntry((vx_reference)file, VX_FAILURE, "Failed to open file %s\n", filename);
@@ -505,7 +505,7 @@ vx_status VX_CALLBACK ownFReadArrayKernel(vx_node node, const vx_reference param
 
         fclose(fp);
         vxUnmapArrayRange(file, map_id);
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return status;
 }  /* ownFReadArrayKernel() */
@@ -529,10 +529,10 @@ vx_kernel_description_t fwrite_image_kernel =
     ownFWriteImageKernel,
     fwrite_image_kernel_params, dimof(fwrite_image_kernel_params),
     own_fwrite_image_validator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };
 
 vx_kernel_description_t fwrite_array_kernel =
@@ -542,10 +542,10 @@ vx_kernel_description_t fwrite_array_kernel =
     ownFWriteArrayKernel,
     fwrite_array_kernel_params, dimof(fwrite_array_kernel_params),
     own_all_pass_validator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };
 
 vx_kernel_description_t fread_image_kernel =
@@ -555,10 +555,10 @@ vx_kernel_description_t fread_image_kernel =
     ownFReadImageKernel,
     fread_image_kernel_params, dimof(fread_image_kernel_params),
     own_fread_image_validator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };
 
 vx_kernel_description_t fread_array_kernel =
@@ -568,8 +568,8 @@ vx_kernel_description_t fread_array_kernel =
     ownFReadArrayKernel,
     fread_array_kernel_params, dimof(fread_array_kernel_params),
     own_all_pass_validator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };

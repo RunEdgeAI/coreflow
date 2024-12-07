@@ -501,7 +501,7 @@ static vx_bool read_pixel_8u_C1(void *base, vx_imagepatch_addressing_t *addr, vx
     bx = x < 0 ? 0 : x >= addr->dim_x ? addr->dim_x - 1 : (vx_uint32)x;
     by = y < 0 ? 0 : y >= addr->dim_y ? addr->dim_y - 1 : (vx_uint32)y;
 
-    vx_uint8 *new_ptr = NULL;
+    vx_uint8 *new_ptr = nullptr;
     vx_uint32 offset = (addr->stride_y * by + addr->stride_x * bx);
     new_ptr = (vx_uint8 *)base;
     bpixel = &new_ptr[offset];
@@ -528,7 +528,7 @@ static vx_uint32 vxComputePatchOffset(vx_uint32 x, vx_uint32 y, const vx_imagepa
 
 static void* vxFormatImagePatchAddress2d_U1(void *ptr, vx_uint32 x, vx_uint32 y, const vx_imagepatch_addressing_t *addr)
 {
-    vx_uint8 *new_ptr = NULL;
+    vx_uint8 *new_ptr = nullptr;
 
     vx_uint32 offset = vxComputePatchOffset(x, y, addr);
     new_ptr = (vx_uint8 *)ptr;

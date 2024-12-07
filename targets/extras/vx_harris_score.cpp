@@ -474,7 +474,7 @@ static vx_status harris_score1x7(vx_border_t borders, vx_uint32 grad_size, vx_ui
 static vx_status VX_CALLBACK ownHarrisScoreKernel(vx_node node, const vx_reference parameters[], vx_uint32 num)
 {
     vx_status status = VX_FAILURE;
-    if (NULL != node && NULL != parameters && num == dimof(harris_score_kernel_params))
+    if (nullptr != node && nullptr != parameters && num == dimof(harris_score_kernel_params))
     {
         vx_image  grad_x = (vx_image)parameters[0];
         vx_image  grad_y = (vx_image)parameters[1];
@@ -498,9 +498,9 @@ static vx_status VX_CALLBACK ownHarrisScoreKernel(vx_node node, const vx_referen
             vx_int32 y;
             vx_int32 i;
             vx_int32 j;
-            void* gx_base = NULL;
-            void* gy_base = NULL;
-            void* dst_base = NULL;
+            void* gx_base = nullptr;
+            void* gy_base = nullptr;
+            void* dst_base = nullptr;
             vx_imagepatch_addressing_t gx_addr = VX_IMAGEPATCH_ADDR_INIT;
             vx_imagepatch_addressing_t gy_addr = VX_IMAGEPATCH_ADDR_INIT;
             vx_imagepatch_addressing_t dst_addr = VX_IMAGEPATCH_ADDR_INIT;
@@ -587,14 +587,14 @@ static vx_status VX_CALLBACK ownHarrisScoreKernel(vx_node node, const vx_referen
             status |= vxUnmapImagePatch(grad_y, grad_y_map_id);
             status |= vxUnmapImagePatch(dst, dst_map_id);
         }
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
     return status;
 } /* ownHarrisScoreKernel() */
 #else
 static vx_status VX_CALLBACK ownHarrisScoreKernel(vx_node node, const vx_reference parameters[], vx_uint32 num)
 {
     vx_status status = VX_FAILURE;
-    if (NULL != node && NULL != parameters && num == dimof(harris_score_kernel_params))
+    if (nullptr != node && nullptr != parameters && num == dimof(harris_score_kernel_params))
     {
         vx_image  grad_x      = (vx_image)parameters[0];
         vx_image  grad_y      = (vx_image)parameters[1];
@@ -619,9 +619,9 @@ static vx_status VX_CALLBACK ownHarrisScoreKernel(vx_node node, const vx_referen
             vx_int32 y;
             vx_int32 i;
             vx_int32 j;
-            void* gx_base = NULL;
-            void* gy_base = NULL;
-            void* dst_base = NULL;
+            void* gx_base = nullptr;
+            void* gy_base = nullptr;
+            void* dst_base = nullptr;
             vx_imagepatch_addressing_t gx_addr  = VX_IMAGEPATCH_ADDR_INIT;
             vx_imagepatch_addressing_t gy_addr  = VX_IMAGEPATCH_ADDR_INIT;
             vx_imagepatch_addressing_t dst_addr = VX_IMAGEPATCH_ADDR_INIT;
@@ -698,7 +698,7 @@ static vx_status VX_CALLBACK ownHarrisScoreKernel(vx_node node, const vx_referen
             status |= vxUnmapImagePatch(grad_y, grad_y_map_id);
             status |= vxUnmapImagePatch(dst, dst_map_id);
         }
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
     return status;
 } /* ownHarrisScoreKernel() */
 #endif
@@ -708,7 +708,7 @@ static vx_status VX_CALLBACK set_harris_score_valid_rectangle(
     const vx_rectangle_t* const input_valid[], vx_rectangle_t* const output_valid[])
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
-    if (NULL != node && index < dimof(harris_score_kernel_params) && NULL != input_valid && NULL != output_valid)
+    if (nullptr != node && index < dimof(harris_score_kernel_params) && nullptr != input_valid && nullptr != output_valid)
     {
         vx_border_t borders = { VX_BORDER_UNDEFINED, { { 0 } } };
         status = vxQueryNode(node, VX_NODE_BORDER, &borders, sizeof(borders));
@@ -758,15 +758,15 @@ static vx_status VX_CALLBACK set_harris_score_valid_rectangle(
             }
             else
                 status = VX_ERROR_INVALID_PARAMETERS;
-            if (NULL != block_size)
+            if (nullptr != block_size)
                 vxReleaseScalar(&block_size);
 
-            if (NULL != param)
+            if (nullptr != param)
                 vxReleaseParameter(&param);
         } // if BORDER_UNDEFINED
         else
             status = VX_ERROR_NOT_IMPLEMENTED;
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
     return status;
 } /* set_harris_score_valid_rectangle() */
 
@@ -775,9 +775,9 @@ static vx_status VX_CALLBACK own_harris_score_validator(
     const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[])
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
-    if (NULL != node &&
+    if (nullptr != node &&
         num == dimof(harris_score_kernel_params) &&
-        NULL != metas)
+        nullptr != metas)
     {
         vx_parameter param1 = 0;
         vx_parameter param2 = 0;
@@ -913,27 +913,27 @@ static vx_status VX_CALLBACK own_harris_score_validator(
             }
         }
 
-        if (NULL != dx)
+        if (nullptr != dx)
             vxReleaseImage(&dx);
-        if (NULL != dy)
+        if (nullptr != dy)
             vxReleaseImage(&dy);
-        if (NULL != sensitivity)
+        if (nullptr != sensitivity)
             vxReleaseScalar(&sensitivity);
-        if (NULL != gradient_size)
+        if (nullptr != gradient_size)
             vxReleaseScalar(&gradient_size);
-        if (NULL != block_size)
+        if (nullptr != block_size)
             vxReleaseScalar(&block_size);
-        if (NULL != param1)
+        if (nullptr != param1)
             vxReleaseParameter(&param1);
-        if (NULL != param2)
+        if (nullptr != param2)
             vxReleaseParameter(&param2);
-        if (NULL != param3)
+        if (nullptr != param3)
             vxReleaseParameter(&param3);
-        if (NULL != param4)
+        if (nullptr != param4)
             vxReleaseParameter(&param4);
-        if (NULL != param5)
+        if (nullptr != param5)
             vxReleaseParameter(&param5);
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
     return status;
 } /* own_harris_score_validator() */
 
@@ -944,8 +944,8 @@ vx_kernel_description_t harris_score_kernel =
     ownHarrisScoreKernel,
     harris_score_kernel_params, dimof(harris_score_kernel_params),
     own_harris_score_validator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };

@@ -40,8 +40,8 @@ vx_status ownCopyImage(vx_image input, vx_image output)
     for (p = 0; p < planes && status == VX_SUCCESS; p++)
     {
         status = VX_SUCCESS;
-        src = NULL;
-        dst = NULL;
+        src = nullptr;
+        dst = nullptr;
 
         status |= vxMapImagePatch(input, &rect, p, &src_map_id, &src_addr, &src, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
         status |= vxMapImagePatch(output, &rect, p, &dst_map_id, &dst_addr, &dst, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
@@ -77,7 +77,7 @@ vx_status ownCopyArray(vx_array src, vx_array dst)
     vx_size src_num_items = 0;
     vx_size dst_capacity = 0;
     vx_size src_stride = 0;
-    void* srcp = NULL;
+    void* srcp = nullptr;
     vx_map_id map_id = 0;
     vx_status status = VX_SUCCESS; // assume success until an error occurs.
 

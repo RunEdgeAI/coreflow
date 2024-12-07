@@ -12,7 +12,7 @@
 #define MAX(a, b) ((a) < (b) ? (b) : (a))
 #define CLAMP(val, lower, upper) MAX((lower), MIN((val), (upper)))
 
-static void TensorMultiplyMatrix_U8(const vx_uint8 *src1, const vx_uint32 *dim1, const vx_uint32 *srcStride1, const vx_uint8 *src2, const vx_uint32 *dim2, const vx_uint32 *srcStride2, const vx_uint8 *src3, const vx_uint32 *srcStride3, const vx_uint32 *dstStride, vx_uint8 *dst) 
+static void TensorMultiplyMatrix_U8(const vx_uint8 *src1, const vx_uint32 *dim1, const vx_uint32 *srcStride1, const vx_uint8 *src2, const vx_uint32 *dim2, const vx_uint32 *srcStride2, const vx_uint8 *src3, const vx_uint32 *srcStride3, const vx_uint32 *dstStride, vx_uint8 *dst)
 {
     vx_uint32 row, col, index;
     vx_uint32 dim10 = dim1[0];
@@ -54,7 +54,7 @@ static void TensorMultiplyMatrix_U8(const vx_uint8 *src1, const vx_uint32 *dim1,
 
                 sumu32x4 = vmlaq_u32(sumu32x4, s1u32x4, s2u32x4);
             }
-            if (NULL != src3)
+            if (nullptr != src3)
             {
                 s3[0] = src3[srcStride31 * row + srcStride30 * (col + 0)];
                 s3[1] = src3[srcStride31 * row + srcStride30 * (col + 1)];
@@ -73,14 +73,14 @@ static void TensorMultiplyMatrix_U8(const vx_uint8 *src1, const vx_uint32 *dim1,
             dst[dstStride1 * row + dstStride0 * (col + 3)] = CLAMP(sum[3], 0, UINT8_MAX);
         }
 
-        for (col = dim20_neon; col < dim20; col++) 
+        for (col = dim20_neon; col < dim20; col++)
         {
             sum1 = 0;
-            for (index = 0; index < dim10; index++) 
+            for (index = 0; index < dim10; index++)
             {
                 sum1 += src1[srcStride11 * row + srcStride10 * index] * src2[srcStride21 * index + srcStride20 * col];
             }
-            if (NULL != src3) 
+            if (nullptr != src3)
             {
                 sum1 += src3[srcStride31 * row + srcStride30 * col];
             }
@@ -89,7 +89,7 @@ static void TensorMultiplyMatrix_U8(const vx_uint8 *src1, const vx_uint32 *dim1,
     }
 }
 
-static void TensorMultiplyMatrix_S8(const vx_int8 *src1, const vx_uint32 *dim1, const vx_uint32 *srcStride1, const vx_int8 *src2, const vx_uint32 *dim2, const vx_uint32 *srcStride2, const vx_int8 *src3, const vx_uint32 *srcStride3, const vx_uint32 *dstStride, vx_int8 *dst) 
+static void TensorMultiplyMatrix_S8(const vx_int8 *src1, const vx_uint32 *dim1, const vx_uint32 *srcStride1, const vx_int8 *src2, const vx_uint32 *dim2, const vx_uint32 *srcStride2, const vx_int8 *src3, const vx_uint32 *srcStride3, const vx_uint32 *dstStride, vx_int8 *dst)
 {
     vx_uint32 row, col, index;
     vx_uint32 dim1_multiple4 = dim1[0] - dim1[0] % 4;
@@ -97,14 +97,14 @@ static void TensorMultiplyMatrix_S8(const vx_int8 *src1, const vx_uint32 *dim1, 
 
     vx_int32 sum, d[4], s1[4], s2[4], s3[4], t[4];
 
-    for (row = 0; row < dim1[1]; row++) 
+    for (row = 0; row < dim1[1]; row++)
     {
-        for (col = 0; col < dim2_multiple4; col+=4) 
-        {   
+        for (col = 0; col < dim2_multiple4; col+=4)
+        {
             for(vx_uint32 k = 0; k < 4; k++)
             {
                 d[k] = 0;
-                for (index = 0; index < dim1_multiple4; index+=4) 
+                for (index = 0; index < dim1_multiple4; index+=4)
                 {
                     s1[0] = src1[srcStride1[1] * row + srcStride1[0] * (index + 0)];
                     s1[1] = src1[srcStride1[1] * row + srcStride1[0] * (index + 1)];
@@ -123,7 +123,7 @@ static void TensorMultiplyMatrix_S8(const vx_int8 *src1, const vx_uint32 *dim1, 
                     d[k] += t[0] + t[1] + t[2] + t[3];
                 }
             }
-            for (index = dim1_multiple4; index < dim1[0]; index++) 
+            for (index = dim1_multiple4; index < dim1[0]; index++)
             {
 
                 s2[0] = src2[srcStride2[1] * index + srcStride2[0] * col];
@@ -139,7 +139,7 @@ static void TensorMultiplyMatrix_S8(const vx_int8 *src1, const vx_uint32 *dim1, 
                 d32x4 = vaddq_s32(d32x4, t32x4);
                 vst1q_s32(d, d32x4);
             }
-            if (NULL != src3) 
+            if (nullptr != src3)
             {
                 s3[0] = src3[srcStride3[1] * row + srcStride3[0] * (col + 0)];
                 s3[1] = src3[srcStride3[1] * row + srcStride3[0] * (col + 1)];
@@ -158,10 +158,10 @@ static void TensorMultiplyMatrix_S8(const vx_int8 *src1, const vx_uint32 *dim1, 
             dst[dstStride[1] * row + dstStride[0] * (col+3)] = CLAMP(d[3], INT8_MIN, INT8_MAX);
         }
 
-        for (col = dim2_multiple4; col < dim2[0]; col++) 
+        for (col = dim2_multiple4; col < dim2[0]; col++)
         {
-            sum = 0;       
-            for (index = 0; index < dim1_multiple4; index+=4) 
+            sum = 0;
+            for (index = 0; index < dim1_multiple4; index+=4)
             {
                 s1[0] = src1[srcStride1[1] * row + srcStride1[0] * (index + 0)];
                 s1[1] = src1[srcStride1[1] * row + srcStride1[0] * (index + 1)];
@@ -179,11 +179,11 @@ static void TensorMultiplyMatrix_S8(const vx_int8 *src1, const vx_uint32 *dim1, 
                 vst1q_s32(t, t32x4);
                 sum += t[0] + t[1] + t[2] + t[3];
             }
-            for (index = dim1_multiple4; index < dim1[0]; index++) 
+            for (index = dim1_multiple4; index < dim1[0]; index++)
             {
                 sum += src1[srcStride1[1] * row + srcStride1[0] * index] * src2[srcStride2[1] * index + srcStride2[0] * col];
             }
-            if (NULL != src3) 
+            if (nullptr != src3)
             {
                 sum += src3[srcStride3[1] * row + srcStride3[0] * col];
             }
@@ -193,7 +193,7 @@ static void TensorMultiplyMatrix_S8(const vx_int8 *src1, const vx_uint32 *dim1, 
     }
 }
 
-static void TensorMultiplyMatrix_S16(const vx_int16 *src1, const vx_uint32 *dim1, const vx_uint32 *srcStride1, const vx_int16 *src2, const vx_uint32 *dim2, const vx_uint32 *srcStride2, const vx_int16 *src3, const vx_uint32 *srcStride3, const vx_uint32 *dstStride, vx_int16 *dst) 
+static void TensorMultiplyMatrix_S16(const vx_int16 *src1, const vx_uint32 *dim1, const vx_uint32 *srcStride1, const vx_int16 *src2, const vx_uint32 *dim2, const vx_uint32 *srcStride2, const vx_int16 *src3, const vx_uint32 *srcStride3, const vx_uint32 *dstStride, vx_int16 *dst)
 {
     vx_uint32 row, col, index;
     vx_uint32 dim1_multiple4 = dim1[0] - dim1[0] % 4;
@@ -201,14 +201,14 @@ static void TensorMultiplyMatrix_S16(const vx_int16 *src1, const vx_uint32 *dim1
 
     vx_int32 sum, d[4], s1[4], s2[4], s3[4], t[4];
 
-    for (row = 0; row < dim1[1]; row++) 
+    for (row = 0; row < dim1[1]; row++)
     {
-        for (col = 0; col < dim2_multiple4; col+=4) 
-        {                  
+        for (col = 0; col < dim2_multiple4; col+=4)
+        {
             for(vx_uint32 k = 0; k < 4; k++)
             {
                 d[k] = 0;
-                for (index = 0; index < dim1_multiple4; index+=4) 
+                for (index = 0; index < dim1_multiple4; index+=4)
                 {
                     s1[0] = (*(vx_int16 *)((vx_int8 *)src1 + srcStride1[1] * row + srcStride1[0] * (index+0)));
                     s1[1] = (*(vx_int16 *)((vx_int8 *)src1 + srcStride1[1] * row + srcStride1[0] * (index+1)));
@@ -228,7 +228,7 @@ static void TensorMultiplyMatrix_S16(const vx_int16 *src1, const vx_uint32 *dim1
                     d[k] += t[0] + t[1] + t[2] + t[3];
                 }
             }
-            for (index = dim1_multiple4; index < dim1[0]; index++) 
+            for (index = dim1_multiple4; index < dim1[0]; index++)
             {
                 s2[0] =  (*(vx_int16 *)((vx_int8 *)src2 + srcStride2[1] * index + srcStride2[0] * (col+0)));
                 s2[1] =  (*(vx_int16 *)((vx_int8 *)src2 + srcStride2[1] * index + srcStride2[0] * (col+1)));
@@ -244,7 +244,7 @@ static void TensorMultiplyMatrix_S16(const vx_int16 *src1, const vx_uint32 *dim1
                 vst1q_s32(d, d32x4);
 
             }
-            if (NULL != src3) 
+            if (nullptr != src3)
             {
                 s3[0] = (*(vx_int16 *)((vx_int8 *)src3 + srcStride3[1] * row + srcStride3[0] * (col+0))) * Q78_SCALE;
                 s3[1] = (*(vx_int16 *)((vx_int8 *)src3 + srcStride3[1] * row + srcStride3[0] * (col+1))) * Q78_SCALE;
@@ -262,10 +262,10 @@ static void TensorMultiplyMatrix_S16(const vx_int16 *src1, const vx_uint32 *dim1
             *(vx_int16 *)((vx_int8 *)dst + dstStride[1] * row + dstStride[0] * (col+3)) = CLAMP((d[3] / Q78_SCALE), INT16_MIN, INT16_MAX);
         }
 
-        for (col = dim2_multiple4; col < dim2[0]; col++) 
+        for (col = dim2_multiple4; col < dim2[0]; col++)
         {
             sum = 0;
-            for (index = 0; index < dim1_multiple4; index+=4) 
+            for (index = 0; index < dim1_multiple4; index+=4)
             {
                 s1[0] = (*(vx_int16 *)((vx_int8 *)src1 + srcStride1[1] * row + srcStride1[0] * (index+0)));
                 s1[1] = (*(vx_int16 *)((vx_int8 *)src1 + srcStride1[1] * row + srcStride1[0] * (index+1)));
@@ -284,12 +284,12 @@ static void TensorMultiplyMatrix_S16(const vx_int16 *src1, const vx_uint32 *dim1
                 sum += t[0] + t[1] + t[2] + t[3];
             }
 
-            for (index = dim1_multiple4; index < dim1[0]; index++) 
+            for (index = dim1_multiple4; index < dim1[0]; index++)
             {
                 sum += (*(vx_int16 *)((vx_int8 *)src1 + srcStride1[1] * row + srcStride1[0] * index)) *
                     (*(vx_int16 *)((vx_int8 *)src2 + srcStride2[1] * index + srcStride2[0] * col));
             }
-            if (NULL != src3) 
+            if (nullptr != src3)
             {
                 sum += (*(vx_int16 *)((vx_int8 *)src3 + srcStride3[1] * row + srcStride3[0] * col)) * Q78_SCALE;
             }
@@ -313,19 +313,19 @@ void Multiply2DMatrixesImpl(
 
     switch (type)
     {
-    case VX_TYPE_INT8: TensorMultiplyMatrix_S8((vx_uint8 *)src1, dims1, src1_strides, (vx_uint8 *)src2, dims2, src2_strides, 
+    case VX_TYPE_INT8: TensorMultiplyMatrix_S8((vx_uint8 *)src1, dims1, src1_strides, (vx_uint8 *)src2, dims2, src2_strides,
                         (vx_uint8 *)src3, src3_strides, dst_strides, (vx_uint8 *)dst);
                         break;
 
-    case VX_TYPE_UINT8: TensorMultiplyMatrix_U8((vx_int8 *)src1, dims1, src1_strides, (vx_int8 *)src2, dims2, src2_strides, 
+    case VX_TYPE_UINT8: TensorMultiplyMatrix_U8((vx_int8 *)src1, dims1, src1_strides, (vx_int8 *)src2, dims2, src2_strides,
                         (vx_int8 *)src3, src3_strides, dst_strides, (vx_int8 *)dst);
                         break;
 
-    case VX_TYPE_INT16: TensorMultiplyMatrix_S16((vx_int16 *)src1, dims1, src1_strides, (vx_int16 *)src2, dims2, src2_strides, 
+    case VX_TYPE_INT16: TensorMultiplyMatrix_S16((vx_int16 *)src1, dims1, src1_strides, (vx_int16 *)src2, dims2, src2_strides,
                         (vx_int16 *)src3, src3_strides, dst_strides, (vx_int16 *)dst);
                         break;
 
-    default: assert(0); 
+    default: assert(0);
                         break;
     }
 }

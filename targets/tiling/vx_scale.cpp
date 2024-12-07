@@ -215,18 +215,18 @@ vx_tiling_kernel_t scale_image_kernel =
 {
     "org.khronos.openvx.tiling_scale_image",
     VX_KERNEL_SCALE_IMAGE,
-    NULL,
+    nullptr,
     ScaleImage_image_tiling_flexible,
     ScaleImage_image_tiling_fast,
     3,
     { { VX_INPUT,  VX_TYPE_IMAGE,  VX_PARAMETER_STATE_REQUIRED },
       { VX_OUTPUT, VX_TYPE_IMAGE,  VX_PARAMETER_STATE_REQUIRED },
       { VX_INPUT,  VX_TYPE_SCALAR, VX_PARAMETER_STATE_OPTIONAL }},
-	NULL,
+	nullptr,
     vxScaleImageInputValidator,
     vxScaleImageOutputValidator,
     vxScaleImageInitializer,
-    NULL,
+    nullptr,
     { 16, 16 },
     { -1, 1, -1, 1 },
     { VX_BORDER_MODE_UNDEFINED, 0 },
@@ -359,14 +359,14 @@ static vx_convolution vxCreateGaussian5x5Convolution(vx_context context)
     if (status != VX_SUCCESS)
     {
         vxReleaseConvolution(&conv);
-        return NULL;
+        return nullptr;
     }
 
     status = vxSetConvolutionAttribute(conv, VX_CONVOLUTION_SCALE, (void *)&gaussian5x5scale, sizeof(vx_uint32));
     if (status != VX_SUCCESS)
     {
         vxReleaseConvolution(&conv);
-        return NULL;
+        return nullptr;
     }
     return conv;
 }
@@ -510,13 +510,13 @@ vx_tiling_kernel_t halfscale_gaussian_kernel =
     "org.khronos.openvx.tiling_halfscale_gaussian",
     VX_KERNEL_HALFSCALE_GAUSSIAN,
     vxHalfscaleGaussianKernel,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     3,
     { { VX_INPUT,  VX_TYPE_IMAGE,  VX_PARAMETER_STATE_REQUIRED },
       { VX_OUTPUT, VX_TYPE_IMAGE,  VX_PARAMETER_STATE_REQUIRED },
       { VX_INPUT,  VX_TYPE_SCALAR, VX_PARAMETER_STATE_OPTIONAL } },
-    NULL,
+    nullptr,
     vxHalfscaleGaussianInputValidator,
     vxHalfscaleGaussianOutputValidator,
     vxHalfscaleGaussianInitializer,

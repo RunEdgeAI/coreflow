@@ -53,7 +53,7 @@ vx_status vxLBPStandard(vx_image src, vx_int8 ksize, vx_image dst)
     vx_rectangle_t rect;
     vx_uint32 y = 0, x = 0;
     vx_status status = VX_SUCCESS;
-    void *src_base = NULL, *dst_base = NULL;
+    void *src_base = nullptr, *dst_base = nullptr;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_uint8 gc, g[8], sum;
 
@@ -121,7 +121,7 @@ vx_status vxLBPStandard(vx_image src, vx_int8 ksize, vx_image dst)
          }
      }
 
-     status |= vxCommitImagePatch(src, NULL, 0, &src_addr, src_base);
+     status |= vxCommitImagePatch(src, nullptr, 0, &src_addr, src_base);
      status |= vxCommitImagePatch(dst, &rect, 0, &dst_addr, dst_base);
      return status;
 }
@@ -131,7 +131,7 @@ vx_status vxLBPModified(vx_image src, vx_image dst)
     vx_rectangle_t rect;
     vx_uint32 y = 0, x = 0;
     vx_status status = VX_SUCCESS;
-    void *src_base = NULL, *dst_base = NULL;
+    void *src_base = nullptr, *dst_base = nullptr;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_uint8 avg, g[8], sum;
 
@@ -170,7 +170,7 @@ vx_status vxLBPModified(vx_image src, vx_image dst)
         }
      }
 
-     status |= vxCommitImagePatch(src, NULL, 0, &src_addr, src_base);
+     status |= vxCommitImagePatch(src, nullptr, 0, &src_addr, src_base);
      status |= vxCommitImagePatch(dst, &rect, 0, &dst_addr, dst_base);
 
      return status;
@@ -181,7 +181,7 @@ vx_status vxLBPUniform(vx_image src, vx_int8 ksize, vx_image dst)
     vx_rectangle_t rect;
     vx_uint32 y = 0, x = 0;
     vx_status status = VX_SUCCESS;
-    void *src_base = NULL, *dst_base = NULL;
+    void *src_base = nullptr, *dst_base = nullptr;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_uint8 gc, g[8], sum;
 
@@ -263,7 +263,7 @@ vx_status vxLBPUniform(vx_image src, vx_int8 ksize, vx_image dst)
          }
      }
 
-     status |= vxCommitImagePatch(src, NULL, 0, &src_addr, src_base);
+     status |= vxCommitImagePatch(src, nullptr, 0, &src_addr, src_base);
      status |= vxCommitImagePatch(dst, &rect, 0, &dst_addr, dst_base);
      return status;
 }

@@ -180,9 +180,9 @@ vx_kernel_description_t nonmaxsuppression_kernel = {
     "org.khronos.openvx.non_max_suppression",
     vxNonMaxSuppressionKernel,
     nonmaxsuppression_kernel_params, dimof(nonmaxsuppression_kernel_params),
-    NULL,
+    nullptr,
     vxNonMaxSuppressionInputValidator,
     vxNonMaxSuppressionOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };

@@ -72,8 +72,8 @@ void quicksort(struct kp_elem list[], int m, int n)
 // nodeless version of the EuclideanNonMaxSuppression kernel
 vx_status ownEuclideanNonMaxSuppressionHarris(vx_image src, vx_scalar thr, vx_scalar rad, vx_image dst)
 {
-    void* src_base = NULL;
-    void* dst_base = NULL;
+    void* src_base = nullptr;
+    void* dst_base = nullptr;
     vx_imagepatch_addressing_t src_addr = VX_IMAGEPATCH_ADDR_INIT;
     vx_imagepatch_addressing_t dst_addr = VX_IMAGEPATCH_ADDR_INIT;
     vx_map_id src_map_id = 0;
@@ -108,7 +108,7 @@ vx_status ownEuclideanNonMaxSuppressionHarris(vx_image src, vx_scalar thr, vx_sc
 
         struct kp_elem* kp_list = (struct kp_elem*)malloc(src_addr.dim_x * src_addr.dim_y * sizeof(struct kp_elem));
 
-        if (NULL != kp_list)
+        if (nullptr != kp_list)
         {
             int nb_kp = 0;
 
@@ -233,9 +233,9 @@ vx_status ownNonMaxSuppression(vx_image i_mag, vx_image i_ang, vx_image i_edge, 
     vx_uint32 low_y;
     vx_uint32 high_x;
     vx_uint32 high_y;
-    void* mag_base = NULL;
-    void* ang_base = NULL;
-    void* edge_base = NULL;
+    void* mag_base = nullptr;
+    void* ang_base = nullptr;
+    void* edge_base = nullptr;
     vx_imagepatch_addressing_t mag_addr  = VX_IMAGEPATCH_ADDR_INIT;
     vx_imagepatch_addressing_t ang_addr  = VX_IMAGEPATCH_ADDR_INIT;
     vx_imagepatch_addressing_t edge_addr = VX_IMAGEPATCH_ADDR_INIT;

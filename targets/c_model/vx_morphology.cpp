@@ -125,11 +125,11 @@ vx_kernel_description_t erode3x3_kernel = {
     "org.khronos.openvx.erode_3x3",
     vxErode3x3Kernel,
     morphology_kernel_params, dimof(morphology_kernel_params),
-    NULL,
+    nullptr,
     vxMorphologyInputValidator,
     vxMorphologyOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 vx_kernel_description_t dilate3x3_kernel = {
@@ -137,11 +137,11 @@ vx_kernel_description_t dilate3x3_kernel = {
     "org.khronos.openvx.dilate_3x3",
     vxDilate3x3Kernel,
     morphology_kernel_params, dimof(morphology_kernel_params),
-    NULL,
+    nullptr,
     vxMorphologyInputValidator,
     vxMorphologyOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 
 

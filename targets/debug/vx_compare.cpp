@@ -38,7 +38,7 @@ VX_CALLBACK ownCompareImagesKernel(vx_node node, const vx_reference parameters[]
 {
     vx_status status = VX_FAILURE;
 
-    if (NULL != node && NULL != parameters && num == dimof(compare_images_kernel_params))
+    if (nullptr != node && nullptr != parameters && num == dimof(compare_images_kernel_params))
     {
         vx_image a = (vx_image)parameters[0];
         vx_image b = (vx_image)parameters[1];
@@ -74,8 +74,8 @@ VX_CALLBACK ownCompareImagesKernel(vx_node node, const vx_reference parameters[]
             vx_uint32 x;
             vx_uint32 y;
             vx_uint32 p;
-            void* a_base_ptrs[4] = { NULL, NULL, NULL, NULL };
-            void* b_base_ptrs[4] = { NULL, NULL, NULL, NULL };
+            void* a_base_ptrs[4] = { nullptr, nullptr, nullptr, nullptr };
+            void* b_base_ptrs[4] = { nullptr, nullptr, nullptr, nullptr };
             vx_imagepatch_addressing_t a_addrs[4] = { VX_IMAGEPATCH_ADDR_INIT, VX_IMAGEPATCH_ADDR_INIT, VX_IMAGEPATCH_ADDR_INIT };
             vx_imagepatch_addressing_t b_addrs[4] = { VX_IMAGEPATCH_ADDR_INIT, VX_IMAGEPATCH_ADDR_INIT, VX_IMAGEPATCH_ADDR_INIT };
             vx_rectangle_t rect_a;
@@ -139,7 +139,7 @@ VX_CALLBACK ownCompareImagesKernel(vx_node node, const vx_reference parameters[]
                 vxAddLogEntry((vx_reference)node, VX_FAILURE, "%u differences found\n", numDiffs);
             }
         }
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return status;
 } /* ownCompareImagesKernel() */
@@ -149,7 +149,7 @@ vx_status VX_CALLBACK own_compare_images_validator(vx_node node, const vx_refere
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
 
-    if (NULL != node && NULL != parameters && num == dimof(compare_images_kernel_params) && NULL != metas)
+    if (nullptr != node && nullptr != parameters && num == dimof(compare_images_kernel_params) && nullptr != metas)
     {
         vx_parameter param1 = vxGetParameterByIndex(node, 0); /* input image a */
         vx_parameter param2 = vxGetParameterByIndex(node, 1); /* input image b */
@@ -196,19 +196,19 @@ vx_status VX_CALLBACK own_compare_images_validator(vx_node node, const vx_refere
                 }
             }
 
-            if (NULL != a)
+            if (nullptr != a)
                 vxReleaseImage(&a);
 
-            if (NULL != b)
+            if (nullptr != b)
                 vxReleaseImage(&b);
         }
 
-        if (NULL != param1)
+        if (nullptr != param1)
             vxReleaseParameter(&param1);
 
-        if (NULL != param2)
+        if (nullptr != param2)
             vxReleaseParameter(&param2);
-    } // if ptrs non NULL
+    } // if ptrs non nullptr
 
     return VX_SUCCESS;
 } /* own_compare_images_validator() */
@@ -220,8 +220,8 @@ vx_kernel_description_t compare_images_kernel =
     ownCompareImagesKernel,
     compare_images_kernel_params, dimof(compare_images_kernel_params),
     own_compare_images_validator,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
 };

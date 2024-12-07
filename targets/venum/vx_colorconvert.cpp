@@ -200,10 +200,10 @@ vx_kernel_description_t colorconvert_kernel = {
     "org.khronos.openvx.color_convert",
     vxColorConvertKernel,
     color_convert_kernel_params, dimof(color_convert_kernel_params),
-    NULL,
+    nullptr,
     vxColorConvertInputValidator,
     vxColorConvertOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 

@@ -181,7 +181,7 @@ static vx_status vxExportToXMLImage(FILE* fp, vx_reference refs[], vx_uint32 r, 
             fprintf(fp, "%s\t<uniform>\n", indent);
             for (p = 0u; p < image->planes; p++)
             {
-                void *base = NULL;
+                void *base = nullptr;
                 status |= vxAccessImagePatch((vx_image)image, &rect, p, &addr, &base, VX_READ_ONLY);
 
                 if (image->format == VX_DF_IMAGE_U8)
@@ -272,7 +272,7 @@ static vx_status vxExportToXMLImage(FILE* fp, vx_reference refs[], vx_uint32 r, 
                         }
                     }
                 }
-                status |= vxCommitImagePatch((vx_image)image, NULL, 0, &addr, base);
+                status |= vxCommitImagePatch((vx_image)image, nullptr, 0, &addr, base);
             }
             fprintf(fp, "%s\t</uniform>\n", indent);
         }
@@ -284,7 +284,7 @@ static vx_status vxExportToXMLImage(FILE* fp, vx_reference refs[], vx_uint32 r, 
             vxGetValidRegionImage((vx_image)image, &rect);
             for (p = 0u; p < image->planes; p++)
             {
-                void *base = NULL;
+                void *base = nullptr;
                 fprintf(fp, "%s\t<rectangle plane=\"%u\">\n", indent, p);
                 fprintf(fp, "%s\t\t<start_x>%u</start_x>\n", indent, rect.start_x);
                 fprintf(fp, "%s\t\t<start_y>%u</start_y>\n", indent, rect.start_y);
@@ -365,7 +365,7 @@ static vx_status vxExportToXMLImage(FILE* fp, vx_reference refs[], vx_uint32 r, 
                         }
                     }
                 }
-                status |= vxCommitImagePatch((vx_image)image, NULL, p, &addr, base);
+                status |= vxCommitImagePatch((vx_image)image, nullptr, p, &addr, base);
                 fprintf(fp, "%s\t\t</pixels>\n", indent);
                 fprintf(fp, "%s\t</rectangle>\n", indent);
             }
@@ -1047,7 +1047,7 @@ static vx_status vxExportToXMLScalar(FILE* fp, vx_reference refs[], vx_uint32 r,
 VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xmlfile[])
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
-    FILE *fp = NULL;
+    FILE *fp = nullptr;
     vx_uint32 r, r1, numrefs = 0u;
     /* these types don't get exported */
     vx_enum skipTypes[] = {
@@ -1058,7 +1058,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
             VX_TYPE_CONTEXT,
             VX_TYPE_IMPORT,
     };
-    vx_reference* refs = NULL;
+    vx_reference* refs = nullptr;
 
     if (Context::isValidContext(context) == vx_false_e)
         return VX_ERROR_INVALID_REFERENCE;
@@ -1129,7 +1129,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
 
         for (r = 0u; r < numrefs; r++)
         {
-            if (refs[r] == NULL) continue;
+            if (refs[r] == nullptr) continue;
             vxGetName(refs[r]);
             if (refs[r]->type == VX_TYPE_GRAPH)
             {

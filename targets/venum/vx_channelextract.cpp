@@ -241,10 +241,10 @@ vx_kernel_description_t channelextract_kernel = {
     "org.khronos.openvx.channel_extract",
     vxChannelExtractKernel,
     channel_extract_kernel_params, dimof(channel_extract_kernel_params),
-    NULL,
+    nullptr,
     vxChannelExtractInputValidator,
     vxChannelExtractOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };
 

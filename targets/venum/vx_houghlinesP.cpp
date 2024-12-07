@@ -118,9 +118,9 @@ vx_kernel_description_t houghlinesp_kernel = {
     "org.khronos.openvx.hough_lines_p",
     vxHoughLinesPKernel,
     houghlinesp_kernel_params, dimof(houghlinesp_kernel_params),
-    NULL,
+    nullptr,
     vxHoughLinesPInputValidator,
     vxHoughLinesPOutputValidator,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
 };

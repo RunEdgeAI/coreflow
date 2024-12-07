@@ -68,8 +68,8 @@ vx_status vxCopy(vx_reference input, vx_reference output)
                 for (p = 0; p < planes && status == VX_SUCCESS; p++)
                 {
                     status = VX_SUCCESS;
-                    src = NULL;
-                    dst = NULL;
+                    src = nullptr;
+                    dst = nullptr;
                     status |= vxMapImagePatch((vx_image)input, &rect, p, &src_map_id, &src_addr, &src, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
                     status |= vxMapImagePatch((vx_image)output, &rect, p, &dst_map_id, &dst_addr, &dst, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
                     for (y = 0; y < src_addr.dim_y && status == VX_SUCCESS; y += src_addr.step_y)
@@ -93,7 +93,7 @@ vx_status vxCopy(vx_reference input, vx_reference output)
                 vx_size src_num_items = 0;
                 vx_size dst_capacity = 0;
                 vx_size src_stride = 0;
-                void* srcp = NULL;
+                void* srcp = nullptr;
                 vx_map_id map_id = 0;
                 vx_array src = (vx_array)input;
                 vx_array dst = (vx_array)output;
@@ -121,7 +121,7 @@ vx_status vxCopy(vx_reference input, vx_reference output)
         case VX_TYPE_LUT:
             {
                 vx_map_id map_id;
-                void* lut_data = NULL;
+                void* lut_data = nullptr;
                 status = vxMapLUT((vx_lut)input, &map_id, &lut_data, VX_READ_ONLY,  user_mem_type, 0);
                 if (status == VX_SUCCESS)
                     status = vxCopyLUT((vx_lut)output, lut_data, VX_WRITE_ONLY, user_mem_type);
@@ -290,7 +290,7 @@ vx_status vxCopy(vx_reference input, vx_reference output)
                     break;
                 }
                 vx_map_id map_id;
-                void* distribution_data = NULL;
+                void* distribution_data = nullptr;
                 status = vxMapDistribution(distribution_input, &map_id, &distribution_data, VX_READ_ONLY,  user_mem_type, 0);
                 if (status == VX_SUCCESS)
                     status = vxCopyDistribution(distribution_output, distribution_data, VX_WRITE_ONLY, user_mem_type);
@@ -315,7 +315,7 @@ vx_status vxCopy(vx_reference input, vx_reference output)
                     break;
                 }
 
-                vx_reference input_item = NULL, output_item = NULL;
+                vx_reference input_item = nullptr, output_item = nullptr;
                 for (vx_size i = 0; i < input_counts; i++)
                 {
                     input_item = vxGetObjectArrayItem(object_array_input, i);
@@ -449,7 +449,7 @@ vx_status vxCopy(vx_reference input, vx_reference output)
                 vx_tensor tensor_input = (vx_tensor)input;
                 vx_tensor tensor_output = (vx_tensor)output;
                 vx_size input_dims_num = 0, output_dims_num = 0;
-                vx_size *input_dims = NULL, *output_dims = NULL;
+                vx_size *input_dims = nullptr, *output_dims = nullptr;
                 vx_enum input_data_type, output_data_type;
                 vx_uint8 input_fixed_point_pos = 0, output_fixed_point_pos;
                 status |= vxQueryTensor(tensor_input,VX_TENSOR_NUMBER_OF_DIMS, &input_dims_num, sizeof(input_dims_num));
