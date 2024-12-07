@@ -2284,7 +2284,7 @@ vx_status vx_test_graph_tracker(int argc, char *argv[])
                 vxChannelExtractNode(graph, images[1], VX_CHANNEL_Y, images[3]),
                 vxGaussianPyramidNode(graph, images[3], pyramid_old),
                 vxHarrisCornersNode(graph, images[3], sens_thresh_s, min_distance_s,sensitivity_s,gradient_size,block_size, old_features,num_corners_s),
-                // vxOpticalFlowPyrLKNode(graph, pyramid_old,  pyramid_new, old_features,old_features,new_features,criteria,epsilon_s,num_iterations_s,use_initial_estimate_s,winSize )
+                vxOpticalFlowPyrLKNode(graph, pyramid_old,  pyramid_new, old_features,old_features,new_features,criteria,epsilon_s,num_iterations_s,use_initial_estimate_s,winSize )
              };
 
             CHECK_ALL_ITEMS(nodes, n, status, exit);
@@ -2293,8 +2293,8 @@ vx_status vx_test_graph_tracker(int argc, char *argv[])
             {
 
 
-                // status |= vxuFReadImage(context,"./tests/raw/superresFirst_3072x2048_UYVY.yuv", images[0]);
-                // status |= vxuFReadImage(context,"./tests/raw/superresSecond_3072x2048_UYVY.yuv", images[1]);
+                status |= vxuFReadImage(context,"./tests/raw/superresFirst_3072x2048_UYVY.yuv", images[0]);
+                status |= vxuFReadImage(context,"./tests/raw/superresSecond_3072x2048_UYVY.yuv", images[1]);
 
                 if (status == VX_SUCCESS)
                     status = vxProcessGraph(graph);
