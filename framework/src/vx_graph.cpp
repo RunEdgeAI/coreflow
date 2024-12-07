@@ -795,7 +795,7 @@ vx_bool Graph::setupOutput(vx_uint32 n, vx_uint32 p, vx_reference* vref, vx_meta
     }
     else
     {
-        VX_PRINT(VX_ZONE_GRAPH, "Virtual Reference detected at kernel %S parameter %u\n",
+        VX_PRINT(VX_ZONE_GRAPH, "Virtual Reference detected at kernel %s parameter %u\n",
                 nodes[n]->kernel->name,
                 p);
         if ((*vref)->scope->type == VX_TYPE_GRAPH &&
@@ -850,7 +850,7 @@ vx_bool Graph::postprocessOutputDataType(vx_uint32 n, vx_uint32 p, vx_reference*
     {
         vx_image img = (vx_image)*item;
         VX_PRINT(VX_ZONE_GRAPH, "meta: type 0x%08x, %ux%u\n", meta->type, meta->dim.image.width, meta->dim.image.height);
-        if (vref == item || img->is_virtual == vx_true_e)
+        if (*vref == (vx_reference)img)
         {
             VX_PRINT(VX_ZONE_GRAPH, "Creating Image From Meta Data!\n");
             /*! \todo need to worry about images that have a format, but no dimensions too */
@@ -1035,7 +1035,7 @@ vx_bool Graph::postprocessOutputDataType(vx_uint32 n, vx_uint32 p, vx_reference*
     {
         vx_array arr = (vx_array)*item;
         VX_PRINT(VX_ZONE_GRAPH, "meta: type 0x%08x, 0x%08x " VX_FMT_SIZE "\n", meta->type, meta->dim.array.item_type, meta->dim.array.capacity);
-        if (vref == (vx_reference *)&arr)
+        if (*vref == (vx_reference)arr)
         {
             VX_PRINT(VX_ZONE_GRAPH, "Creating Array From Meta Data %x and " VX_FMT_SIZE "!\n", meta->dim.array.item_type, meta->dim.array.capacity);
             if (arr->initVirtualArray(meta->dim.array.item_type, meta->dim.array.capacity) != vx_true_e)
@@ -1116,7 +1116,7 @@ vx_bool Graph::postprocessOutputDataType(vx_uint32 n, vx_uint32 p, vx_reference*
         }
 
         /* check to see if the pyramid is virtual */
-        if (vref == (vx_reference*)&pyramid)
+        if (*vref == (vx_reference)pyramid)
         {
             pyramid->initPyramid(
                 meta->dim.pyramid.levels,
@@ -1444,7 +1444,7 @@ vx_bool Graph::postprocessOutputDataType(vx_uint32 n, vx_uint32 p, vx_reference*
     else if (meta->type == VX_TYPE_TENSOR)
     {
         vx_tensor tensor = (vx_tensor)*item;
-        if (vref == (vx_reference*)&tensor)
+        if (*vref == (vx_reference)tensor)
         {
             VX_PRINT(VX_ZONE_GRAPH, "Creating Tensor From Meta Data!\n");
             if ((tensor->data_type != VX_TYPE_INVALID) &&
