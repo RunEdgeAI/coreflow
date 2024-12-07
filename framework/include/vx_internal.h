@@ -531,6 +531,16 @@ typedef struct vx_kernel_attr_t {
     vx_ptr_t      globalDataPtr;
     /*! \brief The border mode of this node */
     vx_border_t   borders;
+#ifdef OPENVX_KHR_TILING
+    /*! \brief The block size information */
+    vx_tile_block_size_t blockinfo;
+    /*! \brief The neighborhood size */
+    vx_neighborhood_size_t nhbdinfo;
+    /*! \brief The tile memory size. */
+    vx_size       tileDataSize;
+    /*! \brief The tile memory pointer */
+    vx_ptr_t      tileDataPtr;
+#endif
     /*! \brief The reset valid rectangle flag */
     vx_bool       valid_rect_reset;
 #ifdef OPENVX_USE_OPENCL_INTEROP
@@ -637,6 +647,10 @@ typedef struct vx_target_funcs_t {
     vx_target_verify_f   verify;
     /*! \brief Target function to add a kernel */
     vx_target_addkernel_f addkernel;
+#ifdef OPENVX_KHR_TILING
+    /*! \brief Target function to add a tiling kernel */
+    vx_target_addtilingkernel_f addtilingkernel;
+#endif
 };
 
 enum vx_ext_target_type_e {

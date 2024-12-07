@@ -169,6 +169,11 @@ public:
     vx_kernel_attr_t attributes;
     /*! \brief Target Index, back reference for the later nodes to inherit affinity */
     vx_uint32 affinity;
+#ifdef OPENVX_KHR_TILING
+    /*! \brief The tiling function pointer interface */
+    vx_tiling_kernel_f tilingfast_function;
+    vx_tiling_kernel_f tilingflexible_function;
+#endif
     /*! \brief The pointer to the kernel object deinitializer. */
     vx_kernel_object_deinitialize_f kernel_object_deinitialize;
 };
