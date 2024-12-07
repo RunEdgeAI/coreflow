@@ -13,10 +13,12 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
+
 #include <VX/vx.h>
 #include <VX/vx_lib_debug.h>
+
 #include "debug_k.h"
 
 vx_status ownFWriteImage(vx_image input, vx_array file)
@@ -162,6 +164,7 @@ vx_status ownFWriteImage(vx_image input, vx_array file)
 
 vx_status ownFReadImage(vx_array file, vx_image output)
 {
+    vx_char* filepath = NULL;
     vx_char* filename = NULL;
     vx_size filename_stride = 0;
     vx_uint8* src = NULL;
@@ -180,14 +183,14 @@ vx_status ownFReadImage(vx_array file, vx_image output)
     vx_map_id image_map_id = 0;
     vx_status status = VX_SUCCESS;
 
-    status = vxMapArrayRange(file, 0, VX_MAX_FILE_NAME, &fname_map_id, &filename_stride, (void**)&filename, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
+    status = vxMapArrayRange(file, 0, VX_MAX_FILE_NAME, &fname_map_id, &filename_stride, (void**)&filepath, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
     if (status != VX_SUCCESS || filename_stride != sizeof(vx_char))
     {
         vxAddLogEntry((vx_reference)file, VX_FAILURE, "Incorrect array " VX_FMT_REF "\n", file);
         return VX_FAILURE;
     }
 
-    fp = fopen(filename, "rb");
+    fp = fopen(filepath, "rb");
     if (fp == NULL)
     {
         vxAddLogEntry((vx_reference)file, VX_FAILURE, "Failed to open file %s\n",filename);
@@ -196,6 +199,17 @@ vx_status ownFReadImage(vx_array file, vx_image output)
 
     status |= vxQueryImage(output, VX_IMAGE_PLANES, &planes, sizeof(planes));
     status |= vxQueryImage(output, VX_IMAGE_FORMAT, &format, sizeof(format));
+
+    // Extract the filename from the path
+    filename = strrchr(filepath, '/');
+    if (filename)
+    {
+        filename++;
+    }
+    else
+    {
+        filename = filepath;
+    }
 
     ext = strrchr(filename, '.');
     if (ext && (strcmp(ext, ".pgm") == 0 || strcmp(ext, ".PGM") == 0))
@@ -250,7 +264,7 @@ vx_status ownFReadImage(vx_array file, vx_image output)
     }
 
     fclose(fp);
-    vxUnmapArrayRange(file, fname_map_id);
+    status |= vxUnmapArrayRange(file, fname_map_id);
 
     return status;
 } /* ownFReadImage() */
