@@ -74,9 +74,9 @@ static vx_bool ownIsValidContext_tiling(vx_context context)
 {
     vx_bool ret = vx_false_e;
     if ((context != nullptr) &&
-        (context->base.magic == VX_MAGIC) &&
-        (context->base.type == VX_TYPE_CONTEXT) &&
-        (context->base.context == nullptr))
+        (context->magic == VX_MAGIC) &&
+        (context->type == VX_TYPE_CONTEXT) &&
+        (context->context == nullptr))
     {
         ret = vx_true_e; /* this is the top level context */
     }
@@ -103,7 +103,7 @@ static vx_size strnindex(const vx_char *str, vx_char c, vx_size limit)
     return index;
 }
 
-VX_API_ENTRY vx_kernel VX_API_CALL vxAddTilingKernelEx(vx_context c,
+VX_API_ENTRY vx_kernel VX_API_CALL vxAddTilingKernelEx(vx_context context,
                             vx_char name[VX_MAX_KERNEL_NAME],
                             vx_enum enumeration,
                             vx_kernel_f function,
@@ -116,11 +116,10 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxAddTilingKernelEx(vx_context c,
                             vx_kernel_initialize_f initialize,
                             vx_kernel_deinitialize_f deinitialize)
 {
-    vx_context_t *context = (vx_context_t *)c;
     vx_kernel kernel = 0;
     vx_uint32 t = 0;
     vx_size index = 0;
-    vx_target_t *target = nullptr;
+    vx_target target = nullptr;
     vx_char targetName[VX_MAX_TARGET_NAME];
 
     if (ownIsValidContext_tiling(context) == vx_false_e)
@@ -135,7 +134,7 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxAddTilingKernelEx(vx_context c,
         /* initialize and de-initialize can be nullptr */
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid Parameters!\n");
-        vxAddLogEntry((vx_reference)c, VX_ERROR_INVALID_PARAMETERS, "Invalid Parameters supplied to vxAddKernel\n");
+        vxAddLogEntry((vx_reference)context, VX_ERROR_INVALID_PARAMETERS, "Invalid Parameters supplied to vxAddKernel\n");
         return (vx_kernel)nullptr;
     }
 
@@ -152,7 +151,7 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxAddTilingKernelEx(vx_context c,
     VX_PRINT(VX_ZONE_KERNEL, "Deduced Name as %s\n", targetName);
     for (t = 0u; t < context->num_targets; t++)
     {
-        target = &context->targets[t];
+        target = context->targets[t];
         if (strncmp(targetName,target->name, VX_MAX_TARGET_NAME) == 0)
         {
             break;
@@ -164,11 +163,11 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxAddTilingKernelEx(vx_context c,
         kernel = target->funcs.addtilingkernel(target, name, enumeration, function,
                                          flexible_func_ptr, fast_func_ptr, num_params, validate,
                                          input, output, initialize, deinitialize);
-        VX_PRINT(VX_ZONE_KERNEL,"Added Kernel %s to Target %s ("VX_FMT_REF")\n", name, target->name, kernel);
+        VX_PRINT(VX_ZONE_KERNEL,"Added Kernel %s to Target %s (" VX_FMT_REF ")\n", name, target->name, kernel);
     }
     else
     {
-        vxAddLogEntry((vx_reference)c, VX_ERROR_NO_RESOURCES, "No target named %s exists!\n", targetName);
+        vxAddLogEntry((vx_reference)context, VX_ERROR_NO_RESOURCES, "No target named %s exists!\n", targetName);
     }
     return (vx_kernel)kernel;
 }
@@ -277,12 +276,12 @@ vx_status vxTargetInit(vx_target target)
         strncpy(target->name, name, VX_MAX_TARGET_NAME);
         target->priority = VX_TARGET_PRIORITY_TILING;
     }
-    return vxPublishKernels(target->base.context);
+    return vxPublishKernels(target->context);
 }
 
 vx_status vxTargetDeinit(vx_target target)
 {
-    return vxUnpublishKernels(target->base.context);
+    return vxUnpublishKernels(target->context);
 }
 
 vx_status vxTargetSupports(vx_target target,
@@ -319,7 +318,7 @@ vx_status vxTargetSupports(vx_target target,
     return status;
 }
 
-vx_action vxTargetProcess(vx_target target, vx_node_t *nodes[], vx_size startIndex, vx_size numNodes)
+vx_action vxTargetProcess(vx_target target, vx_node nodes[], vx_size startIndex, vx_size numNodes)
 {
     vx_action action = VX_ACTION_CONTINUE;
     vx_status status = VX_SUCCESS;
@@ -331,7 +330,7 @@ vx_action vxTargetProcess(vx_target target, vx_node_t *nodes[], vx_size startInd
             nodes[n]->kernel->name,
             nodes[n]->kernel->enumeration,
             n,
-            nodes[n]->base.context->targets[nodes[n]->affinity].name);
+            nodes[n]->context->targets[nodes[n]->affinity].name);
 
         if (context->perf_enabled)
             ownStartCapture(&nodes[n]->perf);
@@ -439,7 +438,7 @@ vx_action vxTargetProcess(vx_target target, vx_node_t *nodes[], vx_size startInd
     return action;
 }
 
-vx_status vxTargetVerify(vx_target target, vx_node_t *node)
+vx_status vxTargetVerify(vx_target target, vx_node node)
 {
     vx_status status = VX_SUCCESS;
     return status;
@@ -457,25 +456,23 @@ vx_kernel vxTargetAddKernel(vx_target target,
                             vx_kernel_deinitialize_f deinitialize)
 {
     vx_uint32 k = 0u;
-    vx_kernel_t *kernel = nullptr;
-    // ownSemWait(&target->base.lock);
+    vx_kernel kernel = nullptr;
+    ownSemWait(&target->lock);
     for (k = 0; k < VX_INT_MAX_KERNELS; k++)
     {
-        kernel = &(target->kernels[k]);
+        kernel = target->kernels[k];
         if (kernel->enabled == vx_false_e)
         {
-            ownInitializeKernel(target->base.context,
-                               kernel,
-                               enumeration, func_ptr, name,
-                               nullptr, numParams,
-                               validate, input, output, initialize, deinitialize);
+            kernel->initializeKernel(enumeration, func_ptr, name,
+                                     nullptr, numParams,
+                                     validate, input, output, initialize, deinitialize);
             VX_PRINT(VX_ZONE_KERNEL, "Reserving %s Kernel[%u] for %s\n", target->name, k, kernel->name);
             target->num_kernels++;
             break;
         }
         kernel = nullptr;
     }
-    // ownSemPost(&target->base.lock);
+    ownSemPost(&target->lock);
     return (vx_kernel)kernel;
 }
 
@@ -494,10 +491,10 @@ vx_kernel vxTargetAddTilingKernel(vx_target target,
                             vx_kernel_deinitialize_f deinitialize)
 {
     vx_uint32 k = 0u;
-    vx_kernel_t *kernel = nullptr;
+    vx_kernel kernel = nullptr;
     for (k = 0; k < VX_INT_MAX_KERNELS; k++)
     {
-        kernel = &(target->kernels[k]);
+        kernel = target->kernels[k];
         if (kernel->enabled == vx_false_e)
         {
             kernel->tilingfast_function = fast_func_ptr;
@@ -505,19 +502,15 @@ vx_kernel vxTargetAddTilingKernel(vx_target target,
 
             if (function == nullptr)
             {
-                ownInitializeKernel(target->base.context,
-                                   kernel,
-                                   enumeration, vxTilingKernel, name,
-                                   nullptr, numParams,
-                                   validate, input, output, initialize, deinitialize);
+                kernel->initializeKernel(enumeration, vxTilingKernel, name,
+                                         nullptr, numParams,
+                                         validate, input, output, initialize, deinitialize);
             }
-            else //Kernel with more than one node like HalfScaleGaussian
+            else // Kernel with more than one node like HalfScaleGaussian
             {
-                ownInitializeKernel(target->base.context,
-                                   kernel,
-                                   enumeration, function, name,
-                                   nullptr, numParams,
-                                   validate, input, output, initialize, deinitialize);
+                kernel->initializeKernel(enumeration, function, name,
+                                         nullptr, numParams,
+                                         validate, input, output, initialize, deinitialize);
             }
             VX_PRINT(VX_ZONE_KERNEL, "Reserving %s Kernel[%u] for %s\n", target->name, k, kernel->name);
             target->num_kernels++;
@@ -532,9 +525,8 @@ static vx_status vxGetPatchToTile(vx_image image, vx_rectangle_t *rect, vx_tile_
 {
     vx_status status = VX_SUCCESS;
     vx_uint32 p = 0;
-    vx_image_t *img = (vx_image_t *)image;
 
-    for (p = 0; p < img->planes; p++)
+    for (p = 0; p < image->planes; p++)
     {
         tile->base[p] = nullptr;
         if(image->constant == 1)
@@ -548,11 +540,10 @@ static vx_status vxGetPatchToTile(vx_image image, vx_rectangle_t *rect, vx_tile_
 
 static vx_status vxSetTileToPatch(vx_image image, vx_rectangle_t *rect, vx_tile_ex_t *tile)
 {
-    vx_image_t *img = (vx_image_t *)image;
     vx_uint32 p = 0;
     vx_status status = VX_SUCCESS;
 
-    for (p = 0; p < img->planes; p++)
+    for (p = 0; p < image->planes; p++)
     {
         status = vxCommitImagePatch(image, rect, p, &tile->addr[p], tile->base[p]);
     }
@@ -562,7 +553,7 @@ static vx_status vxSetTileToPatch(vx_image image, vx_rectangle_t *rect, vx_tile_
 
 static void* ownAllocateTensorMemory_tiling(vx_tensor tensor)
 {
-    vx_size total_size = ownSizeOfType(tensor->data_type);
+    vx_size total_size = Context::sizeOfType(tensor->data_type);
 
     if (tensor->addr == nullptr)
     {
@@ -811,7 +802,7 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
     vx_uint32 blkCntX = (width / tile_size_x) * tile_size_x;
 
     //tiling fast function
-    if (((vx_node_t *)node)->kernel->tilingfast_function && is_U1 == 0)
+    if (node->kernel->tilingfast_function && is_U1 == 0)
     {
         for (ty = 0u; (ty < blkCntY) && (status == VX_SUCCESS); ty += tile_size_y)
         {
@@ -825,12 +816,12 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
                         tiles[p].tile_y = ty;
                     }
                 }
-                tile_memory = ((vx_node_t *)node)->attributes.tileDataPtr;
-                ((vx_node_t *)node)->kernel->tilingfast_function(params, tile_memory, size);
+                tile_memory = node->attributes.tileDataPtr;
+                node->kernel->tilingfast_function(params, tile_memory, size);
             }
         }
 
-        if (((vx_node_t *)node)->kernel->tilingflexible_function && ((blkCntY < height) || (blkCntX < width)))
+        if (node->kernel->tilingflexible_function && ((blkCntY < height) || (blkCntX < width)))
         {
             for (p = 0u; p < num; p++)
             {
@@ -840,12 +831,12 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
                     tiles[p].tile_y = ty;
                 }
             }
-            tile_memory = ((vx_node_t *)node)->attributes.tileDataPtr;
-            ((vx_node_t *)node)->kernel->tilingflexible_function(params, tile_memory, size);
+            tile_memory = node->attributes.tileDataPtr;
+            node->kernel->tilingflexible_function(params, tile_memory, size);
         }
     }
     //tiling flexible function
-    else if (((vx_node_t *)node)->kernel->tilingflexible_function)
+    else if (node->kernel->tilingflexible_function)
     {
         for (p = 0u; p < num; p++)
         {
@@ -855,8 +846,8 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
                 tiles[p].tile_y = ty;
             }
         }
-        tile_memory = ((vx_node_t *)node)->attributes.tileDataPtr;
-        ((vx_node_t *)node)->kernel->tilingflexible_function(params, tile_memory, size);
+        tile_memory = node->attributes.tileDataPtr;
+        node->kernel->tilingflexible_function(params, tile_memory, size);
     }
 
     for (p = 0u; p < num; p++)
@@ -874,7 +865,7 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
         }
         else if (types[p] == VX_TYPE_ARRAY && dirs[p] == VX_OUTPUT)
         {
-            arrays[p]->memory.ptrs[0] = array_t[p].ptr;
+            arrays[p]->memory.ptrs[0] = (vx_uint8*)array_t[p].ptr;
             arrays[p]->num_items = array_t[p].num_items;
         }
         else if (types[p] == VX_TYPE_SCALAR && dirs[p] == VX_OUTPUT && scalar[p] != nullptr)
