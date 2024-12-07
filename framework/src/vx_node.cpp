@@ -677,12 +677,14 @@ VX_API_ENTRY vx_status VX_API_CALL vxReplicateNode(vx_graph graph, vx_node first
 				if (Reference::isValidReference(ref, type) == vx_true_e)
 				{
 					vx_size items = 0;
-					if (Reference::isValidReference(ref->scope, VX_TYPE_PYRAMID) == vx_true_e)
+					if (ref->scope->type == VX_TYPE_PYRAMID &&
+                        Reference::isValidReference(ref->scope, VX_TYPE_PYRAMID) == vx_true_e)
 					{
 						vx_pyramid pyramid = (vx_pyramid)ref->scope;
 						vxQueryPyramid(pyramid, VX_PYRAMID_LEVELS, &items, sizeof(vx_size));
 					}
-					else if (Reference::isValidReference(ref->scope, VX_TYPE_OBJECT_ARRAY) == vx_true_e)
+					else if (ref->scope->type == VX_TYPE_OBJECT_ARRAY &&
+                        Reference::isValidReference(ref->scope, VX_TYPE_OBJECT_ARRAY) == vx_true_e)
 					{
 						vx_object_array object_array = (vx_object_array)ref->scope;
 						vxQueryObjectArray(object_array, VX_OBJECT_ARRAY_NUMITEMS, &items, sizeof(vx_size));

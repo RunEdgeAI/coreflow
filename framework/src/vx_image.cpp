@@ -2521,7 +2521,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapImagePatch(
         extra.image_data.plane_index = plane_index;
         extra.image_data.rect        = *rect;
 
-        if (VX_MEMORY_TYPE_NONE != image->memory_type && vx_true_e == image->context->memoryMap((vx_reference)image, 0, usage, mem_type, flags, &extra, (void**)&buf, map_id))
+        if (VX_MEMORY_TYPE_NONE != image->memory_type &&
+            vx_true_e == image->context->memoryMap((vx_reference)image, 0, usage, mem_type, flags, &extra, (void**)&buf, map_id))
         {
             /* use the addressing of the internal format */
             if (image->format == VX_DF_IMAGE_U1 && start_x % 8 != 0)
@@ -2549,7 +2550,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapImagePatch(
         }
         else
         /* get mapping buffer of sufficient size and map_id */
-        if (image->context->memoryMap((vx_reference)image, size, usage, mem_type, flags, &extra, (void**)&buf, map_id))
+        if (vx_true_e == image->context->memoryMap((vx_reference)image, size, usage, mem_type, flags, &extra, (void**)&buf, map_id))
         {
             /* use the addressing of the internal format */
             if (image->format == VX_DF_IMAGE_U1 && start_x % 8 != 0)
@@ -2616,7 +2617,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapImagePatch(
             status = VX_SUCCESS;
         }
         else
+        {
             status = VX_FAILURE;
+        }
     }
 
 exit:
