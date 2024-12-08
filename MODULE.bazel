@@ -12,11 +12,20 @@ bazel_dep(name = "rules_cc", version = "0.0.9")
 # Set up rules_foreign_cc
 bazel_dep(name = "rules_foreign_cc", version = "0.12.0")
 
-# Setup platforms for cross-compiling
+# Set up platforms for cross-compiling
 bazel_dep(name = "platforms", version = "0.0.10")
 
 # Set up rules_python
 bazel_dep(name = "rules_python", version = "0.37.2")
+
+# Set up arm toolchain
+bazel_dep(name = "toolchains_arm_gnu", version = "1.0.3")
+
+arm_toolchain = use_extension("@toolchains_arm_gnu//:extensions.bzl", "arm_toolchain")
+
+arm_toolchain.arm_none_eabi()
+use_repo(arm_toolchain, "arm_none_eabi")
+register_toolchains("@arm_none_eabi//toolchain:all")
 
 # Load third-party modules
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")

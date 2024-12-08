@@ -36,7 +36,7 @@ platform(
 platform(
     name = "arm",
     constraint_values = [
-        "@platforms//cpu:aarch64",
+        "@platforms//cpu:arm",
         "@platforms//os:none",
     ],
 )

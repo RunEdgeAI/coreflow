@@ -3,20 +3,21 @@ cc_library(
     name = "venum",
     srcs = glob([
         "*.cpp",
-    ],
-    exclude = [
-    ]),
-    hdrs = glob([
         "*.h"
     ]),
     includes = [
         ".",
         "//framework/include",
-        "//kernels/utils",
         "//kernels/venum",
+    ],
+    copts = [
+        "-mfpu=neon",
+        "-mfloat-abi=hard",
+        "-march=armv8-a",
     ],
     deps = [
         "//:corevx",
+        "//kernels/utils",
         "//kernels/venum:venum_kernels"
     ],
     target_compatible_with = [

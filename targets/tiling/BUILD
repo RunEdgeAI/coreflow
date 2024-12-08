@@ -8,8 +8,9 @@ cc_library(
         "*.h"
     ]),
     copts = [
-        "-mfpu=neon",  # Use NEON SIMD instructions
-        # "-march=armv8-a",  # Specify the ARM architecture (modify based on your platform)
+        "-mfpu=neon",
+        "-mfloat-abi=hard",
+        "-march=armv8-a",
     ],
     includes = [
         ".",

@@ -3,7 +3,7 @@ common --enable_bzlmod
 
 # Build settings
 build --cxxopt=-std=c++17  # Use C++17 standard (adjust if needed)
-build --compiler=g++   # Specify the compiler if needed, e.g., gcc, clang
+build --compiler=g++       # Specify the compiler if needed, e.g., gcc, clang
 
 # Test settings
 test --test_output=errors  # Show errors from tests
@@ -23,7 +23,8 @@ build --cpu=amd
 # ARM configuration
 build:arm --platforms=//build_tools/platforms:arm
 build:arm --crosstool_top=@bazel_tools//tools/cpp:cc-toolchain
-build:arm --cpu=aarch64
+build:arm --linkopt --specs=rdimon.specs
+build:arm --linkopt -lstdc++
 
 # Additional settings can be added as needed
 # Address sanitizer
