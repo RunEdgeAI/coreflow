@@ -14,17 +14,59 @@
  * limitations under the License.
  */
 
-#ifndef UTILS_TENSOR_UTILS_H_
-#define UTILS_TENSOR_UTILS_H_
+#ifndef UTILS_TENSOR_UTILS_H
+#define UTILS_TENSOR_UTILS_H
+
 #include "VX/vx_types.h"
+
 #define MAX_NUM_OF_DIMENSIONS 6
 
+/**
+ * @brief Compute Global Positions From Index
+ *
+ * @param index
+ * @param dimensions
+ * @param stride
+ * @param number_of_dimensions
+ * @param pos
+ * @return vx_size
+ */
 vx_size ComputeGlobalPositionsFromIndex(vx_size index, const vx_size * dimensions,
 		const vx_size * stride, vx_size number_of_dimensions, vx_size * pos);
+
+/**
+ * @brief Compute Number Of Elements
+ *
+ * @param dimensions
+ * @param number_of_dimensions
+ * @return vx_size
+ */
 vx_size ComputeNumberOfElements (const vx_size * dimensions, vx_size number_of_dimensions);
 
+/**
+ * @brief Allocate patch
+ *
+ * @param tensor
+ * @param dims_num
+ * @param dimensions
+ * @param stride
+ * @param buffer_ptr
+ * @param usage
+ * @return vx_status
+ */
 vx_status AllocatePatch (vx_tensor tensor, vx_size* dims_num, vx_size* dimensions, vx_size* stride, void** buffer_ptr, vx_enum usage);
 
+/**
+ * @brief Release patch
+ *
+ * @param tensor
+ * @param dims_num
+ * @param dimensions
+ * @param stride
+ * @param buffer_ptr
+ * @param usage
+ * @return vx_status
+ */
 vx_status ReleasePatch (vx_tensor tensor, vx_size dims_num, const vx_size* dimensions, const vx_size* stride, void** buffer_ptr, vx_enum usage) ;
 
-#endif /* UTILS_TENSOR_UTILS_H_ */
+#endif /* UTILS_TENSOR_UTILS_H */
