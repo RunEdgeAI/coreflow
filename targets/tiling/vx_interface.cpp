@@ -21,8 +21,8 @@
  */
 
 #include "vx_internal.h"
-#include <vx_interface.h>
-#include <tiling.h>
+#include "vx_interface.h"
+#include "tiling.h"
 
 vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters[], vx_uint32 num);
 
@@ -70,39 +70,7 @@ vx_tiling_kernel_t *tiling_kernels[] =
     &houghlinesp_kernel,
 };
 
-static vx_bool ownIsValidContext_tiling(vx_context context)
-{
-    vx_bool ret = vx_false_e;
-    if ((context != nullptr) &&
-        (context->magic == VX_MAGIC) &&
-        (context->type == VX_TYPE_CONTEXT) &&
-        (context->context == nullptr))
-    {
-        ret = vx_true_e; /* this is the top level context */
-    }
-    if (ret == vx_false_e)
-    {
-        VX_PRINT(VX_ZONE_ERROR, "%p is not a valid context!\n", context);
-    }
-    return ret;
-}
-
-static vx_size strnindex(const vx_char *str, vx_char c, vx_size limit)
-{
-    vx_size index = 0;
-    while (index < limit && *str != c)
-    {
-        if(!*str)
-        {
-            index = limit;
-            break;
-        }
-        str++;
-        index++;
-	}
-    return index;
-}
-
+#ifdef OPENVX_KHR_TILING
 VX_API_ENTRY vx_kernel VX_API_CALL vxAddTilingKernelEx(vx_context context,
                             vx_char name[VX_MAX_KERNEL_NAME],
                             vx_enum enumeration,
@@ -122,7 +90,7 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxAddTilingKernelEx(vx_context context,
     vx_target target = nullptr;
     vx_char targetName[VX_MAX_TARGET_NAME];
 
-    if (ownIsValidContext_tiling(context) == vx_false_e)
+    if (Context::isValidContext(context) == vx_false_e)
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid Context\n");
         return (vx_kernel)nullptr;
@@ -302,7 +270,7 @@ vx_status vxTargetSupports(vx_target target,
             vx_char *kernel;
             vx_char def[8] = "default";
 
-            strncpy(targetKernelName, target->kernels[k].name, VX_MAX_KERNEL_NAME);
+            strncpy(targetKernelName, target->kernels[k]->name, VX_MAX_KERNEL_NAME);
             kernel = strtok(targetKernelName, ":");
             if (kernel == nullptr)
                 kernel = def;
@@ -330,7 +298,7 @@ vx_action vxTargetProcess(vx_target target, vx_node nodes[], vx_size startIndex,
             nodes[n]->kernel->name,
             nodes[n]->kernel->enumeration,
             n,
-            nodes[n]->context->targets[nodes[n]->affinity].name);
+            nodes[n]->context->targets[nodes[n]->affinity]->name);
 
         if (context->perf_enabled)
             ownStartCapture(&nodes[n]->perf);
@@ -476,7 +444,6 @@ vx_kernel vxTargetAddKernel(vx_target target,
     return (vx_kernel)kernel;
 }
 
-#ifdef OPENVX_KHR_TILING
 vx_kernel vxTargetAddTilingKernel(vx_target target,
                             vx_char name[VX_MAX_KERNEL_NAME],
                             vx_enum enumeration,
@@ -876,4 +843,4 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
 
     return status;
 }
-#endif
+#endif /* OPENVX_KHR_TILING */

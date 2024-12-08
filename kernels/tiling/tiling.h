@@ -67,9 +67,9 @@ typedef struct _vx_tiling_kernel_t {
     /* validate */
     vx_kernel_validate_f validate;
     /*! input validator */
-    void *input_validator;
+    vx_kernel_input_validate_f input_validator;
     /*! output validator */
-    void *output_validator;
+    vx_kernel_output_validate_f output_validator;
     /*! \brief The initialization function */
     vx_kernel_initialize_f initialize;
     /*! \brief The deinitialization function */
