@@ -24,7 +24,7 @@
 #include <VX/vx_helper.h>
 
 #include "vx_internal.h"
-#include <vx_interface.h>
+#include "vx_interface.h"
 
 vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters[], vx_uint32 num);
 
@@ -114,12 +114,12 @@ vx_status vxTargetInit(vx_target target)
         target->priority = VX_TARGET_PRIORITY_VENUM;
 #endif
     }
-    return ownInitializeTarget(target, target_kernels, num_target_kernels);
+    return target->initializeTarget(target_kernels, num_target_kernels);
 }
 
 vx_status vxTargetDeinit(vx_target target)
 {
-    return ownDeinitializeTarget(target);
+    return target->deinitializeTarget();
 }
 
 vx_status vxTargetSupports(vx_target target,
@@ -146,7 +146,7 @@ vx_status vxTargetSupports(vx_target target,
             vx_char *variant;
 #endif
 
-            strncpy(targetKernelName, target->kernels[k].name, VX_MAX_KERNEL_NAME);
+            strncpy(targetKernelName, target->kernels[k]->name, VX_MAX_KERNEL_NAME);
             kernel = strtok(targetKernelName, ":");
             if (kernel == nullptr)
                 kernel = def;
@@ -172,7 +172,7 @@ vx_status vxTargetSupports(vx_target target,
     return status;
 }
 
-vx_action vxTargetProcess(vx_target target, vx_node_t *nodes[], vx_size startIndex, vx_size numNodes)
+vx_action vxTargetProcess(vx_target target, vx_node nodes[], vx_size startIndex, vx_size numNodes)
 {
     vx_action action = VX_ACTION_CONTINUE;
     vx_status status = VX_SUCCESS;
@@ -184,7 +184,7 @@ vx_action vxTargetProcess(vx_target target, vx_node_t *nodes[], vx_size startInd
             nodes[n]->kernel->name,
             nodes[n]->kernel->enumeration,
             n,
-            nodes[n]->base.context->targets[nodes[n]->affinity].name);
+            nodes[n]->context->targets[nodes[n]->affinity]->name);
 
         if (context->perf_enabled)
             ownStartCapture(&nodes[n]->perf);
@@ -292,7 +292,7 @@ vx_action vxTargetProcess(vx_target target, vx_node_t *nodes[], vx_size startInd
     return action;
 }
 
-vx_status vxTargetVerify(vx_target target, vx_node_t *node)
+vx_status vxTargetVerify(vx_target target, vx_node node)
 {
     vx_status status = VX_SUCCESS;
     return status;
@@ -310,25 +310,23 @@ vx_kernel vxTargetAddKernel(vx_target target,
                             vx_kernel_deinitialize_f deinitialize)
 {
     vx_uint32 k = 0u;
-    vx_kernel_t *kernel = nullptr;
-    // ownSemWait(&target->base.lock);
+    vx_kernel kernel = nullptr;
+    ownSemWait(&target->lock);
     for (k = 0; k < VX_INT_MAX_KERNELS; k++)
     {
-        kernel = &(target->kernels[k]);
+        kernel = target->kernels[k];
         if (kernel->enabled == vx_false_e)
         {
-            ownInitializeKernel(target->base.context,
-                               kernel,
-                               enumeration, func_ptr, name,
-                               nullptr, numParams,
-                               validate, input, output, initialize, deinitialize);
+            kernel->initializeKernel(enumeration, func_ptr, name,
+                                     nullptr, numParams,
+                                     validate, input, output, initialize, deinitialize);
             VX_PRINT(VX_ZONE_KERNEL, "Reserving %s Kernel[%u] for %s\n", target->name, k, kernel->name);
             target->num_kernels++;
             break;
         }
         kernel = nullptr;
     }
-    // ownSemPost(&target->base.lock);
+    ownSemPost(&target->lock);
     return (vx_kernel)kernel;
 }
 
@@ -346,15 +344,13 @@ vx_kernel vxTargetAddTilingKernel(vx_target target,
     vx_kernel_t *kernel = nullptr;
     for (k = 0; k < VX_INT_MAX_KERNELS; k++)
     {
-        kernel = &(target->kernels[k]);
+        kernel = target->kernels[k];
         if (kernel->enabled == vx_false_e)
         {
             kernel->tiling_function = fast_func_ptr;
-            ownInitializeKernel(target->base.context,
-                               kernel,
-                               enumeration, vxTilingKernel, name,
-                               nullptr, numParams,
-                               nullptr, input, output, nullptr, nullptr);
+            kernel->initializeKernel(enumeration, vxTilingKernel, name,
+                                     nullptr, numParams,
+                                     nullptr, input, output, nullptr, nullptr);
             VX_PRINT(VX_ZONE_KERNEL, "Reserving %s Kernel[%u] for %s\n", target->name, k, kernel->name);
             target->num_kernels++;
             break;
@@ -500,8 +496,8 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
             if (status == VX_SUCCESS)
             {
                 //printf("Calling Tile{%u,%u} with %s\n", tx, ty, ((vx_node_t *)node)->kernel->name);
-                tile_memory = ((vx_node_t *)node)->attributes.tileDataPtr;
-                ((vx_node_t *)node)->kernel->tiling_function(params, tile_memory, size);
+                tile_memory = node->attributes.tileDataPtr;
+                node->kernel->tiling_function(params, tile_memory, size);
             }
             else
             {
@@ -530,5 +526,4 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
     //printf("Tiling Kernel returning = %d\n", status);
     return status;
 }
-#endif
-
+#endif /* OPENVX_KHR_TILING */
