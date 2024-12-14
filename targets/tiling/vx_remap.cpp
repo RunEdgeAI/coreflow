@@ -179,7 +179,7 @@ void Remap_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void * 
     vx_uint32 low_y = out->tile_y;
     vx_uint32 high_y = out->tile_y + out->tile_block.height;
 
-    vx_int32 policy = (vx_int32)(*stype);
+    vx_int32 policy = (*stype)->data.s32;
 
     vx_uint32 src_width = in->image.width;
     vx_uint32 src_height = in->image.height;
@@ -401,7 +401,7 @@ void Remap_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT], voi
     vx_uint8 *src_base = in->base[0] + in->tile_x;
     vx_uint8 *dst_base = out->base[0] + out->tile_x;
 
-    vx_int32 policy = (vx_int32)(*stype);
+    vx_int32 policy = (*stype)->data.s32;
 
     vx_border_t borders = in->border;
 

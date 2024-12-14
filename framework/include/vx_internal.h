@@ -630,6 +630,23 @@ typedef vx_kernel (*vx_target_addkernel_f)(vx_target target,
                                            vx_kernel_initialize_f initialize,
                                            vx_kernel_deinitialize_f deinitialize);
 
+#ifdef OPENVX_KHR_TILING
+/*! \brief Adds a tiling kernel to the target.
+ * \ingroup group_int_target
+ */
+typedef vx_kernel (*vx_target_addtilingkernel_f)(vx_target target,
+                                                  const vx_char name[VX_MAX_KERNEL_NAME],
+                                                  vx_enum enumeration,
+                                                  vx_kernel_f function,
+                                                  vx_tiling_kernel_f flexible_func_ptr,
+                                                  vx_tiling_kernel_f fast_func_ptr,
+                                                  vx_uint32 num_parameters,
+                                                  vx_kernel_validate_f validate,
+                                                  vx_kernel_input_validate_f input,
+                                                  vx_kernel_output_validate_f output,
+                                                  vx_kernel_initialize_f initialize,
+                                                  vx_kernel_deinitialize_f deinitialize);
+#endif
 
 /*! \brief The structure which holds all the target interface function pointers.
  * \ingroup group_int_target

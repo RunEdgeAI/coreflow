@@ -653,7 +653,7 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxAddTilingKernel(vx_context context,
     VX_PRINT(VX_ZONE_KERNEL, "Deduced Name as %s\n", targetName);
     for (t = 0u; t < context->num_targets; t++)
     {
-        target = &context->targets[t];
+        target = context->targets[t];
         if (strncmp(targetName,target->name, VX_MAX_TARGET_NAME) == 0)
         {
             break;
@@ -665,7 +665,7 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxAddTilingKernel(vx_context context,
         kernel = target->funcs.addtilingkernel(target, name, enumeration, nullptr,
                                          flexible_func_ptr, fast_func_ptr, num_params, nullptr,
                                          input, output, nullptr, nullptr);
-        VX_PRINT(VX_ZONE_KERNEL,"Added Kernel %s to Target %s ("VX_FMT_REF")\n", name, target->name, kernel);
+        VX_PRINT(VX_ZONE_KERNEL,"Added Kernel %s to Target %s (" VX_FMT_REF ")\n", name, target->name, kernel);
     }
     else
     {
@@ -832,7 +832,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxAddParameterToKernel(vx_kernel kernel,
         if (index < kernel->signature.num_parameters)
         {
 #ifdef OPENVX_KHR_TILING
-            if (kern->tilingfast_function)
+            if (kernel->tilingfast_function)
             {
                 if (((data_type != VX_TYPE_IMAGE) &&
                      (data_type != VX_TYPE_SCALAR) &&
