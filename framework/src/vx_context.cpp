@@ -27,7 +27,7 @@ vx_char targetModules[][VX_MAX_TARGET_NAME] = {
     "openvx-opencl",
 #endif
 #if defined(OPENVX_USE_TILING)
-    "openvx-tiling_chaining",
+    "openvx-tiling",
 #endif
 #if defined(EXPERIMENTAL_USE_VENUM)
     "openvx-venum",

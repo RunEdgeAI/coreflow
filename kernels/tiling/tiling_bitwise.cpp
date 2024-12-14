@@ -77,10 +77,10 @@ void And_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void * VX
         {                                                                                      \
             vx_uint32 xShftd = x + in_1->rect.start_x % 8;                                     \
             vx_uint8 *src[2] = {                                                               \
-                vxFormatImagePatchAddress2d(src_base1, xShftd, y, in_1->addr),                 \
-                vxFormatImagePatchAddress2d(src_base2, xShftd, y, in_2->addr),                 \
+                (vx_uint8 *)vxFormatImagePatchAddress2d(src_base1, xShftd, y, in_1->addr),                 \
+                (vx_uint8 *)vxFormatImagePatchAddress2d(src_base2, xShftd, y, in_2->addr),                 \
             };                                                                                 \
-            vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, xShftd, y, out->addr);       \
+            vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, xShftd, y, out->addr);       \
                                                                                                \
             vx_uint8 mask  = 1 << (xShftd % 8);                                                \
             vx_uint8 pixel = op(*src[0], *src[1]) & mask;                                      \
@@ -460,8 +460,8 @@ void Not_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT], void 
             for (x = 0; x < width; x++)
             {
                 vx_uint32 xShftd = x + in->rect.start_x % 8;
-                vx_uint8 *src = vxFormatImagePatchAddress2d(src_base, xShftd, y, in->addr);
-                vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, xShftd, y, out->addr);
+                vx_uint8 *src = (vx_uint8 *)vxFormatImagePatchAddress2d(src_base, xShftd, y, in->addr);
+                vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, xShftd, y, out->addr);
 
                 vx_uint8 mask  = 1 << (xShftd % 8);
                 vx_uint8 pixel = ~*src & mask;

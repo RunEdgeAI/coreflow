@@ -7,11 +7,6 @@ cc_library(
     hdrs = glob([
         "*.h"
     ]),
-    copts = [
-        "-mfpu=neon",
-        "-mfloat-abi=hard",
-        "-march=armv8-a",
-    ],
     includes = [
         ".",
         "//framework/include",
@@ -22,7 +17,7 @@ cc_library(
         "//kernels/tiling:tiling_kernels"
     ],
     target_compatible_with = [
-        "@platforms//cpu:arm",
+        "@platforms//cpu:aarch64",
     ],
     visibility = ["//visibility:public"]
 )

@@ -10,9 +10,6 @@ cc_library(
         "//framework/include",
         "//kernels/venum",
     ],
-    copts = [
-        # "-mfpu=neon"
-    ],
     deps = [
         "//:corevx",
         "//kernels/venum:venum_kernels",

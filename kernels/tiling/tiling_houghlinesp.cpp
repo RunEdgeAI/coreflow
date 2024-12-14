@@ -125,7 +125,7 @@ void HoughLinesP_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
     if ((in->image.height - height_tiling) <  in->tile_block.height  && (in->image.width - width_tiling) < in->tile_block.width)
     {
         vx_coordinates2d_t pt;
-        vx_uint8* buf = malloc(param_hough_lines_array->item_size*sizeof(vx_uint8));
+        vx_uint8* buf = (vx_uint8*)malloc(param_hough_lines_array->item_size*sizeof(vx_uint8));
         void *param_hough_lines_array_ptr;
         vxMapArrayRange_tiling(param_hough_lines_array, buf, 0, param_hough_lines_array->num_items, 0, &param_hough_lines_array_ptr);
         vx_hough_lines_p_t *param_hough_lines = (vx_hough_lines_p_t *)param_hough_lines_array_ptr;
@@ -453,7 +453,7 @@ void HoughLinesP_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT
     }
 
     vx_coordinates2d_t pt;
-    vx_uint8* buf = malloc(param_hough_lines_array->item_size*sizeof(vx_uint8));
+    vx_uint8* buf = (vx_uint8*)malloc(param_hough_lines_array->item_size*sizeof(vx_uint8));
     void *param_hough_lines_array_ptr;
     vxMapArrayRange_tiling(param_hough_lines_array, buf, 0, param_hough_lines_array->num_items, 0, &param_hough_lines_array_ptr);
     vx_hough_lines_p_t *param_hough_lines = (vx_hough_lines_p_t *)param_hough_lines_array_ptr;

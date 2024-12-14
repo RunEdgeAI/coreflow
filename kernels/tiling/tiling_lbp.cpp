@@ -553,7 +553,7 @@ vx_uint8 vx_lbp_u(vx_uint8 *g, vx_uint8 gc)
                 sum += vx_lbp_s(g[p] - gc) * (1 << p);                                          \
             }                                                                                   \
                                                                                                 \
-            vx_uint8 *dst_ptr = vxFormatImagePatchAddress2d(dst_base, x, y, out->addr);         \
+            vx_uint8 *dst_ptr = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, out->addr);         \
             *dst_ptr = sum;                                                                     \
         }                                                                                       \
     }
@@ -580,7 +580,7 @@ vx_uint8 vx_lbp_u(vx_uint8 *g, vx_uint8 gc)
                 sum += vx_lbp_s(g[p] - gc) * (1 << p);                                          \
             }                                                                                   \
                                                                                                 \
-            vx_uint8 *dst_ptr = vxFormatImagePatchAddress2d(dst_base, x, y, out->addr);         \
+            vx_uint8 *dst_ptr = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, out->addr);         \
             *dst_ptr = sum;                                                                     \
         }                                                                                       \
     }
@@ -644,7 +644,7 @@ static void vxLBPStandard_tiling_flexible(vx_tile_ex_t *in, vx_int8 ksize, vx_ti
                 sum += ((g[p] > avg) * (1 << p));                                               \
             }                                                                                   \
                                                                                                 \
-            vx_uint8 *dst_ptr = vxFormatImagePatchAddress2d(dst_base, x, y, out->addr);         \
+            vx_uint8 *dst_ptr = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, out->addr);         \
             *dst_ptr = sum;                                                                     \
         }                                                                                       \
     }
@@ -703,7 +703,7 @@ void vxLBPModified_tiling_flexible(vx_tile_ex_t *in, vx_tile_ex_t *out)
                 sum = 9;                                                                        \
             }                                                                                   \
                                                                                                 \
-            vx_uint8 *dst_ptr = vxFormatImagePatchAddress2d(dst_base, x, y, out->addr);         \
+            vx_uint8 *dst_ptr = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, out->addr);         \
             *dst_ptr = sum;                                                                     \
         }                                                                                       \
     }
@@ -737,7 +737,7 @@ void vxLBPModified_tiling_flexible(vx_tile_ex_t *in, vx_tile_ex_t *out)
                 sum = 9;                                                                        \
             }                                                                                   \
                                                                                                 \
-            vx_uint8 *dst_ptr = vxFormatImagePatchAddress2d(dst_base, x, y, out->addr);         \
+            vx_uint8 *dst_ptr = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, out->addr);         \
             *dst_ptr = sum;                                                                     \
         }                                                                                       \
     }
