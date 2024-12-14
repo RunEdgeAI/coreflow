@@ -14,11 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <float.h>
-#include <stdlib.h>
-#include <string.h>
-#include <venum.h>
 #include <arm_neon.h>
+#include <venum.h>
+
+#include <cfloat>
+#include <cstdlib>
+#include <cstring>
 
 #define _SQRT_MAGIC     0xbe6f0000
 /* calculates 1/sqrt(val) */
@@ -286,7 +287,8 @@ vx_status vxMatchTemplateEntry(const vx_image source_image,
     for (i = 0; i < src_height; i++)
     {
         vx_uint8* srcp = (vx_uint8*)vxFormatImagePatchAddress1d(src, i * src_width, &addr);
-        memcpy(*imgBuf + i * template_width, srcp, template_width);
+        vx_uint8* dstp = (vx_uint8*)*imgBuf + i * template_width;
+        memcpy(dstp, srcp, template_width);
     }
     status |= vxUnmapImagePatch(source_image, source_map_id);
 
@@ -298,7 +300,8 @@ vx_status vxMatchTemplateEntry(const vx_image source_image,
     for (i = 0; i < template_height; i++)
     {
         vx_uint8* srcp = (vx_uint8*)vxFormatImagePatchAddress1d(src, i * template_width, &template_addr);
-        memcpy(*templBuf + i * template_width, srcp, template_width);
+        vx_uint8* dstp = (vx_uint8*)*templBuf + i * template_width;
+        memcpy(dstp, srcp, template_width);
     }
     status = vxUnmapImagePatch(template_image, template_map_id);
     return status;

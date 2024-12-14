@@ -125,12 +125,12 @@ static vx_status LKTracker(
     derivIWinBuf_x = vxCreateImage(context_lk_internal, (vx_uint32)winSize, (vx_uint32)winSize, VX_DF_IMAGE_S16);
     derivIWinBuf_y = vxCreateImage(context_lk_internal, (vx_uint32)winSize, (vx_uint32)winSize, VX_DF_IMAGE_S16);
 
-    ownInitImage((vx_image_t*)IWinBuf, (vx_uint32)winSize, (vx_uint32)winSize, VX_DF_IMAGE_S16);
-    ownAllocateImage((vx_image_t*)IWinBuf);
-    ownInitImage((vx_image_t*)derivIWinBuf_x, (vx_uint32)winSize, (vx_uint32)winSize, VX_DF_IMAGE_S16);
-    ownAllocateImage((vx_image_t*)derivIWinBuf_x);
-    ownInitImage((vx_image_t*)derivIWinBuf_y, (vx_uint32)winSize, (vx_uint32)winSize, VX_DF_IMAGE_S16);
-    ownAllocateImage((vx_image_t*)derivIWinBuf_y);
+    IWinBuf->initImage((vx_uint32)winSize, (vx_uint32)winSize, VX_DF_IMAGE_S16);
+    IWinBuf->allocateImage();
+    derivIWinBuf_x->initImage((vx_uint32)winSize, (vx_uint32)winSize, VX_DF_IMAGE_S16);
+    derivIWinBuf_x->allocateImage();
+    derivIWinBuf_y->initImage((vx_uint32)winSize, (vx_uint32)winSize, VX_DF_IMAGE_S16);
+    derivIWinBuf_y->allocateImage();
 
     vxQueryImage(derivIx, VX_IMAGE_FORMAT, &derivIx_format, sizeof(derivIx_format));
     vxQueryImage(J, VX_IMAGE_FORMAT, &J_format, sizeof(J_format));
@@ -365,9 +365,9 @@ static vx_status LKTracker(
     status |= vxUnmapImagePatch(derivIy, map_id_derivIy);
     status |= vxUnmapImagePatch(I, map_id_I);
 
-    ownFreeImage((vx_image_t*)IWinBuf);
-    ownFreeImage((vx_image_t*)derivIWinBuf_x);
-    ownFreeImage((vx_image_t*)derivIWinBuf_y);
+    IWinBuf->freeImage();
+    derivIWinBuf_x->freeImage();
+    derivIWinBuf_y->freeImage();
 
     vxReleaseImage(&IWinBuf);
     vxReleaseImage(&derivIWinBuf_x);

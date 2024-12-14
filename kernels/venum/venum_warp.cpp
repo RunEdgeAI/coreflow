@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include <venum.h>
 #include <arm_neon.h>
+#include <venum.h>
 
 #define MIN(a,b)    (((a) < (b)) ? (a) : (b))
 
@@ -318,7 +318,7 @@ vx_status vxWarpAffine_U8(vx_image src_image, vx_matrix matrix, vx_scalar stype,
 
                     vx_uint8 * dstBase = (vx_uint8 *)((vx_int8 *)dst_base + i * dstStride);
                     // make remap
-                    remapNearestNeighborConst(blockHeight, blockWidth, src_base, &map[0],
+                    remapNearestNeighborConst(blockHeight, blockWidth, (const vx_uint8*)src_base, &map[0],
                                                         dstBase + j, dstStride, borderValue);
                 }
             }
@@ -423,7 +423,7 @@ vx_status vxWarpAffine_U8(vx_image src_image, vx_matrix matrix, vx_scalar stype,
                     vx_uint8 * dstBase = (vx_uint8 *)((vx_int8 *)dst_base + i * dstStride);
 
                     remapLinearConst(blockHeight, blockWidth,
-                                     src_base, &map[0], &coeffs[0],
+                                     (const vx_uint8*)src_base, &map[0], &coeffs[0],
                                      dstBase + j, dstStride, borderValue);
                 }
             }
@@ -568,7 +568,7 @@ vx_status vxWarpPerspective_U8(vx_image src_image, vx_matrix matrix, vx_scalar s
 
                 vx_uint8 * dstBase = (vx_uint8 *)((vx_int8 *)dst_base + i * dstStride);
                 // make remap
-                remapNearestNeighborConst(blockHeight, blockWidth, src_base, &map[0],dstBase + j, dstStride, borderValue);
+                remapNearestNeighborConst(blockHeight, blockWidth, (const vx_uint8*)src_base, &map[0],dstBase + j, dstStride, borderValue);
             }
         }
     }
@@ -677,7 +677,7 @@ vx_status vxWarpPerspective_U8(vx_image src_image, vx_matrix matrix, vx_scalar s
                 vx_uint8 * dstBase = (vx_uint8 *)((vx_int8 *)dst_base + i * dstStride);
 
                 remapLinearConst(blockHeight, blockWidth,
-                        src_base, &map[0], &coeffs[0],
+                        (const vx_uint8*)src_base, &map[0], &coeffs[0],
                         dstBase + j, dstStride, borderValue);
             }
         }

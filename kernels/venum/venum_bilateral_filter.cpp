@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
-#include <float.h>
-#include <venum.h>
 #include <arm_neon.h>
+#include <venum.h>
+
+#include <cfloat>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #define  COLOR_WEIGHT_SIZE_PER_CHANNEL      256
 

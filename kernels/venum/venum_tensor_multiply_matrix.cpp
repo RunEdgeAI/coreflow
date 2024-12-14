@@ -1,8 +1,8 @@
-#include <venum.h>
-
-#include <assert.h>
 
 #include <arm_neon.h>
+#include <venum.h>
+
+#include <cassert>
 
 #define Q78_FIXED_POINT_POSITION 8
 #define Q78_SCALE   (1 << Q78_FIXED_POINT_POSITION)
@@ -313,16 +313,16 @@ void Multiply2DMatrixesImpl(
 
     switch (type)
     {
-    case VX_TYPE_INT8: TensorMultiplyMatrix_S8((vx_uint8 *)src1, dims1, src1_strides, (vx_uint8 *)src2, dims2, src2_strides,
-                        (vx_uint8 *)src3, src3_strides, dst_strides, (vx_uint8 *)dst);
+    case VX_TYPE_INT8: TensorMultiplyMatrix_S8((vx_int8 *)src1, (const vx_uint32*)dims1, (const vx_uint32*)src1_strides, (vx_int8 *)src2, (const vx_uint32*)dims2, (const vx_uint32*)src2_strides,
+                        (const vx_int8 *)src3, (const vx_uint32*)src3_strides, (const vx_uint32*)dst_strides, (vx_int8 *)dst);
                         break;
 
-    case VX_TYPE_UINT8: TensorMultiplyMatrix_U8((vx_int8 *)src1, dims1, src1_strides, (vx_int8 *)src2, dims2, src2_strides,
-                        (vx_int8 *)src3, src3_strides, dst_strides, (vx_int8 *)dst);
+    case VX_TYPE_UINT8: TensorMultiplyMatrix_U8((vx_uint8 *)src1, (const vx_uint32*)dims1, (const vx_uint32*)src1_strides, (vx_uint8 *)src2, (const vx_uint32*)dims2, (const vx_uint32*)src2_strides,
+                        (const vx_uint8 *)src3, (const vx_uint32*)src3_strides, (const vx_uint32*)dst_strides, (vx_uint8 *)dst);
                         break;
 
-    case VX_TYPE_INT16: TensorMultiplyMatrix_S16((vx_int16 *)src1, dims1, src1_strides, (vx_int16 *)src2, dims2, src2_strides,
-                        (vx_int16 *)src3, src3_strides, dst_strides, (vx_int16 *)dst);
+    case VX_TYPE_INT16: TensorMultiplyMatrix_S16((vx_int16 *)src1, (const vx_uint32*)dims1, (const vx_uint32*)src1_strides, (vx_int16 *)src2, (const vx_uint32*)dims2, (const vx_uint32*)src2_strides,
+                        (vx_int16 *)src3, (const vx_uint32*)src3_strides, (const vx_uint32*)dst_strides, (vx_int16 *)dst);
                         break;
 
     default: assert(0);

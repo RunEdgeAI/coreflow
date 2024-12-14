@@ -15,8 +15,8 @@
 * limitations under the License.
 */
 
-#include <venum.h>
 #include <arm_neon.h>
+#include <venum.h>
 
 // nodeless version of the Weighted Average kernel
 vx_status vxWeightedAverage(vx_image img1, vx_scalar alpha, vx_image img2, vx_image output)

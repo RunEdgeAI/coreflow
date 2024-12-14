@@ -11,17 +11,16 @@ cc_library(
         "//kernels/venum",
     ],
     copts = [
-        "-mfpu=neon",
-        "-mfloat-abi=hard",
-        "-march=armv8-a",
+        # "-mfpu=neon"
     ],
     deps = [
         "//:corevx",
-        "//kernels/utils",
-        "//kernels/venum:venum_kernels"
+        "//kernels/venum:venum_kernels",
+        "//targets/extras:extras",
+        "//vxu:corevx-vxu"
     ],
     target_compatible_with = [
-        "@platforms//cpu:arm",
+        "@platforms//cpu:aarch64",
     ],
     visibility = ["//visibility:public"]
 )

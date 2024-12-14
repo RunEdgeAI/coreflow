@@ -266,7 +266,7 @@ static vx_status VX_CALLBACK vxLaplacianPyramidInputValidator(vx_node node, vx_u
 }
 
 
-static vx_status VX_CALLBACK vxLaplacianPyramidOutputValidator(vx_node node, vx_uint32 index, vx_meta_format* ptr)
+static vx_status VX_CALLBACK vxLaplacianPyramidOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     vx_status status = VX_SUCCESS;
     if (index == 1)

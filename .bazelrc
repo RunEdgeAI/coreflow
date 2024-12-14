@@ -13,18 +13,17 @@ test --test_env=PATH=/usr/local/bin:/usr/bin:/bin  # Example of setting environm
 build --jobs=4             # Use 4 parallel jobs for builds
 build --color=yes          # Enable colored output in build logs
 build --show_progress=true # Show build progress in the terminal
-# build --keep_going       # Continue building even if some targets fail
+# build --keep_going         # Continue building even if some targets fail
 
 # Default x86 configuration
 build --platforms=@platforms//host
-build --crosstool_top=@bazel_tools//tools/cpp:default-toolchain
-build --cpu=amd
 
-# ARM configuration
-build:arm --platforms=//build_tools/platforms:arm
-build:arm --crosstool_top=@bazel_tools//tools/cpp:cc-toolchain
-build:arm --linkopt --specs=rdimon.specs
-build:arm --linkopt -lstdc++
+# Apple ARM64 Config
+build:apple_arm --platforms=//build_tools/platforms:osx_arm
+build:apple_arm --apple_platform_type=macos
+build:apple_arm --cpu=darwin_arm64
+build:apple_arm --host_cpu=darwin_arm64
+build:apple_arm --crosstool_top=@bazel_tools//tools/cpp:apple_cc_toolchain
 
 # Additional settings can be added as needed
 # Address sanitizer

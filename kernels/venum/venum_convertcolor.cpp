@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
-#include <venum.h>
 #include <arm_neon.h>
-#include <vx_debug.h>
+#include <venum.h>
+
+#include "vx_debug.h"
 
 // helpers -------------------------------------------------------------------
 
@@ -690,10 +691,10 @@ vx_status vxConvertColor(vx_image src, vx_image dst)
             {
                 for (x = 0; x < dst_addr[0].dim_x; x++)
                 {
-                    vx_uint8 *luma[2] = {vxFormatImagePatchAddress2d(src_base[0], x, y, &src_addr[0]),
-                                         vxFormatImagePatchAddress2d(dst_base[0], x, y, &dst_addr[0])};
-                    vx_uint8 *cbcr = vxFormatImagePatchAddress2d(src_base[1], x, y, &src_addr[1]);
-                    vx_uint8 *crcb = vxFormatImagePatchAddress2d(dst_base[1], x, y, &dst_addr[1]);
+                    vx_uint8 *luma[2] = {(vx_uint8 *)vxFormatImagePatchAddress2d(src_base[0], x, y, &src_addr[0]),
+                                         (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base[0], x, y, &dst_addr[0])};
+                    vx_uint8 *cbcr = (vx_uint8 *)vxFormatImagePatchAddress2d(src_base[1], x, y, &src_addr[1]);
+                    vx_uint8 *crcb = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base[1], x, y, &dst_addr[1]);
                     yuv2yuv_601to709(luma[0][0],cbcr[0],cbcr[1],&luma[1][0],&crcb[1],&crcb[0]);
                 }
             }
@@ -771,9 +772,9 @@ vx_status vxConvertColor(vx_image src, vx_image dst)
                     {
                         for(int i = 0; i < 4; i++)
                         {
-                            crcb[i]= vxFormatImagePatchAddress2d(src_base[1], x+i, y, &src_addr[1]);
-                            cb[i]= vxFormatImagePatchAddress2d(dst_base[1], x+i, y, &dst_addr[1]);
-                            cr[i]= vxFormatImagePatchAddress2d(dst_base[2], x+i, y, &dst_addr[2]);
+                            crcb[i]= (vx_uint8 *)vxFormatImagePatchAddress2d(src_base[1], x+i, y, &src_addr[1]);
+                            cb[i]= (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base[1], x+i, y, &dst_addr[1]);
+                            cr[i]= (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base[2], x+i, y, &dst_addr[2]);
 
                             cb[i][0] = crcb[i][u_pix];
                             cr[i][0] = crcb[i][v_pix];
@@ -1327,8 +1328,8 @@ vx_status vxConvertColor(vx_image src, vx_image dst)
                 for (x = 0; x < width4; x += 4)
                 {
                     vx_uint8 *luma = (vx_uint8 *)src_base[0] + y * srcP0StrideY + x * srcP0StrideX;
-                    vx_uint8 *cb = vxFormatImagePatchAddress2d(src_base[1], x, y, &src_addr[1]);
-                    vx_uint8 *cr = vxFormatImagePatchAddress2d(src_base[2], x, y, &src_addr[2]);
+                    vx_uint8 *cb = (vx_uint8 *)vxFormatImagePatchAddress2d(src_base[1], x, y, &src_addr[1]);
+                    vx_uint8 *cr = (vx_uint8 *)vxFormatImagePatchAddress2d(src_base[2], x, y, &src_addr[2]);
 
                     vx_float32 yValue[4] = {(vx_float32)luma[0],(vx_float32)luma[1],(vx_float32)luma[2],(vx_float32)luma[3]};
                     vx_float32 cbValue[4] = {(vx_float32)cb[0],(vx_float32)cb[0],(vx_float32)cb[1],(vx_float32)cb[1]};
@@ -1399,8 +1400,8 @@ vx_status vxConvertColor(vx_image src, vx_image dst)
                 for (; x < width; x++)
                 {
                     vx_uint8 *luma = (vx_uint8 *)src_base[0] + y * srcP0StrideY + x * srcP0StrideX;
-                    vx_uint8 *cb = vxFormatImagePatchAddress2d(src_base[1], x, y, &src_addr[1]);
-                    vx_uint8 *cr = vxFormatImagePatchAddress2d(src_base[2], x, y, &src_addr[2]);
+                    vx_uint8 *cb = (vx_uint8 *)vxFormatImagePatchAddress2d(src_base[1], x, y, &src_addr[1]);
+                    vx_uint8 *cr = (vx_uint8 *)vxFormatImagePatchAddress2d(src_base[2], x, y, &src_addr[2]);
                     vx_uint8 *rgb = (vx_uint8 *)dst_base[0] + y * dstP0StrideY + x * dstP0StrideX;
 
                     if (dst_format == VX_DF_IMAGE_RGBX)
@@ -1447,16 +1448,16 @@ vx_status vxConvertColor(vx_image src, vx_image dst)
                 }
                 for (; x < width; x++)
                 {
-                    vx_uint8 *luma = vxFormatImagePatchAddress2d(src_base[0], x, y, &src_addr[0]);
-                    vx_uint8 *cb   = vxFormatImagePatchAddress2d(src_base[1], x, y, &src_addr[1]);
-                    vx_uint8 *cr   = vxFormatImagePatchAddress2d(src_base[2], x, y, &src_addr[2]);
-                    vx_uint8 *nv12[2] = {vxFormatImagePatchAddress2d(dst_base[0], x, y, &dst_addr[0]),
-                                         vxFormatImagePatchAddress2d(dst_base[1], x, y, &dst_addr[1])};
+                    vx_uint8 *luma = (vx_uint8 *)vxFormatImagePatchAddress2d(src_base[0], x, y, &src_addr[0]);
+                    vx_uint8 *cb   = (vx_uint8 *)vxFormatImagePatchAddress2d(src_base[1], x, y, &src_addr[1]);
+                    vx_uint8 *cr   = (vx_uint8 *)vxFormatImagePatchAddress2d(src_base[2], x, y, &src_addr[2]);
+                    vx_uint8 *nv12[2] = {(vx_uint8 *)vxFormatImagePatchAddress2d(dst_base[0], x, y, &dst_addr[0]),
+                                         (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base[1], x, y, &dst_addr[1])};
                     nv12[0][0] = luma[0];
                     nv12[1][0] = cb[0];
                     nv12[1][1] = cr[0];
-                    vx_uint8 *luma1 = vxFormatImagePatchAddress2d(src_base[0], x, (y + 1), &src_addr[0]);
-                    vx_uint8 *nv12luma1 = vxFormatImagePatchAddress2d(dst_base[0], x, (y + 1), &dst_addr[0]);
+                    vx_uint8 *luma1 = (vx_uint8 *)vxFormatImagePatchAddress2d(src_base[0], x, (y + 1), &src_addr[0]);
+                    vx_uint8 *nv12luma1 = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base[0], x, (y + 1), &dst_addr[0]);
                     nv12luma1[0] = luma1[0];
                 }
             }
@@ -1501,23 +1502,23 @@ vx_status vxConvertColor(vx_image src, vx_image dst)
                 }
                 for (; x < width; x++)
                 {
-                    vx_uint8 *luma[2] = {vxFormatImagePatchAddress2d(src_base[0], x, y, &src_addr[0]),
-                                         vxFormatImagePatchAddress2d(dst_base[0], x, y, &dst_addr[0])};
-                    vx_uint8 *cb[2]   = {vxFormatImagePatchAddress2d(src_base[1], x, y, &src_addr[1]),
-                                         vxFormatImagePatchAddress2d(dst_base[1], x, y, &dst_addr[1])};
-                    vx_uint8 *cr[2]   = {vxFormatImagePatchAddress2d(src_base[2], x, y, &src_addr[2]),
-                                         vxFormatImagePatchAddress2d(dst_base[2], x, y, &dst_addr[2])};
+                    vx_uint8 *luma[2] = {(vx_uint8 *)vxFormatImagePatchAddress2d(src_base[0], x, y, &src_addr[0]),
+                                         (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base[0], x, y, &dst_addr[0])};
+                    vx_uint8 *cb[2]   = {(vx_uint8 *)vxFormatImagePatchAddress2d(src_base[1], x, y, &src_addr[1]),
+                                         (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base[1], x, y, &dst_addr[1])};
+                    vx_uint8 *cr[2]   = {(vx_uint8 *)vxFormatImagePatchAddress2d(src_base[2], x, y, &src_addr[2]),
+                                         (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base[2], x, y, &dst_addr[2])};
 
                     luma[1][0] = luma[0][0];
                     cb[1][0] = cb[0][0];
                     cr[1][0] = cr[0][0];
 
-                    vx_uint8 *luma1[2] = { vxFormatImagePatchAddress2d(src_base[0], x, (y + 1), &src_addr[0]),
-                        vxFormatImagePatchAddress2d(dst_base[0], x, (y + 1), &dst_addr[0]) };
-                    vx_uint8 *cb1[2] = { vxFormatImagePatchAddress2d(src_base[1], x, (y + 1), &src_addr[1]),
-                        vxFormatImagePatchAddress2d(dst_base[1], x, (y + 1), &dst_addr[1]) };
-                    vx_uint8 *cr1[2] = { vxFormatImagePatchAddress2d(src_base[2], x, (y + 1), &src_addr[2]),
-                        vxFormatImagePatchAddress2d(dst_base[2], x, (y + 1), &dst_addr[2]) };
+                    vx_uint8 *luma1[2] = { (vx_uint8 *)vxFormatImagePatchAddress2d(src_base[0], x, (y + 1), &src_addr[0]),
+                        (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base[0], x, (y + 1), &dst_addr[0]) };
+                    vx_uint8 *cb1[2] = { (vx_uint8 *)vxFormatImagePatchAddress2d(src_base[1], x, (y + 1), &src_addr[1]),
+                        (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base[1], x, (y + 1), &dst_addr[1]) };
+                    vx_uint8 *cr1[2] = { (vx_uint8 *)vxFormatImagePatchAddress2d(src_base[2], x, (y + 1), &src_addr[2]),
+                        (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base[2], x, (y + 1), &dst_addr[2]) };
 
                     luma1[1][0] = luma1[0][0];
                     cb1[1][0] = cb1[0][0];

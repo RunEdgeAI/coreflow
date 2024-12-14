@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include <venum.h>
 #include <arm_neon.h>
+#include <venum.h>
+
 #include "tensor_utils.h"
 
 // nodeless version of the TableLookup kernel
@@ -31,8 +32,8 @@ vx_status vxTensorTableLookup(void* src, vx_size* src_strides, vx_size* dims, vx
         vx_size dst_pos = ComputeGlobalPositionsFromIndex(i, dims, dst_strides, num_of_dims, &dst_pos);
         if (type == VX_TYPE_UINT8)
         {
-            vx_uint8 *src_ptr = src+src_pos;
-            vx_uint8 *dst_ptr = dst+dst_pos;
+            vx_uint8 *src_ptr = (vx_uint8*)src+src_pos;
+            vx_uint8 *dst_ptr = (vx_uint8*)dst+dst_pos;
             vx_uint8 *lut_tmp = (vx_uint8 *)lut;
 
             uint8x8_t src_u8x8 = vld1_u8(src_ptr);
@@ -83,8 +84,8 @@ vx_status vxTensorTableLookup(void* src, vx_size* src_strides, vx_size* dims, vx
         }
         else if (type == VX_TYPE_INT16)
         {
-            vx_int16 *src_ptr = src+src_pos;
-            vx_int16 *dst_ptr = dst+dst_pos;
+            vx_int16 *src_ptr = (vx_int16*)src+src_pos;
+            vx_int16 *dst_ptr = (vx_int16*)dst+dst_pos;
             vx_int16 *lut_tmp = (vx_int16 *)lut;
             int16x8_t src_s16x8 = vld1q_s16(src_ptr);
             int32x4x2_t src_s32x4 =
@@ -138,8 +139,8 @@ vx_status vxTensorTableLookup(void* src, vx_size* src_strides, vx_size* dims, vx
         vx_size dst_pos = ComputeGlobalPositionsFromIndex(i, dims, dst_strides, num_of_dims, &dst_pos);
         if (type == VX_TYPE_UINT8)
         {
-            vx_uint8 *src_ptr = src+src_pos;
-            vx_uint8 *dst_ptr = dst+dst_pos;
+            vx_uint8 *src_ptr = (vx_uint8*)src+src_pos;
+            vx_uint8 *dst_ptr = (vx_uint8*)dst+dst_pos;
             vx_uint8 *lut_tmp = (vx_uint8 *)lut;
             vx_int32 index = (vx_int32)lut_offset + (vx_int32)(*src_ptr);
             if (index >= 0 && index < (vx_int32)lut_size)
@@ -149,8 +150,8 @@ vx_status vxTensorTableLookup(void* src, vx_size* src_strides, vx_size* dims, vx
         }
         else if (type == VX_TYPE_INT16)
         {
-            vx_int16 *src_ptr = src+src_pos;
-            vx_int16 *dst_ptr = dst+dst_pos;
+            vx_int16 *src_ptr = (vx_int16*)src+src_pos;
+            vx_int16 *dst_ptr = (vx_int16*)dst+dst_pos;
             vx_int16 *lut_tmp = (vx_int16 *)lut;
             vx_int32 index = (vx_int32)lut_offset + (vx_int32)(*src_ptr);
             if (index >= 0 && index < (vx_int32)lut_size)

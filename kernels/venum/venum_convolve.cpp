@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-#include <venum.h>
-#include <VX/vx.h>
 #include <arm_neon.h>
-#include <string.h>
+#include <venum.h>
 
+#include <cstring>
+
+#include <VX/vx.h>
 /**=============================================================================
 @function
 u32Tou8

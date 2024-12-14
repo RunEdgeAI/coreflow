@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-#include <venum.h>
 #include <arm_neon.h>
-#include <stdlib.h>
+#include <venum.h>
+
+#include <cstdlib>
 
 #define C_MAX_NONLINEAR_DIM 9
 
@@ -615,7 +616,7 @@ static void NonLinearFilter_c(const void *src_base, const vx_imagepatch_addressi
                               void *dst_base, const vx_imagepatch_addressing_t *dst_addr, vx_uint32 x, vx_uint32 y,
                               struct rcood r, vx_uint8 *m, vx_uint8 *v, const vx_border_t * border, vx_enum function)
 {
-    vx_uint8 *dstp = vxFormatImagePatchAddress2d(dst_base, x, y, dst_addr);
+    vx_uint8 *dstp = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, dst_addr);
     vx_int32 count = (vx_int32)readMaskedRectangle_U8(src_base, src_addr, border, VX_DF_IMAGE_U8, x, y, (vx_uint32)r.rx0, (vx_uint32)r.ry0, (vx_uint32)r.rx1, (vx_uint32)r.ry1, m, v);
 
     qsort(v, count, sizeof(vx_uint8), vx_uint8_compare);
@@ -1398,7 +1399,7 @@ vx_status vxNonLinearFilter(vx_scalar function, vx_image src, vx_matrix mask, vx
         }
         else
         {
-            struct rcood rxy = {rx0, ry0, rx1, ry1};
+            struct rcood rxy = {(vx_uint32)rx0, (vx_uint32)ry0, (vx_uint32)rx1, (vx_uint32)ry1};
 
             vx_int32 count_mask = 0;
             vx_int32 mask_index = 0;

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include <venum.h>
 #include <arm_neon.h>
+#include <venum.h>
 
 // nodeless version of the Multiply kernel
 vx_status vxMultiply(vx_image in0, vx_image in1, vx_scalar scale_param, vx_scalar opolicy_param, vx_scalar rpolicy_param, vx_image output)
@@ -179,12 +179,14 @@ vx_status vxMultiply(vx_image in0, vx_image in1, vx_scalar scale_param, vx_scala
                 if (out_format == VX_DF_IMAGE_U8)
                 {
                   *(vx_uint8 *)dstp = (vx_uint8)final_result_value;
-                  dstp += 1;
+                  vx_uint8* ptr = (vx_uint8*)dstp + 1;
+                  dstp = ptr;
                 }
                 else
                 {
                   *(vx_int16 *)dstp = (vx_int16)final_result_value;
-                  dstp += 2;
+                  vx_uint8* ptr = (vx_uint8*)dstp + 2;
+                  dstp = ptr;
                 }
             }
         }

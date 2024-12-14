@@ -7,8 +7,10 @@
     "https://bcr.bazel.build/modules/abseil-cpp/20230125.1/MODULE.bazel": "89047429cb0207707b2dface14ba7f8df85273d484c2572755be4bab7ce9c3a0",
     "https://bcr.bazel.build/modules/abseil-cpp/20230802.0.bcr.1/MODULE.bazel": "1c8cec495288dccd14fdae6e3f95f772c1c91857047a098fad772034264cc8cb",
     "https://bcr.bazel.build/modules/abseil-cpp/20230802.0.bcr.1/source.json": "14892cc698e02ffedf4967546e6bedb7245015906888d3465fcf27c90a26da10",
+    "https://bcr.bazel.build/modules/apple_support/1.17.1/MODULE.bazel": "655c922ab1209978a94ef6ca7d9d43e940cd97d9c172fb55f94d91ac53f8610b",
+    "https://bcr.bazel.build/modules/apple_support/1.17.1/source.json": "6b2b8c74d14e8d485528a938e44bdb72a5ba17632b9e14ef6e68a5ee96c8347f",
     "https://bcr.bazel.build/modules/apple_support/1.5.0/MODULE.bazel": "50341a62efbc483e8a2a6aec30994a58749bd7b885e18dd96aa8c33031e558ef",
-    "https://bcr.bazel.build/modules/apple_support/1.5.0/source.json": "eb98a7627c0bc486b57f598ad8da50f6625d974c8f723e9ea71bd39f709c9862",
+    "https://bcr.bazel.build/modules/bazel_features/1.10.0/MODULE.bazel": "f75e8807570484a99be90abcd52b5e1f390362c258bcb73106f4544957a48101",
     "https://bcr.bazel.build/modules/bazel_features/1.11.0/MODULE.bazel": "f9382337dd5a474c3b7d334c2f83e50b6eaedc284253334cf823044a26de03e8",
     "https://bcr.bazel.build/modules/bazel_features/1.15.0/MODULE.bazel": "d38ff6e517149dc509406aca0db3ad1efdd890a85e049585b7234d04238e2a4d",
     "https://bcr.bazel.build/modules/bazel_features/1.15.0/source.json": "483d0d339c23732f16b995fab1323147c1d2cc4b1c6ca4f832373aff028fdea9",
@@ -77,8 +79,6 @@
     "https://bcr.bazel.build/modules/stardoc/0.5.3/MODULE.bazel": "c7f6948dae6999bf0db32c1858ae345f112cacf98f174c7a8bb707e41b974f1c",
     "https://bcr.bazel.build/modules/stardoc/0.6.2/MODULE.bazel": "7060193196395f5dd668eda046ccbeacebfd98efc77fed418dbe2b82ffaa39fd",
     "https://bcr.bazel.build/modules/stardoc/0.6.2/source.json": "d2ff8063b63b4a85e65fe595c4290f99717434fa9f95b4748a79a7d04dfed349",
-    "https://bcr.bazel.build/modules/toolchains_arm_gnu/1.0.3/MODULE.bazel": "93eb9d83bc26634651b62f4cbde3c20b67dca2fc1d24f3f1a7d7b06a995dbbf1",
-    "https://bcr.bazel.build/modules/toolchains_arm_gnu/1.0.3/source.json": "cb432fa18fcbe48101a6169338b12a1703fedffa36c12c66bad34c04864685f7",
     "https://bcr.bazel.build/modules/upb/0.0.0-20220923-a547704/MODULE.bazel": "7298990c00040a0e2f121f6c32544bab27d4452f80d9ce51349b1a28f3005c43",
     "https://bcr.bazel.build/modules/upb/0.0.0-20230516-61a97ef/MODULE.bazel": "c0df5e35ad55e264160417fd0875932ee3c9dda63d9fccace35ac62f45e1b6f9",
     "https://bcr.bazel.build/modules/upb/0.0.0-20230516-61a97ef/source.json": "b2150404947339e8b947c6b16baa39fa75657f4ddec5e37272c7b11c7ab533bc",
@@ -91,8 +91,8 @@
   "moduleExtensions": {
     "@@apple_support~//crosstool:setup.bzl%apple_cc_configure_extension": {
       "general": {
-        "bzlTransitiveDigest": "PjIds3feoYE8SGbbIq2SFTZy3zmxeO2tQevJZNDo7iY=",
-        "usagesDigest": "+hz7IHWN6A1oVJJWNDB6yZRG+RYhF76wAYItpAeIUIg=",
+        "bzlTransitiveDigest": "7ii+gFxWSxHhQPrBxfMEHhtrGvHmBTvsh+KOyGunP/s=",
+        "usagesDigest": "R8xslr59tZnVLqBbEpbunVi3NfM8lkJZstFJkVyW4qk=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -525,145 +525,6 @@
             "rules_foreign_cc~",
             "rules_foreign_cc",
             "rules_foreign_cc~"
-          ]
-        ]
-      }
-    },
-    "@@toolchains_arm_gnu~//:extensions.bzl%arm_toolchain": {
-      "general": {
-        "bzlTransitiveDigest": "fbkcg7qLwOSDh++tu5zdX8nQzbyIWzfyuuDAlrRNiIE=",
-        "usagesDigest": "mJVM9vHN5XhVQTcZj9cPKSUW5+hXvyqKzE/hUduNzf0=",
-        "recordedFileInputs": {},
-        "recordedDirentsInputs": {},
-        "envVariables": {},
-        "generatedRepoSpecs": {
-          "arm_none_eabi": {
-            "bzlFile": "@@toolchains_arm_gnu~//:deps.bzl",
-            "ruleClassName": "toolchains_arm_gnu_repo",
-            "attributes": {
-              "toolchain_name": "arm_none_eabi",
-              "toolchain_prefix": "arm-none-eabi",
-              "version": "13.2.1",
-              "hosts": {
-                "arm_none_eabi_darwin_x86_64": [
-                  "@platforms//os:macos",
-                  "@platforms//cpu:x86_64"
-                ],
-                "arm_none_eabi_darwin_arm64": [
-                  "@platforms//os:macos",
-                  "@platforms//cpu:arm64"
-                ],
-                "arm_none_eabi_linux_x86_64": [
-                  "@platforms//os:linux",
-                  "@platforms//cpu:x86_64"
-                ],
-                "arm_none_eabi_linux_aarch64": [
-                  "@platforms//os:linux",
-                  "@platforms//cpu:aarch64"
-                ],
-                "arm_none_eabi_windows_x86_64": [
-                  "@platforms//os:windows",
-                  "@platforms//cpu:aarch64"
-                ]
-              }
-            }
-          },
-          "arm_none_eabi_darwin_x86_64": {
-            "bzlFile": "@@toolchains_arm_gnu~//:deps.bzl",
-            "ruleClassName": "arm_gnu_cross_hosted_platform_specific_repo",
-            "attributes": {
-              "toolchain_prefix": "arm-none-eabi",
-              "version": "13.2.1",
-              "sha256": "075faa4f3e8eb45e59144858202351a28706f54a6ec17eedd88c9fb9412372cc",
-              "strip_prefix": "arm-gnu-toolchain-13.2.Rel1-darwin-x86_64-arm-none-eabi",
-              "url": "https://developer.arm.com/-/media/Files/downloads/gnu/13.2.rel1/binrel/arm-gnu-toolchain-13.2.rel1-darwin-x86_64-arm-none-eabi.tar.xz?rev=a3d8c87bb0af4c40b7d7e0e291f6541b&hash=10927356ACA904E1A0122794E036E8DDE7D8435D",
-              "exec_compatible_with": [
-                "@platforms//os:macos",
-                "@platforms//cpu:x86_64"
-              ]
-            }
-          },
-          "arm_none_eabi_darwin_arm64": {
-            "bzlFile": "@@toolchains_arm_gnu~//:deps.bzl",
-            "ruleClassName": "arm_gnu_cross_hosted_platform_specific_repo",
-            "attributes": {
-              "toolchain_prefix": "arm-none-eabi",
-              "version": "13.2.1",
-              "sha256": "39c44f8af42695b7b871df42e346c09fee670ea8dfc11f17083e296ea2b0d279",
-              "strip_prefix": "arm-gnu-toolchain-13.2.Rel1-darwin-arm64-arm-none-eabi",
-              "url": "https://developer.arm.com/-/media/Files/downloads/gnu/13.2.rel1/binrel/arm-gnu-toolchain-13.2.rel1-darwin-arm64-arm-none-eabi.tar.xz?rev=73e10891de3d41e29e95ac2878742b74&hash=6036196A3358CB5AD85FC01DFD0FEC02A",
-              "exec_compatible_with": [
-                "@platforms//os:macos",
-                "@platforms//cpu:arm64"
-              ]
-            }
-          },
-          "arm_none_eabi_linux_x86_64": {
-            "bzlFile": "@@toolchains_arm_gnu~//:deps.bzl",
-            "ruleClassName": "arm_gnu_cross_hosted_platform_specific_repo",
-            "attributes": {
-              "toolchain_prefix": "arm-none-eabi",
-              "version": "13.2.1",
-              "sha256": "6cd1bbc1d9ae57312bcd169ae283153a9572bd6a8e4eeae2fedfbc33b115fdbb",
-              "strip_prefix": "arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi",
-              "url": "https://developer.arm.com/-/media/Files/downloads/gnu/13.2.rel1/binrel/arm-gnu-toolchain-13.2.rel1-x86_64-arm-none-eabi.tar.xz?rev=e434b9ea4afc4ed7998329566b764309&hash=688C370BF08399033CA9DE3C1CC8CF8E31D8C441",
-              "exec_compatible_with": [
-                "@platforms//os:linux",
-                "@platforms//cpu:x86_64"
-              ]
-            }
-          },
-          "arm_none_eabi_linux_aarch64": {
-            "bzlFile": "@@toolchains_arm_gnu~//:deps.bzl",
-            "ruleClassName": "arm_gnu_cross_hosted_platform_specific_repo",
-            "attributes": {
-              "toolchain_prefix": "arm-none-eabi",
-              "version": "13.2.1",
-              "sha256": "8fd8b4a0a8d44ab2e195ccfbeef42223dfb3ede29d80f14dcf2183c34b8d199a",
-              "strip_prefix": "arm-gnu-toolchain-13.2.Rel1-aarch64-arm-none-eabi",
-              "url": "https://developer.arm.com/-/media/Files/downloads/gnu/13.2.rel1/binrel/arm-gnu-toolchain-13.2.rel1-aarch64-arm-none-eabi.tar.xz?rev=17baf091942042768d55c9a304610954&hash=7F32B9E3ADFAFC4F8F74C30EBBBFECEB1AC96B60",
-              "exec_compatible_with": [
-                "@platforms//os:linux",
-                "@platforms//cpu:aarch64"
-              ]
-            }
-          },
-          "arm_none_eabi_windows_x86_64": {
-            "bzlFile": "@@toolchains_arm_gnu~//:deps.bzl",
-            "ruleClassName": "arm_gnu_cross_hosted_platform_specific_repo",
-            "attributes": {
-              "toolchain_prefix": "arm-none-eabi",
-              "version": "13.2.1",
-              "sha256": "51d933f00578aa28016c5e3c84f94403274ea7915539f8e56c13e2196437d18f",
-              "strip_prefix": "arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi",
-              "url": "https://developer.arm.com/-/media/Files/downloads/gnu/13.2.rel1/binrel/arm-gnu-toolchain-13.2.rel1-mingw-w64-i686-arm-none-eabi.zip?rev=93fda279901c4c0299e03e5c4899b51f&hash=A3C5FF788BE90810E121091C873E3532336C8D46",
-              "exec_compatible_with": [
-                "@platforms//os:windows",
-                "@platforms//cpu:aarch64"
-              ]
-            }
-          }
-        },
-        "recordedRepoMappingEntries": [
-          [
-            "rules_cc~",
-            "bazel_tools",
-            "bazel_tools"
-          ],
-          [
-            "toolchains_arm_gnu~",
-            "bazel_tools",
-            "bazel_tools"
-          ],
-          [
-            "toolchains_arm_gnu~",
-            "rules_cc",
-            "rules_cc~"
-          ],
-          [
-            "toolchains_arm_gnu~",
-            "toolchains_arm_gnu",
-            "toolchains_arm_gnu~"
           ]
         ]
       }

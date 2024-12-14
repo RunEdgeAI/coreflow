@@ -602,14 +602,14 @@ static vx_status replicateConvolve(vx_image src, vx_convolution conv, vx_image d
 
             if (dst_format == VX_DF_IMAGE_U8)
             {
-                vx_uint8 *dstp = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_uint8 *dstp = (vx_uint8*)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                 if (value < 0) *dstp = 0;
                 else if (value > UINT8_MAX) *dstp = UINT8_MAX;
                 else *dstp = value;
             }
             else if (dst_format == VX_DF_IMAGE_S16)
             {
-                vx_int16 *dstp = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_int16 *dstp = (vx_int16*)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                 if (value < INT16_MIN) *dstp = INT16_MIN;
                 else if (value > INT16_MAX) *dstp = INT16_MAX;
                 else *dstp = value;
@@ -828,7 +828,7 @@ static vx_status VX_CALLBACK vxLaplacianReconstructInputValidator(vx_node node, 
     return status;
 }
 
-static vx_status VX_CALLBACK vxLaplacianReconstructOutputValidator(vx_node node, vx_uint32 index, vx_meta_format* ptr)
+static vx_status VX_CALLBACK vxLaplacianReconstructOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     vx_status status = VX_SUCCESS;
     if (index == 2)

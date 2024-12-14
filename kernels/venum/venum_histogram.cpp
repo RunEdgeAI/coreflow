@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include <venum.h>
 #include <arm_neon.h>
+#include <venum.h>
 
 // nodeless version of the Histogram kernel
 vx_status vxHistogram(vx_image src, vx_distribution dist)
@@ -43,7 +43,7 @@ vx_status vxHistogram(vx_image src, vx_distribution dist)
     status |= vxMapDistribution(dist, &dst_map_id, &dist_ptr, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST, 0);
     if (status == VX_SUCCESS)
     {
-        vx_int32 *dist_tmp = dist_ptr;
+        vx_int32 *dist_tmp = (vx_int32*)dist_ptr;
         for (x = 0; x < numBins; x++)
         {
             dist_tmp[x] = 0;
@@ -183,7 +183,7 @@ vx_status vxHistogram(vx_image src, vx_distribution dist)
             {
                 if (format == VX_DF_IMAGE_U8)
                 {
-                    vx_uint8 *src_ptr = vxFormatImagePatchAddress2d(src_base, x, y, &src_addr);
+                    vx_uint8 *src_ptr = (vx_uint8 *)vxFormatImagePatchAddress2d(src_base, x, y, &src_addr);
                     vx_uint8 pixel = *src_ptr;
                     if (((vx_size)offset <= (vx_size)pixel) && ((vx_size)pixel < (vx_size)(offset+range)))
                     {
@@ -193,7 +193,7 @@ vx_status vxHistogram(vx_image src, vx_distribution dist)
                 }
                 else if (format == VX_DF_IMAGE_U16)
                 {
-                    vx_uint16 *src_ptr = vxFormatImagePatchAddress2d(src_base, x, y, &src_addr);
+                    vx_uint16 *src_ptr = (vx_uint16 *)vxFormatImagePatchAddress2d(src_base, x, y, &src_addr);
                     vx_uint16 pixel = *src_ptr;
                     if (((vx_size)offset <= (vx_size)pixel) && ((vx_size)pixel < (vx_size)(offset+range)))
                     {

@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
-#include <venum.h>
 #include <arm_neon.h>
-#include <stdio.h>
+#include <venum.h>
+
+#include <cstdio>
 
 static inline void opt_max(uint8x8_t *a, uint8x8_t *b)
 {
@@ -119,7 +120,7 @@ vx_status vxErode3x3_U8(vx_image src, vx_image dst, vx_border_t *borders)
         }
         for (x = low_x; x < high_x; x++)
         {
-            dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+            dst = (vx_uint8*)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
 
             vxReadRectangle(src_base, &src_addr, borders, VX_DF_IMAGE_U8, x, y, 1, 1, &pixels, 0);
 
@@ -140,7 +141,7 @@ vx_status vxErode3x3_U8(vx_image src, vx_image dst, vx_border_t *borders)
         for (y = 0; y < high_y; y++)
         {
             x = 0;
-            vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+            vx_uint8 *dst = (vx_uint8*)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
 
             vxReadRectangle(src_base, &src_addr, borders, VX_DF_IMAGE_U8, x, y, 1, 1, &pixels, 0);
 
@@ -152,7 +153,7 @@ vx_status vxErode3x3_U8(vx_image src, vx_image dst, vx_border_t *borders)
 
 
             x = high_x - 1;
-            dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+            dst = (vx_uint8*)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
 
             vxReadRectangle(src_base, &src_addr, borders, VX_DF_IMAGE_U8, x, y, 1, 1, &pixels, 0);
 
@@ -166,7 +167,7 @@ vx_status vxErode3x3_U8(vx_image src, vx_image dst, vx_border_t *borders)
         for (x = 1; x < high_x - 1; x++)
         {
             y = 0;
-            vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+            vx_uint8 *dst = (vx_uint8*)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
 
             vxReadRectangle(src_base, &src_addr, borders, VX_DF_IMAGE_U8, x, y, 1, 1, &pixels, 0);
 
@@ -177,7 +178,7 @@ vx_status vxErode3x3_U8(vx_image src, vx_image dst, vx_border_t *borders)
             *dst = m;
 
             y = high_y - 1;
-            dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+            dst = (vx_uint8*)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
 
             vxReadRectangle(src_base, &src_addr, borders, VX_DF_IMAGE_U8, x, y, 1, 1, &pixels, 0);
 
@@ -262,7 +263,7 @@ vx_status vxDilate3x3_U8(vx_image src, vx_image dst, vx_border_t *borders)
         }
         for (x = low_x; x < high_x; x++)
         {
-            dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+            dst = (vx_uint8*)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
 
             vxReadRectangle(src_base, &src_addr, borders, VX_DF_IMAGE_U8, x, y, 1, 1, &pixels, 0);
 
@@ -283,7 +284,7 @@ vx_status vxDilate3x3_U8(vx_image src, vx_image dst, vx_border_t *borders)
         for (y = 0; y < high_y; y++)
         {
             x = 0;
-            vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+            vx_uint8 *dst = (vx_uint8*)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
 
             vxReadRectangle(src_base, &src_addr, borders, VX_DF_IMAGE_U8, x, y, 1, 1, &pixels, 0);
 
@@ -295,7 +296,7 @@ vx_status vxDilate3x3_U8(vx_image src, vx_image dst, vx_border_t *borders)
 
 
             x = high_x - 1;
-            dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+            dst = (vx_uint8*)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
 
             vxReadRectangle(src_base, &src_addr, borders, VX_DF_IMAGE_U8, x, y, 1, 1, &pixels, 0);
 
@@ -309,7 +310,7 @@ vx_status vxDilate3x3_U8(vx_image src, vx_image dst, vx_border_t *borders)
         for (x = 1; x < high_x - 1; x++)
         {
             y = 0;
-            vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+            vx_uint8 *dst = (vx_uint8*)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
 
             vxReadRectangle(src_base, &src_addr, borders, VX_DF_IMAGE_U8, x, y, 1, 1, &pixels, 0);
 
@@ -320,7 +321,7 @@ vx_status vxDilate3x3_U8(vx_image src, vx_image dst, vx_border_t *borders)
             *dst = m;
 
             y = high_y - 1;
-            dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+            dst = (vx_uint8*)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
 
             vxReadRectangle(src_base, &src_addr, borders, VX_DF_IMAGE_U8, x, y, 1, 1, &pixels, 0);
 
