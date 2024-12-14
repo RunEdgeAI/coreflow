@@ -14,11 +14,11 @@
 * limitations under the License.
 */
 
-#include <venum.h>
 #include <arm_neon.h>
-#include <stdlib.h>
+#include <venum.h>
 
-#include <stdio.h>
+#include <cstdio>
+#include <cstdlib>
 
 static vx_status Gaussian5x5_U8_U8(vx_image src, vx_image dst, vx_border_t *bordermode)
 {
@@ -225,7 +225,7 @@ static vx_status Gaussian5x5_U8_U8(vx_image src, vx_image dst, vx_border_t *bord
 
                 value = sum / 256;
 
-                vx_uint8 *dstp = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_uint8 *dstp = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
 
                 if (value < 0) *dstp = 0;
                 else if (value > UINT8_MAX) *dstp = UINT8_MAX;
@@ -245,7 +245,7 @@ static vx_status Gaussian5x5_U8_U8(vx_image src, vx_image dst, vx_border_t *bord
 
                 value = sum / 256;
 
-                vx_uint8 *dstp = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_uint8 *dstp = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
 
                 if (value < 0) *dstp = 0;
                 else if (value > UINT8_MAX) *dstp = UINT8_MAX;
@@ -268,7 +268,7 @@ static vx_status Gaussian5x5_U8_U8(vx_image src, vx_image dst, vx_border_t *bord
 
                 value = sum / 256;
 
-                vx_uint8 *dstp = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_uint8 *dstp = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
 
                 if (value < 0) *dstp = 0;
                 else if (value > UINT8_MAX) *dstp = UINT8_MAX;
@@ -288,7 +288,7 @@ static vx_status Gaussian5x5_U8_U8(vx_image src, vx_image dst, vx_border_t *bord
 
                 value = sum / 256;
 
-                vx_uint8 *dstp = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_uint8 *dstp = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
 
                 if (value < 0) *dstp = 0;
                 else if (value > UINT8_MAX) *dstp = UINT8_MAX;
@@ -387,7 +387,7 @@ static vx_status Gaussian5x5_U8_S16(vx_image src, vx_image dst, vx_border_t *bor
             }
 
             value = sum / 256;
-            vx_int16 *dstp = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+            vx_int16 *dstp = (vx_int16*)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
             if (value < INT16_MIN) *dstp = INT16_MIN;
             else if (value > INT16_MAX) *dstp = INT16_MAX;
             else *dstp = value;

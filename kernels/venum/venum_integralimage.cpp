@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include <venum.h>
 #include <arm_neon.h>
+#include <venum.h>
 
 // nodeless version of the XXXX kernel
 vx_status vxIntegralImage(vx_image src, vx_image dst)

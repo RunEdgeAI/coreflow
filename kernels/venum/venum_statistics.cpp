@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-#include <venum.h>
 #include <arm_neon.h>
-#include <vx_debug.h>
+#include <venum.h>
+
+#include "vx_debug.h"
 
 #ifndef MIN
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
@@ -205,7 +206,7 @@ vx_status vxMeanStdDev_U1(vx_image input, vx_scalar mean, vx_scalar stddev)
     {
         for (x = 0; x < width; x++)
         {
-            vx_uint8 *pixels = vxFormatImagePatchAddress2d(base_ptr, x + shift_x_u1, y, &addrs);
+            vx_uint8 *pixels = (vx_uint8 *)vxFormatImagePatchAddress2d(base_ptr, x + shift_x_u1, y, &addrs);
             sum += (*pixels & (1 << (x + shift_x_u1) % 8)) >> (x + shift_x_u1) % 8;
         }
     }
@@ -214,7 +215,7 @@ vx_status vxMeanStdDev_U1(vx_image input, vx_scalar mean, vx_scalar stddev)
     {
         for (x = 0; x < width; x++)
         {
-            vx_uint8 *pixels = vxFormatImagePatchAddress2d(base_ptr, x + shift_x_u1, y, &addrs);
+            vx_uint8 *pixels = (vx_uint8 *)vxFormatImagePatchAddress2d(base_ptr, x + shift_x_u1, y, &addrs);
             vx_uint8  pixel  = (*pixels & (1 << (x + shift_x_u1) % 8)) >> (x + shift_x_u1) % 8;
             sum_diff_sqrs += pow((vx_float64)pixel - fmean, 2);
         }

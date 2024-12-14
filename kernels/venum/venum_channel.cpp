@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-#include <venum.h>
 #include <arm_neon.h>
-#include <stdlib.h>
+#include <venum.h>
+
+#include <cstdlib>
 
 static void procRGB(void *src_ptrs[], vx_imagepatch_addressing_t *src_addrs,
                     void *dst_ptr, vx_imagepatch_addressing_t *dst_addr)
@@ -44,11 +45,11 @@ static void procRGB(void *src_ptrs[], vx_imagepatch_addressing_t *src_addrs,
             for (x = wCnt; x < src_addrs[0].dim_x; x++)
             {
                 vx_uint8 *planes[3] = {
-                    vxFormatImagePatchAddress2d(src_ptrs[0], x, y, &src_addrs[0]),
-                    vxFormatImagePatchAddress2d(src_ptrs[1], x, y, &src_addrs[1]),
-                    vxFormatImagePatchAddress2d(src_ptrs[2], x, y, &src_addrs[2]),
+                    (vx_uint8 *)vxFormatImagePatchAddress2d(src_ptrs[0], x, y, &src_addrs[0]),
+                    (vx_uint8 *)vxFormatImagePatchAddress2d(src_ptrs[1], x, y, &src_addrs[1]),
+                    (vx_uint8 *)vxFormatImagePatchAddress2d(src_ptrs[2], x, y, &src_addrs[2]),
                 };
-                vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_ptr, x, y, dst_addr);
+                vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_ptr, x, y, dst_addr);
                 dst[0] = planes[0][0];
                 dst[1] = planes[1][0];
                 dst[2] = planes[2][0];
@@ -86,12 +87,12 @@ static void procRGBX(void *src_ptrs[], vx_imagepatch_addressing_t *src_addrs,
             for (x = wCnt; x < src_addrs[0].dim_x; x++)
             {
                 vx_uint8 *planes[4] = {
-                    vxFormatImagePatchAddress2d(src_ptrs[0], x, y, &src_addrs[0]),
-                    vxFormatImagePatchAddress2d(src_ptrs[1], x, y, &src_addrs[1]),
-                    vxFormatImagePatchAddress2d(src_ptrs[2], x, y, &src_addrs[2]),
-                    vxFormatImagePatchAddress2d(src_ptrs[3], x, y, &src_addrs[3]),
+                    (vx_uint8 *)vxFormatImagePatchAddress2d(src_ptrs[0], x, y, &src_addrs[0]),
+                    (vx_uint8 *)vxFormatImagePatchAddress2d(src_ptrs[1], x, y, &src_addrs[1]),
+                    (vx_uint8 *)vxFormatImagePatchAddress2d(src_ptrs[2], x, y, &src_addrs[2]),
+                    (vx_uint8 *)vxFormatImagePatchAddress2d(src_ptrs[3], x, y, &src_addrs[3]),
                 };
-                vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_ptr, x, y, dst_addr);
+                vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_ptr, x, y, dst_addr);
                 dst[0] = planes[0][0];
                 dst[1] = planes[1][0];
                 dst[2] = planes[2][0];
@@ -128,8 +129,8 @@ static void procYUV4orIYUV(void *src_ptr, vx_imagepatch_addressing_t *src_addr,
                 {
                     vx_uint32 x1 = x * src_addr->step_x / dst_addr->step_x;
                     vx_uint32 y1 = y * src_addr->step_y / dst_addr->step_y;
-                    vx_uint8 *src = vxFormatImagePatchAddress2d(src_ptr, x1, y1, src_addr);
-                    vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_ptr, x, y, dst_addr);
+                    vx_uint8 *src = (vx_uint8 *)vxFormatImagePatchAddress2d(src_ptr, x1, y1, src_addr);
+                    vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_ptr, x, y, dst_addr);
                     *dst = *src;
                 }
             }
@@ -152,8 +153,8 @@ static void procYUV4orIYUV(void *src_ptr, vx_imagepatch_addressing_t *src_addr,
                 {
                     vx_uint32 x1 = x * src_addr->step_x / dst_addr->step_x;
                     vx_uint32 y1 = y * src_addr->step_y / dst_addr->step_y;
-                    vx_uint8 *src = vxFormatImagePatchAddress2d(src_ptr, x1, y1, src_addr);
-                    vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_ptr, x, y, dst_addr);
+                    vx_uint8 *src = (vx_uint8 *)vxFormatImagePatchAddress2d(src_ptr, x1, y1, src_addr);
+                    vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_ptr, x, y, dst_addr);
                     *dst = *src;
                 }
             }
@@ -187,7 +188,7 @@ vx_status vxChannelCombine(vx_image inputs[4], vx_image output)
         }
 
         // get the planes
-        vx_map_id *map_id_p = calloc(numplanes, sizeof(vx_map_id));
+        vx_map_id *map_id_p = (vx_map_id*)calloc(numplanes, sizeof(vx_map_id));
         vx_map_id map_id_dst = 0;
         for (p = 0; p < numplanes; p++)
         {
@@ -266,8 +267,8 @@ vx_status vxChannelCombine(vx_image inputs[4], vx_image output)
                 }
                 for (x = wCnt; x < dst_addr.dim_x; x += dst_addr.step_x)
                 {
-                    vx_uint8 *src = vxFormatImagePatchAddress2d(base_src_ptr, x, y, &src_addr);
-                    vx_uint8 *dst = vxFormatImagePatchAddress2d(base_dst_ptr, x, y, &dst_addr);
+                    vx_uint8 *src = (vx_uint8 *)vxFormatImagePatchAddress2d(base_src_ptr, x, y, &src_addr);
+                    vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(base_dst_ptr, x, y, &dst_addr);
                     *dst = *src;
                 }
             }
@@ -310,9 +311,9 @@ vx_status vxChannelCombine(vx_image inputs[4], vx_image output)
                 {
                     vx_uint32 x1 = x * src0_addr.step_x / dst_addr.step_x;
                     vx_uint32 y1 = y * src0_addr.step_y / dst_addr.step_y;
-                    vx_uint8 *src0 = vxFormatImagePatchAddress2d(base_src0_ptr, x1, y1, &src0_addr);
-                    vx_uint8 *src1 = vxFormatImagePatchAddress2d(base_src1_ptr, x1, y1, &src1_addr);
-                    vx_uint8 *dst = vxFormatImagePatchAddress2d(base_dst_ptr, x, y, &dst_addr);
+                    vx_uint8 *src0 = (vx_uint8 *)vxFormatImagePatchAddress2d(base_src0_ptr, x1, y1, &src0_addr);
+                    vx_uint8 *src1 = (vx_uint8 *)vxFormatImagePatchAddress2d(base_src1_ptr, x1, y1, &src1_addr);
+                    vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(base_dst_ptr, x, y, &dst_addr);
                     dst[1-vidx] = *src0;
                     dst[vidx]   = *src1;
                 }
@@ -371,12 +372,12 @@ vx_status vxChannelCombine(vx_image inputs[4], vx_image output)
                 vx_uint32 y1 = y * src0_addr.step_y / dst_addr.step_y;
                 vx_uint32 x2 = x * src1_addr.step_x / (dst_addr.step_x * 2);
                 vx_uint32 y2 = y * src1_addr.step_y / dst_addr.step_y;
-                vx_uint8 *srcy0 = vxFormatImagePatchAddress2d(base_src0_ptr, x1, y1, &src0_addr);
-                vx_uint8 *srcy1 = vxFormatImagePatchAddress2d(base_src0_ptr, x1 + src0_addr.step_x, y1, &src0_addr);
-                vx_uint8 *srcu = vxFormatImagePatchAddress2d(base_src1_ptr, x2, y2, &src1_addr);
-                vx_uint8 *srcv = vxFormatImagePatchAddress2d(base_src2_ptr, x2, y2, &src2_addr);
-                vx_uint8 *dst0 = vxFormatImagePatchAddress2d(base_dst_ptr, x, y, &dst_addr);
-                vx_uint8 *dst1 = vxFormatImagePatchAddress2d(base_dst_ptr, x + dst_addr.step_x, y, &dst_addr);
+                vx_uint8 *srcy0 = (vx_uint8 *)vxFormatImagePatchAddress2d(base_src0_ptr, x1, y1, &src0_addr);
+                vx_uint8 *srcy1 = (vx_uint8 *)vxFormatImagePatchAddress2d(base_src0_ptr, x1 + src0_addr.step_x, y1, &src0_addr);
+                vx_uint8 *srcu = (vx_uint8 *)vxFormatImagePatchAddress2d(base_src1_ptr, x2, y2, &src1_addr);
+                vx_uint8 *srcv = (vx_uint8 *)vxFormatImagePatchAddress2d(base_src2_ptr, x2, y2, &src2_addr);
+                vx_uint8 *dst0 = (vx_uint8 *)vxFormatImagePatchAddress2d(base_dst_ptr, x, y, &dst_addr);
+                vx_uint8 *dst1 = (vx_uint8 *)vxFormatImagePatchAddress2d(base_dst_ptr, x + dst_addr.step_x, y, &dst_addr);
                 dst0[yidx] = *srcy0;
                 dst1[yidx] = *srcy1;
                 dst0[1-yidx] = *srcu;
@@ -460,16 +461,16 @@ static vx_status vxCopyPlaneToImage(vx_image src,
                     src8x16 = vsetq_lane_u8(srcp13[src_component], src8x16, 13);
                     src8x16 = vsetq_lane_u8(srcp14[src_component], src8x16, 14);
                     src8x16 = vsetq_lane_u8(srcp15[src_component], src8x16, 15);
-                    vx_uint8 *dstp = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_uint8 *dstp = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     vst1q_u8 (dstp, src8x16);
                 }
                 for (; x < dst_addr.dim_x; x++)
                 {
-                    vx_uint8 *srcp = vxFormatImagePatchAddress2d(src_base,
+                    vx_uint8 *srcp = (vx_uint8 *)vxFormatImagePatchAddress2d(src_base,
                         x * VX_SCALE_UNITY / src_addr.scale_x * x_subsampling,
                         y * VX_SCALE_UNITY / src_addr.scale_y,
                         &src_addr);
-                    vx_uint8 *dstp = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_uint8 *dstp = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *dstp = srcp[src_component];
                 }
             }

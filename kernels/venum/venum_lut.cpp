@@ -105,8 +105,8 @@ vx_status vxTableLookup(vx_image src, vx_lut lut, vx_image dst)
             }
             for (x = w16; x < src_addr.dim_x; x++)
             {
-                vx_uint8 *src_ptr = vxFormatImagePatchAddress2d(src_base, x, y, &src_addr);
-                vx_uint8 *dst_ptr = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_uint8 *src_ptr = (vx_uint8 *)vxFormatImagePatchAddress2d(src_base, x, y, &src_addr);
+                vx_uint8 *dst_ptr = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                 vx_uint8 *lut_tmp = (vx_uint8 *)lut_ptr;
                 vx_int32 index = (vx_int32)offset + (vx_int32)(*src_ptr);
                 if (index >= 0 && index < (vx_int32)count)
@@ -158,8 +158,8 @@ vx_status vxTableLookup(vx_image src, vx_lut lut, vx_image dst)
             }
             for (x = w8; x < src_addr.dim_x; x++)
             {
-                vx_int16 *src_ptr = vxFormatImagePatchAddress2d(src_base, x, y, &src_addr);
-                vx_int16 *dst_ptr = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_int16 *src_ptr = (vx_int16 *)vxFormatImagePatchAddress2d(src_base, x, y, &src_addr);
+                vx_int16 *dst_ptr = (vx_int16 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                 vx_int32 index = (vx_int32)offset + (vx_int32)(*src_ptr);
                 if (index >= 0 && index < (vx_int32)count)
                 {

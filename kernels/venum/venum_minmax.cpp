@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#include <venum.h>
 #include <arm_neon.h>
+#include <venum.h>
 
 // nodeless version of the Min kernel
 vx_status vxMin(vx_image in0, vx_image in1, vx_image output)

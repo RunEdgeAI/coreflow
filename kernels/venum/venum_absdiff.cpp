@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include <venum.h>
 #include <arm_neon.h>
+#include <venum.h>
 
 // nodeless version of the AbsDiff kernel
 vx_status vxAbsDiff(vx_image in1, vx_image in2, vx_image output)

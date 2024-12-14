@@ -14,9 +14,10 @@
 * limitations under the License.
 */
 
-#include <venum.h>
 #include <arm_neon.h>
-#include <vx_debug.h>
+#include <venum.h>
+
+#include "vx_debug.h"
 
 // nodeless version of the Threshold kernel
 vx_status vxThreshold_U8(vx_image src_image, vx_threshold threshold, vx_image dst_image)

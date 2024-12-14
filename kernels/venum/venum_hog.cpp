@@ -26,10 +26,12 @@
 * MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
 */
 
-#include <venum.h>
 #include <arm_neon.h>
-#include <stdlib.h>
-#include <string.h>
+#include <venum.h>
+
+#include <cstdlib>
+#include <cstring>
+
 #include "tensor_utils.h"
 
 #ifndef min
@@ -167,14 +169,14 @@ vx_status vxHogCells(vx_image img, vx_scalar cell_width, vx_scalar cell_height, 
         for (; i < width; i++) {
             vx_int32 x1 = i - 1 < 0 ? 0 : i - 1;
             vx_int32 x2 = i + 1 >= width ? width - 1 : i + 1;
-            vx_uint8 *gx1 = vxFormatImagePatchAddress2d(src_base, x1, j, &src_addr);
-            vx_uint8 *gx2 = vxFormatImagePatchAddress2d(src_base, x2, j, &src_addr);
+            vx_uint8 *gx1 = (vx_uint8 *)vxFormatImagePatchAddress2d(src_base, x1, j, &src_addr);
+            vx_uint8 *gx2 = (vx_uint8 *)vxFormatImagePatchAddress2d(src_base, x2, j, &src_addr);
             gx = *gx2 - *gx1;
 
             int y1 = j - 1 < 0 ? 0 : j - 1;
             int y2 = j + 1 >= height ? height - 1 : j + 1;
-            vx_uint8 *gy1 = vxFormatImagePatchAddress2d(src_base, i, y1, &src_addr);
-            vx_uint8 *gy2 = vxFormatImagePatchAddress2d(src_base, i, y2, &src_addr);
+            vx_uint8 *gy1 = (vx_uint8 *)vxFormatImagePatchAddress2d(src_base, i, y1, &src_addr);
+            vx_uint8 *gy2 = (vx_uint8 *)vxFormatImagePatchAddress2d(src_base, i, y2, &src_addr);
             gy = *gy2 - *gy1;
 
             //calculating mag and orientation

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include <venum.h>
 #include <arm_neon.h>
+#include <venum.h>
 
 // nodeless version of the Magnitude kernel
 vx_status vxMagnitude(vx_image grad_x, vx_image grad_y, vx_image output)
@@ -178,11 +178,11 @@ vx_status vxMagnitude(vx_image grad_x, vx_image grad_y, vx_image output)
         }
         for (; x < src_addr_x.dim_x; x++)
         {
-            vx_int16 *in_x = vxFormatImagePatchAddress2d(src_base_x, x, y, &src_addr_x);
-            vx_int16 *in_y = vxFormatImagePatchAddress2d(src_base_y, x, y, &src_addr_y);
+            vx_int16 *in_x = (vx_int16 *)vxFormatImagePatchAddress2d(src_base_x, x, y, &src_addr_x);
+            vx_int16 *in_y = (vx_int16 *)vxFormatImagePatchAddress2d(src_base_y, x, y, &src_addr_y);
             if (format == VX_DF_IMAGE_U8)
             {
-                vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                 vx_int32 grad[2] = {in_x[0]*in_x[0], in_y[0]*in_y[0]};
                 vx_float64 sum = grad[0] + grad[1];
                 value = ((vx_int32)sqrt(sum))/4;
@@ -190,7 +190,7 @@ vx_status vxMagnitude(vx_image grad_x, vx_image grad_y, vx_image output)
             }
             else if (format == VX_DF_IMAGE_S16)
             {
-                vx_uint16 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_uint16 *dst = (vx_uint16 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                 vx_float64 grad[2] = {(vx_float64)in_x[0]*in_x[0], (vx_float64)in_y[0]*in_y[0]};
                 vx_float64 sum = grad[0] + grad[1];
                 value = (vx_int32)(sqrt(sum) + 0.5);

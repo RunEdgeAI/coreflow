@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
+#include <arm_neon.h>
 #include <venum.h>
 
 #include <VX/vx_types.h>
 #include <VX/vx_lib_extras.h>
-#include <arm_neon.h>
 
 // nodeless version of the ConvertDepth kernel
 vx_status vxConvertDepthU1(vx_image input, vx_image output, vx_scalar spol, vx_scalar sshf)

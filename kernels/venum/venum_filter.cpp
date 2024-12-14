@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-#include <venum.h>
-#include <stdlib.h>
 #include <arm_neon.h>
-#include <string.h>
-#include <stdio.h>
+#include <venum.h>
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 static vx_uint8 vx_clamp_u8_i32(vx_int32 value)
 {
@@ -292,7 +293,7 @@ vx_status vxMedian3x3_U8(vx_image src, vx_image dst, vx_border_t *borders)
         }
         for (x = low_x; x < high_x; x++)
         {
-            vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+            vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
 
             vxReadRectangle(src_base, &src_addr, borders, VX_DF_IMAGE_U8, x, y, 1, 1, values, 0);
 
@@ -309,7 +310,7 @@ vx_status vxMedian3x3_U8(vx_image src, vx_image dst, vx_border_t *borders)
         for (y = 0; y < high_y; y++)
         {
             x = 0;
-            vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+            vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
 
             vxReadRectangle(src_base, &src_addr, borders, VX_DF_IMAGE_U8, x, y, 1, 1, values, 0);
 
@@ -318,7 +319,7 @@ vx_status vxMedian3x3_U8(vx_image src, vx_image dst, vx_border_t *borders)
 
 
             x = high_x - 1;
-            dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+            dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
 
             vxReadRectangle(src_base, &src_addr, borders, VX_DF_IMAGE_U8, x, y, 1, 1, values, 0);
 
@@ -329,7 +330,7 @@ vx_status vxMedian3x3_U8(vx_image src, vx_image dst, vx_border_t *borders)
         for (x = 1; x < high_x - 1; x++)
         {
             y = 0;
-            vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+            vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
 
             vxReadRectangle(src_base, &src_addr, borders, VX_DF_IMAGE_U8, x, y, 1, 1, values, 0);
 
@@ -337,7 +338,7 @@ vx_status vxMedian3x3_U8(vx_image src, vx_image dst, vx_border_t *borders)
             *dst = values[4]; /* pick the middle value */
 
             y = high_y - 1;
-            dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+            dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
 
             vxReadRectangle(src_base, &src_addr, borders, VX_DF_IMAGE_U8, x, y, 1, 1, values, 0);
 
@@ -488,12 +489,12 @@ vx_status vxBox3x3(vx_image src, vx_image dst, vx_border_t *bordermode)
 
             if (dst_format == VX_DF_IMAGE_U8)
             {
-                vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                 *dst = vx_clamp_u8_i32(value);
             }
             else
             {
-                vx_int16 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_int16 *dst = (vx_int16 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                 *dst = vx_clamp_s16_i32(value);
             }
         }
@@ -512,12 +513,12 @@ vx_status vxBox3x3(vx_image src, vx_image dst, vx_border_t *bordermode)
 
             if (dst_format == VX_DF_IMAGE_U8)
             {
-                vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                 *dst = vx_clamp_u8_i32(value);
             }
             else
             {
-                vx_int16 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_int16 *dst = (vx_int16 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                 *dst = vx_clamp_s16_i32(value);
             }
 
@@ -526,12 +527,12 @@ vx_status vxBox3x3(vx_image src, vx_image dst, vx_border_t *bordermode)
 
             if (dst_format == VX_DF_IMAGE_U8)
             {
-                vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                 *dst = vx_clamp_u8_i32(value);
             }
             else
             {
-                vx_int16 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_int16 *dst = (vx_int16 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                 *dst = vx_clamp_s16_i32(value);
             }
         }
@@ -543,12 +544,12 @@ vx_status vxBox3x3(vx_image src, vx_image dst, vx_border_t *bordermode)
 
             if (dst_format == VX_DF_IMAGE_U8)
             {
-                vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                 *dst = vx_clamp_u8_i32(value);
             }
             else
             {
-                vx_int16 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_int16 *dst = (vx_int16 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                 *dst = vx_clamp_s16_i32(value);
             }
 
@@ -557,12 +558,12 @@ vx_status vxBox3x3(vx_image src, vx_image dst, vx_border_t *bordermode)
 
             if (dst_format == VX_DF_IMAGE_U8)
             {
-                vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                 *dst = vx_clamp_u8_i32(value);
             }
             else
             {
-                vx_int16 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_int16 *dst = (vx_int16 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                 *dst = vx_clamp_s16_i32(value);
             }
         }

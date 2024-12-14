@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include <venum.h>
 #include <arm_neon.h>
+#include <venum.h>
 
 static void addu8u8u8(void *src1, vx_imagepatch_addressing_t *src1_addr,
                       void *src2, vx_imagepatch_addressing_t *src2_addr,

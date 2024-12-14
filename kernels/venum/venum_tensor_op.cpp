@@ -1,12 +1,14 @@
+#include <arm_neon.h>
+#include <cassert>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <venum.h>
+
+#include <VX/vx_types.h>
+
 #include "conversion_utils.h"
 #include "tensor_utils.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <arm_neon.h>
-#include <VX/vx_types.h>
-#include <assert.h>
-
 
 // The following example supports both an arbitrary dim num and a somewhat,
 // hopefully faster, hardcoded amount of loops to MAX_NUM_OF_DIMENSIONS.

@@ -40,3 +40,14 @@ platform(
         "@platforms//os:none",
     ],
 )
+
+# Define an OSX ARM platform
+platform(
+    name = "osx_arm",
+    constraint_values = [
+        "@platforms//cpu:aarch64",
+        "@platforms//os:osx",
+        "@build_bazel_apple_support//constraints:apple",
+        "@build_bazel_apple_support//constraints:device",
+    ],
+)

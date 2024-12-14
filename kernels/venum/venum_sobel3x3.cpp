@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include <venum.h>
 #include <arm_neon.h>
+#include <venum.h>
 
 static vx_uint8 vx_clamp_u8_i32(vx_int32 value)
 {
@@ -196,12 +196,12 @@ static vx_status vxConvolution3x3(vx_image src, vx_image dst, const vx_border_t 
 
                 if (dst_format == VX_DF_IMAGE_U8)
                 {
-                    vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *dst = vx_clamp_u8_i32(value);
                 }
                 else
                 {
-                    vx_int16 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_int16 *dst = (vx_int16 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *dst = vx_clamp_s16_i32(value);
                 }
             }
@@ -211,12 +211,12 @@ static vx_status vxConvolution3x3(vx_image src, vx_image dst, const vx_border_t 
 
                 if (dst_format == VX_DF_IMAGE_U8)
                 {
-                    vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *dst = vx_clamp_u8_i32(value);
                 }
                 else
                 {
-                    vx_int16 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_int16 *dst = (vx_int16 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *dst = vx_clamp_s16_i32(value);
                 }
             }
@@ -238,12 +238,12 @@ static vx_status vxConvolution3x3(vx_image src, vx_image dst, const vx_border_t 
 
                 if (dst_format == VX_DF_IMAGE_U8)
                 {
-                    vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *dst = vx_clamp_u8_i32(value);
                 }
                 else
                 {
-                    vx_int16 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_int16 *dst = (vx_int16 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *dst = vx_clamp_s16_i32(value);
                 }
 
@@ -252,12 +252,12 @@ static vx_status vxConvolution3x3(vx_image src, vx_image dst, const vx_border_t 
 
                 if (dst_format == VX_DF_IMAGE_U8)
                 {
-                    vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *dst = vx_clamp_u8_i32(value);
                 }
                 else
                 {
-                    vx_int16 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_int16 *dst = (vx_int16 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *dst = vx_clamp_s16_i32(value);
                 }
             }
@@ -269,12 +269,12 @@ static vx_status vxConvolution3x3(vx_image src, vx_image dst, const vx_border_t 
 
                 if (dst_format == VX_DF_IMAGE_U8)
                 {
-                    vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *dst = vx_clamp_u8_i32(value);
                 }
                 else
                 {
-                    vx_int16 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_int16 *dst = (vx_int16 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *dst = vx_clamp_s16_i32(value);
                 }
 
@@ -283,12 +283,12 @@ static vx_status vxConvolution3x3(vx_image src, vx_image dst, const vx_border_t 
 
                 if (dst_format == VX_DF_IMAGE_U8)
                 {
-                    vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *dst = vx_clamp_u8_i32(value);
                 }
                 else
                 {
-                    vx_int16 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_int16 *dst = (vx_int16 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *dst = vx_clamp_s16_i32(value);
                 }
             }
@@ -303,12 +303,12 @@ static vx_status vxConvolution3x3(vx_image src, vx_image dst, const vx_border_t 
 
                 if (dst_format == VX_DF_IMAGE_U8)
                 {
-                    vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *dst = vx_clamp_u8_i32(value);
                 }
                 else
                 {
-                    vx_int16 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_int16 *dst = (vx_int16 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *dst = vx_clamp_s16_i32(value);
                 }
 
@@ -317,12 +317,12 @@ static vx_status vxConvolution3x3(vx_image src, vx_image dst, const vx_border_t 
 
                 if (dst_format == VX_DF_IMAGE_U8)
                 {
-                    vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *dst = vx_clamp_u8_i32(value);
                 }
                 else
                 {
-                    vx_int16 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_int16 *dst = (vx_int16 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *dst = vx_clamp_s16_i32(value);
                 }
             }
@@ -334,12 +334,12 @@ static vx_status vxConvolution3x3(vx_image src, vx_image dst, const vx_border_t 
 
                 if (dst_format == VX_DF_IMAGE_U8)
                 {
-                    vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *dst = vx_clamp_u8_i32(value);
                 }
                 else
                 {
-                    vx_int16 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_int16 *dst = (vx_int16 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *dst = vx_clamp_s16_i32(value);
                 }
 
@@ -348,12 +348,12 @@ static vx_status vxConvolution3x3(vx_image src, vx_image dst, const vx_border_t 
 
                 if (dst_format == VX_DF_IMAGE_U8)
                 {
-                    vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *dst = vx_clamp_u8_i32(value);
                 }
                 else
                 {
-                    vx_int16 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                    vx_int16 *dst = (vx_int16 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                     *dst = vx_clamp_s16_i32(value);
                 }
             }

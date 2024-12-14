@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include <venum.h>
 #include <arm_neon.h>
+#include <venum.h>
 
 typedef vx_uint8 (bitwiseOp)(vx_uint8, vx_uint8);
 
@@ -56,10 +56,10 @@ static vx_status vxBinaryU1Op(vx_image in1, vx_image in2, vx_image output, bitwi
         {
             vx_uint32 xShftd = x + rect.start_x % 8;     // U1 valid region start bit offset
             vx_uint8 *src[2] = {
-                vxFormatImagePatchAddress2d(src_base[0], xShftd, y, &src_addr[0]),
-                vxFormatImagePatchAddress2d(src_base[1], xShftd, y, &src_addr[1]),
+                (vx_uint8 *)vxFormatImagePatchAddress2d(src_base[0], xShftd, y, &src_addr[0]),
+                (vx_uint8 *)vxFormatImagePatchAddress2d(src_base[1], xShftd, y, &src_addr[1]),
             };
-            vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, xShftd, y, &dst_addr);
+            vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, xShftd, y, &dst_addr);
 
             vx_uint8 mask  = 1 << (xShftd % 8);
             vx_uint8 pixel = op(*src[0], *src[1]) & mask;
@@ -308,8 +308,8 @@ vx_status vxNotU8(vx_image input, vx_image output)
         }
         for (; x < width; x++)
         {
-            vx_uint8 *src = vxFormatImagePatchAddress2d(src_base, x, y, &src_addr);
-            vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+            vx_uint8 *src = (vx_uint8 *)vxFormatImagePatchAddress2d(src_base, x, y, &src_addr);
+            vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
 
             *dst = ~*src;
         }

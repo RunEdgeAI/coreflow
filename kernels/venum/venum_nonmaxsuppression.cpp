@@ -14,13 +14,14 @@
  * limitations under the License.
 */
 
-#include <stdlib.h>
-#include <venum.h>
 #include <arm_neon.h>
-#include <stdio.h>
-#include <assert.h>
-#include <string.h>
-#include <math.h>
+#include <venum.h>
+
+#include <cassert>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cmath>
 
 static void nonMaxSuppression_U8(vx_uint8* src,
     vx_uint32 srcWidth,

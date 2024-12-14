@@ -48,7 +48,7 @@ static vx_bool read_pixel(void* base, vx_imagepatch_addressing_t* addr,
     bx = x < 0 ? 0 : x >= addr->dim_x ? addr->dim_x - 1 : (vx_uint32)x;
     by = y < 0 ? 0 : y >= addr->dim_y ? addr->dim_y - 1 : (vx_uint32)y;
 
-    bpixel = vxFormatImagePatchAddress2d(base, bx, by, addr);
+    bpixel = (vx_uint8*)vxFormatImagePatchAddress2d(base, bx, by, addr);
     *pixel = *bpixel;
 
     return vx_true_e;
@@ -176,7 +176,7 @@ static void remapNearest(void *src, vx_imagepatch_addressing_t *src_addr, vx_rem
             vx_float32 src_x = 0.0f;
             vx_float32 src_y = 0.0f;
 
-            vx_uint8 *tmp_dst = vxFormatImagePatchAddress2d(dst, x, y, dst_addr);
+            vx_uint8 *tmp_dst = (vx_uint8*)vxFormatImagePatchAddress2d(dst, x, y, dst_addr);
 
             (void)vxGetRemapPoint(table, x, y, &src_x, &src_y);
 
@@ -532,7 +532,7 @@ static void remapBilinear(void *src, vx_imagepatch_addressing_t *src_addr, vx_re
             vx_float32 src_x = 0.0f;
             vx_float32 src_y = 0.0f;
 
-            vx_uint8 *tmp_dst = vxFormatImagePatchAddress2d(dst, x, y, dst_addr);
+            vx_uint8 *tmp_dst = (vx_uint8*)vxFormatImagePatchAddress2d(dst, x, y, dst_addr);
 
             (void)vxGetRemapPoint(table, x, y, &src_x, &src_y);
 

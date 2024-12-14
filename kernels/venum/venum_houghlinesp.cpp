@@ -14,10 +14,11 @@
  * limitations under the License.
 */
 
-#include <venum.h>
 #include <arm_neon.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <venum.h>
+
+#include <cstdio>
+#include <cstdlib>
 
 #define VX_PI   3.1415926535897932384626433832795
 static vx_uint64 state = 0xffffffff;
@@ -120,13 +121,13 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
     vx_size accum_stride = 0;
     void *accum_ptr = nullptr;
     vx_map_id accum_map_id;
-    vx_int32* num_in_p = calloc(numrho * numangle, sizeof(vx_int32));
+    vx_int32* num_in_p = (vx_int32*)calloc(numrho * numangle, sizeof(vx_int32));
     vxAddArrayItems(accum, numrho * numangle, num_in_p, sizeof(vx_int32));
     free(num_in_p);
 
     vxMapArrayRange(accum, 0, numrho * numangle, &accum_map_id, &accum_stride, &accum_ptr, VX_READ_AND_WRITE, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
     vx_int32 *accum_p = (vx_int32 *)accum_ptr;
-    vx_float32* cosin_p = calloc(2*numangle, sizeof(vx_float32));
+    vx_float32* cosin_p = (vx_float32*)calloc(2*numangle, sizeof(vx_float32));
     for (int n = 0; n < numangle; n++)
     {
         vx_float32 cos_v = (vx_float32)(cos((vx_float64)n * (param_hough_lines->theta)) * irho);
@@ -153,7 +154,7 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
         const vx_uint8* data = (vx_uint8 *)src_base + pt.y*src_addr.stride_y;
         vx_coordinates2d_t coordinates2d_arr[1024] = {0};
         vx_uint32 tmpindex = 0;
-        vx_uint8* mdata_in_p = calloc(width, sizeof(vx_uint8));
+        vx_uint8* mdata_in_p = (vx_uint8*)calloc(width, sizeof(vx_uint8));
         pt.x = 0;
         for (; pt.x < roiw16;)
         {
@@ -320,7 +321,7 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
     vx_uint8* mdata0 = mask_p;
 
     // stage 2. process all the points in random order
-    vx_line2d_t *linesp = calloc(nzcount, sizeof(vx_line2d_t));
+    vx_line2d_t *linesp = (vx_line2d_t *)calloc(nzcount, sizeof(vx_line2d_t));
 
     vx_int32 roiw3 = numangle >= 3 ? numangle - 3 : 0;
     float32x4_t r_f32x4;

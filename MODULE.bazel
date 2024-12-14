@@ -18,14 +18,8 @@ bazel_dep(name = "platforms", version = "0.0.10")
 # Set up rules_python
 bazel_dep(name = "rules_python", version = "0.37.2")
 
-# Set up arm toolchain
-bazel_dep(name = "toolchains_arm_gnu", version = "1.0.3")
-
-arm_toolchain = use_extension("@toolchains_arm_gnu//:extensions.bzl", "arm_toolchain")
-
-arm_toolchain.arm_none_eabi()
-use_repo(arm_toolchain, "arm_none_eabi")
-register_toolchains("@arm_none_eabi//toolchain:all")
+# Set up apple arm toolchain
+bazel_dep(name = "apple_support", version = "1.17.1", repo_name = "build_bazel_apple_support")
 
 # Load third-party modules
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")

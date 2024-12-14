@@ -13,14 +13,15 @@
  * limitations under the License.
  */
 
-#include <venum.h>
 #include <arm_neon.h>
-#include <vx_debug.h>
+#include <venum.h>
+
+#include <cstdlib>
 
 #include <VX/vx_types.h>
 #include <VX/vx_lib_extras.h>
 
-#include <stdlib.h>
+#include "vx_debug.h"
 
 #define DBL_EPSILON     2.2204460492503131e-016 /* smallest such that 1.0+DBL_EPSILON != 1.0 */
 

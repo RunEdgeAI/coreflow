@@ -15,9 +15,10 @@
  */
 
 #include <arm_neon.h>
-#include <stdlib.h>
 #include <venum.h>
-#include <stdio.h>
+
+#include <cstdio>
+#include <cstdlib>
 
 vx_uint8 vx_lbp_s(vx_int16 x)
 {
@@ -55,7 +56,7 @@ vx_status vxLBPStandard(vx_image src, vx_int8 ksize, vx_image dst)
     vx_rectangle_t rect;
     vx_uint32 y = 0, x = 0;
     vx_status status = VX_SUCCESS;
-    void *src_base = nullptr, *dst_base = nullptr;
+    void *src_base = NULL, *dst_base = NULL;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_uint8 gc, g[8], sum;
 
@@ -165,7 +166,7 @@ vx_status vxLBPStandard(vx_image src, vx_int8 ksize, vx_image dst)
                     sum += vx_lbp_s(g[p] - gc) * (1 << p);
                 }
 
-                vx_uint8 *dst_ptr = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_uint8 *dst_ptr = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                 *dst_ptr = sum;
             }
          }
@@ -265,7 +266,7 @@ vx_status vxLBPStandard(vx_image src, vx_int8 ksize, vx_image dst)
                     sum += vx_lbp_s(g[p] - gc) * (1 << p);
                 }
 
-                vx_uint8 *dst_ptr = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_uint8 *dst_ptr = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                 *dst_ptr = sum;
             }
          }
@@ -280,7 +281,7 @@ vx_status vxLBPModified(vx_image src, vx_image dst)
     vx_rectangle_t rect;
     vx_uint32 y = 0, x = 0;
     vx_status status = VX_SUCCESS;
-    void *src_base = nullptr, *dst_base = nullptr;
+    void *src_base = NULL, *dst_base = NULL;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_uint8 avg, g[8], sum;
     uint8x16_t vPrv[3], vCur[3], vNxt[3], vG[8];
@@ -382,7 +383,7 @@ vx_status vxLBPModified(vx_image src, vx_image dst)
                 sum += ((g[p] > avg) * (1 << p));
             }
 
-            vx_uint8 *dst_ptr = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+            vx_uint8 *dst_ptr = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
             *dst_ptr = sum;
         }
      }
@@ -396,7 +397,7 @@ vx_status vxLBPUniform(vx_image src, vx_int8 ksize, vx_image dst)
     vx_rectangle_t rect;
     vx_uint32 y = 0, x = 0;
     vx_status status = VX_SUCCESS;
-    void *src_base = nullptr, *dst_base = nullptr;
+    void *src_base = NULL, *dst_base = NULL;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_uint8 gc, g[8], sum;
     vx_uint8 szCoeff[8] = { 1 << 0, 1 << 1, 1 << 2, 1 << 3,
@@ -511,7 +512,7 @@ vx_status vxLBPUniform(vx_image src, vx_int8 ksize, vx_image dst)
                     sum = 9;
                 }
 
-                vx_uint8 *dst_ptr = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_uint8 *dst_ptr = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                 *dst_ptr = sum;
             }
          }
@@ -611,7 +612,7 @@ vx_status vxLBPUniform(vx_image src, vx_int8 ksize, vx_image dst)
                     sum = 9;
                 }
 
-                vx_uint8 *dst_ptr = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                vx_uint8 *dst_ptr = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                 *dst_ptr = sum;
             }
          }

@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
-#include <venum.h>
 #include <arm_neon.h>
-#include <stdio.h>
+#include <venum.h>
+
+#include <cstdio>
 
 // helpers
 
@@ -320,7 +321,7 @@ static vx_status vxNearestScaling(vx_image src_image, vx_image dst_image, const 
             else
             {
                 vx_int16 v = 0;
-                vx_int16* dst = vxFormatImagePatchAddress2d(dst_base, x2, y2, &dst_addr);
+                vx_int16* dst = (vx_int16*)vxFormatImagePatchAddress2d(dst_base, x2, y2, &dst_addr);
                 vx_float32 x_src = ((vx_float32)x2 + 0.5f)*wr - 0.5f;
                 vx_float32 y_src = ((vx_float32)y2 + 0.5f)*hr - 0.5f;
                 vx_float32 x_min = floorf(x_src);
@@ -807,7 +808,7 @@ static vx_status vxBilinearScaling(vx_image src_image, vx_image dst_image, const
         for (; x2 < (vx_int32)w2; x2++)
         {
             vx_uint8 tl = 0, tr = 0, bl = 0, br = 0;
-            vx_uint8 *dst = vxFormatImagePatchAddress2d(dst_base, x2, y2, &dst_addr);
+            vx_uint8 *dst = (vx_uint8 *)vxFormatImagePatchAddress2d(dst_base, x2, y2, &dst_addr);
             vx_float32 x_src = ((vx_float32)x2+0.5f)*wr - 0.5f;
             vx_float32 y_src = ((vx_float32)y2+0.5f)*hr - 0.5f;
             vx_float32 x_min = floorf(x_src);
