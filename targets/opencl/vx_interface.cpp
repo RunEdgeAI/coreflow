@@ -190,7 +190,7 @@ vx_status vxTargetInit(vx_target target)
     #endif
     #endif
                         default:
-                            sprintf(order, "%x", formats[f].image_channel_order);
+                            snprintf(order, sizeof(cl_channel_order), "%x", formats[f].image_channel_order);
                             break;
                     }
                     switch(formats[f].image_channel_data_type) {
@@ -213,7 +213,7 @@ vx_status vxTargetInit(vx_target target)
                         CASE_STRINGERIZE2(CL_UNORM_INT24, datat);
     #endif
                         default:
-                            sprintf(order, "%x", formats[f].image_channel_data_type);
+                            snprintf(order, sizeof(cl_channel_type), "%x", formats[f].image_channel_data_type);
                             break;
                     }
                     VX_PRINT(VX_ZONE_INFO, "%s : %s\n", order, datat);
@@ -271,7 +271,7 @@ vx_status vxTargetInit(vx_target target)
                                 sizeof(log),
                                 log,
                                 &logSize);
-                            printf("%s\n", log);
+                            // printf("%s\n", log);
                             VX_PRINT(VX_ZONE_ERROR, "%s", log);
                         }
                     }
@@ -521,6 +521,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
 
     vx_status status = VX_FAILURE;
     vx_context context = node->context;
+    __attribute__((unused))
     vx_target target = (vx_target)&node->context->targets[node->affinity];
     vx_cl_kernel_description_t *vxclk = vxclFindKernel(node->kernel->enumeration);
     vx_uint32 pidx, pln, didx, plidx, argidx;

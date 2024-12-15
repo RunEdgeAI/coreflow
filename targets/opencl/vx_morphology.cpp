@@ -54,6 +54,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
 
     //Set Input
     vx_reference ref = node->parameters[0];
+    __attribute__((unused))
     vx_enum dir = node->kernel->signature.directions[0];
     vx_memory_t *memory = &((vx_image)ref)->memory;
 

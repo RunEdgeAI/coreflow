@@ -21,6 +21,7 @@
         fprintf(stderr, "%s: OpenCL error "#err" at %s in %s:%d\n", label, function, file, line); \
         break
 
+__attribute__((unused))
 static size_t flen(FILE *fp)
 {
     size_t len = 0;
@@ -184,9 +185,9 @@ cl_program vxLoadProgram(cl_context context, const char *src_dir, cl_int *perr)
     char **source = nullptr;
     printf("Matched %d files\n", num_files);
     for (f = 0; f < num_files; f++) {
-        if (names[f]->d_name) {
+        if (nullptr != names[f]) {
             char pathname[CL_MAX_LINESIZE];
-            sprintf(pathname, "%s%s", src_dir, names[f]->d_name);
+            snprintf(pathname, CL_MAX_LINESIZE, "%s%s", src_dir, names[f]->d_name);
             FILE *fp = fopen(pathname, "r");
             if (fp) {
                 num_lines += flines(fp);
@@ -204,9 +205,9 @@ cl_program vxLoadProgram(cl_context context, const char *src_dir, cl_int *perr)
     }
     // load all source into a single array
     for (f = 0; f < num_files; f++) {
-        if (names[f]->d_name) {
+        if (nullptr != names[f]) {
             char pathname[CL_MAX_LINESIZE];
-            sprintf(pathname, "%s%s", src_dir, names[f]->d_name);
+            snprintf(pathname, CL_MAX_LINESIZE, "%s%s", src_dir, names[f]->d_name);
             FILE *fp = fopen(pathname, "r");
             if (fp) {
                 printf("Reading from file %s\n", pathname);

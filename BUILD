@@ -18,7 +18,14 @@ cc_library(
         "include",
         "framework/include"
     ],
-    linkopts = [
+    linkopts = select({
+        "@platforms//os:osx": [
+            "-framework OpenCL",
+        ],
+        "//conditions:default": [
+            "-lOpenCL",
+        ],
+    }) + [
         "-lxml2"
     ],
     deps = [
