@@ -65,7 +65,7 @@ static void VX_CALLBACK vxcl_platform_notifier(const char *errinfo,
     VX_PRINT(VX_ZONE_ERROR, "%s\n", errinfo);
 }
 
-vx_status vxTargetInit(vx_target target)
+extern "C" vx_status vxTargetInit(vx_target target)
 {
     vx_status status = VX_ERROR_NO_RESOURCES;
     cl_int err = 0;
@@ -352,7 +352,7 @@ exit:
     return status;
 }
 
-vx_status vxTargetDeinit(vx_target target)
+extern "C" vx_status vxTargetDeinit(vx_target target)
 {
     vx_context context = target->context;
     if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
@@ -378,7 +378,7 @@ vx_status vxTargetDeinit(vx_target target)
     return VX_SUCCESS;
 }
 
-vx_status vxTargetSupports(vx_target target,
+extern "C" vx_status vxTargetSupports(vx_target target,
                            vx_char targetName[VX_MAX_TARGET_NAME],
                            vx_char kernelName[VX_MAX_KERNEL_NAME],
 #if defined(EXPERIMENTAL_USE_VARIANTS)
@@ -405,7 +405,7 @@ vx_status vxTargetSupports(vx_target target,
     return status;
 }
 
-vx_action vxTargetProcess(vx_target target, vx_node nodes[], vx_size startIndex, vx_size numNodes)
+extern "C" vx_action vxTargetProcess(vx_target target, vx_node nodes[], vx_size startIndex, vx_size numNodes)
 {
     vx_action action = VX_ACTION_CONTINUE;
     vx_status status = VX_SUCCESS;
@@ -446,13 +446,13 @@ vx_action vxTargetProcess(vx_target target, vx_node nodes[], vx_size startIndex,
     return action;
 }
 
-vx_status vxTargetVerify(vx_target target, vx_node node)
+extern "C" vx_status vxTargetVerify(vx_target target, vx_node node)
 {
     vx_status status = VX_SUCCESS;
     return status;
 }
 
-vx_kernel vxTargetAddKernel(vx_target target,
+extern "C" vx_kernel vxTargetAddKernel(vx_target target,
                             vx_char name[VX_MAX_KERNEL_NAME],
                             vx_enum enumeration,
                             vx_kernel_f func_ptr,
