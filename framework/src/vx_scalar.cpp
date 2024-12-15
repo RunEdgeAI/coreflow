@@ -261,7 +261,7 @@ static vx_status own_scalar_to_host_mem(vx_scalar scalar, void* user_ptr)
     case VX_TYPE_INT64:    *(vx_int64*)user_ptr = scalar->data.s64; break;
     case VX_TYPE_UINT64:   *(vx_uint64*)user_ptr = scalar->data.u64; break;
 #ifdef EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT
-    case VX_TYPE_FLOAT16:  *(vx_float16*)ptr = scalar->data.f16; break;
+    case VX_TYPE_FLOAT16:  *(vx_float16*)user_ptr = scalar->data.f16; break;
 #endif
     case VX_TYPE_FLOAT32:  *(vx_float32*)user_ptr = scalar->data.f32; break;
     case VX_TYPE_FLOAT64:  *(vx_float64*)user_ptr = scalar->data.f64; break;
