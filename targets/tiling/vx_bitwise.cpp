@@ -127,7 +127,7 @@ vx_tiling_kernel_t And_kernel =
     nullptr,
     { 16, 16 },
     { -1, 1, -1, 1 },
-    { VX_BORDER_MODE_UNDEFINED, 0 },
+    { VX_BORDER_MODE_UNDEFINED, {{0}} },
 };
 vx_tiling_kernel_t Or_kernel =
 {
@@ -147,7 +147,7 @@ vx_tiling_kernel_t Or_kernel =
     nullptr,
     { 16, 16 },
     { -1, 1, -1, 1 },
-    { VX_BORDER_MODE_UNDEFINED, 0 },
+    { VX_BORDER_MODE_UNDEFINED, {{0}} },
 };
 vx_tiling_kernel_t Xor_kernel =
 {
@@ -167,7 +167,7 @@ vx_tiling_kernel_t Xor_kernel =
     nullptr,
     { 16, 16 },
     { -1, 1, -1, 1 },
-    { VX_BORDER_MODE_UNDEFINED, 0 },
+    { VX_BORDER_MODE_UNDEFINED, {{0}} },
 };
 
 /* The Not kernel is an unary operator, requiring separate validators. */
@@ -239,6 +239,6 @@ vx_tiling_kernel_t Not_kernel =
     nullptr,
     { 16, 16 },
     { -1, 1, -1, 1 },
-    { VX_BORDER_MODE_UNDEFINED, 0 },
+    { VX_BORDER_MODE_UNDEFINED, {{0}} },
 };
 

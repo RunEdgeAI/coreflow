@@ -148,7 +148,7 @@ static void read_pixel_v(void *base, vx_imagepatch_addressing_t *addr,
     }
 
     vx_uint8 *bpixel;
-    vx_uint32 bx, by;
+    // vx_uint32 bx, by;
     if(flag_1 == 0)
     {
        bpixel = (vx_uint8*)base + addr->stride_y*vgetq_lane_s32(y_32x4, 0) + vgetq_lane_s32(x_32x4, 0);
@@ -341,7 +341,7 @@ static vx_status vxNearestScaling(vx_image src_image, vx_image dst_image, const 
     }
     status |= vxUnmapImagePatch(src_image, map_id_src);
     status |= vxUnmapImagePatch(dst_image, map_id_dst);
-    return VX_SUCCESS;
+    return status;
 }
 
 static vx_status vxNearestScaling_U1(vx_image src_image, vx_image dst_image, const vx_border_t *borders)
@@ -404,7 +404,7 @@ static vx_status vxNearestScaling_U1(vx_image src_image, vx_image dst_image, con
     status |= vxCommitImagePatch(src_image, nullptr, 0, &src_addr, src_base);
     status |= vxCommitImagePatch(dst_image, &dst_rect, 0, &dst_addr, dst_base);
 
-    return VX_SUCCESS;
+    return status;
 }
 
 static vx_status vxBilinearScaling(vx_image src_image, vx_image dst_image, const vx_border_t *borders)
@@ -446,14 +446,14 @@ static vx_status vxBilinearScaling(vx_image src_image, vx_image dst_image, const
         {
             vx_uint8 tl = 0, tr = 0, bl = 0, br = 0;
             vx_uint8* dst = (vx_uint8*)dst_base + dst_addr.stride_y*((dst_addr.scale_y*y2)/VX_SCALE_UNITY) + dst_addr.stride_x*((dst_addr.scale_x*x2)/VX_SCALE_UNITY);
-            float32x4_t x2_32x4;
+            float32x4_t x2_32x4 = vdupq_n_f32(0.0f);
             x2_32x4 = vsetq_lane_f32((vx_float32)x2, x2_32x4, 0);
             x2_32x4 = vsetq_lane_f32((vx_float32)(x2+1), x2_32x4, 1);
             x2_32x4 = vsetq_lane_f32((vx_float32)(x2+2), x2_32x4, 2);
             x2_32x4 = vsetq_lane_f32((vx_float32)(x2+3), x2_32x4, 3);
             float32x4_t x_src_32x4 = vsubq_f32(vmulq_f32(vaddq_f32(x2_32x4,vdupq_n_f32(0.5f)), vdupq_n_f32(wr)),vdupq_n_f32(0.5f));
 
-            float32x4_t x2_32x4_1;
+            float32x4_t x2_32x4_1 = vdupq_n_f32(0.0f);
             x2_32x4_1 = vsetq_lane_f32((vx_float32)(x2+4), x2_32x4_1, 0);
             x2_32x4_1 = vsetq_lane_f32((vx_float32)(x2+5), x2_32x4_1, 1);
             x2_32x4_1 = vsetq_lane_f32((vx_float32)(x2+6), x2_32x4_1, 2);
@@ -463,19 +463,19 @@ static vx_status vxBilinearScaling(vx_image src_image, vx_image dst_image, const
             float32x4_t y2_32x4 = vdupq_n_f32((vx_float32)y2);
             float32x4_t y_src_32x4 = vsubq_f32(vmulq_f32(vaddq_f32(y2_32x4,vdupq_n_f32(0.5f)), vdupq_n_f32(hr)),vdupq_n_f32(0.5f));
 
-            float32x4_t x_min_32x4;
+            float32x4_t x_min_32x4 = vdupq_n_f32(0.0f);
             x_min_32x4 = vsetq_lane_f32(floorf(vgetq_lane_f32(x_src_32x4, 0)), x_min_32x4, 0);
             x_min_32x4 = vsetq_lane_f32(floorf(vgetq_lane_f32(x_src_32x4, 1)), x_min_32x4, 1);
             x_min_32x4 = vsetq_lane_f32(floorf(vgetq_lane_f32(x_src_32x4, 2)), x_min_32x4, 2);
             x_min_32x4 = vsetq_lane_f32(floorf(vgetq_lane_f32(x_src_32x4, 3)), x_min_32x4, 3);
 
-            float32x4_t x_min_32x4_1;
+            float32x4_t x_min_32x4_1 = vdupq_n_f32(0.0f);
             x_min_32x4_1 = vsetq_lane_f32(floorf(vgetq_lane_f32(x_src_32x4_1, 0)), x_min_32x4_1, 0);
             x_min_32x4_1 = vsetq_lane_f32(floorf(vgetq_lane_f32(x_src_32x4_1, 1)), x_min_32x4_1, 1);
             x_min_32x4_1 = vsetq_lane_f32(floorf(vgetq_lane_f32(x_src_32x4_1, 2)), x_min_32x4_1, 2);
             x_min_32x4_1 = vsetq_lane_f32(floorf(vgetq_lane_f32(x_src_32x4_1, 3)), x_min_32x4_1, 3);
 
-            float32x4_t y_min_32x4;
+            float32x4_t y_min_32x4 = vdupq_n_f32(0.0f);
             y_min_32x4 = vsetq_lane_f32(floorf(vgetq_lane_f32(y_src_32x4, 0)), y_min_32x4, 0);
             y_min_32x4 = vsetq_lane_f32(floorf(vgetq_lane_f32(y_src_32x4, 1)), y_min_32x4, 1);
             y_min_32x4 = vsetq_lane_f32(floorf(vgetq_lane_f32(y_src_32x4, 2)), y_min_32x4, 2);
@@ -857,7 +857,7 @@ static vx_status vxBilinearScaling(vx_image src_image, vx_image dst_image, const
     }
     status |= vxUnmapImagePatch(src_image, map_id_src);
     status |= vxUnmapImagePatch(dst_image, map_id_dst);
-    return VX_SUCCESS;
+    return status;
 }
 
 static vx_status vxBilinearScaling_U1(vx_image src_image, vx_image dst_image, const vx_border_t *borders)
@@ -958,7 +958,7 @@ static vx_status vxBilinearScaling_U1(vx_image src_image, vx_image dst_image, co
     status |= vxCommitImagePatch(src_image, nullptr, 0, &src_addr, src_base);
     status |= vxCommitImagePatch(dst_image, &dst_rect, 0, &dst_addr, dst_base);
 
-    return VX_SUCCESS;
+    return status;
 }
 
 #if AREA_SCALE_ENABLE

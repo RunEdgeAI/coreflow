@@ -124,6 +124,7 @@ static void vxReadRectangle_U1(const void *base,
 {
     vx_int32 width = (vx_int32)addr->dim_x, height = (vx_int32)addr->dim_y;
     vx_int32 stride_y = addr->stride_y;
+    __attribute__((unused))
     vx_int32 stride_x = addr->stride_x;
     vx_uint16 stride_x_bits = addr->stride_x_bits;
     const vx_uint8 *ptr = (const vx_uint8 *)base;

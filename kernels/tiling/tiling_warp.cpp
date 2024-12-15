@@ -156,7 +156,7 @@ static void remapLinearConst(const size_t height,
 
 void WarpAffine_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void * VX_RESTRICT tile_memory, vx_size tile_memory_size)
 {
-    vx_uint32 x = 0, y = 0;
+    // vx_uint32 x = 0, y = 0;
 
     vx_tile_ex_t *in = (vx_tile_ex_t *)parameters[0];
     vx_tile_matrix_t *mask = (vx_tile_matrix_t *)parameters[1];
@@ -315,7 +315,7 @@ static inline float32x4_t vrecpq_f32(float32x4_t val)
 
 void WarpPerspective_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void * VX_RESTRICT tile_memory, vx_size tile_memory_size)
 {
-    vx_uint32 x = 0, y = 0;
+    // vx_uint32 x = 0, y = 0;
 
     vx_tile_ex_t *in = (vx_tile_ex_t *)parameters[0];
     vx_tile_matrix_t *mask = (vx_tile_matrix_t *)parameters[1];

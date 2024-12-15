@@ -689,16 +689,16 @@ void Convolve_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void
     vx_uint8 *src_base = in->base[0];
     vx_uint8 *dst_base = out->base[0];
 
-    vx_uint32 low_y = out->tile_y;
+    __attribute__((unused)) vx_uint32 low_y = out->tile_y;
     vx_uint32 high_y = out->tile_y + out->tile_block.height;
 
-    vx_uint32 low_x = out->tile_x;
+    __attribute__((unused)) vx_uint32 low_x = out->tile_x;
     vx_uint32 high_x = out->tile_x + out->tile_block.width;
 
     vx_size conv_width = (*conv).conv_width;
     vx_size conv_height = (*conv).conv_height;
 
-    vx_int32 conv_radius_x, conv_radius_y;
+    __attribute__((unused)) vx_int32 conv_radius_x, conv_radius_y;
 
     conv_radius_x = (vx_int32)conv_width / 2;
     conv_radius_y = (vx_int32)conv_height / 2;
@@ -706,7 +706,7 @@ void Convolve_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void
     vx_uint32 src_format = in->image.format;
     vx_uint32 dst_format = out->image.format;
 
-    vx_int32 sum = 0, value = 0;
+    __attribute__((unused)) vx_int32 sum = 0, value = 0;
 
     vx_uint32 scale = (*conv).scale;
 

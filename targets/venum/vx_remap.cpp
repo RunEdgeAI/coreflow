@@ -577,7 +577,9 @@ static vx_status VX_CALLBACK vxRemapKernel(vx_node node, const vx_reference para
         vx_enum policy     = 0;
         void *src_base     = nullptr;
         void *dst_base     = nullptr;
+        __attribute__((unused))
         vx_uint32 y        = 0u;
+        __attribute__((unused))
         vx_uint32 x        = 0u;
         vx_uint32 width    = 0u;
         vx_uint32 height   = 0u;

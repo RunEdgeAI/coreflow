@@ -152,7 +152,7 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
     for (pt.y = 0; pt.y < height; pt.y++)
     {
         const vx_uint8* data = (vx_uint8 *)src_base + pt.y*src_addr.stride_y;
-        vx_coordinates2d_t coordinates2d_arr[1024] = {0};
+        vx_coordinates2d_t coordinates2d_arr[1024] = {{0}};
         vx_uint32 tmpindex = 0;
         vx_uint8* mdata_in_p = (vx_uint8*)calloc(width, sizeof(vx_uint8));
         pt.x = 0;
@@ -293,6 +293,7 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
         }
         for (; pt.x < width; pt.x++)
         {
+            __attribute__((unused))
             vx_uint8 mdata_in = 0;
             if (data[pt.x])
             {
@@ -322,13 +323,18 @@ vx_status vxHoughLinesP_U8(vx_image img, vx_array param_hough_lines_array, vx_ar
 
     // stage 2. process all the points in random order
     vx_line2d_t *linesp = (vx_line2d_t *)calloc(nzcount, sizeof(vx_line2d_t));
-
+    __attribute__((unused))
     vx_int32 roiw3 = numangle >= 3 ? numangle - 3 : 0;
+    __attribute__((unused))
     float32x4_t r_f32x4;
+    __attribute__((unused))
     int32x4_t r_s32x4;
+    __attribute__((unused))
     int32x4_t val_s32x4;
+    __attribute__((unused))
     int32x4_t n_s32x4;
     vx_int32 numrho_tmp =  (numrho - 1) / 2;
+    __attribute__((unused))
     int32x4_t numrho_s32x4 = vdupq_n_s32(numrho_tmp);
     for (; nzcount > 0; nzcount--)
     {

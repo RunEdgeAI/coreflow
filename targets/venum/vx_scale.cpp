@@ -375,6 +375,7 @@ static vx_status VX_CALLBACK vxHalfscaleGaussianInitializer(vx_node node, const 
         vx_context context = vxGetContext((vx_reference)node);
 
         vx_image input  = (vx_image)parameters[0];
+        __attribute__((unused))
         vx_image output = (vx_image)parameters[1];
         vx_enum scaletype = VX_INTERPOLATION_NEAREST_NEIGHBOR;
         vx_int32 kernel_size = 3;

@@ -109,5 +109,5 @@ vx_tiling_kernel_t houghlinesp_kernel =
     nullptr,
     { 32, 32 },
     { -1, 1, -1, 1 },
-    { VX_BORDER_MODE_UNDEFINED, 0 },
+    { VX_BORDER_MODE_UNDEFINED, {{0}} },
 };

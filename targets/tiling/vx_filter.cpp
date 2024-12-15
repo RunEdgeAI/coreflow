@@ -99,7 +99,7 @@ vx_tiling_kernel_t box_3x3_kernels =
     nullptr,
     { 16, 16 },
     { -1, 1, -1, 1 },
-    { VX_BORDER_MODE_UNDEFINED, 0 },
+    { VX_BORDER_MODE_UNDEFINED, {{0}} },
 };
 
 vx_tiling_kernel_t median3x3_kernel =
@@ -119,7 +119,7 @@ vx_tiling_kernel_t median3x3_kernel =
     nullptr,
     { 16, 16 },
     { -1, 1, -1, 1 },
-    { VX_BORDER_MODE_UNDEFINED, 0 },
+    { VX_BORDER_MODE_UNDEFINED, {{0}} },
 };
 
 vx_tiling_kernel_t gaussian3x3_kernel =
@@ -139,5 +139,5 @@ vx_tiling_kernel_t gaussian3x3_kernel =
     nullptr,
     { 16, 16 },
     { -1, 1, -1, 1 },
-    { VX_BORDER_MODE_UNDEFINED, 0 },
+    { VX_BORDER_MODE_UNDEFINED, {{0}} },
 };

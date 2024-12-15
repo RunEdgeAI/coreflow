@@ -35,7 +35,7 @@ vx_status vxMeanStdDev_U8(vx_image input, vx_scalar mean, vx_scalar stddev)
     vx_imagepatch_addressing_t addrs = VX_IMAGEPATCH_ADDR_INIT;
     vx_map_id map_id = 0;
     void *base_ptr = nullptr;
-    vx_uint32 x, y;
+    // vx_uint32 x, y;
     vx_status status  = VX_SUCCESS;
 
     vxQueryImage(input, VX_IMAGE_FORMAT, &format, sizeof(format));
@@ -244,6 +244,7 @@ vx_status vxMeanStdDev(vx_image input, vx_scalar mean, vx_scalar stddev)
 }
 
 // nodeless version of the MinMaxLoc kernel
+__attribute__((unused))
 static void analyzeMinMaxValue(vx_uint32 x, vx_uint32 y, vx_int64 v,
                                vx_int64 *pMinVal, vx_int64 *pMaxVal,
                                vx_uint32 *pMinCount, vx_uint32 *pMaxCount,
@@ -653,7 +654,7 @@ static void calcMinMaxLocs16(vx_int16 *src_base, vx_imagepatch_addressing_t *src
 
 vx_status vxMinMaxLoc(vx_image input, vx_scalar minVal, vx_scalar maxVal, vx_array minLoc, vx_array maxLoc, vx_scalar minCount, vx_scalar maxCount)
 {
-    vx_uint32 y, x;
+    // vx_uint32 y, x;
     void *src_base = nullptr;
     vx_imagepatch_addressing_t src_addr = VX_IMAGEPATCH_ADDR_INIT;
     vx_rectangle_t rect;

@@ -96,6 +96,7 @@ static vx_int32 vx_uint8_compare(const void *p1, const void *p2)
         return -1;
 }
 
+__attribute__((unused))
 static vx_uint32 readMaskedRectangle_U8(const void *base,
     const vx_imagepatch_addressing_t *addr,
     const vx_border_t *borders,
@@ -232,8 +233,9 @@ vx_status vxMedian3x3_U8(vx_image src, vx_image dst, vx_border_t *borders)
 
     vx_uint32 width_x8 = high_x / 8 * 8;
 
-    vx_uint8 values[9], m;
-    vx_uint32 i;
+    vx_uint8 values[9];
+    // vx_uint8 m;
+    // vx_uint32 i;
 
     for (y = low_y; (y < high_y) && (status == VX_SUCCESS); y++)
     {

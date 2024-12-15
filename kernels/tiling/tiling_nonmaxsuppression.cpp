@@ -26,13 +26,16 @@
 void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void * VX_RESTRICT tile_memory, vx_size tile_memory_size)
 {
     vx_uint32 y, x;
+    __attribute__((unused))
     vx_uint8 mask_data = 0;
     vx_tile_ex_t *in = (vx_tile_ex_t *)parameters[0];
     vx_tile_ex_t *mask = (vx_tile_ex_t *)parameters[1];
     vx_int32 *wsize = (vx_int32*)parameters[2];
     vx_tile_ex_t *out = (vx_tile_ex_t *)parameters[3];
+    __attribute__((unused))
     vx_uint32 ty = out->tile_y;
-    vx_uint32 tx = out->tile_x;
+    __attribute__((unused))
+     vx_uint32 tx = out->tile_x;
     vx_df_image format = in->image.format;
     vx_int32 border = *wsize / 2;
 
@@ -55,6 +58,7 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
         vx_uint8 *maskCurr = nullptr;
         vx_uint8 *maskLeftTop = nullptr;
         uint8x16_t vOne16 = vdupq_n_u8(1);
+        __attribute__((unused))
         uint8x8_t vOne8 = vdup_n_u8(1);
         for (y = low_height; y < height; y++)
         {
@@ -142,7 +146,7 @@ void NonMaxSuppression_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRI
                 vx_int16 *dest = (vx_int16 *)((vx_uint8 *)out->base[0] + y*out->addr[0].stride_y + x*out->addr[0].stride_x);
                 int16x8_t src_val_16x8 = vld1q_s16(val_p);
 
-                int16x8_t dst_16x8;
+                int16x8_t dst_16x8 = vdupq_n_s16(0);
                 uint8x8_t t_8x8 = vdup_n_u8(0);
                 uint8x8_t maskequal0_8x8_o = vceq_u8(_mask_8x8_o, vdup_n_u8(0));
                 dst_16x8 = vbslq_s16(vmovl_u8(maskequal0_8x8_o), dst_16x8, src_val_16x8);
@@ -346,7 +350,7 @@ for (vx_int32 y = low_y; y < high_y; y++)\
 
 void NonMaxSuppression_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT], void * VX_RESTRICT tile_memory, vx_size tile_memory_size)
 {
-    vx_uint32 y, x;
+    // vx_uint32 y, x;
     vx_uint8 mask_data = 0;
     vx_tile_ex_t *in = (vx_tile_ex_t *)parameters[0];
     vx_tile_ex_t *mask = (vx_tile_ex_t *)parameters[1];

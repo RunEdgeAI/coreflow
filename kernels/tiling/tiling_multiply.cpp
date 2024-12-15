@@ -25,6 +25,7 @@ void Multiply_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void
     vx_tile_ex_t *in_2 = (vx_tile_ex_t *)parameters[1];
     vx_float32 *scale = (vx_float32*)parameters[2];
     vx_enum *overflow_policy = (vx_enum*)parameters[3];
+    __attribute__((unused))
     vx_enum *rounding_policy = (vx_enum*)parameters[4];
     vx_tile_ex_t *out = (vx_tile_ex_t *)parameters[5];
     vx_uint32 low_height = out->tile_y;
@@ -116,7 +117,7 @@ void Multiply_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void
             vx_int32 i;
             for(i = 0; i < 8; i++)
             {
-                vx_int32 tmp_int32;
+                vx_int32 tmp_int32 = 0;
                 if(i == 0)
                   tmp_int32 = tmp0;
                 else if(i == 1)
@@ -248,6 +249,7 @@ void Multiply_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT], 
     vx_tile_ex_t *in_2 = (vx_tile_ex_t *)parameters[1];
     vx_float32 *scale = (vx_float32*)parameters[2];
     vx_enum *overflow_policy = (vx_enum*)parameters[3];
+    __attribute__((unused))
     vx_enum *rounding_policy = (vx_enum*)parameters[4];
     vx_tile_ex_t *out = (vx_tile_ex_t *)parameters[5];
 

@@ -323,7 +323,7 @@ static vx_status Gaussian5x5_U8_S16(vx_image src, vx_image dst, vx_border_t *bor
     vx_int32 conv_radius_x, conv_radius_y;
     vx_int16 conv_mat[25] = { 1, 4, 6, 4, 1, 4, 16, 24, 16, 4, 6, 24, 36, 24, 6, 4, 16, 24, 16, 4, 1, 4, 6, 4, 1 };
     vx_int32 sum = 0, value = 0;
-    vx_uint32 scale = 1;
+    // vx_uint32 scale = 1;
     vx_df_image src_format = 0;
     vx_df_image dst_format = 0;
     vx_status status = VX_SUCCESS;

@@ -221,8 +221,8 @@ vx_status vxWarpAffine_U8(vx_image src_image, vx_matrix matrix, vx_scalar stype,
     vx_float32 m[9];
     vx_enum type = 0;
 
-    vx_uint32 x = 0u;
-    vx_uint32 y = 0u;
+    // vx_uint32 x = 0u;
+    // vx_uint32 y = 0u;
 
     vx_map_id src_map_id = 0;
     vx_map_id dst_map_id = 0;
@@ -461,8 +461,8 @@ vx_status vxWarpPerspective_U8(vx_image src_image, vx_matrix matrix, vx_scalar s
     vx_float32 m[9];
     vx_enum type = 0;
 
-    vx_uint32 x = 0u;
-    vx_uint32 y = 0u;
+    // vx_uint32 x = 0u;
+    // vx_uint32 y = 0u;
 
     vx_map_id src_map_id = 0;
     vx_map_id dst_map_id = 0;

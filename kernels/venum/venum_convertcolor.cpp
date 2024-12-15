@@ -73,7 +73,7 @@ static void yuv2rgb_bt709(vx_uint8 y, vx_uint8 cb, vx_uint8 cr,
     *b = usat8(i_b);
 }
 
-
+__attribute__((unused))
 static void rgb2yuv_bt709(vx_uint8 r, vx_uint8 g, vx_uint8 b,
                           vx_uint8 *y, vx_uint8 *cb, vx_uint8 *cr)
 {
@@ -272,6 +272,7 @@ static void yuv2rgb_bt709_neon(vx_uint8 **y, vx_uint8 cb, vx_uint8 cr,
     }
 }
 
+__attribute__((unused))
 static void yuv2yuv_601to709_neon(vx_uint8 *y0, vx_uint8 *cb0, vx_uint8 *cr0,
     vx_uint8 *y1, vx_uint8 *cb1, vx_uint8 *cr1)
 {
@@ -328,6 +329,7 @@ static void yuv2rgb_bt601V(vx_float32* y, vx_float32* cb, vx_float32* cr,
     float32x4_t cb32X4Value = vld1q_f32(cb);
     float32x4_t cr32X4Value = vld1q_f32(cr);
     float32x4_t All128 = vdupq_n_f32(128.0f);
+    __attribute__((unused))
     float32x4_t AllZero = vdupq_n_f32(0.0f);
     float32x4_t rFloatValue, gFloatValue, bFloatValue;
     int32x4_t  rIntValue, gIntValue, bIntValue;
@@ -372,6 +374,7 @@ static void yuv2rgb_bt709V(vx_float32* y, vx_float32* cb, vx_float32* cr,
     float32x4_t cb32X4Value = vld1q_f32(cb);
     float32x4_t cr32X4Value = vld1q_f32(cr);
     float32x4_t All128 = vdupq_n_f32(128.0f);
+    __attribute__((unused))
     float32x4_t AllZero = vdupq_n_f32(0.0f);
     float32x4_t rFloatValue, gFloatValue, bFloatValue;
     int32x4_t  rIntValue, gIntValue, bIntValue;

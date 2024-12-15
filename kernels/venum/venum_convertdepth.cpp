@@ -334,12 +334,13 @@ static vx_status vxConDeptS16U8(void *src_base,void *dst_base,vx_uint32 height,v
             dstp++;
         }
     }
+
+    return VX_SUCCESS;
 }
 
 // nodeless version of the ConvertDepth kernel
 vx_status vxConvertDepth(vx_image input, vx_image output, vx_scalar spol, vx_scalar sshf)
 {
-    vx_uint32 y, x;
     void *dst_base = nullptr;
     void *src_base = nullptr;
     vx_imagepatch_addressing_t dst_addr, src_addr;
@@ -359,16 +360,16 @@ vx_status vxConvertDepth(vx_image input, vx_image output, vx_scalar spol, vx_sca
     status |= vxMapImagePatch(input, &rect, 0, &map_id, &src_addr, &src_base, VX_READ_ONLY, VX_MEMORY_TYPE_HOST, 0);
     status |= vxMapImagePatch(output, &rect, 0, &result_map_id, &dst_addr, &dst_base, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST, 0);
 
-    int16x8_t sh=vdupq_n_s16(0-shift);
+    __attribute__((unused)) int16x8_t sh=vdupq_n_s16(0-shift);
 
-    vx_uint32 roiw16 = src_addr.dim_x >= 15 ? src_addr.dim_x - 15 : 0;
-    vx_uint32 roiw8 = src_addr.dim_x >= 7 ? src_addr.dim_x - 7 : 0;
+    // vx_uint32 roiw16 = src_addr.dim_x >= 15 ? src_addr.dim_x - 15 : 0;
+    // vx_uint32 roiw8 = src_addr.dim_x >= 7 ? src_addr.dim_x - 7 : 0;
 
     switch (format[0])
     {
         case  VX_DF_IMAGE_U8:
         {
-            int16x8_t sh = vdupq_n_s16(shift);
+            __attribute__((unused)) int16x8_t sh = vdupq_n_s16(shift);
 
             switch (format[1])
             {

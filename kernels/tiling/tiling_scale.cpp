@@ -210,6 +210,7 @@ static vx_bool read_pixel_1u(void *base, vx_imagepatch_addressing_t *addr, vx_ui
 
 static void vxNearestScaling_fast(vx_tile_ex_t *src_image, vx_tile_ex_t *dst_image)
 {
+    __attribute__((unused))
     vx_int32 x1,y1,x2,y2;
     vx_rectangle_t src_rect, dst_rect;
     vx_uint32 w1 = 0, h1 = 0, w2 = 0, h2 = 0;
@@ -309,6 +310,7 @@ static void vxBilinearScaling_fast(vx_tile_ex_t *src_image, vx_tile_ex_t *dst_im
 {
     vx_int32 x2,y2;
     vx_rectangle_t src_rect, dst_rect;
+    __attribute__((unused))
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_uint32 w1 = 0, h1 = 0, w2 = 0, h2 = 0;
     vx_float32 wr, hr;
@@ -343,14 +345,14 @@ static void vxBilinearScaling_fast(vx_tile_ex_t *src_image, vx_tile_ex_t *dst_im
         {
             vx_uint8 tl = 0, tr = 0, bl = 0, br = 0;
             vx_uint8* dst = (vx_uint8 *)dst_image->base[0] + y2 * dst_image->addr[0].stride_y + dst_image->addr[0].stride_x*x2;
-            float32x4_t x2_32x4;
+            float32x4_t x2_32x4 = vdupq_n_f32(0.0f);
             x2_32x4 = vsetq_lane_f32((vx_float32)x2, x2_32x4, 0);
             x2_32x4 = vsetq_lane_f32((vx_float32)(x2+1), x2_32x4, 1);
             x2_32x4 = vsetq_lane_f32((vx_float32)(x2+2), x2_32x4, 2);
             x2_32x4 = vsetq_lane_f32((vx_float32)(x2+3), x2_32x4, 3);
             float32x4_t x_src_32x4 = vsubq_f32(vmulq_f32(vaddq_f32(x2_32x4,vdupq_n_f32(0.5f)), vdupq_n_f32(wr)),vdupq_n_f32(0.5f));
 
-            float32x4_t x2_32x4_1;
+            float32x4_t x2_32x4_1 = vdupq_n_f32(0.0f);
             x2_32x4_1 = vsetq_lane_f32((vx_float32)(x2+4), x2_32x4_1, 0);
             x2_32x4_1 = vsetq_lane_f32((vx_float32)(x2+5), x2_32x4_1, 1);
             x2_32x4_1 = vsetq_lane_f32((vx_float32)(x2+6), x2_32x4_1, 2);
@@ -360,19 +362,19 @@ static void vxBilinearScaling_fast(vx_tile_ex_t *src_image, vx_tile_ex_t *dst_im
             float32x4_t y2_32x4 = vdupq_n_f32((vx_float32)y2);
             float32x4_t y_src_32x4 = vsubq_f32(vmulq_f32(vaddq_f32(y2_32x4,vdupq_n_f32(0.5f)), vdupq_n_f32(hr)),vdupq_n_f32(0.5f));
 
-            float32x4_t x_min_32x4;
+            float32x4_t x_min_32x4 = vdupq_n_f32(0.0f);
             x_min_32x4 = vsetq_lane_f32(floorf(vgetq_lane_f32(x_src_32x4, 0)), x_min_32x4, 0);
             x_min_32x4 = vsetq_lane_f32(floorf(vgetq_lane_f32(x_src_32x4, 1)), x_min_32x4, 1);
             x_min_32x4 = vsetq_lane_f32(floorf(vgetq_lane_f32(x_src_32x4, 2)), x_min_32x4, 2);
             x_min_32x4 = vsetq_lane_f32(floorf(vgetq_lane_f32(x_src_32x4, 3)), x_min_32x4, 3);
 
-            float32x4_t x_min_32x4_1;
+            float32x4_t x_min_32x4_1 = vdupq_n_f32(0.0f);
             x_min_32x4_1 = vsetq_lane_f32(floorf(vgetq_lane_f32(x_src_32x4_1, 0)), x_min_32x4_1, 0);
             x_min_32x4_1 = vsetq_lane_f32(floorf(vgetq_lane_f32(x_src_32x4_1, 1)), x_min_32x4_1, 1);
             x_min_32x4_1 = vsetq_lane_f32(floorf(vgetq_lane_f32(x_src_32x4_1, 2)), x_min_32x4_1, 2);
             x_min_32x4_1 = vsetq_lane_f32(floorf(vgetq_lane_f32(x_src_32x4_1, 3)), x_min_32x4_1, 3);
 
-            float32x4_t y_min_32x4;
+            float32x4_t y_min_32x4 = vdupq_n_f32(0.0f);
             y_min_32x4 = vsetq_lane_f32(floorf(vgetq_lane_f32(y_src_32x4, 0)), y_min_32x4, 0);
             y_min_32x4 = vsetq_lane_f32(floorf(vgetq_lane_f32(y_src_32x4, 1)), y_min_32x4, 1);
             y_min_32x4 = vsetq_lane_f32(floorf(vgetq_lane_f32(y_src_32x4, 2)), y_min_32x4, 2);
@@ -707,7 +709,7 @@ static void vxBilinearScaling_fast(vx_tile_ex_t *src_image, vx_tile_ex_t *dst_im
 
 void ScaleImage_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void * VX_RESTRICT tile_memory, vx_size tile_memory_size)
 {
-    vx_uint32 y, x;
+    // vx_uint32 y, x;
     vx_tile_ex_t *in = (vx_tile_ex_t *)parameters[0];
     vx_tile_ex_t *out = (vx_tile_ex_t *)parameters[1];
     vx_enum *type = (vx_enum*)parameters[2];
@@ -901,6 +903,7 @@ static void vxBilinearScaling(vx_tile_ex_t *src_image, vx_tile_ex_t *dst_image, 
 {
     vx_int32 x2,y2;
     vx_rectangle_t src_rect, dst_rect;
+    __attribute__((unused))
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_uint32 w1 = 0, h1 = 0, w2 = 0, h2 = 0;
     vx_float32 wr, hr;
@@ -1010,7 +1013,7 @@ static void vxBilinearScaling(vx_tile_ex_t *src_image, vx_tile_ex_t *dst_image, 
 
 void ScaleImage_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT], void * VX_RESTRICT tile_memory, vx_size tile_memory_size)
 {
-    vx_uint32 y, x;
+    // vx_uint32 y, x;
     vx_tile_ex_t *in = (vx_tile_ex_t *)parameters[0];
     vx_tile_ex_t *out = (vx_tile_ex_t *)parameters[1];
     vx_enum *type = (vx_enum*)parameters[2];

@@ -177,10 +177,10 @@ vx_status vxChannelCombine(vx_image inputs[4], vx_image output)
         vx_imagepatch_addressing_t dst_addr;
         void *base_src_ptrs[4] = {nullptr, nullptr, nullptr, nullptr};
         void *base_dst_ptr = nullptr;
-        vx_uint32 x, y, p;
+        vx_uint32 p;
         vx_uint32 numplanes = 3;
-        vx_uint32 wCnt, wStep;
-        vx_uint8 *ptr0, *ptr1, *ptr2, *pout;
+        // vx_uint32 wCnt, wStep;
+        // vx_uint8 *ptr0, *ptr1, *ptr2, *pout;
 
         if (format == VX_DF_IMAGE_RGBX)
         {
@@ -215,7 +215,7 @@ vx_status vxChannelCombine(vx_image inputs[4], vx_image output)
     }
     else if ((format == VX_DF_IMAGE_YUV4) || (format == VX_DF_IMAGE_IYUV))
     {
-        vx_uint32 x, y, p;
+        vx_uint32 p;
 
         for (p = 0; p < 3; p++)
         {
@@ -444,7 +444,7 @@ static vx_status vxCopyPlaneToImage(vx_image src,
                     vx_uint8 *srcp14 = srcyP + src_addr.stride_x*((src_addr.scale_x *((x+14)* VX_SCALE_UNITY / src_addr.scale_x * x_subsampling))/VX_SCALE_UNITY);
                     vx_uint8 *srcp15 = srcyP + src_addr.stride_x*((src_addr.scale_x *((x+15)* VX_SCALE_UNITY / src_addr.scale_x * x_subsampling))/VX_SCALE_UNITY);
 
-                    uint8x16_t src8x16;
+                    uint8x16_t src8x16 = vdupq_n_u8(0);
                     src8x16 = vsetq_lane_u8(srcp[src_component], src8x16, 0);
                     src8x16 = vsetq_lane_u8(srcp1[src_component], src8x16, 1);
                     src8x16 = vsetq_lane_u8(srcp2[src_component], src8x16, 2);

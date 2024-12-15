@@ -154,9 +154,12 @@ vx_status vxHogFeatures(vx_image img, vx_tensor magnitudes, vx_tensor bins, vx_a
     width = src_addr.dim_x;
     height = src_addr.dim_y;
 
+    __attribute__((unused))
     vx_int32 num_blockW = width / hog_params_t->cell_width - 1;
+    __attribute__((unused))
     vx_int32 num_blockH = height / hog_params_t->cell_height - 1;
     vx_int32 n_cellsx = width / hog_params_t->cell_width;
+    __attribute__((unused))
     vx_int32 n_cellsy = height / hog_params_t->cell_height;
     vx_int32 cells_per_block_w = hog_params_t->block_width / hog_params_t->cell_width;
     vx_int32 cells_per_block_h = hog_params_t->block_height / hog_params_t->cell_height;

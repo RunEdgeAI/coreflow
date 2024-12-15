@@ -743,7 +743,9 @@ vx_status matchTemplate_CCORR(const vx_image source_image, vx_uint32 src_width, 
     status |= vxMapImagePatch(result_image, &result_rect, 0, &result_map_id, &result_addr, (void**)&result_src, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
     if( status != VX_SUCCESS ) return status;
 
+    __attribute__((unused))
     const vx_uint32 W16 = winLen / 16 * 16;
+    __attribute__((unused))
     const vx_uint32 W8 = winLen / 8 * 8;
     const vx_uint32 src_dim_x = addr.dim_x;
     const vx_uint32 dst_dim_x = result_addr.dim_x;
@@ -751,6 +753,7 @@ vx_status matchTemplate_CCORR(const vx_image source_image, vx_uint32 src_width, 
     const vx_uint8 dstStride_x = result_addr.stride_x / 2;
     const vx_uint8 dstStride_y = result_addr.stride_y / 2;
 
+    __attribute__((unused))
     uint16x8_t vZero = vdupq_n_u16(0);
 
     /* main loop - through x coordinate of the result */
@@ -873,6 +876,7 @@ vx_status matchTemplate_COMPARE_L2_NORM(const vx_image source_image, vx_uint32 s
     const vx_uint32 W16 = winLen / 16 * 16;
     const vx_uint32 W8 = winLen / 8 * 8;
     const vx_uint32 src_dim_x = addr.dim_x;
+    __attribute__((unused))
     const vx_uint32 dst_dim_x = result_addr.dim_x;
     const vx_uint32 srcStride_y = addr.stride_y;
     const vx_uint8 dstStride_x = result_addr.stride_x / 2;
@@ -1070,7 +1074,9 @@ vx_status matchTemplate_COMPARE_CCORR_NORM(const vx_image source_image, vx_uint3
     status |= vxMapImagePatch(result_image, &result_rect, 0, &result_map_id, &result_addr, (void**)&result_src, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST, VX_NOGAP_X);
     if( status != VX_SUCCESS ) return status;
 
+    __attribute__((unused))
     const vx_uint32 W16 = winLen / 16 * 16;
+    __attribute__((unused))
     const vx_uint32 W8 = winLen / 8 * 8;
     const vx_uint32 src_dim_x = addr.dim_x;
     const vx_uint32 dst_dim_x = result_addr.dim_x;

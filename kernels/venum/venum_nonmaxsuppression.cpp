@@ -275,7 +275,7 @@ vx_status vxNonMaxSuppression_U8(vx_image input, vx_image mask, vx_scalar win_si
                 vx_int16 *dest = (vx_int16 *)((vx_uint8 *)dst_base + y*dst_addr.stride_y + x*dst_addr.stride_x);
                 int16x8_t src_val_16x8 = vld1q_s16(val_p);
 
-                int16x8_t dst_16x8;
+                int16x8_t dst_16x8 = vdupq_n_s16(0);
                 uint8x8_t t_8x8 = vdup_n_u8(0);
                 uint8x8_t maskequal0_8x8_o = vceq_u8(_mask_8x8_o, vdup_n_u8(0));
                 dst_16x8 = vbslq_s16(vmovl_u8(maskequal0_8x8_o), dst_16x8, src_val_16x8);

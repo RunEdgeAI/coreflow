@@ -98,7 +98,7 @@ vx_tiling_kernel_t erode3x3_kernel =
     nullptr,
     { 16, 16 },
     { -1, 1, -1, 1 },
-    { VX_BORDER_MODE_UNDEFINED, 0 },
+    { VX_BORDER_MODE_UNDEFINED, {{0}} },
 };
 
 vx_tiling_kernel_t dilate3x3_kernel =
@@ -118,5 +118,5 @@ vx_tiling_kernel_t dilate3x3_kernel =
     nullptr,
     { 16, 16 },
     { -1, 1, -1, 1 },
-    { VX_BORDER_MODE_UNDEFINED, 0 },
+    { VX_BORDER_MODE_UNDEFINED, {{0}} },
 };

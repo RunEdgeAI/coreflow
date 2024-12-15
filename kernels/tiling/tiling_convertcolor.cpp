@@ -270,6 +270,7 @@ static void yuv2rgb_bt709_neon(vx_uint8 **y, vx_uint8 cb, vx_uint8 cr,
     }
 }
 
+__attribute__((unused))
 static void yuv2yuv_601to709_neon(vx_uint8 *y0, vx_uint8 *cb0, vx_uint8 *cr0,
     vx_uint8 *y1, vx_uint8 *cb1, vx_uint8 *cr1)
 {
@@ -326,6 +327,7 @@ static void yuv2rgb_bt601V(vx_float32* y, vx_float32* cb, vx_float32* cr,
     float32x4_t cb32X4Value = vld1q_f32(cb);
     float32x4_t cr32X4Value = vld1q_f32(cr);
     float32x4_t All128 = vdupq_n_f32(128.0f);
+    __attribute__((unused))
     float32x4_t AllZero = vdupq_n_f32(0.0f);
     float32x4_t rFloatValue, gFloatValue, bFloatValue;
     int32x4_t  rIntValue, gIntValue, bIntValue;
@@ -370,6 +372,7 @@ static void yuv2rgb_bt709V(vx_float32* y, vx_float32* cb, vx_float32* cr,
     float32x4_t cb32X4Value = vld1q_f32(cb);
     float32x4_t cr32X4Value = vld1q_f32(cr);
     float32x4_t All128 = vdupq_n_f32(128.0f);
+    __attribute__((unused))
     float32x4_t AllZero = vdupq_n_f32(0.0f);
     float32x4_t rFloatValue, gFloatValue, bFloatValue;
     int32x4_t  rIntValue, gIntValue, bIntValue;
@@ -418,7 +421,9 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
     vx_tile_ex_t *in = (vx_tile_ex_t *)parameters[0];
     vx_tile_ex_t *out = (vx_tile_ex_t *)parameters[1];
 
+    __attribute__((unused))
     vx_uint32 width = vxTileWidth(out, 0);
+    __attribute__((unused))
     vx_uint32 height = vxTileHeight(out, 0);
 
     vx_uint32 low_y = out->tile_y;
@@ -865,8 +870,8 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
         else if (dst_format == VX_DF_IMAGE_NV12)
         {
             vx_uint32 x, y;
-            vx_uint8 *yuyv[2];
-            vx_uint8 *luma[4];
+            __attribute__((unused)) vx_uint8 *yuyv[2];
+            __attribute__((unused)) vx_uint8 *luma[4];
             for (y = low_y; y < high_y; y += 2)
             {
                 vx_uint8 *src0 = (vx_uint8 *)src_base[0] + y * srcP0StrideY;
@@ -922,8 +927,8 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
         else if (dst_format == VX_DF_IMAGE_IYUV)
         {
             vx_uint32 x, y;
-            vx_uint8 *yuyv[2];
-            vx_uint8 *_luma[4];
+            __attribute__((unused)) vx_uint8 *yuyv[2];
+            __attribute__((unused)) vx_uint8 *_luma[4];
             for (y = low_y; y < high_y; y += 2)
             {
                 vx_uint8 *src0 = (vx_uint8 *)src_base[0] + y * srcP0StrideY;
@@ -1040,8 +1045,8 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
         else if (dst_format == VX_DF_IMAGE_NV12)
         {
             vx_uint32 x, y;
-            vx_uint8 *uyvy[2];
-            vx_uint8 *luma[4];
+            __attribute__((unused)) vx_uint8 *uyvy[2];
+            __attribute__((unused)) vx_uint8 *luma[4];
             for (y = low_y; y < high_y; y += 2)
             {
                 vx_uint8 *src0 = (vx_uint8 *)src_base[0] + y * srcP0StrideY;
@@ -1097,8 +1102,8 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
         else if (dst_format == VX_DF_IMAGE_IYUV)
         {
             vx_uint32 x, y;
-            vx_uint8 *uyvy[2];
-            vx_uint8 *_luma[4];
+            __attribute__((unused)) vx_uint8 *uyvy[2];
+            __attribute__((unused)) vx_uint8 *_luma[4];
             for (y = low_y; y < high_y; y += 2)
             {
                 vx_uint8 *src0 = (vx_uint8 *)src_base[0] + y * srcP0StrideY;
@@ -1333,10 +1338,10 @@ void ConvertColor_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
             vx_float32 arrfg[4] = { (vx_float32)rgb[0][1], (vx_float32)rgb[1][1], (vx_float32)rgb[2][1], (vx_float32)rgb[3][1] };   \
             vx_float32 arrfb[4] = { (vx_float32)rgb[0][2], (vx_float32)rgb[1][2], (vx_float32)rgb[2][2], (vx_float32)rgb[3][2] };   \
                                                                                                                                     \
-            rgb2yuv_bt709(rgb[0][0], rgb[0][1], rgb[0][2], &luma[0][0], &cb[0], &cr[0]);                                            \
-            rgb2yuv_bt709(rgb[1][0], rgb[1][1], rgb[1][2], &luma[1][0], &cb[1], &cr[1]);                                            \
-            rgb2yuv_bt709(rgb[2][0], rgb[2][1], rgb[2][2], &luma[2][0], &cb[2], &cr[2]);                                            \
-            rgb2yuv_bt709(rgb[3][0], rgb[3][1], rgb[3][2], &luma[3][0], &cb[3], &cr[3]);                                            \
+            rgb2yuv_bt709(arrfr[0], arrfg[0], arrfb[0], &luma[0][0], &cb[0], &cr[0]);                                            \
+            rgb2yuv_bt709(arrfr[1], arrfg[1], arrfb[1], &luma[1][0], &cb[1], &cr[1]);                                            \
+            rgb2yuv_bt709(arrfr[2], arrfg[2], arrfb[2], &luma[2][0], &cb[2], &cr[2]);                                            \
+            rgb2yuv_bt709(arrfr[3], arrfg[3], arrfb[3], &luma[3][0], &cb[3], &cr[3]);                                            \
                                                                                                                                     \
             cbcr[0] = (cb[0] + cb[1] + cb[2] + cb[3]) / 4;                                                                          \
             cbcr[1] = (cr[0] + cr[1] + cr[2] + cr[3]) / 4;                                                                          \
@@ -1829,12 +1834,12 @@ void ConvertColor_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRIC
         }
         else if (dst_format == VX_DF_IMAGE_YUV4)
         {
-            vx_uint8 cb[4];
-            vx_uint8 cr[4];
-            vx_uint8 *rgb[4];
-            vx_uint8 *luma[4];
-            vx_uint8 *u[4];
-            vx_uint8 *v[4];
+            __attribute__((unused)) vx_uint8 cb[4];
+            __attribute__((unused)) vx_uint8 cr[4];
+            __attribute__((unused)) vx_uint8 *rgb[4];
+            __attribute__((unused)) vx_uint8 *luma[4];
+            __attribute__((unused)) vx_uint8 *u[4];
+            __attribute__((unused)) vx_uint8 *v[4];
 
             if (low_y == 0 && low_x == 0)
             {

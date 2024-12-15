@@ -77,8 +77,10 @@ vx_status vxHogCells(vx_image img, vx_scalar cell_width, vx_scalar cell_height, 
     vx_float32 gy_0, gy_1, gy_2, gy_3;
     float32x4_t magnitude_f32x4;
     float32x4_t orientation_f32x4;
+    __attribute__((unused))
     float32x4_t fv_0_5_32x4 = vdupq_n_f32(0.5f);
     float32x4_t num_div_360_f32x4 = vdupq_n_f32(num_div_360);
+    __attribute__((unused))
     int32x4_t bin_s32x4;
     vx_int32 cell_wxh = cell_w*cell_h;
     int32x4_t num_orientations_s32x4 = vdupq_n_s32(num_orientations);
@@ -134,7 +136,8 @@ vx_status vxHogCells(vx_image img, vx_scalar cell_width, vx_scalar cell_height, 
             //calculating bin.
             int32x4_t bin_s32x4 = vcvtq_s32_f32(vmulq_f32(orientation_f32x4, num_div_360_f32x4));
 
-            int32x4_t cellx_s32x4 = vsetq_lane_s32(i/cell_w, cellx_s32x4, 0);
+            int32x4_t cellx_s32x4 = vdupq_n_s32(0);
+            cellx_s32x4 = vsetq_lane_s32(i/cell_w, cellx_s32x4, 0);
             cellx_s32x4 = vsetq_lane_s32((i+1)/cell_w, cellx_s32x4, 1);
             cellx_s32x4 = vsetq_lane_s32((i+2)/cell_w, cellx_s32x4, 2);
             cellx_s32x4 = vsetq_lane_s32((i+3)/cell_w, cellx_s32x4, 3);
@@ -247,9 +250,12 @@ vx_status vxHogFeatures(vx_image img, vx_tensor magnitudes, vx_tensor bins, vx_a
     width = src_addr.dim_x;
     height = src_addr.dim_y;
 
+    __attribute__((unused))
     vx_int32 num_blockW = width / hog_params_t->cell_width - 1;
+    __attribute__((unused))
     vx_int32 num_blockH = height / hog_params_t->cell_height - 1;
     vx_int32 n_cellsx = width / hog_params_t->cell_width;
+    __attribute__((unused))
     vx_int32 n_cellsy = height / hog_params_t->cell_height;
     vx_int32 cells_per_block_w = hog_params_t->block_width / hog_params_t->cell_width;
     vx_int32 cells_per_block_h = hog_params_t->block_height / hog_params_t->cell_height;

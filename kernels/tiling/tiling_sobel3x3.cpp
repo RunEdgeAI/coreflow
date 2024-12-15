@@ -30,7 +30,7 @@
             vreinterpretq_s16_u16(vmovl_u8(vget_high_u8(top_data)))    \
         }                                                              \
     };                                                                 \
-                                                                       \
+    __attribute__((unused))                                            \
     const int16x8x2_t mid_s16 =                                        \
     {                                                                  \
         {                                                              \

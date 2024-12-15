@@ -50,7 +50,7 @@ void ChannelCombine_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT]
 
     format = out->image.format;
 
-    vx_uint8 *planes[4];
+    __attribute__((unused)) vx_uint8 *planes[4];
 
     if (format == VX_DF_IMAGE_RGB)
     {
@@ -329,7 +329,7 @@ void ChannelCombine_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTR
 
     format = out->image.format;
 
-    vx_uint8 *planes[4];
+    __attribute__((unused)) vx_uint8 *planes[4];
 
     if ((format == VX_DF_IMAGE_RGB) || (format == VX_DF_IMAGE_RGBX))
     {

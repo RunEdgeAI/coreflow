@@ -111,6 +111,7 @@ void HoughLinesP_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
     vx_tile_ex_t *in = (vx_tile_ex_t *)parameters[0];
     vx_tile_array_t *param_hough_lines_array = (vx_tile_array_t *)parameters[1];
     vx_tile_array_t *lines_array = (vx_tile_array_t *)parameters[2];
+    __attribute__((unused))
     vx_size *num_lines = (vx_size *)parameters[3];
 
     if (in->image.format != VX_DF_IMAGE_U8)
@@ -118,8 +119,10 @@ void HoughLinesP_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
         return;
     }
 
+    __attribute__((unused))
     vx_uint32 low_height = in->tile_y;
     vx_uint32 height_tiling = in->tile_y + in->tile_block.height;
+    __attribute__((unused))
     vx_uint32 low_width = in->tile_x;
     vx_uint32 width_tiling = in->tile_x + in->tile_block.width;
     if ((in->image.height - height_tiling) <  in->tile_block.height  && (in->image.width - width_tiling) < in->tile_block.width)
@@ -132,7 +135,7 @@ void HoughLinesP_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
         vx_float32 irho = 1 / param_hough_lines->rho;
         vx_int32 width, height;
 
-        void *src_base = in->base[0];
+        // void *src_base = in->base[0];
         width = in->addr[0].dim_x;
         height = in->addr[0].dim_y;
 
@@ -172,7 +175,7 @@ void HoughLinesP_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
         const vx_float32* ttab = &trigtab_p[0];
 
         vx_int32 nzcount = 0;
-        vx_size lines_num = 0;
+        __attribute__((unused)) vx_size lines_num = 0;
 
         // stage 1. collect non-zero image points
         for (pt.y = 0; pt.y < height; pt.y++)
@@ -206,12 +209,14 @@ void HoughLinesP_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], v
 
         vx_uint8* mdata0 = mask_p;
         // stage 2. process all the points in random order
+        __attribute__((unused))
         vx_int32 roiw3 = numangle >= 3 ? numangle - 3 : 0;
-        float32x4_t r_f32x4;
-        int32x4_t r_s32x4;
-        int32x4_t val_s32x4;
-        int32x4_t n_s32x4;
+        __attribute__((unused)) float32x4_t r_f32x4;
+        __attribute__((unused)) int32x4_t r_s32x4;
+        __attribute__((unused)) int32x4_t val_s32x4;
+        __attribute__((unused)) int32x4_t n_s32x4;
         vx_int32 numrho_tmp =  (numrho - 1) / 2;
+        __attribute__((unused))
         int32x4_t numrho_s32x4 = vdupq_n_s32(numrho_tmp);
         for (; nzcount > 0; nzcount--)
         {
@@ -446,6 +451,7 @@ void HoughLinesP_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT
     vx_tile_ex_t *in = (vx_tile_ex_t *)parameters[0];
     vx_tile_array_t *param_hough_lines_array = (vx_tile_array_t *)parameters[1];
     vx_tile_array_t *lines_array = (vx_tile_array_t *)parameters[2];
+    __attribute__((unused))
     vx_size *num_lines = (vx_size *)parameters[3];
     if (in->image.format != VX_DF_IMAGE_U1 && in->image.format != VX_DF_IMAGE_U8)
     {
@@ -460,7 +466,7 @@ void HoughLinesP_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT
     vx_float32 irho = 1 / param_hough_lines->rho;
     vx_int32 width, height;
 
-    void *src_base = in->base[0];
+    // void *src_base = in->base[0];
     width = vxTileWidth(in, 0);//in->addr[0].dim_x;
     height = vxTileHeight(in, 0);//in->addr[0].dim_y;
 
@@ -500,7 +506,7 @@ void HoughLinesP_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT
     const vx_float32* ttab = &trigtab_p[0];
 
     vx_int32 nzcount = 0;
-    vx_size lines_num = 0;
+    __attribute__((unused)) vx_size lines_num = 0;
 
     // stage 1. collect non-zero image points
     vx_uint32 ty = in->tile_y;

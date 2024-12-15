@@ -28,6 +28,7 @@ static void vxLBPStandard_tiling_fast(vx_tile_ex_t *in, vx_int8 ksize, vx_tile_e
     vx_uint32 low_y = in->tile_y;
     vx_uint32 high_y = in->tile_y + in->tile_block.height;
 
+    __attribute__((unused))
     vx_uint32 low_x = in->tile_x;
     vx_uint32 high_x = in->tile_x + in->tile_block.width;
 
@@ -217,10 +218,12 @@ static void vxLBPModified_tiling_fast(vx_tile_ex_t *in, vx_tile_ex_t *out)
     vx_uint32 low_y = in->tile_y;
     vx_uint32 high_y = in->tile_y + in->tile_block.height;
 
+    __attribute__((unused))
     vx_uint32 low_x = in->tile_x;
     vx_uint32 high_x = in->tile_x + in->tile_block.width;
 
     uint8x16_t vPrv[3], vCur[3], vNxt[3], vG[8];
+    __attribute__((unused))
     vx_uint32 w16;
     uint8x16_t vOne = vdupq_n_u8(1);
     vx_uint8 szCoeff[8] = { 1 << 0, 1 << 1, 1 << 2, 1 << 3,
@@ -309,6 +312,7 @@ static void vxLBPUniform_tiling_fast(vx_tile_ex_t *in, vx_int8 ksize, vx_tile_ex
     vx_uint32 low_y = in->tile_y;
     vx_uint32 high_y = in->tile_y + in->tile_block.height;
 
+    __attribute__((unused))
     vx_uint32 low_x = in->tile_x;
     vx_uint32 high_x = in->tile_x + in->tile_block.width;
 

@@ -46,6 +46,7 @@ vx_status VX_CALLBACK ownFillImageKernel(vx_node node, const vx_reference parame
         vx_scalar fill = (vx_scalar)parameters[0];
         vx_image image = (vx_image)parameters[1];
         vx_pixel_value_t value;
+        __attribute__((unused))
         vx_uint32 count = 0u;
         vx_size planes = 0u;
 

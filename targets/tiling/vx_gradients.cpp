@@ -20,6 +20,7 @@
  */
 
 #include "vx_interface.h"
+#include "vx_internal.h"
 
 #include <tiling.h>
 
@@ -41,6 +42,7 @@ static vx_status VX_CALLBACK own_sobel3x3_validator(vx_node node, const vx_refer
         vx_parameter param3 = vxGetParameterByIndex(node, 2);
 
         if (VX_SUCCESS == vxGetStatus((vx_reference)param1) &&
+            (param1->type == sobel3x3_kernel_params[0].data_type) &&
             ((VX_SUCCESS == vxGetStatus((vx_reference)param2)) || (VX_SUCCESS == vxGetStatus((vx_reference)param3))))
         {
             vx_uint32   src_width = 0;
@@ -112,7 +114,7 @@ vx_tiling_kernel_t sobel3x3_kernel =
     nullptr,
     Sobel3x3_image_tiling_flexible,
     Sobel3x3_image_tiling_fast,
-    3,
+    dimof(sobel3x3_kernel_params),
     { { VX_INPUT,  VX_TYPE_IMAGE, VX_PARAMETER_STATE_REQUIRED },
       { VX_OUTPUT, VX_TYPE_IMAGE, VX_PARAMETER_STATE_OPTIONAL },
       { VX_OUTPUT, VX_TYPE_IMAGE, VX_PARAMETER_STATE_OPTIONAL } },
@@ -123,5 +125,5 @@ vx_tiling_kernel_t sobel3x3_kernel =
     nullptr,
     { 16, 16 },
     { -1, 1, -1, 1 },
-    { VX_BORDER_MODE_UNDEFINED, 0 },
+    { VX_BORDER_MODE_UNDEFINED, {{0}} },
 };

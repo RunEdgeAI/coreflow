@@ -150,7 +150,7 @@ vx_status VX_API_CALL vxPublishKernels(vx_context context)
     {
         if (k == 34)
 		{
-			int aa = 0;
+			// int aa = 0;
 		}
         vx_kernel kernel = vxAddTilingKernelEx(context,
             tiling_kernels[k]->name,
@@ -547,9 +547,10 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
     size_t scalars[VX_INT_MAX_PARAMS];
     vx_uint32 index = UINT32_MAX;
     vx_uint32 tile_size_y = 0u, tile_size_x = 0u;
+    __attribute__((unused))
     vx_uint32 block_multiple = 64;
     vx_uint32 height = 0u, width = 0u;
-    vx_border_t borders = {VX_BORDER_UNDEFINED, 0};
+    vx_border_t borders = {VX_BORDER_UNDEFINED, {{0}}};
     vx_neighborhood_size_t nbhd;
     void *tile_memory = nullptr;
     vx_size size = 0;
