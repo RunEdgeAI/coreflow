@@ -15,7 +15,7 @@
 #define OPENVX_USE_IX
 #define OPENVX_USE_XML
 #define OPENVX_USE_S16
-// #define OPENVX_USE_OPENCL_INTEROP
+#define OPENVX_USE_OPENCL_INTEROP
 #define OPENVX_USE_NN
 #if defined(__arm__) || defined(__arm64__)
 #define OPENVX_USE_TILING
@@ -26,7 +26,7 @@
 #define OPENVX_CONFORMANCE_NEURAL_NETWORKS
 #define EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT
 #define EXPERIMENTAL_USE_DOT
-// #define EXPERIMENTAL_USE_OPENCL
+#define EXPERIMENTAL_USE_OPENCL
 /* ******************************* */
 
 #endif /* VX_COREVX_EXT_H */

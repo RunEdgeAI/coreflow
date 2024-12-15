@@ -108,7 +108,9 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
     err = clSetKernelArg(kernel, argidx++, sizeof(vx_int32), &out_offset_first_element_in_bytes);
     VX_PRINT(VX_ZONE_INFO, "Setting vx_image as Buffer with 5 parameters\n");
 
+    __attribute__((unused))
     int width = memory->dims[pln][VX_DIM_X];
+    __attribute__((unused))
     int height = memory->dims[pln][VX_DIM_Y];
     //width, height
     err = clSetKernelArg(vxclk->kernels[plidx], argidx++, sizeof(vx_int32), &src_width);
