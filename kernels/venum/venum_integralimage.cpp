@@ -19,7 +19,7 @@
 // nodeless version of the XXXX kernel
 vx_status vxIntegralImage(vx_image src, vx_image dst)
 {
-    vx_uint32 y, x;
+    // vx_uint32 y, x;
     void *src_base = nullptr;
     void *dst_base = nullptr;
     vx_imagepatch_addressing_t src_addr = VX_IMAGEPATCH_ADDR_INIT;

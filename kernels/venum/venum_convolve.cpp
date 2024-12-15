@@ -689,15 +689,16 @@ static void convRow9x1s16(int16x8_t *pvPrv, int16x8_t *pvCur, int16x8_t *pvNxt, 
 // nodeless version of the Convolve kernel
 vx_status vxConvolve(vx_image src, vx_convolution conv, vx_image dst, vx_border_t *bordermode)
 {
-    vx_int32 y, x, i;
+    vx_int32 y, x;
     void *src_base = nullptr;
     void *dst_base = nullptr;
     vx_imagepatch_addressing_t src_addr, dst_addr;
     vx_rectangle_t rect;
     vx_size conv_width, conv_height;
+    __attribute__((unused))
     vx_int32 conv_radius_x, conv_radius_y;
     vx_int16 conv_mat[VENUM_MAX_CONVOLUTION_DIM * VENUM_MAX_CONVOLUTION_DIM] = {0};
-    vx_int32 sum = 0, value = 0;
+    // vx_int32 sum = 0, value = 0;
     vx_uint32 scale = 1;
     vx_df_image src_format = 0;
     vx_df_image dst_format = 0;

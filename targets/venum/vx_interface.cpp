@@ -341,13 +341,13 @@ vx_kernel vxTargetAddTilingKernel(vx_target target,
                             vx_kernel_output_validate_f output)
 {
     vx_uint32 k = 0u;
-    vx_kernel_t *kernel = nullptr;
+    vx_kernel kernel = nullptr;
     for (k = 0; k < VX_INT_MAX_KERNELS; k++)
     {
         kernel = target->kernels[k];
         if (kernel->enabled == vx_false_e)
         {
-            kernel->tiling_function = fast_func_ptr;
+            kernel->tilingfast_function = fast_func_ptr;
             kernel->initializeKernel(enumeration, vxTilingKernel, name,
                                      nullptr, numParams,
                                      nullptr, input, output, nullptr, nullptr);
@@ -364,8 +364,7 @@ static vx_status vxGetPatchToTile(vx_image image, vx_rectangle_t *rect, vx_tile_
 {
     vx_status status = VX_SUCCESS;
     vx_uint32 p = 0;
-    vx_image_t *img = (vx_image_t *)image;
-    for (p = 0; p < img->planes; p++)
+    for (p = 0; p < image->planes; p++)
     {
         tile->base[p] = nullptr;
         status = vxAccessImagePatch(image, rect, 0, &tile->addr[p], (void **)&tile->base[p], VX_READ_AND_WRITE);
@@ -375,10 +374,9 @@ static vx_status vxGetPatchToTile(vx_image image, vx_rectangle_t *rect, vx_tile_
 
 static vx_status vxSetTileToPatch(vx_image image, vx_rectangle_t *rect, vx_tile_t *tile)
 {
-    vx_image_t *img = (vx_image_t *)image;
     vx_uint32 p = 0;
     vx_status status = VX_SUCCESS;;
-    for (p = 0; p < img->planes; p++)
+    for (p = 0; p < image->planes; p++)
     {
         status = vxCommitImagePatch(image, rect, 0, &tile->addr[p], tile->base[p]);
     }
@@ -400,7 +398,7 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
     vx_uint32 tile_size_y = 0u, tile_size_x = 0u;
     vx_uint32 block_multiple = 64;
     vx_uint32 height = 0u, width = 0u;
-    vx_border_t borders = {VX_BORDER_UNDEFINED, 0};
+    vx_border_t borders = {VX_BORDER_UNDEFINED, {{0}}};
     vx_neighborhood_size_t nbhd;
     void *tile_memory = nullptr;
     vx_size size = 0;
@@ -497,7 +495,7 @@ vx_status VX_CALLBACK vxTilingKernel(vx_node node, const vx_reference parameters
             {
                 //printf("Calling Tile{%u,%u} with %s\n", tx, ty, ((vx_node_t *)node)->kernel->name);
                 tile_memory = node->attributes.tileDataPtr;
-                node->kernel->tiling_function(params, tile_memory, size);
+                node->kernel->tilingfast_function(params, tile_memory, size);
             }
             else
             {

@@ -102,7 +102,9 @@ static vx_status vxConvolution3x3(vx_image src, vx_image dst, const vx_border_t 
     high_x = src_addr.dim_x;
     high_y = src_addr.dim_y;
 
+    __attribute__((unused))
     vx_int32 src_stride_y = src_addr.stride_y;
+    __attribute__((unused))
     vx_int32 dst_stride_y = dst_addr.stride_y;
 
     int16x8_t two      = vdupq_n_s16(2);

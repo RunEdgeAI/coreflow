@@ -189,6 +189,6 @@ vx_tiling_kernel_t colorconvert_kernel =
     nullptr,
     { 8, 8 },
     { -1, 1, -1, 1 },
-    { VX_BORDER_MODE_UNDEFINED, 0 },
+    { VX_BORDER_MODE_UNDEFINED, {{0}} },
 };
 

@@ -95,8 +95,8 @@ static float32x4_t vrecpq_f32(float32x4_t val)
 // nodeless version of the Phase kernel
 vx_status vxPhase(vx_image grad_x, vx_image grad_y, vx_image output)
 {
-    vx_uint32 x;
-    vx_uint32 y;
+    // vx_uint32 x;
+    // vx_uint32 y;
     vx_df_image format = 0;
     vx_uint8* dst_base = nullptr;
     void* src_base_x   = nullptr;

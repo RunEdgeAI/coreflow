@@ -295,6 +295,7 @@ static vx_status VX_CALLBACK vxGaussianPyramidInitializer(vx_node node, const vx
     vx_size lev;
     vx_size levels = 1;
 
+    __attribute__((unused))
     vx_enum interp = VX_INTERPOLATION_NEAREST_NEIGHBOR;
 
     vx_image input = (vx_image)parameters[0];

@@ -551,10 +551,10 @@ void Fast9Corners_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
 
     vx_uint8 *src_base = in->base[0];
 
-    vx_uint32 low_y = in->tile_y;
+    __attribute__((unused)) vx_uint32 low_y = in->tile_y;
     vx_uint32 high_y = in->tile_y + in->tile_block.height;
 
-    vx_uint32 low_x = in->tile_x;
+    __attribute__((unused)) vx_uint32 low_x = in->tile_x;
     vx_uint32 high_x = in->tile_x + in->tile_block.width;
 
     vx_uint8 tolerance = (vx_uint8)(*sens);
@@ -563,7 +563,7 @@ void Fast9Corners_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], 
 
     memset(&kp, 0, sizeof(kp));
 
-    vx_int32 w8 = ((in->image.width - 2 * APERTURE) >> 3) << 3;
+    __attribute__((unused)) vx_int32 w8 = ((in->image.width - 2 * APERTURE) >> 3) << 3;
     vx_int16 szXStep[8] = {0, 1, 2, 3, 4, 5, 6, 7};
     vx_uint8 szStrength[8];
     int16x8_t vXStep = vld1q_s16(szXStep);

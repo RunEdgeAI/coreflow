@@ -218,7 +218,7 @@ vx_tiling_kernel_t scale_image_kernel =
     nullptr,
     ScaleImage_image_tiling_flexible,
     ScaleImage_image_tiling_fast,
-    3,
+    dimof(scale_kernel_params),
     { { VX_INPUT,  VX_TYPE_IMAGE,  VX_PARAMETER_STATE_REQUIRED },
       { VX_OUTPUT, VX_TYPE_IMAGE,  VX_PARAMETER_STATE_REQUIRED },
       { VX_INPUT,  VX_TYPE_SCALAR, VX_PARAMETER_STATE_OPTIONAL }},
@@ -229,7 +229,7 @@ vx_tiling_kernel_t scale_image_kernel =
     nullptr,
     { 16, 16 },
     { -1, 1, -1, 1 },
-    { VX_BORDER_MODE_UNDEFINED, 0 },
+    { VX_BORDER_MODE_UNDEFINED, {{0}} },
 };
 
 /* half scale gaussian kernel */
@@ -311,6 +311,7 @@ static vx_status VX_CALLBACK vxHalfscaleGaussianOutputValidator(vx_node node, vx
         vx_parameter src_param = vxGetParameterByIndex(node, 0);
         vx_parameter dst_param = vxGetParameterByIndex(node, index);
         if ((vxGetStatus((vx_reference)src_param) == VX_SUCCESS) &&
+            (src_param->type == scale_kernel_params[0].data_type) &&
             (vxGetStatus((vx_reference)dst_param) == VX_SUCCESS))
         {
             vx_image src = 0;
@@ -523,5 +524,5 @@ vx_tiling_kernel_t halfscale_gaussian_kernel =
     vxHalfscaleGaussianDeinitializer,
     { 16, 16 },
     { -1, 1, -1, 1 },
-    { VX_BORDER_MODE_UNDEFINED, 0 },
+    { VX_BORDER_MODE_UNDEFINED, {{0}} },
 };

@@ -123,6 +123,7 @@ static vx_status ownCopyImage(vx_image input, vx_image output)
 static vx_status xLaplacianPyramidupsampleImage(vx_context context, vx_uint32 width, vx_uint32 height, vx_image filling, vx_convolution conv, vx_image upsample, vx_border_t *border)
 {
     vx_status status = VX_SUCCESS;
+    __attribute__((unused))
     vx_df_image format, filling_format;
 
     format = VX_DF_IMAGE_U8;

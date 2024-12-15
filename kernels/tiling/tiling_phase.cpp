@@ -42,6 +42,7 @@ static float32x4_t vrecpq_f32(float32x4_t val)
          A_90 = ((vx_float32)(90.f * scale)),                                            \
         A_180 = ((vx_float32)(180.f * scale)),                                           \
         A_360 = ((vx_float32)(360.f * scale));                                           \
+        __attribute__((unused))                                                          \
         float32x4_t eps = (vdupq_n_f32((vx_float32)DBL_EPSILON)),                        \
          _90 = (vdupq_n_f32(A_90)),                                                      \
         _180 = (vdupq_n_f32(A_180)),                                                     \
@@ -209,7 +210,7 @@ void Phase_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void * 
                 float32x4_t v_src10 = vld1q_f32(src1 + x), v_src11 = vld1q_f32(src1 + x + 4);
 
                 float32x4_t v_dst32f0;
-                
+
                 // 0
                 FASTATAN2VECTOR(v_src10, v_src00, v_dst32f0)
                 // 1

@@ -45,7 +45,7 @@ static vx_status LKTracker(
     const vx_array prevPts, vx_array nextPts,
     vx_scalar winSize_s, vx_scalar criteria_s, vx_uint32 level, vx_scalar epsilon, vx_scalar num_iterations)
 {
-    vx_status status = VX_FAILURE;
+    vx_status status = VX_SUCCESS;
 
     vx_int32 j;
     vx_size winSize;
@@ -375,7 +375,7 @@ static vx_status LKTracker(
 
     vxReleaseContext(&context_lk_internal);
 
-    return VX_SUCCESS;
+    return status;
 }
 
 

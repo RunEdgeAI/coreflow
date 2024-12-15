@@ -106,7 +106,6 @@ static vx_status vxWarpInputValidator(vx_node node, vx_uint32 index, vx_size mat
     return status;
 }
 
-
 static vx_status VX_CALLBACK vxWarpOutputValidator(vx_node node, vx_uint32 index, vx_meta_format ptr)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
@@ -169,12 +168,12 @@ static vx_status VX_CALLBACK vxWarpPerspectiveInputValidator(vx_node node, vx_ui
     return vxWarpInputValidator(node, index, 3);
 }
 
-static vx_param_description_t warp_kernel_params[] = {
-    {VX_INPUT, VX_TYPE_IMAGE, VX_PARAMETER_STATE_REQUIRED},
-    {VX_INPUT, VX_TYPE_MATRIX, VX_PARAMETER_STATE_REQUIRED},
-    {VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_OPTIONAL},
-    {VX_OUTPUT, VX_TYPE_IMAGE, VX_PARAMETER_STATE_REQUIRED},
-};
+// static vx_param_description_t warp_kernel_params[] = {
+//     {VX_INPUT, VX_TYPE_IMAGE, VX_PARAMETER_STATE_REQUIRED},
+//     {VX_INPUT, VX_TYPE_MATRIX, VX_PARAMETER_STATE_REQUIRED},
+//     {VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_OPTIONAL},
+//     {VX_OUTPUT, VX_TYPE_IMAGE, VX_PARAMETER_STATE_REQUIRED},
+// };
 
 vx_tiling_kernel_t warp_affine_kernel =
 {
@@ -195,7 +194,7 @@ vx_tiling_kernel_t warp_affine_kernel =
     nullptr,
     { 16, 16 },
     { -1, 1, -1, 1 },
-    { VX_BORDER_MODE_UNDEFINED, 0 },
+    { VX_BORDER_MODE_UNDEFINED, {{0}} },
 };
 
 
@@ -218,5 +217,5 @@ vx_tiling_kernel_t warp_perspective_kernel =
     nullptr,
     { 16, 16 },
     { -1, 1, -1, 1 },
-    { VX_BORDER_MODE_UNDEFINED, 0 },
+    { VX_BORDER_MODE_UNDEFINED, {{0}} },
 };

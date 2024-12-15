@@ -40,7 +40,7 @@ vx_param_description_t harris_score_kernel_params[] =
     { VX_INPUT,  VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED },
     { VX_OUTPUT, VX_TYPE_IMAGE,  VX_PARAMETER_STATE_REQUIRED },
 };
-#if EXPERIMENTAL_USE_VENUM
+#if defined(EXPERIMENTAL_USE_VENUM)
 
 static inline float32x4_t harris_score(float32x4_t gx2, float32x4_t gy2, float32x4_t gxgy, float32x4_t sensitivity)
 {
@@ -550,13 +550,13 @@ static vx_status VX_CALLBACK ownHarrisScoreKernel(vx_node node, const vx_referen
                                 vx_float64 ktrace_A2 = 0.0;
                                 vx_float64 M_c = 0.0;
 
-                                vx_float32* pmc = vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
+                                vx_float32* pmc = (vx_float32*)vxFormatImagePatchAddress2d(dst_base, x, y, &dst_addr);
                                 for (j = -b2; j <= b2; j++)
                                 {
                                     for (i = -b2; i <= b2; i++)
                                     {
-                                        vx_float32* pgx = vxFormatImagePatchAddress2d(gx_base, x + i, y + j, &gx_addr);
-                                        vx_float32* pgy = vxFormatImagePatchAddress2d(gy_base, x + i, y + j, &gy_addr);
+                                        vx_float32* pgx = (vx_float32*)vxFormatImagePatchAddress2d(gx_base, x + i, y + j, &gx_addr);
+                                        vx_float32* pgy = (vx_float32*)vxFormatImagePatchAddress2d(gy_base, x + i, y + j, &gy_addr);
 
                                         vx_float32 gx = (*pgx);
                                         vx_float32 gy = (*pgy);

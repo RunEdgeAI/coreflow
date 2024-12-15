@@ -128,7 +128,7 @@ vx_status vxMultiply(vx_image in0, vx_image in1, vx_scalar scale_param, vx_scala
             vx_int32 i;
             for(i = 0; i < 8; i++)
             {
-                vx_int32 tmp_int32;
+                vx_int32 tmp_int32 = 0;
                 if(i == 0)
                   tmp_int32 = tmp0;
                 else if(i == 1)

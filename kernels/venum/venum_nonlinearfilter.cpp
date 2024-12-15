@@ -636,6 +636,7 @@ static void cal_border_around(const void *src_base, const vx_imagepatch_addressi
 {
     vx_uint32 y, x;
 
+    __attribute__((unused))
     vx_uint32 low_x = 0, low_y = 0, high_x, high_y;
 
     high_x = src_addr->dim_x;

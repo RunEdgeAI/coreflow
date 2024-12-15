@@ -787,6 +787,8 @@ static void* filter_cross_5x5(vx_tile_ex_t *in, vx_tile_ex_t *out, vx_enum funct
             filter_cross_5x5_neon(src, dst, low_x, high_x, function);
         }
     }
+
+    return dst_base;
 }
 
 
@@ -920,6 +922,8 @@ static void* filter_box_5x5(vx_tile_ex_t *in, vx_tile_ex_t *out, vx_enum functio
             filter_box_5x5_neon(src, dst, low_x, high_x, function);
         }
     }
+
+    return dst_base;
 }
 
 
@@ -1061,11 +1065,13 @@ static void* filter_disk_5x5(vx_tile_ex_t *in, vx_tile_ex_t *out, vx_enum functi
             filter_disk_5x5_neon(src, dst, low_x, high_x, function);
         }
     }
+
+    return dst_base;
 }
 
 void NonLinearFilter_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void * VX_RESTRICT tile_memory, vx_size tile_memory_size)
 {
-    vx_uint32 x = 0, y = 0;
+    // vx_uint32 x = 0, y = 0;
     vx_enum *func = (vx_enum *)parameters[0];
     vx_tile_ex_t *in = (vx_tile_ex_t *)parameters[1];
     vx_tile_matrix_t *mask = (vx_tile_matrix_t *)parameters[2];
@@ -1190,6 +1196,7 @@ static vx_uint32 readMaskedRectangle_U1(const void *base,
 {
     vx_int32 width = (vx_int32)addr->dim_x, height = (vx_int32)addr->dim_y;
     vx_int32 stride_y = addr->stride_y;
+    __attribute__((unused))
     vx_int32 stride_x = addr->stride_x;
     vx_uint16 stride_x_bits = addr->stride_x_bits;
     const vx_uint8 *ptr = (const vx_uint8 *)base;

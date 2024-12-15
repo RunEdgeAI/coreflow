@@ -330,7 +330,7 @@ static void vxReadRectangle_U1(const void *base,
 {
     vx_int32 width = (vx_int32)addr->dim_x, height = (vx_int32)addr->dim_y;
     vx_int32 stride_y = addr->stride_y;
-    vx_int32 stride_x = addr->stride_x;
+    // vx_int32 stride_x = addr->stride_x;
     vx_uint16 stride_x_bits = addr->stride_x_bits;
     const vx_uint8 *ptr = (const vx_uint8 *)base;
     vx_int32 ky, kx;
@@ -381,13 +381,13 @@ void Median3x3_image_tiling_flexible(void * VX_RESTRICT parameters[VX_RESTRICT],
     }
     else
     {
-        void *src_base = in->base[0];                                                           
-        void *dst_base = out->base[0];    
-        vx_uint32 shift_x_u1 = in->rect.start_x % 8;                                                         
-        high_x = high_x - shift_x_u1;                                                                  
-                                         
+        void *src_base = in->base[0];
+        void *dst_base = out->base[0];
+        vx_uint32 shift_x_u1 = in->rect.start_x % 8;
+        high_x = high_x - shift_x_u1;
+
         ++low_x; --high_x;
-        ++low_y; --high_y;                                                          
+        ++low_y; --high_y;
         for (y = low_y; y < high_y; y++)
         {
             for (x = low_x; x < high_x; x++)

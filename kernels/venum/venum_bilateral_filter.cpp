@@ -199,7 +199,7 @@ static vx_status bilateralFilter_8u(void* src, vx_size* src_strides, vx_size* di
             for (x = low_x; x < high_x; x += 4)
             {
                 float32x4_t v_sum = vdupq_n_f32(0.0f), v_wsum = vdupq_n_f32(0.0f);
-                float32x4_t value;
+                float32x4_t value = vdupq_n_f32(0.0f);
                 value = vsetq_lane_f32(*((vx_uint8 *)src + y * src_strides[1] + x * src_strides[0]), value, 0);
                 value = vsetq_lane_f32(*((vx_uint8 *)src + y * src_strides[1] + (x + 1) * src_strides[0]), value, 1);
                 value = vsetq_lane_f32(*((vx_uint8 *)src + y * src_strides[1] + (x + 2) * src_strides[0]), value, 2);
@@ -220,7 +220,7 @@ static vx_status bilateralFilter_8u(void* src, vx_size* src_strides, vx_size* di
 
                     vx_int32 tmpy = neighbor_y < 0 ? 0 : (neighbor_y > (dims[1] - 1) ? (dims[1] - 1) : neighbor_y);
 
-                    float32x4_t neighborVal;
+                    float32x4_t neighborVal = vdupq_n_f32(0.0f);
                     neighborVal = vsetq_lane_f32(*((vx_uint8 *)src + tmpy * src_strides[1] + tmpx * src_strides[0]), neighborVal, 0);
                     neighborVal = vsetq_lane_f32(*((vx_uint8 *)src + tmpy * src_strides[1] + tmpx1 * src_strides[0]), neighborVal, 1);
                     neighborVal = vsetq_lane_f32(*((vx_uint8 *)src + tmpy * src_strides[1] + tmpx2 * src_strides[0]), neighborVal, 2);
@@ -249,7 +249,7 @@ static vx_status bilateralFilter_8u(void* src, vx_size* src_strides, vx_size* di
                     vx_int32 abs_val1 = (vx_int32)vgetq_lane_f32(v_abs_val, 1);
                     vx_int32 abs_val2 = (vx_int32)vgetq_lane_f32(v_abs_val, 2);
                     vx_int32 abs_val3 = (vx_int32)vgetq_lane_f32(v_abs_val, 3);
-                    float32x4_t color_weight_val;
+                    float32x4_t color_weight_val = vdupq_n_f32(0.0f);
                     color_weight_val = vsetq_lane_f32(color_weight[abs_val0], color_weight_val, 0);
                     color_weight_val = vsetq_lane_f32(color_weight[abs_val1], color_weight_val, 1);
                     color_weight_val = vsetq_lane_f32(color_weight[abs_val2], color_weight_val, 2);
@@ -284,7 +284,7 @@ static vx_status bilateralFilter_8u(void* src, vx_size* src_strides, vx_size* di
             for (x = low_x; x < high_x; x += 4)
             {
                 float32x4_t v_sum_b = vdupq_n_f32(0.0f), v_sum_g = vdupq_n_f32(0.0f), v_sum_r = vdupq_n_f32(0.0f), v_wsum = vdupq_n_f32(0.0f);
-                float32x4_t v_b0, v_g0, v_r0;
+                float32x4_t v_b0 = vdupq_n_f32(0.0f), v_g0 = vdupq_n_f32(0.0f), v_r0 = vdupq_n_f32(0.0f);
                 v_b0 = vsetq_lane_f32(*((vx_uint8 *)src + y * src_strides[2] + x * src_strides[1]), v_b0, 0);
                 v_b0 = vsetq_lane_f32(*((vx_uint8 *)src + y * src_strides[2] + (x + 1) * src_strides[1]), v_b0, 1);
                 v_b0 = vsetq_lane_f32(*((vx_uint8 *)src + y * src_strides[2] + (x + 2) * src_strides[1]), v_b0, 2);
@@ -316,7 +316,7 @@ static vx_status bilateralFilter_8u(void* src, vx_size* src_strides, vx_size* di
 
                     vx_int32 tmpy = neighbor_y < 0 ? 0 : (neighbor_y > (dims[2] - 1) ? (dims[2] - 1) : neighbor_y);
 
-                    float32x4_t v_b, v_g, v_r;
+                    float32x4_t v_b = vdupq_n_f32(0.0f), v_g = vdupq_n_f32(0.0f), v_r = vdupq_n_f32(0.0f);
                     v_b = vsetq_lane_f32(*((vx_uint8 *)src + tmpy * src_strides[2] + tmpx * src_strides[1]), v_b, 0);
                     v_b = vsetq_lane_f32(*((vx_uint8 *)src + tmpy * src_strides[2] + tmpx1 * src_strides[1]), v_b, 1);
                     v_b = vsetq_lane_f32(*((vx_uint8 *)src + tmpy * src_strides[2] + tmpx2 * src_strides[1]), v_b, 2);
@@ -374,7 +374,7 @@ static vx_status bilateralFilter_8u(void* src, vx_size* src_strides, vx_size* di
                     vx_int32 abs_val1 = (vx_int32)vgetq_lane_f32(v_abs_val, 1);
                     vx_int32 abs_val2 = (vx_int32)vgetq_lane_f32(v_abs_val, 2);
                     vx_int32 abs_val3 = (vx_int32)vgetq_lane_f32(v_abs_val, 3);
-                    float32x4_t color_weight_val;
+                    float32x4_t color_weight_val = vdupq_n_f32(0.0f);
                     color_weight_val = vsetq_lane_f32(color_weight[abs_val0], color_weight_val, 0);
                     color_weight_val = vsetq_lane_f32(color_weight[abs_val1], color_weight_val, 1);
                     color_weight_val = vsetq_lane_f32(color_weight[abs_val2], color_weight_val, 2);
@@ -561,7 +561,7 @@ static vx_status bilateralFilter_s16(void* src, vx_size* src_strides, vx_size* d
             for (x = low_x; x < high_x; x += 4)
             {
                 float32x4_t v_sum = vdupq_n_f32(0.0f), v_wsum = vdupq_n_f32(0.0f);
-                float32x4_t value;
+                float32x4_t value = vdupq_n_f32(0.0f);
                 value = vsetq_lane_f32(*(vx_int16 *)((vx_int8 *)src + y * src_strides[1] + x * src_strides[0]), value, 0);
                 value = vsetq_lane_f32(*(vx_int16 *)((vx_int8 *)src + y * src_strides[1] + (x + 1) * src_strides[0]), value, 1);
                 value = vsetq_lane_f32(*(vx_int16 *)((vx_int8 *)src + y * src_strides[1] + (x + 2) * src_strides[0]), value, 2);
@@ -582,7 +582,7 @@ static vx_status bilateralFilter_s16(void* src, vx_size* src_strides, vx_size* d
 
                     vx_int32 tmpy = neighbor_y < 0 ? 0 : (neighbor_y > (dims[1] - 1) ? (dims[1] - 1) : neighbor_y);
 
-                    float32x4_t neighborVal;
+                    float32x4_t neighborVal = vdupq_n_f32(0.0f);
                     neighborVal = vsetq_lane_f32(*(vx_int16 *)((vx_int8 *)src + tmpy * src_strides[1] + tmpx * src_strides[0]), neighborVal, 0);
                     neighborVal = vsetq_lane_f32(*(vx_int16 *)((vx_int8 *)src + tmpy * src_strides[1] + tmpx1 * src_strides[0]), neighborVal, 1);
                     neighborVal = vsetq_lane_f32(*(vx_int16 *)((vx_int8 *)src + tmpy * src_strides[1] + tmpx2 * src_strides[0]), neighborVal, 2);
@@ -623,7 +623,7 @@ static vx_status bilateralFilter_s16(void* src, vx_size* src_strides, vx_size* d
                     alpha2 -= idx2;
                     alpha3 -= idx3;
 
-                    float32x4_t color_weight_val;
+                    float32x4_t color_weight_val = vdupq_n_f32(0.0f);
                     color_weight_val = vsetq_lane_f32(color_weight[idx0] + alpha0 * (color_weight[idx0 + 1] - color_weight[idx0]), color_weight_val, 0);
                     color_weight_val = vsetq_lane_f32(color_weight[idx1] + alpha1 * (color_weight[idx1 + 1] - color_weight[idx1]), color_weight_val, 1);
                     color_weight_val = vsetq_lane_f32(color_weight[idx2] + alpha2 * (color_weight[idx2 + 1] - color_weight[idx2]), color_weight_val, 2);
@@ -658,7 +658,7 @@ static vx_status bilateralFilter_s16(void* src, vx_size* src_strides, vx_size* d
             for (x = low_x; x < high_x; x += 4)
             {
                 float32x4_t v_sum_b = vdupq_n_f32(0.0f), v_sum_g = vdupq_n_f32(0.0f), v_sum_r = vdupq_n_f32(0.0f), v_wsum = vdupq_n_f32(0.0f);
-                float32x4_t v_b0, v_g0, v_r0;
+                float32x4_t v_b0 = vdupq_n_f32(0.0f), v_g0 = vdupq_n_f32(0.0f), v_r0 = vdupq_n_f32(0.0f);
                 v_b0 = vsetq_lane_f32(*(vx_int16 *)((vx_uint8 *)src + y * src_strides[2] + x * src_strides[1]), v_b0, 0);
                 v_b0 = vsetq_lane_f32(*(vx_int16 *)((vx_uint8 *)src + y * src_strides[2] + (x + 1) * src_strides[1]), v_b0, 1);
                 v_b0 = vsetq_lane_f32(*(vx_int16 *)((vx_uint8 *)src + y * src_strides[2] + (x + 2) * src_strides[1]), v_b0, 2);
@@ -690,7 +690,7 @@ static vx_status bilateralFilter_s16(void* src, vx_size* src_strides, vx_size* d
 
                     vx_int32 tmpy = neighbor_y < 0 ? 0 : (neighbor_y > (dims[2] - 1) ? (dims[2] - 1) : neighbor_y);
 
-                    float32x4_t v_b, v_g, v_r;
+                    float32x4_t v_b = vdupq_n_f32(0.0f), v_g = vdupq_n_f32(0.0f), v_r = vdupq_n_f32(0.0f);
                     v_b = vsetq_lane_f32(*(vx_int16 *)((vx_uint8 *)src + tmpy * src_strides[2] + tmpx * src_strides[1]), v_b, 0);
                     v_b = vsetq_lane_f32(*(vx_int16 *)((vx_uint8 *)src + tmpy * src_strides[2] + tmpx1 * src_strides[1]), v_b, 1);
                     v_b = vsetq_lane_f32(*(vx_int16 *)((vx_uint8 *)src + tmpy * src_strides[2] + tmpx2 * src_strides[1]), v_b, 2);
@@ -760,7 +760,7 @@ static vx_status bilateralFilter_s16(void* src, vx_size* src_strides, vx_size* d
                     alpha2 -= idx2;
                     alpha3 -= idx3;
 
-                    float32x4_t color_weight_val;
+                    float32x4_t color_weight_val = vdupq_n_f32(0.0f);
                     color_weight_val = vsetq_lane_f32(color_weight[idx0] + alpha0 * (color_weight[idx0 + 1] - color_weight[idx0]), color_weight_val, 0);
                     color_weight_val = vsetq_lane_f32(color_weight[idx1] + alpha1 * (color_weight[idx1 + 1] - color_weight[idx1]), color_weight_val, 1);
                     color_weight_val = vsetq_lane_f32(color_weight[idx2] + alpha2 * (color_weight[idx2 + 1] - color_weight[idx2]), color_weight_val, 2);

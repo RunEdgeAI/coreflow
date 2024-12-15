@@ -558,18 +558,16 @@ static void  vxSubWrapu8u8s16(vx_uint32 width, vx_uint32 height, void *src0, voi
 }
 static void  vxSubSaturates16u8s16(vx_uint32 width, vx_uint32 height, void *src0, void *src1, void *dst)
 {
-    vx_uint32 y, x;
-
     vx_int32 step_16=16;
     vx_uint32 roiw16 = width >= step_16-1 ? width - (step_16-1) : 0;
 
-    for (y = 0; y < height; y++)
+    for (vx_uint32 y = 0; y < height; y++)
     {
         vx_int16* src0p = (vx_int16 *)src0 + y * width;
         vx_uint8* src1p = (vx_uint8 *)src1 + y * width;
         vx_int16* dstp = (vx_int16 *)dst + y * width;
 
-        x = 0;
+        vx_uint32 x = 0;
         for (; x < roiw16; x+=step_16)
         {
             int16x8_t v_src00 = vld1q_s16( src0p+x );
@@ -583,7 +581,7 @@ static void  vxSubSaturates16u8s16(vx_uint32 width, vx_uint32 height, void *src0
             vst1q_s16(dstp+x + 8, vqsubq_s16(v_src01,v_src11));
 
         }
-        for (x; x < width; x++)
+        for (; x < width; x++)
         {
             vx_int32 final_result_value = (vx_int16)src0p[x] - (vx_int16)src1p[x];
 
@@ -710,7 +708,7 @@ static void  vxSubWraps16s16s16(vx_uint32 width, vx_uint32 height, void *src0, v
 vx_status vxSubtraction(vx_image in0, vx_image in1, vx_scalar policy_param, vx_image output)
 {
     vx_enum overflow_policy = -1;
-    vx_uint32 y, x, width = 0, height = 0;
+    vx_uint32 width = 0, height = 0;
     void *dst_base = nullptr;
     void *src_base[2] = { nullptr, nullptr };
     vx_imagepatch_addressing_t dst_addr, src_addr[2];
@@ -809,7 +807,6 @@ vx_status vxSubtraction(vx_image in0, vx_image in1, vx_scalar policy_param, vx_i
 vx_status vxAddition(vx_image in0, vx_image in1, vx_scalar policy_param, vx_image output)
 {
     vx_enum overflow_policy = -1;
-    vx_uint32 y, x, width = 0, height = 0;
     void *dst_base   = nullptr;
     void *src_base[2] = {nullptr, nullptr};
     vx_imagepatch_addressing_t dst_addr, src_addr[2];

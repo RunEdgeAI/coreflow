@@ -350,7 +350,7 @@ static vx_status VX_CALLBACK tensorMultiplyValidator(vx_node node, const vx_refe
     status |= SetOutputMetaFormat (in1, in2, out, &metas[MULTIPLY_PARAM_TENSOR_OUT]);
 
 
-    return VX_SUCCESS;
+    return status;
 }
 
 static vx_param_description_t tensor_multiply_kernel_params[] = {
@@ -426,7 +426,7 @@ static vx_status VX_CALLBACK tensorAddSubValidator(vx_node node, const vx_refere
     status |= SetOutputMetaFormat (in1, in2, out, &metas[ADDSUB_PARAM_TENSOR_OUT]);
 
 
-    return VX_SUCCESS;
+    return status;
 }
 
 

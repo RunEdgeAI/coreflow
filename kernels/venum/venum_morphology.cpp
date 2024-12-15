@@ -40,6 +40,7 @@ static vx_uint8 max_op(vx_uint8 a, vx_uint8 b)
 }
 
 // helpers
+__attribute__((unused))
 static vx_int32 vx_uint8_compare(const void *p1, const void *p2)
 {
     vx_uint8 a = *(vx_uint8 *)p1;

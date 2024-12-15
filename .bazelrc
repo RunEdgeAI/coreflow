@@ -4,6 +4,7 @@ common --enable_bzlmod
 # Build settings
 build --cxxopt=-std=c++17  # Use C++17 standard (adjust if needed)
 build --compiler=g++       # Specify the compiler if needed, e.g., gcc, clang
+build --per_file_copt=.*\.cpp,-tests/*.cpp@-Werror
 
 # Test settings
 test --test_output=errors  # Show errors from tests

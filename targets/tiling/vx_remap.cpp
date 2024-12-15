@@ -166,7 +166,7 @@ static void remapLinearConst(const size_t height,
 
 void Remap_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void * VX_RESTRICT tile_memory, vx_size tile_memory_size)
 {
-    vx_uint32 x = 0, y = 0;
+    // vx_uint32 x = 0, y = 0;
 
     vx_tile_ex_t *in = (vx_tile_ex_t *)parameters[0];
     vx_remap *table = (vx_remap *)parameters[1];
@@ -176,7 +176,9 @@ void Remap_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void * 
     vx_uint8 *src_base = in->base[0];
     vx_uint8 *dst_base = out->base[0];
 
+    __attribute__((unused))
     vx_uint32 low_y = out->tile_y;
+    __attribute__((unused))
     vx_uint32 high_y = out->tile_y + out->tile_block.height;
 
     vx_int32 policy = (*stype)->data.s32;
@@ -212,8 +214,10 @@ void Remap_image_tiling_fast(void * VX_RESTRICT parameters[VX_RESTRICT], void * 
         vx_int32 * map = alignPtr(_map, 16);
 
         int32x4_t v_m1_4 = vdupq_n_s32(-1);
+        __attribute__((unused))
         int32x2_t v_m1_2 = vdup_n_s32(-1);
         float32x4_t v_zero4 = vdupq_n_f32(0.0f);
+        __attribute__((unused))
         float32x2_t v_zero2 = vdup_n_f32(0.0f);
 
         // compute table
@@ -564,5 +568,5 @@ vx_tiling_kernel_t remap_kernel =
     nullptr,
     { 16, 16 },
     { -1, 1, -1, 1 },
-    { VX_BORDER_MODE_UNDEFINED, 0 },
+    { VX_BORDER_MODE_UNDEFINED, {{0}} },
 };
