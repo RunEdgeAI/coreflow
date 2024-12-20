@@ -25,7 +25,23 @@ vx_enum static_objects[] = {
 /* INTERNAL REFERENCE APIS                                                   */
 /*****************************************************************************/
 
-Reference::Reference(vx_context context, vx_enum type, vx_reference scope)
+Reference::Reference(vx_context context, vx_enum type, vx_reference scope):
+magic(VX_MAGIC),
+type(type),
+context(context),
+scope(scope),
+external_count(0),
+internal_count(0),
+read_count(0),
+write_count(0),
+reserved(nullptr),
+index(0),
+extracted(vx_false_e),
+is_virtual(vx_false_e),
+delay(nullptr),
+delay_slot_index(0),
+is_accessible(vx_false_e),
+name{}
 {
 #if !DISABLE_ICD_COMPATIBILITY
     if(context)
@@ -33,20 +49,6 @@ Reference::Reference(vx_context context, vx_enum type, vx_reference scope)
     else
         platform = nullptr;
 #endif
-    this->context = context;
-    this->scope = scope;
-    this->type = type;
-    magic = VX_MAGIC;
-    internal_count = 0;
-    external_count = 0;
-    write_count = 0;
-    read_count = 0;
-    extracted = vx_false_e;
-    delay = nullptr;
-    delay_slot_index = 0;
-    is_virtual = vx_false_e;
-    is_accessible = vx_false_e;
-    name[0] = 0;
     ownCreateSem(&lock, 1);
 }
 

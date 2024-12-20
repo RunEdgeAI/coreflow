@@ -28,8 +28,7 @@ refs(nullptr)
 
 Import::~Import()
 {
-#if defined(OPENVX_USE_XML) || defined(OPENVX_USE_IX)
-#endif /* defined(OPENVX_USE_XML) || defined(OPENVX_USE_IX) */
+
 }
 
 #if defined(OPENVX_USE_XML) || defined(OPENVX_USE_IX)
