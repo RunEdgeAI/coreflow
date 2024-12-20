@@ -19,19 +19,20 @@
  * \brief The C-Model Target Interface
  * \author Erik Rainey <erik.rainey@gmail.com>
  */
+#include <sys/time.h>
 
 #include <VX/vx.h>
 #include <VX/vx_helper.h>
-#include <vx_debug.h>
+
+#include "vx_debug.h"
+#include "vx_interface.h"
 #include "vx_internal.h"
-#include <vx_interface.h>
-#include <vx_support.h>
-#include <sys/time.h>
+#include "vx_support.h"
 
 static const vx_char name[VX_MAX_TARGET_NAME] = "pc.opencl";
 
 /*! \brief Prototype for assigning to kernel */
-static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_reference *parameters, vx_uint32 num);
+static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_reference parameters[], vx_uint32 num);
 
 static vx_cl_kernel_description_t *cl_kernels[] =
 {
@@ -77,7 +78,7 @@ extern "C" vx_status vxTargetInit(vx_target target)
     //char *cl_dirs = "/home/pi/sample-impl-opencl/kernels/opencl";
 	char cl_args[1024];
 
-    if(nullptr == vx_incs)
+    if (nullptr == vx_incs)
         return VX_FAILURE;
 
     snprintf(cl_args, sizeof(cl_args), "-D VX_CL_KERNEL -I %s -I %s %s %s", vx_incs, cl_dirs,
@@ -93,7 +94,8 @@ extern "C" vx_status vxTargetInit(vx_target target)
 #endif
     );
     printf("flags: %s\n", cl_args);
-    if (cl_dirs == nullptr) {
+    if (cl_dirs == nullptr)
+    {
 #ifdef VX_CL_SOURCE_DIR
         const char *sdir = VX_CL_SOURCE_DIR;
         int len = strlen(sdir);
@@ -112,19 +114,23 @@ extern "C" vx_status vxTargetInit(vx_target target)
     if (err != CL_SUCCESS)
         goto exit;
 
-    for (p = 0; p < context->num_platforms; p++) {
-        err = clGetDeviceIDs(context->platforms[p], CL_DEVICE_TYPE_ALL,
+    for (p = 0; p < context->num_platforms; p++)
+    {
+        err = clGetDeviceIDs(context->platforms[p], CL_DEVICE_TYPE_GPU,
             0, nullptr, &context->num_devices[p]);
-        err = clGetDeviceIDs(context->platforms[p], CL_DEVICE_TYPE_ALL,
+
+        err |= clGetDeviceIDs(context->platforms[p], CL_DEVICE_TYPE_GPU,
             context->num_devices[p] > CL_MAX_DEVICES ? CL_MAX_DEVICES : context->num_devices[p],
             context->devices[p], nullptr);
-        if (err == CL_SUCCESS) {
+        if (err == CL_SUCCESS)
+        {
             cl_context_properties props[] = {
                 (cl_context_properties)CL_CONTEXT_PLATFORM,
                 (cl_context_properties)context->platforms[p],
                 (cl_context_properties)0,
             };
-            for (d = 0; d < context->num_devices[p]; d++) {
+            for (d = 0; d < context->num_devices[p]; d++)
+            {
                 char deviceName[64];
                 cl_bool compiler = CL_FALSE;
                 cl_bool available = CL_FALSE;
@@ -146,10 +152,14 @@ extern "C" vx_status vxTargetInit(vx_target target)
                                                  target,
                                                  &err);
             if (err != CL_SUCCESS)
+            {
+                VX_PRINT(VX_ZONE_ERROR, "Failed to create cl context\n");
                 break;
+            }
 
             /* check for supported formats */
-            if (err == CL_SUCCESS) {
+            if (err == CL_SUCCESS)
+            {
                 cl_uint f,num_entries = 0u;
                 cl_image_format *formats = nullptr;
                 cl_mem_flags flags = CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR;
@@ -158,11 +168,13 @@ extern "C" vx_status vxTargetInit(vx_target target)
                 err = clGetSupportedImageFormats(context->global[p], flags, type, 0, nullptr, &num_entries);
                 formats = (cl_image_format *)malloc(num_entries * sizeof(cl_image_format));
                 err = clGetSupportedImageFormats(context->global[p], flags, type, num_entries, formats, nullptr);
-                for (f = 0; f < num_entries; f++) {
+                for (f = 0; f < num_entries; f++)
+                {
                     char order[256];
                     char datat[256];
     #define CASE_STRINGERIZE2(value, string) case value: strcpy(string, #value); break
-                    switch(formats[f].image_channel_order) {
+                    switch(formats[f].image_channel_order)
+                    {
                         CASE_STRINGERIZE2(CL_R, order);
                         CASE_STRINGERIZE2(CL_A, order);
                         CASE_STRINGERIZE2(CL_RG, order);
@@ -193,7 +205,8 @@ extern "C" vx_status vxTargetInit(vx_target target)
                             snprintf(order, sizeof(cl_channel_order), "%x", formats[f].image_channel_order);
                             break;
                     }
-                    switch(formats[f].image_channel_data_type) {
+                    switch(formats[f].image_channel_data_type)
+                    {
                         CASE_STRINGERIZE2(CL_SNORM_INT8, datat);
                         CASE_STRINGERIZE2(CL_SNORM_INT16, datat);
                         CASE_STRINGERIZE2(CL_UNORM_INT8, datat);
@@ -227,7 +240,9 @@ extern "C" vx_status vxTargetInit(vx_target target)
                                                           context->devices[p][d],
                                                           CL_QUEUE_PROFILING_ENABLE,
                                                           &err);
-                if (err == CL_SUCCESS) {
+                if (err == CL_SUCCESS)
+                {
+                    VX_PRINT(VX_ZONE_TARGET, "Successfully created command queues for all devices\n");
                 }
             }
 
@@ -239,11 +254,12 @@ extern "C" vx_status vxTargetInit(vx_target target)
 
                 /* load the source file */
                 VX_PRINT(VX_ZONE_INFO, "Joiner: %s\n", FILE_JOINER);
-                VX_PRINT(VX_ZONE_INFO, "Path: %s\n", VX_CL_SOURCEPATH);
+                VX_PRINT(VX_ZONE_INFO, "Path: %s\n", cl_dirs);
                 VX_PRINT(VX_ZONE_INFO, "Kernel[%u] File: %s\n", k, cl_kernels[k]->sourcepath);
                 VX_PRINT(VX_ZONE_INFO, "Kernel[%u] Name: %s\n", k, cl_kernels[k]->kernelname);
                 VX_PRINT(VX_ZONE_INFO, "Kernel[%u] ID: %s\n", k, cl_kernels[k]->description.name);
-                sources = clLoadSources(cl_kernels[k]->sourcepath, &programSze);
+                std::string fullPath = std::string(cl_dirs) + std::string(cl_kernels[k]->sourcepath);
+                sources = clLoadSources(const_cast<char*>(fullPath.c_str()), &programSze);
                 /* create a program with this source */
                 cl_kernels[k]->program[p] = clCreateProgramWithSource(context->global[p],
                     1,
@@ -315,21 +331,29 @@ extern "C" vx_status vxTargetInit(vx_target target)
                                 VX_PRINT(VX_ZONE_INFO, "Linked Kernel %s on target %s\n", cl_kernels[k]->kernelname, target->name);
                                 target->num_kernels++;
                                 target->context->num_kernels++;
-                                status = target->kernels[k]->initializeKernel(
-                                    cl_kernels[k]->description.enumeration,
-                                    (kfunc == nullptr ? vxclCallOpenCLKernel : kfunc),
-                                    cl_kernels[k]->description.name,
-                                    cl_kernels[k]->description.parameters,
-                                    cl_kernels[k]->description.numParams,
-                                    cl_kernels[k]->description.validate,
-                                    cl_kernels[k]->description.input_validate,
-                                    cl_kernels[k]->description.output_validate,
-                                    cl_kernels[k]->description.initialize,
-                                    cl_kernels[k]->description.deinitialize);
-                                if (Kernel::isKernelUnique(target->kernels[k]) == vx_true_e) {
-                                    target->context->num_unique_kernels++;
-                                } else {
-                                    VX_PRINT(VX_ZONE_KERNEL, "Kernel %s is NOT unqiue\n", target->kernels[k]->name);
+
+                                if (target->kernels[k])
+                                {
+                                    status = target->kernels[k]->initializeKernel(
+                                        cl_kernels[k]->description.enumeration,
+                                        (kfunc == nullptr ? vxclCallOpenCLKernel : kfunc),
+                                        cl_kernels[k]->description.name,
+                                        cl_kernels[k]->description.parameters,
+                                        cl_kernels[k]->description.numParams,
+                                        cl_kernels[k]->description.validate,
+                                        cl_kernels[k]->description.input_validate,
+                                        cl_kernels[k]->description.output_validate,
+                                        cl_kernels[k]->description.initialize,
+                                        cl_kernels[k]->description.deinitialize);
+
+                                    if (Kernel::isKernelUnique(target->kernels[k]) == vx_true_e)
+                                    {
+                                        target->context->num_unique_kernels++;
+                                    }
+                                    else
+                                    {
+                                        VX_PRINT(VX_ZONE_KERNEL, "Kernel %s is NOT unqiue\n", target->kernels[k]->name);
+                                    }
                                 }
                             }
                         }
@@ -344,7 +368,8 @@ extern "C" vx_status vxTargetInit(vx_target target)
         }
     }
 exit:
-    if (err == CL_SUCCESS) {
+    if (err == CL_SUCCESS)
+    {
         status = VX_SUCCESS;
     } else {
         status = VX_ERROR_NO_RESOURCES;
@@ -363,9 +388,12 @@ extern "C" vx_status vxTargetDeinit(vx_target target)
         {
             for (k = 0; k < num_cl_kernels; k++)
             {
-                target->kernels[k]->decrementReference(VX_INTERNAL);
-                clReleaseKernel(cl_kernels[k]->kernels[p]);
-                clReleaseProgram(cl_kernels[k]->program[p]);
+                if (target->kernels[k])
+                {
+                    target->kernels[k]->decrementReference(VX_INTERNAL);
+                    clReleaseKernel(cl_kernels[k]->kernels[p]);
+                    clReleaseProgram(cl_kernels[k]->program[p]);
+                }
 
             }
             for (d = 0; d < context->num_devices[p]; d++)
@@ -394,7 +422,8 @@ extern "C" vx_status vxTargetSupports(vx_target target,
         vx_uint32 k = 0u;
         for (k = 0u; k < VX_INT_MAX_KERNELS; k++)
         {
-            if (strncmp(kernelName, target->kernels[k]->name, VX_MAX_KERNEL_NAME) == 0)
+            if (target->kernels[k] &&
+                strncmp(kernelName, target->kernels[k]->name, VX_MAX_KERNEL_NAME) == 0)
             {
                 status = VX_SUCCESS;
                 if (pIndex) *pIndex = k;
@@ -467,14 +496,15 @@ extern "C" vx_kernel vxTargetAddKernel(vx_target target,
     vx_kernel kernel = nullptr;
     for (k = 0; k < VX_INT_MAX_KERNELS; k++)
     {
-        kernel = target->kernels[k];
-        if (kernel->enabled == vx_false_e)
+        if (target->kernels[k] == nullptr || target->kernels[k]->enabled == vx_false_e)
         {
-            kernel->initializeKernel(
+            target->kernels[k] = reinterpret_cast<vx_kernel>(Reference::createReference(target->context, VX_TYPE_KERNEL, VX_INTERNAL, target->context));
+            target->kernels[k]->initializeKernel(
                                enumeration, func_ptr, name,
                                nullptr, numParams,
                                validate, input, output, initialize, deinitialize);
-            VX_PRINT(VX_ZONE_KERNEL, "Reserving %s Kernel[%u] for %s\n", target->name, k, kernel->name);
+            VX_PRINT(VX_ZONE_KERNEL, "Reserving %s Kernel[%u] for %s\n", target->name, k, target->kernels[k]->name);
+            kernel = target->kernels[k];
             target->num_kernels++;
             break;
         }
@@ -522,7 +552,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
     vx_status status = VX_FAILURE;
     vx_context context = node->context;
     __attribute__((unused))
-    vx_target target = (vx_target)&node->context->targets[node->affinity];
+    vx_target target = (vx_target)node->context->targets[node->affinity];
     vx_cl_kernel_description_t *vxclk = vxclFindKernel(node->kernel->enumeration);
     vx_uint32 pidx, pln, didx, plidx, argidx;
     cl_int err = 0;
@@ -576,10 +606,14 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
             case VX_TYPE_THRESHOLD:
                break;
         }
-        if (memory) {
-            for (pln = 0; pln < memory->nptrs; pln++) {
-                if (memory->cl_type == CL_MEM_OBJECT_BUFFER) {
-                    if (type == VX_TYPE_IMAGE) {
+        if (memory)
+        {
+            for (pln = 0; pln < memory->nptrs; pln++)
+            {
+                if (memory->cl_type == CL_MEM_OBJECT_BUFFER)
+                {
+                    if (type == VX_TYPE_IMAGE)
+                    {
 
                         /* set the work dimensions */
                         work_dim[0] = memory->dims[pln][VX_DIM_X];
@@ -591,7 +625,8 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                         err = clSetKernelArg(vxclk->kernels[plidx], argidx++, sizeof(vx_int32), &memory->strides[pln][VX_DIM_X]);
                         err = clSetKernelArg(vxclk->kernels[plidx], argidx++, sizeof(vx_int32), &memory->strides[pln][VX_DIM_Y]);
                         VX_PRINT(VX_ZONE_INFO, "Setting vx_image as Buffer with 4 parameters\n");
-                    } else if (type == VX_TYPE_ARRAY || type == VX_TYPE_LUT) {
+                    } else if (type == VX_TYPE_ARRAY || type == VX_TYPE_LUT)
+                    {
                         vx_array arr = (vx_array)ref;
                         // sizeof item, active count, capacity
                         err = clSetKernelArg(vxclk->kernels[plidx], argidx++, sizeof(vx_uint32), (vx_uint32 *)&arr->item_size);
@@ -599,13 +634,15 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                         err = clSetKernelArg(vxclk->kernels[plidx], argidx++, sizeof(vx_uint32), (vx_uint32 *)&arr->capacity);
                         err = clSetKernelArg(vxclk->kernels[plidx], argidx++, sizeof(vx_int32), &arr->memory.strides[VX_DIM_X]);
                         VX_PRINT(VX_ZONE_INFO, "Setting vx_buffer as Buffer with 4 parameters\n");
-                    } else if (type == VX_TYPE_MATRIX) {
+                    } else if (type == VX_TYPE_MATRIX)
+                    {
                         vx_matrix mat = (vx_matrix)ref;
                         // columns, rows
                         err = clSetKernelArg(vxclk->kernels[plidx], argidx++, sizeof(vx_uint32), (vx_uint32 *)&mat->columns);
                         err = clSetKernelArg(vxclk->kernels[plidx], argidx++, sizeof(vx_uint32), (vx_uint32 *)&mat->rows);
                         VX_PRINT(VX_ZONE_INFO, "Setting vx_matrix as Buffer with 2 parameters\n");
-                    } else if (type == VX_TYPE_DISTRIBUTION) {
+                    } else if (type == VX_TYPE_DISTRIBUTION)
+                    {
                         vx_distribution dist = (vx_distribution)ref;
                         // num, range, offset, num_bins
                         vx_uint32 num_bins = dist->memory.dims[0][VX_DIM_X];
@@ -613,7 +650,8 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                         err = clSetKernelArg(vxclk->kernels[plidx], argidx++, sizeof(vx_uint32), (vx_uint32 *)&dist->range_x);
                         err = clSetKernelArg(vxclk->kernels[plidx], argidx++, sizeof(vx_uint32), (vx_uint32 *)&dist->offset_x);
                         err = clSetKernelArg(vxclk->kernels[plidx], argidx++, sizeof(vx_uint32), (vx_uint32 *)&num_bins);
-                    } else if (type == VX_TYPE_CONVOLUTION) {
+                    } else if (type == VX_TYPE_CONVOLUTION)
+                    {
                         vx_convolution conv = (vx_convolution)ref;
                         // columns, rows, scale
                         err = clSetKernelArg(vxclk->kernels[plidx], argidx++, sizeof(vx_uint32), (vx_uint32 *)&conv->columns);
@@ -641,7 +679,8 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
 
                         printf("opencl write DMA %f ms\n", costTime);
                     }
-                } else if (memory->cl_type == CL_MEM_OBJECT_IMAGE2D) {
+                } else if (memory->cl_type == CL_MEM_OBJECT_IMAGE2D)
+                {
                     vx_rectangle_t rect = {0};
                     vx_image image = (vx_image)ref;
                     vxGetValidRegionImage(image, &rect);
@@ -653,7 +692,8 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                     VX_PRINT(VX_ZONE_INFO, "Setting vx_image as image2d_t wd={%zu,%zu} arg:%u\n",work_dim[0], work_dim[1], argidx);
                     err = clSetKernelArg(vxclk->kernels[plidx], argidx++, sizeof(cl_mem), &memory->hdls[pln]);
                     CL_ERROR_MSG(err, "clSetKernelArg");
-                    if (err != CL_SUCCESS) {
+                    if (err != CL_SUCCESS)
+                    {
                         VX_PRINT(VX_ZONE_ERROR, "Error Calling Kernel %s, parameter %u\n", node->kernel->name, pidx);
                     }
                     if (dir == VX_INPUT || dir == VX_BIDIRECTIONAL)
@@ -672,7 +712,8 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                 }
             }
         } else {
-            if (type == VX_TYPE_SCALAR) {
+            if (type == VX_TYPE_SCALAR)
+            {
                 vx_value_t value; // largest platform atomic
                 vx_size size = 0ul;
                 vx_scalar sc = (vx_scalar)ref;
@@ -682,13 +723,16 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                 size = Reference::sizeOfType(stype);
                 err = clSetKernelArg(vxclk->kernels[plidx], argidx++, size, &value);
             }
-            else if (type == VX_TYPE_THRESHOLD) {
+            else if (type == VX_TYPE_THRESHOLD)
+            {
                 vx_enum ttype = 0;
                 vx_threshold th = (vx_threshold)ref;
                 vxQueryThreshold(th, VX_THRESHOLD_TYPE, &ttype, sizeof(ttype));
-                if (ttype == VX_THRESHOLD_TYPE_BINARY) {
+                if (ttype == VX_THRESHOLD_TYPE_BINARY)
+                {
                     err = clSetKernelArg(vxclk->kernels[plidx], argidx++, sizeof(vx_uint8), &th->value);
-                } else if (ttype == VX_THRESHOLD_TYPE_RANGE) {
+                } else if (ttype == VX_THRESHOLD_TYPE_RANGE)
+                {
                     err = clSetKernelArg(vxclk->kernels[plidx], argidx++, sizeof(vx_uint8), &th->lower);
                     err = clSetKernelArg(vxclk->kernels[plidx], argidx++, sizeof(vx_uint8), &th->upper);
                 }
@@ -696,10 +740,12 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         }
     }
     we = 0;
-    for (pidx = 0; pidx < num; pidx++) {
+    for (pidx = 0; pidx < num; pidx++)
+    {
         vx_reference ref = node->parameters[pidx];
         vx_enum dir = node->kernel->signature.directions[pidx];
-        if (dir == VX_INPUT || dir == VX_BIDIRECTIONAL) {
+        if (dir == VX_INPUT || dir == VX_BIDIRECTIONAL)
+        {
             memcpy(&writeEvents[we++],&ref->event, sizeof(cl_event));
         }
     }
@@ -754,9 +800,12 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                 case VX_TYPE_THRESHOLD:
                    break;
             }
-            if (memory) {
-                for (pln = 0; pln < memory->nptrs; pln++) {
-                    if (memory->cl_type == CL_MEM_OBJECT_BUFFER) {
+            if (memory)
+            {
+                for (pln = 0; pln < memory->nptrs; pln++)
+                {
+                    if (memory->cl_type == CL_MEM_OBJECT_BUFFER)
+                    {
                         gettimeofday(&start1, nullptr);
                         err = clEnqueueReadBuffer(context->queues[plidx][didx],
                             memory->hdls[pln],
@@ -770,7 +819,8 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
 
                         printf("opencl read DMA %f ms\n", costTime);
                         CL_ERROR_MSG(err, "clEnqueueReadBuffer");
-                    } else if (memory->cl_type == CL_MEM_OBJECT_IMAGE2D) {
+                    } else if (memory->cl_type == CL_MEM_OBJECT_IMAGE2D)
+                    {
                         vx_rectangle_t rect = {0};
                         vx_image image = (vx_image)ref;
                         vxGetValidRegionImage(image, &rect);
@@ -796,10 +846,12 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         }
     }
     re = 0;
-    for (pidx = 0; pidx < num; pidx++) {
+    for (pidx = 0; pidx < num; pidx++)
+    {
         vx_reference ref = node->parameters[pidx];
         vx_enum dir = node->kernel->signature.directions[pidx];
-        if (dir == VX_OUTPUT || dir == VX_BIDIRECTIONAL) {
+        if (dir == VX_OUTPUT || dir == VX_BIDIRECTIONAL)
+        {
             memcpy(&readEvents[re++],&ref->event, sizeof(cl_event));
         }
     }
