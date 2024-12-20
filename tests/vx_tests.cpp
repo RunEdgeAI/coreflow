@@ -1013,15 +1013,15 @@ vx_status vx_test_graph_channels_yuv(int argc, char *argv[])
             if (vxGetStatus((vx_reference)graph) == VX_SUCCESS)
             {
                 vx_node nodes[] = {
-                    vxFReadImageNode(graph, "./tests/raw/colorbars_640x480_I444.rgb", images[0]),
+                    vxFReadImageNode(graph, (vx_char*)"./tests/raw/colorbars_640x480_I444.rgb", images[0]),
                     vxColorConvertNode(graph, images[0], images[1]),
-                    vxFWriteImageNode(graph, images[1], "oiyuv_640x480_P420.yuv"),
+                    vxFWriteImageNode(graph, images[1], (vx_char*)"oiyuv_640x480_P420.yuv"),
                     vxChannelExtractNode(graph, images[1], VX_CHANNEL_Y, images[2]),
                     vxChannelExtractNode(graph, images[1], VX_CHANNEL_U, images[3]),
                     vxChannelExtractNode(graph, images[1], VX_CHANNEL_V, images[4]),
-                    vxFWriteImageNode(graph, images[2], "oy_640x480_P400.bw"),
-                    vxFWriteImageNode(graph, images[3], "ou_320x240_P400.bw"),
-                    vxFWriteImageNode(graph, images[4], "ov_320x240_P400.bw"),
+                    vxFWriteImageNode(graph, images[2], (vx_char*)"oy_640x480_P400.bw"),
+                    vxFWriteImageNode(graph, images[3], (vx_char*)"ou_320x240_P400.bw"),
+                    vxFWriteImageNode(graph, images[4], (vx_char*)"ov_320x240_P400.bw"),
                 };
                 CHECK_ALL_ITEMS(nodes, i, status, exit);
                 if (status == VX_SUCCESS)
@@ -1144,7 +1144,7 @@ vx_status vx_test_graph_bikegray(int argc, char *argv[])
             if (vxGetStatus((vx_reference)graph) == VX_SUCCESS)
             {
                 vx_node nodes[] = {
-                    vxFReadImageNode(graph, "./tests/raw/bikegray_640x480.pgm", images[0]),
+                    vxFReadImageNode(graph, (vx_char*)"./tests/raw/bikegray_640x480.pgm", images[0]),
                     vxMedian3x3Node(graph, images[0], images[12]),
                     vxBox3x3Node(graph, images[0], images[13]),
                     vxScaleImageNode(graph, images[0], images[1], VX_INTERPOLATION_AREA),
@@ -1168,27 +1168,27 @@ vx_status vx_test_graph_bikegray(int argc, char *argv[])
                     vxRemapNode(graph, images[0], table, VX_INTERPOLATION_BILINEAR, images[19]),
                     vxAbsDiffNode(graph, images[18], images[19], images[20]),
 
-                    vxFWriteImageNode(graph, images[0], "obikegray_640x480_P400.pgm"),
-                    vxFWriteImageNode(graph, images[1], "obikegray_300x200_P400.pgm"),
-                    vxFWriteImageNode(graph, images[2], "obikegradh_300x200_P400_-16b.bw"),
-                    vxFWriteImageNode(graph, images[3], "obikegradv_300x200_P400_-16b.bw"),
-                    vxFWriteImageNode(graph, images[4], "obikemag_300x200_P400.pgm"),
-                    vxFWriteImageNode(graph, images[5], "obikeatan_300x200_P400.pgm"),
-                    vxFWriteImageNode(graph, images[6], "obikeluty_300x200_P400.pgm"),
-                    vxFWriteImageNode(graph, images[7], "obikediff_300x200_P400.pgm"),
-                    vxFWriteImageNode(graph, images[8], "obikethsh_300x200_P400.pgm"),
-                    vxFWriteImageNode(graph, images[9], "obikesums_600x200_P400_16b.bw"),
-                    vxFWriteImageNode(graph, images[10], "obikeerod_300x200_P400.pgm"),
-                    vxFWriteImageNode(graph, images[11], "obikedilt_300x200_P400.pgm"),
-                    vxFWriteImageNode(graph, images[12], "obikemed_640x480_P400.pgm"),
-                    vxFWriteImageNode(graph, images[13], "obikeavg_640x480_P400.pgm"),
-                    vxFWriteImageNode(graph, images[14], "obikediff_300x200_P400_16b.bw"),
-                    vxFWriteImageNode(graph, images[15], "obikecanny_640x480_P400.pgm"),
-                    vxFWriteImageNode(graph, images[16], "obikeeqhist_640x480_P400.pgm"),
-                    vxFWriteImageNode(graph, images[17], "obikegrady8_300x200_P400.pgm"),
-                    vxFWriteImageNode(graph, images[18], "obikeremap_nn_300x200_P400.pgm"),
-                    vxFWriteImageNode(graph, images[19], "obikeremap_bi_300x200_P400.pgm"),
-                    vxFWriteImageNode(graph, images[20], "obikeremap_ab_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[0], (vx_char*)"obikegray_640x480_P400.pgm"),
+                    vxFWriteImageNode(graph, images[1], (vx_char*)"obikegray_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[2], (vx_char*)"obikegradh_300x200_P400_-16b.bw"),
+                    vxFWriteImageNode(graph, images[3], (vx_char*)"obikegradv_300x200_P400_-16b.bw"),
+                    vxFWriteImageNode(graph, images[4], (vx_char*)"obikemag_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[5], (vx_char*)"obikeatan_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[6], (vx_char*)"obikeluty_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[7], (vx_char*)"obikediff_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[8], (vx_char*)"obikethsh_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[9], (vx_char*)"obikesums_600x200_P400_16b.bw"),
+                    vxFWriteImageNode(graph, images[10], (vx_char*)"obikeerod_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[11], (vx_char*)"obikedilt_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[12], (vx_char*)"obikemed_640x480_P400.pgm"),
+                    vxFWriteImageNode(graph, images[13], (vx_char*)"obikeavg_640x480_P400.pgm"),
+                    vxFWriteImageNode(graph, images[14], (vx_char*)"obikediff_300x200_P400_16b.bw"),
+                    vxFWriteImageNode(graph, images[15], (vx_char*)"obikecanny_640x480_P400.pgm"),
+                    vxFWriteImageNode(graph, images[16], (vx_char*)"obikeeqhist_640x480_P400.pgm"),
+                    vxFWriteImageNode(graph, images[17], (vx_char*)"obikegrady8_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[18], (vx_char*)"obikeremap_nn_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[19], (vx_char*)"obikeremap_bi_300x200_P400.pgm"),
+                    vxFWriteImageNode(graph, images[20], (vx_char*)"obikeremap_ab_300x200_P400.pgm"),
                 };
                 vx_print_log((vx_reference)context);
                 CHECK_ALL_ITEMS(nodes, i, status, exit);
@@ -1342,7 +1342,7 @@ vx_status vx_test_graph_lena(int argc, char *argv[])
             if (vxGetStatus((vx_reference)graph) == VX_SUCCESS)
             {
                 vx_node nodes[] = {
-                    vxFReadImageNode(graph, "./tests/raw/lena_512x512.pgm", images[0]),
+                    vxFReadImageNode(graph, (vx_char*)"./tests/raw/lena_512x512.pgm", images[0]),
                     vxMedian3x3Node(graph, images[0], images[1]),
                     vxBox3x3Node(graph, images[0], images[2]),
                     vxGaussian3x3Node(graph, images[0], images[3]),
@@ -1350,18 +1350,18 @@ vx_status vx_test_graph_lena(int argc, char *argv[])
                     vxConvolveNode(graph, images[3], conv[1], images[5]),
                     vxMagnitudeNode(graph, images[4], images[5], images[6]),
                     vxLaplacian3x3Node(graph, images[0], images[7]),
-                    // vxGaussianPyramidNode(graph, images[0], pyramid),
-                    // vxWarpAffineNode(graph, images[0], affine, VX_INTERPOLATION_NEAREST_NEIGHBOR, images[8]),
-                    // vxWarpPerspectiveNode(graph, images[0], perspective, VX_INTERPOLATION_NEAREST_NEIGHBOR, images[9]),
-                    vxFWriteImageNode(graph, images[1], "olenamed_512x512_P400.bw"),
-                    vxFWriteImageNode(graph, images[2], "olenaavg_512x512_P400.bw"),
-                    vxFWriteImageNode(graph, images[3], "olenagau_512x512_P400.bw"),
-                    vxFWriteImageNode(graph, images[4], "olenacus1_512x512_P400_-16b.bw"),
-                    vxFWriteImageNode(graph, images[5], "olenacus2_512x512_P400_-16b.bw"),
-                    vxFWriteImageNode(graph, images[6], "olenamag_512x512_P400.bw"),
-                    vxFWriteImageNode(graph, images[7], "olenalapl_512x512_P400.bw"),
-                    vxFWriteImageNode(graph, images[8], "olenaaffine_512x512_P400.bw"),
-                    vxFWriteImageNode(graph, images[9], "olenaperspec_512x512_P400.bw"),
+                    vxGaussianPyramidNode(graph, images[0], pyramid),
+                    vxWarpAffineNode(graph, images[0], affine, VX_INTERPOLATION_NEAREST_NEIGHBOR, images[8]),
+                    vxWarpPerspectiveNode(graph, images[0], perspective, VX_INTERPOLATION_NEAREST_NEIGHBOR, images[9]),
+                    vxFWriteImageNode(graph, images[1], (vx_char*)"olenamed_512x512_P400.bw"),
+                    vxFWriteImageNode(graph, images[2], (vx_char*)"olenaavg_512x512_P400.bw"),
+                    vxFWriteImageNode(graph, images[3], (vx_char*)"olenagau_512x512_P400.bw"),
+                    vxFWriteImageNode(graph, images[4], (vx_char*)"olenacus1_512x512_P400_-16b.bw"),
+                    vxFWriteImageNode(graph, images[5], (vx_char*)"olenacus2_512x512_P400_-16b.bw"),
+                    vxFWriteImageNode(graph, images[6], (vx_char*)"olenamag_512x512_P400.bw"),
+                    vxFWriteImageNode(graph, images[7], (vx_char*)"olenalapl_512x512_P400.bw"),
+                    vxFWriteImageNode(graph, images[8], (vx_char*)"olenaaffine_512x512_P400.bw"),
+                    vxFWriteImageNode(graph, images[9], (vx_char*)"olenaperspec_512x512_P400.bw"),
                 };
                 CHECK_ALL_ITEMS(nodes, i, status, exit);
                 if (status == VX_SUCCESS)
@@ -1378,10 +1378,10 @@ vx_status vx_test_graph_lena(int argc, char *argv[])
                     }
                     if (status == VX_SUCCESS)
                     {
-                        vxuFWriteImage(context, vxGetPyramidLevel(pyramid, 0), "olenapyr_512x512_P400.bw");
-                        vxuFWriteImage(context, vxGetPyramidLevel(pyramid, 1), "olenapyr_256x256_P400.bw");
-                        vxuFWriteImage(context, vxGetPyramidLevel(pyramid, 2), "olenapyr_128x128_P400.bw");
-                        vxuFWriteImage(context, vxGetPyramidLevel(pyramid, 3), "olenapyr_64x64_P400.bw");
+                        vxuFWriteImage(context, vxGetPyramidLevel(pyramid, 0), (vx_char*)"olenapyr_512x512_P400.bw");
+                        vxuFWriteImage(context, vxGetPyramidLevel(pyramid, 1), (vx_char*)"olenapyr_256x256_P400.bw");
+                        vxuFWriteImage(context, vxGetPyramidLevel(pyramid, 2), (vx_char*)"olenapyr_128x128_P400.bw");
+                        vxuFWriteImage(context, vxGetPyramidLevel(pyramid, 3), (vx_char*)"olenapyr_64x64_P400.bw");
                     }
                     else
                     {
@@ -1459,15 +1459,15 @@ vx_status vx_test_graph_channels_rgb(int argc, char *argv[])
             if (vxGetStatus((vx_reference)graph) == VX_SUCCESS)
             {
                 vx_node nodes[] = {
-                    vxFReadImageNode(graph, "./tests/raw/colorbars_640x480_I444.rgb", images[0]),
+                    vxFReadImageNode(graph, (vx_char*)"./tests/raw/colorbars_640x480_I444.rgb", images[0]),
                     vxChannelExtractNode(graph, images[0], VX_CHANNEL_R, images[1]),
                     vxChannelExtractNode(graph, images[0], VX_CHANNEL_G, images[2]),
                     vxChannelExtractNode(graph, images[0], VX_CHANNEL_B, images[3]),
-                    vxFWriteImageNode(graph, images[1], "or_640x480_P400.bw"),
-                    vxFWriteImageNode(graph, images[2], "og_640x480_P400.bw"),
-                    vxFWriteImageNode(graph, images[3], "ob_640x480_P400.bw"),
+                    vxFWriteImageNode(graph, images[1], (vx_char*)"or_640x480_P400.bw"),
+                    vxFWriteImageNode(graph, images[2], (vx_char*)"og_640x480_P400.bw"),
+                    vxFWriteImageNode(graph, images[3], (vx_char*)"ob_640x480_P400.bw"),
                     vxChannelCombineNode(graph, images[1], images[2], images[3], 0, images[4]),
-                    vxFWriteImageNode(graph, images[4], "ocolorbars2_640x480_I444.rgb"),
+                    vxFWriteImageNode(graph, images[4], (vx_char*)"ocolorbars2_640x480_I444.rgb"),
                 };
                 CHECK_ALL_ITEMS(nodes, i, status, exit);
                 if (status == VX_SUCCESS)
@@ -1532,13 +1532,13 @@ vx_status vx_test_graph_accum(int argc, char *argv[])
             if (vxGetStatus((vx_reference)graph) == VX_SUCCESS)
             {
                 vx_node nodes[] = {
-                    vxFReadImageNode(graph, "./tests/raw/bikegray_640x480.pgm", images[0]),
+                    vxFReadImageNode(graph, (vx_char*)"./tests/raw/bikegray_640x480.pgm", images[0]),
                     vxAccumulateImageNode(graph, images[0], images[1]),
                     vxAccumulateWeightedImageNode(graph, images[0], scalars[0], images[2]),
                     vxAccumulateSquareImageNode(graph, images[0], scalars[1], images[3]),
-                    vxFWriteImageNode(graph, images[1], "obikeaccu_640x480_P400_16b.bw"),
-                    vxFWriteImageNode(graph, images[2], "obikeaccw_640x480_P400_16b.bw"),
-                    vxFWriteImageNode(graph, images[3], "obikeaccq_640x480_P400_16b.bw"),
+                    vxFWriteImageNode(graph, images[1], (vx_char*)"obikeaccu_640x480_P400_16b.bw"),
+                    vxFWriteImageNode(graph, images[2], (vx_char*)"obikeaccw_640x480_P400_16b.bw"),
+                    vxFWriteImageNode(graph, images[3], (vx_char*)"obikeaccq_640x480_P400_16b.bw"),
                 };
                 CHECK_ALL_ITEMS(nodes, i, status, exit);
                 if (status == VX_SUCCESS)
@@ -1902,7 +1902,8 @@ static vx_int32 a_mult(vx_int32 a, vx_int32 b, vx_float32 scale,
     return policy_result;
 }
 
-static vx_int32 a_add(vx_int32 a, vx_int32 b, vx_float32 scale,
+static vx_int32 a_add(vx_int32 a, vx_int32 b,
+                      __attribute__((unused))vx_float32 scale,
                       vx_df_image destformat, enum vx_convert_policy_e policy)
 {
     vx_int32 sum = a + b;
@@ -1911,7 +1912,8 @@ static vx_int32 a_add(vx_int32 a, vx_int32 b, vx_float32 scale,
     return policy_result;
 }
 
-static vx_int32 a_sub(vx_int32 a, vx_int32 b, vx_float32 scale,
+static vx_int32 a_sub(vx_int32 a, vx_int32 b,
+                      __attribute__((unused))vx_float32 scale,
                       vx_df_image destformat, enum vx_convert_policy_e policy)
 {
     vx_int32 difference = a - b;
@@ -2168,9 +2170,9 @@ vx_status vx_test_graph_corners(int argc, char *argv[])
         if (vxGetStatus((vx_reference)graph) == VX_SUCCESS)
         {
             vx_node nodes[] = {
-                vxFReadImageNode(graph, "./tests/raw/shapes.pgm", images[0]),
+                vxFReadImageNode(graph, (vx_char*)"./tests/raw/shapes.pgm", images[0]),
                 vxGaussian3x3Node(graph, images[0], images[1]),
-                vxFWriteImageNode(graph, images[1], "oshapes_blurred.pgm"),
+                vxFWriteImageNode(graph, images[1], (vx_char*)"oshapes_blurred.pgm"),
                 vxHarrisCornersNode(graph, images[1], scalars[0], scalars[1], scalars[2], ws, bs, harris_arr, nullptr),
                 vxFastCornersNode(graph, images[1], scalars[3], vx_false_e, fast_arr, nullptr),
             };
@@ -2293,8 +2295,8 @@ vx_status vx_test_graph_tracker(int argc, char *argv[])
             {
 
 
-                status |= vxuFReadImage(context,"./tests/raw/superresFirst_3072x2048_UYVY.yuv", images[0]);
-                status |= vxuFReadImage(context,"./tests/raw/superresSecond_3072x2048_UYVY.yuv", images[1]);
+                status |= vxuFReadImage(context, (vx_char*)"./tests/raw/superresFirst_3072x2048_UYVY.yuv", images[0]);
+                status |= vxuFReadImage(context, (vx_char*)"./tests/raw/superresSecond_3072x2048_UYVY.yuv", images[1]);
 
                 if (status == VX_SUCCESS)
                     status = vxProcessGraph(graph);
@@ -2345,17 +2347,17 @@ vx_status vx_test_graph_dot_export(int argc, char *argv[])
                 vxCreateVirtualImage(graph, 0, 0, VX_DF_IMAGE_VIRT),
             };
             vx_node nodes[] = {
-                vxFReadImageNode(graph, "./tests/raw/lena_512x512.pgm", images[0]),
+                vxFReadImageNode(graph, (vx_char*)"./tests/raw/lena_512x512.pgm", images[0]),
                 vxGaussian3x3Node(graph, images[0], images[1]),
-                vxFWriteImageNode(graph, images[1], "oblena_512x512.pgm"),
+                vxFWriteImageNode(graph, images[1], (vx_char*)"oblena_512x512.pgm"),
             };
             vx_uint32 n;
             CHECK_ALL_ITEMS(nodes, n, status, exit);
             status = vxVerifyGraph(graph);
             if (status == VX_SUCCESS)
             {
-                status = vxExportGraphToDot(graph, "blur.dot", vx_false_e);
-                status = vxExportGraphToDot(graph, "blur_data.dot", vx_true_e);
+                status = vxExportGraphToDot(graph, (vx_char*)"blur.dot", vx_false_e);
+                status = vxExportGraphToDot(graph, (vx_char*)"blur_data.dot", vx_true_e);
             }
             vxReleaseGraph(&graph);
         }
@@ -2430,7 +2432,7 @@ vx_status vx_xml_fullimport(int argc, char *argv[])
                             vx_perf_t perf;
                             graphStatus |= vxProcessGraph((vx_graph)ref);
                             vxQueryGraph((vx_graph)ref, VX_GRAPH_PERFORMANCE, &perf, sizeof(perf));
-                            printf("Graph " VX_FMT_SIZE " avg time: %lu\n", (vx_size)ref, perf.avg);
+                            printf("Graph " VX_FMT_SIZE " avg time: %llu\n", (vx_size)ref, perf.avg);
                         }
                         vxReleaseReference(&ref);
                     }
@@ -2440,7 +2442,7 @@ vx_status vx_xml_fullimport(int argc, char *argv[])
                     status = VX_FAILURE;
 
                 /* Option 2.a: Use known names */
-                vx_char *names[2] = { "GRAPH1", "GRAPH2"};
+                vx_char *names[2] = { (vx_char*)"GRAPH1", (vx_char*)"GRAPH2"};
                 vx_reference refs[2];
                 for(i = 0; i<2; i++) {
                     refs[i] = vxGetImportReferenceByName(xml_import, names[i]);
@@ -2448,7 +2450,7 @@ vx_status vx_xml_fullimport(int argc, char *argv[])
                         vx_perf_t perf;
                         graphStatus |= vxProcessGraph((vx_graph)refs[i]);
                         vxQueryGraph((vx_graph)refs[i], VX_GRAPH_PERFORMANCE, &perf, sizeof(perf));
-                        printf("Graph " VX_FMT_SIZE " avg time: %lu\n", (vx_size)refs[i], perf.avg);
+                        printf("Graph " VX_FMT_SIZE " avg time: %llu\n", (vx_size)refs[i], perf.avg);
                         vxReleaseReference(&refs[i]);
                     }
                 }
@@ -2463,7 +2465,7 @@ vx_status vx_xml_fullimport(int argc, char *argv[])
                         vx_perf_t perf;
                         graphStatus |= vxProcessGraph((vx_graph)refs[i]);
                         vxQueryGraph((vx_graph)refs[i], VX_GRAPH_PERFORMANCE, &perf, sizeof(perf));
-                        printf("Graph " VX_FMT_SIZE " avg time: %lu\n", (vx_size)refs[i], perf.avg);
+                        printf("Graph " VX_FMT_SIZE " avg time: %llu\n", (vx_size)refs[i], perf.avg);
                         vxReleaseReference(&refs[i]);
                     }
                 }
@@ -2569,7 +2571,8 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
                     {-2, 0, 1},
                     {-1, 0, 1},
             };
-            vx_int32 histogram[16], *histo = &histogram[0];
+            vx_int32 histogram[16];
+            __attribute__((unused)) vx_int32* histo = &histogram[0];
             vx_uint8 mylut[256] = {0};
             vx_uint32 y, x, cscale = 16;
             vx_imagepatch_addressing_t addr = {0};
