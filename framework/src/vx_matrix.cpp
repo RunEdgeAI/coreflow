@@ -31,7 +31,13 @@ pattern()
 
 }
 
-Matrix::Matrix(vx_context context, vx_type_e type, vx_reference scope) : Reference(context, type, scope)
+Matrix::Matrix(vx_context context, vx_type_e type, vx_reference scope) : Reference(context, type, scope),
+memory(),
+data_type(VX_TYPE_INVALID),
+columns(0),
+rows(0),
+origin(),
+pattern()
 {
 
 }
