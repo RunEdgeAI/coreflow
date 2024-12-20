@@ -164,7 +164,8 @@ vx_kernel Target::findKernelByEnum(vx_enum enumeration)
     vx_uint32 k = 0;
     for (k = 0; k < num_kernels; k++)
     {
-        if (kernels[k]->enumeration == enumeration)
+        if (kernels[k] &&
+            kernels[k]->enumeration == enumeration)
         {
             return kernels[k];
         }

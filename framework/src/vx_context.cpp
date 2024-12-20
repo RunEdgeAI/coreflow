@@ -277,7 +277,7 @@ vx_status Context::unloadTarget(vx_uint32 index, vx_bool unload_module)
         }
 
         memset(target->module.name, 0, sizeof(target->module.name));
-        status = Reference::releaseReference((vx_reference*)&target, VX_TYPE_TARGET, VX_INTERNAL, nullptr);
+        status = Reference::releaseReference((vx_reference*)&targets[index], VX_TYPE_TARGET, VX_INTERNAL, nullptr);
     }
 
     return status;
