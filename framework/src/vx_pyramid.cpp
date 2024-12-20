@@ -20,7 +20,13 @@
 /******************************************************************************/
 /* INTERNAL INTERFACE                                                         */
 /******************************************************************************/
-Pyramid::Pyramid(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_PYRAMID, scope)
+Pyramid::Pyramid(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_PYRAMID, scope),
+numLevels(0),
+levels(nullptr),
+scale(0),
+width(0),
+height(0),
+format()
 {
 
 }

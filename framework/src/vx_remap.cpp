@@ -20,7 +20,12 @@
 /*****************************************************************************/
 /* INTERNAL INTERFACE                                                        */
 /*****************************************************************************/
-Remap::Remap(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_REMAP, scope)
+Remap::Remap(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_REMAP, scope),
+memory(),
+src_width(0),
+src_height(0),
+dst_width(0),
+dst_height(0)
 {
 
 }

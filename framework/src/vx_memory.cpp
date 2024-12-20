@@ -45,6 +45,12 @@ vx_bool ownAllocateMemory(vx_context context, vx_memory_t *memory)
 {
     (void)context;
 
+    if (memory == nullptr)
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid memory structure provided\n");
+        return vx_false_e;
+    }
+
     if (memory->allocated == vx_false_e)
     {
         vx_uint32 d = 0;
@@ -56,7 +62,9 @@ vx_bool ownAllocateMemory(vx_context context, vx_memory_t *memory)
             vx_size size = sizeof(vx_uint8);
             /* channel is a declared size, don't assume */
             if (memory->strides[p][VX_DIM_C] != 0)
+            {
                 size = (size_t)abs(memory->strides[p][VX_DIM_C]);
+            }
             else if (memory->stride_x_bits[p] != 0)
             {
                 /* data type is not whole number of bytes */
@@ -106,6 +114,7 @@ vx_bool ownAllocateMemory(vx_context context, vx_memory_t *memory)
         }
         ownPrintMemory(memory);
     }
+
     return memory->allocated;
 }
 

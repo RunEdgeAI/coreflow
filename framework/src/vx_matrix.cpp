@@ -20,7 +20,13 @@
 /******************************************************************************/
 /* INTERNAL INTERFACE                                                         */
 /******************************************************************************/
-Matrix::Matrix(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_MATRIX, scope)
+Matrix::Matrix(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_MATRIX, scope),
+memory(),
+data_type(VX_TYPE_INVALID),
+columns(0),
+rows(0),
+origin(),
+pattern()
 {
 
 }
