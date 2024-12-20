@@ -97,7 +97,8 @@ vx_bool Kernel::isKernelUnique(vx_kernel kernel)
         {
             for (k = 0u; k < VX_INT_MAX_KERNELS; k++)
             {
-                if (context->targets[t]->kernels[k] &&
+                if (context->targets[t] &&
+                    context->targets[t]->kernels[k] &&
                     context->targets[t]->kernels[k]->enabled &&
                     context->targets[t]->kernels[k]->enumeration == kernel->enumeration)
                 {
