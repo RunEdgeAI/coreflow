@@ -17,9 +17,6 @@ cc_library(
         "//targets/debug:debug",
         "//targets/extras:extras",
     ],
-    copts = [
-        "-DCL_VERSION_1_2"
-    ],
     linkopts  = select({
         "@platforms//os:osx": [
             "-framework OpenCL",

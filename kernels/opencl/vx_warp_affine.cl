@@ -8,7 +8,7 @@
 #define VEC_DATA_TYPE_STR(type, size) type##size
 #define VEC_DATA_TYPE(type, size) VEC_DATA_TYPE_STR(type, size)
 
-#define CONVERT_STR(x, type) (convert_##type((x)))
+#define CONVERT_STR(x, type) convert_##type(x)
 #define CONVERT(x, type) CONVERT_STR(x, type)
 
 #define IMAGE_DECLARATION(name)      \
@@ -18,13 +18,13 @@
     uint        name##_stride_y, \
     uint        name##_step_y,   \
     uint        name##_offset_first_element_in_bytes
-	
+
 #define CONVERT_TO_IMAGE_STRUCT(name) \
     update_image_workitem_ptr(name##_ptr, name##_offset_first_element_in_bytes, name##_stride_x, name##_step_x, name##_stride_y, name##_step_y)
 
 #define CONVERT_TO_IMAGE_STRUCT_NO_STEP(name) \
     update_image_workitem_ptr(name##_ptr, name##_offset_first_element_in_bytes, name##_stride_x, 0, name##_stride_y, 0)
-	
+
 /** Structure to hold Image information */
 typedef struct Image
 {
@@ -81,7 +81,7 @@ inline const float8 clamp_to_border_with_size(float8 coords, const float width, 
 {
 	const float4 clamped_x = clamp(coords.even, 0.0f - border_size, width - 1 + border_size);
     const float4 clamped_y = clamp(coords.odd, 0.0f - border_size, height - 1 + border_size);
-	
+
     return (float8)(clamped_x.s0, clamped_y.s0, clamped_x.s1, clamped_y.s1, clamped_x.s2, clamped_y.s2, clamped_x.s3, clamped_y.s3);
 }
 
@@ -103,9 +103,9 @@ inline const float8 clamp_to_border(float8 coords, const float width, const floa
  * @param[in] in     Pointer to the source image.
  * @param[in] coords Vector of coordinates to be read from the image.
  */
-inline const VEC_DATA_TYPE(uchar, 4) read_texels4(const Image *in, const int8 coords)
-{ 
-    return (VEC_DATA_TYPE(uchar, 4))(*((__global uchar *)offset(in, coords.s0, coords.s1)),
+inline const __uchar4 read_texels4(const Image *in, const int8 coords)
+{
+    return (__uchar4)(*((__global uchar *)offset(in, coords.s0, coords.s1)),
                                          *((__global uchar *)offset(in, coords.s2, coords.s3)),
                                          *((__global uchar *)offset(in, coords.s4, coords.s5)),
                                          *((__global uchar *)offset(in, coords.s6, coords.s7)));
@@ -161,7 +161,7 @@ inline const float8 get_neighbour_coords(const float2 coord)
  * @param[in] height      Height of the image
  * @param[in] border_size Border size
  */
-inline const VEC_DATA_TYPE(uchar, 4) bilinear_interpolate_with_border(const Image *in, const float8 coords, const float width, const float height, const float border_size)
+inline const __uchar4 bilinear_interpolate_with_border(const Image *in, const float8 coords, const float width, const float height, const float border_size)
 {
     // If any of the 4 texels is out of the image's boundaries we use the border value (REPLICATE or CONSTANT) for any texel out of the image.
 
@@ -192,7 +192,7 @@ inline const VEC_DATA_TYPE(uchar, 4) bilinear_interpolate_with_border(const Imag
                           ((t.s4 * b.s2 * b.s3) + (t.s5 * a.s2 * b.s3) + (t.s6 * b.s2 * a.s3) + (t.s7 * a.s2 * a.s3)),
                           ((t.s8 * b.s4 * b.s5) + (t.s9 * a.s4 * b.s5) + (t.sa * b.s4 * a.s5) + (t.sb * a.s4 * a.s5)),
                           ((t.sc * b.s6 * b.s7) + (t.sd * a.s6 * b.s7) + (t.se * b.s6 * a.s7) + (t.sf * a.s6 * a.s7)));
-    return CONVERT(fr, VEC_DATA_TYPE(uchar, 4));
+    return convert_uchar4(fr);
 }
 
 /* FIXME(COMPMID-682): Clamp border properly in UNDEFINED border mode in Warp, Scale, Remap */
@@ -203,7 +203,7 @@ inline const VEC_DATA_TYPE(uchar, 4) bilinear_interpolate_with_border(const Imag
  * @param[in] width  Width of the image
  * @param[in] height Height of the image
  */
-inline const VEC_DATA_TYPE(uchar, 4) bilinear_interpolate(const Image *in, const float8 coords, const float width, const float height)
+inline const __uchar4 bilinear_interpolate(const Image *in, const float8 coords, const float width, const float height)
 {
     return bilinear_interpolate_with_border(in, coords, width, height, 1);
 }
@@ -239,13 +239,13 @@ __kernel void warp_affine(
     IMAGE_DECLARATION(out),
     const int width,
     const int height,
-	__global float matrix[9],
+	__global float* matrix, // matrix[9]
 	const uchar constValue,
 	const int type)
 {
     Image in  = CONVERT_TO_IMAGE_STRUCT_NO_STEP(in);
     Image out = CONVERT_TO_IMAGE_STRUCT(out);
-	
+
 	float8 mat = (float8)(matrix[0], matrix[1], matrix[2], matrix[3], matrix[4], matrix[5], 0.0, 0.0);
 	float8 coords = apply_affine_transform(get_current_coords(), mat);
 
@@ -253,7 +253,7 @@ __kernel void warp_affine(
 	    vstore4(read_texels4(&in, convert_int8_rtn(clamp_to_border(coords, width, height))), 0, out.ptr);
 	else if (type == VX_INTERPOLATION_BILINEAR)
 	    vstore4(bilinear_interpolate(&in, coords, width, height), 0, out.ptr);
-	
+
 	if (coords.even.s0 < 0 || coords.odd.s0 < 0 || coords.even.s0 >= width || coords.odd.s0 >= height)
 	{
 		out.ptr[0] = constValue;
