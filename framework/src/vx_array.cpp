@@ -20,12 +20,24 @@
 /******************************************************************************/
 /* INTERNAL INTERFACE                                                         */
 /******************************************************************************/
-Array::Array(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_ARRAY, scope)
+Array::Array(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_ARRAY, scope),
+memory(),
+item_type(VX_TYPE_INVALID),
+item_size(0),
+num_items(0),
+capacity(0),
+offset(0)
 {
 
 }
 
-Array::Array(vx_context context, vx_enum type, vx_reference scope) : Reference(context, type, scope)
+Array::Array(vx_context context, vx_enum type, vx_reference scope) : Reference(context, type, scope),
+memory(),
+item_type(VX_TYPE_INVALID),
+item_size(0),
+num_items(0),
+capacity(0),
+offset(0)
 {
 
 }
@@ -817,7 +829,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxAddArrayItems(vx_array arr, vx_size count, 
     {
         status = VX_ERROR_NO_MEMORY;
 
-        if(arr->allocateArray() == vx_true_e)
+        if (arr->allocateArray() == vx_true_e)
         {
             status = VX_ERROR_INVALID_PARAMETERS;
 

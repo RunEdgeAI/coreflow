@@ -20,7 +20,8 @@
 /******************************************************************************/
 /* INTERNAL INTERFACE                                                         */
 /******************************************************************************/
-Convolution::Convolution(vx_context context, vx_reference scope) : Matrix(context, VX_TYPE_CONVOLUTION, scope)
+Convolution::Convolution(vx_context context, vx_reference scope) : Matrix(context, VX_TYPE_CONVOLUTION, scope),
+scale()
 {
 
 }

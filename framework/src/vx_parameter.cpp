@@ -20,7 +20,10 @@
 /******************************************************************************/
 /* INTERNAL INTERFACE                                                         */
 /******************************************************************************/
-Parameter::Parameter(vx_context context, vx_reference ref) : Reference(context, VX_TYPE_PARAMETER, ref)
+Parameter::Parameter(vx_context context, vx_reference ref) : Reference(context, VX_TYPE_PARAMETER, ref),
+index(0),
+node(nullptr),
+kernel(nullptr)
 {
 
 }
