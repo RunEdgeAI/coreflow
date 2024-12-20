@@ -1656,10 +1656,18 @@ void Graph::destruct()
            so we need to check. */
         if (nullptr != node)
         {
-            node->removeNode();
             if (node->external_count)
             {
                 Reference::releaseReference((vx_reference*)&node, VX_TYPE_NODE, VX_EXTERNAL, nullptr);
+            }
+
+            if (node)
+            {
+                node->removeNode();
+            }
+            else
+            {
+                numNodes--;
             }
         }
     }

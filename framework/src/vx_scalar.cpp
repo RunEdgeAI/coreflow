@@ -20,7 +20,11 @@
 /*****************************************************************************/
 /* INTERNAL INTERFACE                                                        */
 /*****************************************************************************/
-Scalar::Scalar(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_SCALAR, scope)
+Scalar::Scalar(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_SCALAR, scope),
+data_type(VX_TYPE_INVALID),
+data(),
+data_addr(nullptr),
+data_len(0)
 {
 
 }
