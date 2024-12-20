@@ -20,7 +20,8 @@
 /* INTERNAL INTERFACE                                                         */
 /******************************************************************************/
 
-Error::Error(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_ERROR, scope)
+Error::Error(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_ERROR, scope),
+status(VX_SUCCESS)
 {
 
 }
