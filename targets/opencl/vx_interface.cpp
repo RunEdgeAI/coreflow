@@ -78,8 +78,35 @@ extern "C" vx_status vxTargetInit(vx_target target)
     //char *cl_dirs = "/home/pi/sample-impl-opencl/kernels/opencl";
 	char cl_args[1024];
 
+    strncpy(target->name, name, VX_MAX_TARGET_NAME);
+    target->priority = VX_TARGET_PRIORITY_OPENCL;
+
     if (nullptr == vx_incs)
+    {
+#ifdef VX_CL_INCLUDE_DIR
+        const char *idir = VX_CL_INCLUDE_DIR;
+        int len = strlen(idir);
+        vx_incs = (char*)malloc(len);
+        strncpy(vx_incs, idir, len);
+#else
+        const char *idir = "/usr/include/";
+        int len = strlen(idir);
+        vx_incs = (char*)malloc(len);
+        strncpy(vx_incs, idir, len);
+#endif
+    }
+
+    if (nullptr == cl_dirs)
+    {
+#ifdef VX_CL_SOURCE_DIR
+        const char *sdir = VX_CL_SOURCE_DIR;
+        int len = strlen(sdir);
+        cl_dirs = (char*)malloc(len);
+        strncpy(cl_dirs, sdir, len);
+#else
         return VX_FAILURE;
+#endif
+    }
 
     snprintf(cl_args, sizeof(cl_args), "-D VX_CL_KERNEL -I %s -I %s %s %s", vx_incs, cl_dirs,
 #if !defined(__APPLE__)
@@ -94,20 +121,6 @@ extern "C" vx_status vxTargetInit(vx_target target)
 #endif
     );
     printf("flags: %s\n", cl_args);
-    if (cl_dirs == nullptr)
-    {
-#ifdef VX_CL_SOURCE_DIR
-        const char *sdir = VX_CL_SOURCE_DIR;
-        int len = strlen(sdir);
-        cl_dirs = malloc(len);
-        strncpy(cl_dirs, sdir, len);
-#else
-        return status;
-#endif
-    }
-
-    strncpy(target->name, name, VX_MAX_TARGET_NAME);
-    target->priority = VX_TARGET_PRIORITY_OPENCL;
 
     context->num_platforms = CL_MAX_PLATFORMS;
     err = clGetPlatformIDs(CL_MAX_PLATFORMS, context->platforms, nullptr);
