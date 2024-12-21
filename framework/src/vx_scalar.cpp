@@ -37,7 +37,7 @@ void* Scalar::allocateScalarMemory(vx_size size)
 {
     if (data_addr == nullptr)
     {
-        data_addr = calloc(size, 1);
+        data_addr = new vx_char[size]();
     }
 
     return data_addr;
@@ -110,7 +110,7 @@ void Scalar::destruct()
 {
     if (data_addr)
     {
-        free(data_addr);
+        ::operator delete(data_addr);
         data_addr = nullptr;
         data_len = 0;
     }

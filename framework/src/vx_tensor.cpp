@@ -63,7 +63,7 @@ void* Tensor::allocateTensorMemory()
             total_size *= this->dimensions[i];
         }
 
-        this->addr = calloc(total_size,1);
+        this->addr = new vx_char[total_size]();
     }
 
     return this->addr;
@@ -135,7 +135,7 @@ void Tensor::destruct()
     /* if it's not imported and does not have a parent, free it */
     if (!parent && addr)
     {
-        free (addr);
+        ::operator delete(addr);
         addr = nullptr;
     }
     else if (parent)

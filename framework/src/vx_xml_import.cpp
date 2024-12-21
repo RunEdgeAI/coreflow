@@ -687,15 +687,15 @@ static vx_status vxLoadDataForArray(vx_array array, xmlNodePtr cur)
             char *string = (char *)xmlNodeListGetString(cur->doc, cur->children, 1);
             char tokens[5] = " \t\n\r";
             char *tmp = strtok(string, tokens);
-            vx_uint8 *v = (vx_uint8*)calloc(array->item_size, sizeof(vx_uint8));
+            vx_uint8 *v = new vx_uint8[array->item_size]();
             vx_uint32 j = 0;
             while (tmp) {
                 sscanf(tmp, "%hhu", &v[j++]);
                 tmp = strtok(nullptr, tokens);
             }
             status |= vxAddArrayItems(array, 1, v, array->item_size);
-            free(v);
-            free(string);
+            delete[](v);
+            delete[](string);
         } else {
             char *string = (char *)xmlNodeListGetString(cur->doc, cur->children, 1);
             char tokens[5] = " \t\n\r";
@@ -901,10 +901,10 @@ static vx_status vxLoadDataForConvolution(vx_convolution conv, xmlNodePtr cur, v
 
     if (XML_HAS_CHILD(cur))
     {
-        void *ptr = calloc(rows*cols,sizeof(vx_int16));
+        std::unique_ptr<vx_int16[]> ptr = std::make_unique<vx_int16[]>(rows*cols);
         if (ptr)
         {
-            if( (status = vxCopyConvolutionCoefficients(conv, ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST)) == VX_SUCCESS)
+            if( (status = vxCopyConvolutionCoefficients(conv, ptr.get(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST)) == VX_SUCCESS)
             {
                 XML_FOREACH_CHILD_TAG (cur, tag, tags) {
                     vx_uint32 row = xml_prop_ulong(cur, "row");
@@ -913,7 +913,7 @@ static vx_status vxLoadDataForConvolution(vx_convolution conv, xmlNodePtr cur, v
                     if (row < rows && col < cols)
                     {
                         if (tag == INT16_TAG) {
-                            vx_int16 *tmp = (vx_int16 *)ptr;
+                            vx_int16 *tmp = (vx_int16 *)ptr.get();
                             tmp[off] = (vx_int16)xml_ulong(cur);
                             //VX_PRINT(VX_ZONE_INFO, "Read conv[%u][%u]=%hd\n", row, col, tmp[off]);
                         }
@@ -922,9 +922,8 @@ static vx_status vxLoadDataForConvolution(vx_convolution conv, xmlNodePtr cur, v
                         return VX_ERROR_INVALID_VALUE;
                     }
                 }
-                status = vxCopyConvolutionCoefficients(conv, ptr, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+                status = vxCopyConvolutionCoefficients(conv, ptr.get(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
             }
-            free(ptr);
         } else {
             status = VX_ERROR_NO_MEMORY;
         }
@@ -1220,10 +1219,10 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
         return import;
     }
 
-    user_struct_table = (xml_struct_t*)calloc(VX_INT_MAX_USER_STRUCTS, sizeof(xml_struct_t));
+    user_struct_table = new xml_struct_t[VX_INT_MAX_USER_STRUCTS]();
     if (user_struct_table == nullptr) {
-        VX_PRINT(VX_ZONE_ERROR, "Calloc failed\n");
-        vxAddLogEntry(context, VX_ERROR_NO_MEMORY, "Calloc failed\n");
+        VX_PRINT(VX_ZONE_ERROR, "Memory alloc failed\n");
+        vxAddLogEntry(context, VX_ERROR_NO_MEMORY, "Memory alloc failed\n");
         import = (vx_import)vxGetErrorObject(context, VX_ERROR_NO_MEMORY);
         return import;
     }
@@ -2170,7 +2169,7 @@ exit_error:
     }
 
 exit:
-    free(user_struct_table);
+    delete[](user_struct_table);
     xmlFreeDoc(doc);
     xmlCleanupParser();
 

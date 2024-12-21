@@ -1685,7 +1685,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxAccessImagePatch(vx_image image,
         vx_size size = vxComputeImagePatchSize(image, rect, plane_index);
         vx_uint32 a = 0u;
 
-        vx_imagepatch_addressing_t *addr_save = (vx_imagepatch_addressing_t*)calloc(1, sizeof(vx_imagepatch_addressing_t));
+        vx_imagepatch_addressing_t *addr_save = new vx_imagepatch_addressing_t();
         /* Strides given by the application */
         addr_save->stride_x = addr->stride_x;
         addr_save->stride_y = addr->stride_y;

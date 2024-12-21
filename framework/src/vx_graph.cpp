@@ -593,8 +593,8 @@ void Graph::topologicalSort(vx_node *list, vx_uint32 nnodes)
         vx_reference ref;
     };
 
-    struct object_relations *x;
-    struct direct_successor *suc_next_table;
+    std::unique_ptr<object_relations[]> x;
+    std::unique_ptr<direct_successor[]> suc_next_table;
     struct direct_successor *avail;
 
     /* Visit each node in the list and its in- and out-parameters,
@@ -639,10 +639,10 @@ void Graph::topologicalSort(vx_node *list, vx_uint32 nnodes)
        and initialize the node + parameters-list. The x table is
        1-based; index 0 is a sentinel.
        (This is step T1.) */
-    x = reinterpret_cast<object_relations*>(calloc(max_n_objects_relations + 1, sizeof (*x)));
-    suc_next_table = reinterpret_cast<direct_successor*>(calloc(max_n_objects_relations, sizeof (*x)));
+    x = std::make_unique<object_relations[]>(max_n_objects_relations + 1);
+    suc_next_table = std::make_unique<direct_successor[]>(max_n_objects_relations);
 
-    avail = suc_next_table;
+    avail = suc_next_table.get();
 
     for (objectno = 1; objectno <= nnodes; objectno++)
     {
@@ -777,9 +777,6 @@ void Graph::topologicalSort(vx_node *list, vx_uint32 nnodes)
     if (nremain != 0)
         for (n = 0; n < nnodes; n++)
             list[n] = (vx_node)x[n+1].ref;
-
-    free(suc_next_table);
-    free(x);
 }
 
 vx_bool Graph::setupOutput(vx_uint32 n, vx_uint32 p, vx_reference* vref, vx_meta_format* meta,
@@ -940,7 +937,7 @@ vx_bool Graph::postprocessOutputDataType(vx_uint32 n, vx_uint32 p, vx_reference*
             }
 
             /* allocate array of pointers to input images valid rectangles */
-            in_rect = (vx_rectangle_t**)malloc(num_in_images * sizeof(vx_rectangle_t*));
+            in_rect = new vx_rectangle_t*[num_in_images]();
             if (nullptr == in_rect)
             {
                 *status = VX_FAILURE;
@@ -952,7 +949,7 @@ vx_bool Graph::postprocessOutputDataType(vx_uint32 n, vx_uint32 p, vx_reference*
                 if (VX_INPUT == node->kernel->signature.directions[i] &&
                     VX_TYPE_IMAGE == node->parameters[i]->type)
                 {
-                    in_rect[i] = (vx_rectangle_t*)malloc(sizeof(vx_rectangle_t));
+                    in_rect[i] = new vx_rectangle_t();
                     if (nullptr == in_rect[i])
                     {
                         *status = VX_FAILURE;
@@ -972,7 +969,7 @@ vx_bool Graph::postprocessOutputDataType(vx_uint32 n, vx_uint32 p, vx_reference*
 
             if (vx_false_e != res)
             {
-                out_rect[0] = (vx_rectangle_t*)malloc(sizeof(vx_rectangle_t));
+                out_rect[0] = new vx_rectangle_t();
                 if (nullptr == out_rect[0])
                 {
                     *status = VX_FAILURE;
@@ -1002,14 +999,14 @@ vx_bool Graph::postprocessOutputDataType(vx_uint32 n, vx_uint32 p, vx_reference*
             {
                 if (nullptr != in_rect[i])
                 {
-                    free(in_rect[i]);
+                    delete(in_rect[i]);
                 }
             }
 
             if (nullptr != in_rect)
-                free(in_rect);
+                delete[](in_rect);
             if (nullptr != out_rect[0])
-                free(out_rect[0]);
+                delete(out_rect[0]);
 
 
             return res;
@@ -1157,7 +1154,7 @@ vx_bool Graph::postprocessOutputDataType(vx_uint32 n, vx_uint32 p, vx_reference*
                 }
             }
 
-            in_rect = (vx_rectangle_t**)malloc(num_in_images * sizeof(vx_rectangle_t*));
+            in_rect = new vx_rectangle_t* [num_in_images]();
             if (nullptr == in_rect)
             {
                 *status = VX_FAILURE;
@@ -1172,7 +1169,7 @@ vx_bool Graph::postprocessOutputDataType(vx_uint32 n, vx_uint32 p, vx_reference*
                 if (VX_INPUT == node->kernel->signature.directions[i] &&
                     VX_TYPE_IMAGE == node->parameters[i]->type)
                 {
-                    in_rect[i] = (vx_rectangle_t*)malloc(sizeof(vx_rectangle_t));
+                    in_rect[i] = new vx_rectangle_t();
                     if (nullptr == in_rect[i])
                     {
                         *status = VX_FAILURE;
@@ -1191,7 +1188,7 @@ vx_bool Graph::postprocessOutputDataType(vx_uint32 n, vx_uint32 p, vx_reference*
 
             if (vx_false_e != res)
             {
-                out_rect = (vx_rectangle_t**)malloc(meta->dim.pyramid.levels * sizeof(vx_rectangle_t*));
+                out_rect = new vx_rectangle_t*[meta->dim.pyramid.levels]();
                 if (nullptr != out_rect)
                 {
                     vx_uint32 k;
@@ -1200,7 +1197,7 @@ vx_bool Graph::postprocessOutputDataType(vx_uint32 n, vx_uint32 p, vx_reference*
 
                     for (i = 0; i < meta->dim.pyramid.levels; i++)
                     {
-                        out_rect[i] = (vx_rectangle_t*)malloc(sizeof(vx_rectangle_t));
+                        out_rect[i] = new vx_rectangle_t();
                         if (nullptr == out_rect[i])
                         {
                             *status = VX_FAILURE;
@@ -1261,21 +1258,21 @@ vx_bool Graph::postprocessOutputDataType(vx_uint32 n, vx_uint32 p, vx_reference*
             {
                 if (nullptr != in_rect && nullptr != in_rect[i])
                 {
-                    free(in_rect[i]);
+                    delete(in_rect[i]);
                 }
             }
 
             if (nullptr != in_rect)
-                free(in_rect);
+                delete[](in_rect);
 
             for (i = 0; i < meta->dim.pyramid.levels; i++)
             {
                 if (nullptr != out_rect && nullptr != out_rect[i])
-                    free(out_rect[i]);
+                    delete(out_rect[i]);
             }
 
             if (nullptr != out_rect)
-                free(out_rect);
+                delete[](out_rect);
 
             return res;
         }
@@ -1855,7 +1852,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                         if (node->attributes.localDataPtr)
                         {
                             if (!first_time_verify && node->attributes.localDataPtr)
-                                free(node->attributes.localDataPtr);
+                            {
+                                ::operator delete(node->attributes.localDataPtr);
+                            }
                             node->attributes.localDataSize = 0;
                             node->attributes.localDataPtr = nullptr;
                         }
@@ -2322,7 +2321,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
             if ((node->attributes.localDataSize > 0) &&
                 (node->attributes.localDataPtr == nullptr))
             {
-                node->attributes.localDataPtr = calloc(1, node->attributes.localDataSize);
+                node->attributes.localDataPtr = new vx_char(node->attributes.localDataSize);
                 if (node->kernel->user_kernel == vx_true_e)
                 {
                     node->local_data_set_by_implementation = vx_true_e;

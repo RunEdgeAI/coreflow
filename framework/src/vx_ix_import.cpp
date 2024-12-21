@@ -929,12 +929,11 @@ static vx_status importScalar(vx_context context, const vx_uint8 *ptr, vx_refere
     }
     if (VX_SUCCESS == status && size)
     {
-        vx_uint8 *data = (vx_uint8*)malloc(size);
+        std::unique_ptr<vx_uint8[]>data = std::make_unique<vx_uint8[]>(size);
         if (data)
         {
-            importBytes(&header, data, size);
-            status = vxCopyScalar((vx_scalar)ref_table[n], data, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-            free(data);
+            importBytes(&header, data.get(), size);
+            status = vxCopyScalar((vx_scalar)ref_table[n], data.get(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
         }
         else
         {
@@ -1890,7 +1889,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportObjectsFromMemory(
     if (VX_SUCCESS == status)
     {
         vx_uint32 i;
-        vx_reference *ref_table = (vx_reference *)calloc(sizeof(vx_reference), header->actual_numrefs);
+        std::unique_ptr<vx_reference[]> ref_table = std::make_unique<vx_reference[]>(header->actual_numrefs);
         if (ref_table)
         {
             for (i = 0; i < numrefs; ++i)
@@ -1900,7 +1899,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportObjectsFromMemory(
                 else
                     ref_table[i] = refs[i];
             }
-            status = createGraphObjects(context, ptr, ref_table);   /* Create graph objects */
+            status = createGraphObjects(context, ptr, ref_table.get());   /* Create graph objects */
         }
         else
             status = VX_ERROR_NO_MEMORY;
@@ -1909,18 +1908,18 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportObjectsFromMemory(
            turn create their children.
         */
         if (VX_SUCCESS == status)
-            status = importObjectsOfType(context, ptr, ref_table, VX_TYPE_DELAY);
+            status = importObjectsOfType(context, ptr, ref_table.get(), VX_TYPE_DELAY);
         if (VX_SUCCESS == status)
-            status = importObjectsOfType(context, ptr, ref_table, VX_TYPE_OBJECT_ARRAY);
+            status = importObjectsOfType(context, ptr, ref_table.get(), VX_TYPE_OBJECT_ARRAY);
         if (VX_SUCCESS == status)
-            status = importObjectArraysFromTensor(context, ptr, ref_table);
+            status = importObjectArraysFromTensor(context, ptr, ref_table.get());
         if (VX_SUCCESS == status)
-            status = importObjectsOfType(context, ptr, ref_table, VX_TYPE_PYRAMID);
+            status = importObjectsOfType(context, ptr, ref_table.get(), VX_TYPE_PYRAMID);
         /* Now we do the rest, by specifying VX_TYPE_INVALID */
         if (VX_SUCCESS == status)
-            status = importObjectsOfType(context, ptr, ref_table, VX_TYPE_INVALID);
+            status = importObjectsOfType(context, ptr, ref_table.get(), VX_TYPE_INVALID);
         if (VX_SUCCESS == status)
-            status = buildGraphs(context, ptr, ref_table);              /* Build and verify graphs */
+            status = buildGraphs(context, ptr, ref_table.get());              /* Build and verify graphs */
         if (VX_SUCCESS == status)
         {
             /* Now we need to clean up kernels that are private to this import. These are
@@ -1958,7 +1957,6 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportObjectsFromMemory(
                         vxReleaseReference(&ref_table[i]);
             }
         }
-        free(ref_table);
     }
     if (VX_SUCCESS != status)
     {

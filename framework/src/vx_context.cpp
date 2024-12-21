@@ -289,11 +289,11 @@ VX_INT_API void Context::removeAccessor(vx_uint32 index)
     {
         if (accessors[index].allocated == vx_true_e)
         {
-            free(accessors[index].ptr);
+            ::operator delete(accessors[index].ptr);
         }
         if (accessors[index].extra_data != nullptr)
         {
-            free(accessors[index].extra_data);
+            ::operator delete(accessors[index].extra_data);
         }
         memset(&accessors[index], 0, sizeof(vx_external_t));
         VX_PRINT(VX_ZONE_CONTEXT, "Removed accessors[%u]\n", index);
@@ -461,7 +461,7 @@ VX_INT_API vx_bool Context::addAccessor(
             /* Allocation requested */
             if (size > 0ul && ptr == nullptr)
             {
-                accessors[a].ptr = malloc(size);
+                accessors[a].ptr = new vx_char[size]();
                 if (accessors[a].ptr == nullptr)
                     return vx_false_e;
                 accessors[a].allocated = vx_true_e;
@@ -530,7 +530,7 @@ VX_INT_API vx_bool Context::memoryMap(
                 /* allocate mapped buffer if requested (by providing size != 0) */
                 if (size != 0)
                 {
-                    buf = (vx_uint8*)malloc(size);
+                    buf = new vx_uint8[size]();
                     if (buf == nullptr)
                     {
                         ownSemPost(&memory_maps_lock);
@@ -629,7 +629,7 @@ VX_INT_API void Context::memoryUnmap(vx_uint32 map_id)
             if (memory_maps[map_id].ptr != nullptr)
             {
                 /* freeing mapped buffer */
-                free(memory_maps[map_id].ptr);
+                ::operator delete(memory_maps[map_id].ptr);
 
                 memset(&memory_maps[map_id], 0, sizeof(vx_memory_map_t));
             }
@@ -653,28 +653,26 @@ vx_target* Context::findTargetByString(const char* target_string)
     vx_target* target = nullptr;
 
     size_t len = strlen(target_string);
-    char* target_lower_string = (char*)calloc(len + 1, sizeof(char));
+    std::string target_lower_string(len + 1, '\0');
 
-    if (target_lower_string)
+    if (target_lower_string.size() > 0)
     {
         unsigned int i;
         /* to lower case */
         for (i = 0; target_string[i] != 0; i++)
         {
-            target_lower_string[i] = (char)tolower(target_string[i]);
+            target_lower_string[i] = std::tolower(target_string[i]);
         }
 
         for (t = 0; t < num_targets; t++)
         {
             vx_uint32 rt = priority_targets[t];
             vx_target curr_target = targets[rt];
-            if (Target::matchTargetNameWithString(curr_target->name, target_lower_string) == vx_true_e)
+            if (Target::matchTargetNameWithString(curr_target->name, target_lower_string.c_str()) == vx_true_e)
             {
                 target = &curr_target;
             }
         }
-
-        free(target_lower_string);
     }
 
     return target;
@@ -958,7 +956,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
             {
                 if (context->reftable[r])
                 {
-                    VX_PRINT(VX_ZONE_WARNING, "Reference %p, type %x not removed\n",
+                    VX_PRINT(VX_ZONE_ERROR, "Reference %p, type %x not removed\n",
                         context->reftable[r], context->reftable[r]->type);
                 }
             }

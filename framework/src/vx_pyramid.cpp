@@ -45,7 +45,7 @@ void Pyramid::destruct()
             Reference::releaseReference((vx_reference*)&levels[i], VX_TYPE_IMAGE, VX_INTERNAL, nullptr);
         }
     }
-    free(levels);
+    delete[](levels);
     levels = nullptr;
 }
 
@@ -65,7 +65,7 @@ vx_status Pyramid::initPyramid(vx_size numLevels,
     {
         this->numLevels = numLevels;
         this->scale = scale;
-        this->levels = (vx_image *)calloc(numLevels, sizeof(vx_image));
+        this->levels = new vx_image[numLevels]();
     }
 
     /* these could be "virtual" values or hard values */
