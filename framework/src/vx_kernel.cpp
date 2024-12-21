@@ -129,7 +129,7 @@ vx_status Kernel::initializeKernel(vx_enum kenum,
                              vx_kernel_deinitialize_f deinitialize)
 {
     {
-        incrementReference(VX_INTERNAL);
+        // incrementReference(VX_INTERNAL);
 
         /* setup the kernel meta-data */
         strncpy(this->name, name, VX_MAX_KERNEL_NAME - 1);
