@@ -233,7 +233,7 @@
 /*! \brief Convenience wrapper around calloc to cast it correctly
  * \ingroup group_int_macros
  */
-#define VX_CALLOC(type) (type *)calloc(1, sizeof(type))
+#define VX_CALLOC(type) (type *)new type()
 
 /*! \brief Helper to convert any data type to string
  * \ingroup group_int_macros

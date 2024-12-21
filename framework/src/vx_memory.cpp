@@ -30,7 +30,7 @@ vx_bool ownFreeMemory(vx_context context, vx_memory_t *memory)
             if (memory->ptrs[p])
             {
                 VX_PRINT(VX_ZONE_INFO, "Freeing %p\n", memory->ptrs[p]);
-                free(memory->ptrs[p]);
+                delete[](memory->ptrs[p]);
                 ownDestroySem(&memory->locks[p]);
                 memory->ptrs[p] = nullptr;
             }
@@ -91,7 +91,7 @@ vx_bool ownAllocateMemory(vx_context context, vx_memory_t *memory)
                 }
             }
             /* don't presume that memory should be zeroed */
-            memory->ptrs[p] = (vx_uint8*)malloc(size);
+            memory->ptrs[p] = new vx_uint8[size]();
             if (memory->ptrs[p] == nullptr)
             {
                 vx_uint32 pi;

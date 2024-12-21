@@ -1058,7 +1058,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
             VX_TYPE_CONTEXT,
             VX_TYPE_IMPORT,
     };
-    vx_reference* refs = nullptr;
+    std::unique_ptr<vx_reference[]> refs = nullptr;
 
     if (Context::isValidContext(context) == vx_false_e)
         return VX_ERROR_INVALID_REFERENCE;
@@ -1081,7 +1081,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
         return VX_ERROR_NOT_SUPPORTED;
 
     /* create the temp renamer */
-    refs = (vx_reference*)calloc(numrefs,sizeof(vx_reference));
+    refs = std::make_unique<vx_reference[]>(numrefs);
     if (!refs)
         return VX_ERROR_NO_MEMORY;
     else
@@ -1217,15 +1217,15 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
                         vxGetName(refs[r2]);
                         if (refs[r2]->type == VX_TYPE_IMAGE)
                         {
-                            status |= vxExportToXMLImage(fp, refs, r2, 2, numrefs);
+                            status |= vxExportToXMLImage(fp, refs.get(), r2, 2, numrefs);
                         }
                         else if (refs[r2]->type == VX_TYPE_ARRAY)
                         {
-                            status |= vxExportToXMLArray(fp, refs, r2, 2);
+                            status |= vxExportToXMLArray(fp, refs.get(), r2, 2);
                         }
                         else if (refs[r2]->type == VX_TYPE_PYRAMID)
                         {
-                            status |= vxExportToXMLPyramid(fp, refs, r2, 2, numrefs);
+                            status |= vxExportToXMLPyramid(fp, refs.get(), r2, 2, numrefs);
                         }
                     }
                 }
@@ -1243,7 +1243,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
                    refs[r]->scope->type != VX_TYPE_IMAGE &&
                    refs[r]->scope->type != VX_TYPE_OBJECT_ARRAY)
                 {
-                    status |= vxExportToXMLImage(fp, refs, r, 1, numrefs);
+                    status |= vxExportToXMLImage(fp, refs.get(), r, 1, numrefs);
                 }
             }
             else if (refs[r]->type == VX_TYPE_PYRAMID)
@@ -1252,7 +1252,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
                    refs[r]->scope->type != VX_TYPE_DELAY &&
                    refs[r]->scope->type != VX_TYPE_OBJECT_ARRAY)
                 {
-                    status |= vxExportToXMLPyramid(fp, refs, r, 1, numrefs);
+                    status |= vxExportToXMLPyramid(fp, refs.get(), r, 1, numrefs);
                 }
             }
             else if (refs[r]->type == VX_TYPE_ARRAY)
@@ -1261,7 +1261,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
                    refs[r]->scope->type != VX_TYPE_DELAY &&
                    refs[r]->scope->type != VX_TYPE_OBJECT_ARRAY)
                 {
-                   status |= vxExportToXMLArray(fp, refs, r, 1);
+                   status |= vxExportToXMLArray(fp, refs.get(), r, 1);
                 }
             }
             else if (refs[r]->type == VX_TYPE_LUT)
@@ -1270,7 +1270,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
                    refs[r]->scope->type != VX_TYPE_DELAY &&
                    refs[r]->scope->type != VX_TYPE_OBJECT_ARRAY)
                 {
-                    status |= vxExportToXMLLut(fp, refs, r, 1);
+                    status |= vxExportToXMLLut(fp, refs.get(), r, 1);
                 }
             }
             else if (refs[r]->type == VX_TYPE_MATRIX)
@@ -1279,7 +1279,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
                    refs[r]->scope->type != VX_TYPE_DELAY &&
                    refs[r]->scope->type != VX_TYPE_OBJECT_ARRAY)
                 {
-                    status |= vxExportToXMLMatrix(fp, refs, r, 1);
+                    status |= vxExportToXMLMatrix(fp, refs.get(), r, 1);
                 }
             }
             else if (refs[r]->type == VX_TYPE_CONVOLUTION)
@@ -1288,7 +1288,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
                    refs[r]->scope->type != VX_TYPE_DELAY &&
                    refs[r]->scope->type != VX_TYPE_OBJECT_ARRAY)
                 {
-                    status |= vxExportToXMLConvolution(fp, refs, r, 1);
+                    status |= vxExportToXMLConvolution(fp, refs.get(), r, 1);
                 }
             }
             else if (refs[r]->type == VX_TYPE_DISTRIBUTION)
@@ -1297,7 +1297,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
                    refs[r]->scope->type != VX_TYPE_DELAY &&
                    refs[r]->scope->type != VX_TYPE_OBJECT_ARRAY)
                 {
-                    status |= vxExportToXMLDistribution(fp, refs, r, 1);
+                    status |= vxExportToXMLDistribution(fp, refs.get(), r, 1);
                 }
             }
             else if (refs[r]->type == VX_TYPE_REMAP)
@@ -1306,7 +1306,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
                    refs[r]->scope->type != VX_TYPE_DELAY &&
                    refs[r]->scope->type != VX_TYPE_OBJECT_ARRAY)
                 {
-                    status |= vxExportToXMLRemap(fp, refs, r, 1);
+                    status |= vxExportToXMLRemap(fp, refs.get(), r, 1);
                 }
             }
             else if (refs[r]->type == VX_TYPE_THRESHOLD)
@@ -1315,7 +1315,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
                    refs[r]->scope->type != VX_TYPE_DELAY &&
                    refs[r]->scope->type != VX_TYPE_OBJECT_ARRAY)
                 {
-                    status |= vxExportToXMLThreshold(fp, refs, r, 1);
+                    status |= vxExportToXMLThreshold(fp, refs.get(), r, 1);
                 }
             }
             else if (refs[r]->type == VX_TYPE_SCALAR)
@@ -1324,7 +1324,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
                    refs[r]->scope->type != VX_TYPE_DELAY &&
                    refs[r]->scope->type != VX_TYPE_OBJECT_ARRAY)
                 {
-                    status |= vxExportToXMLScalar(fp, refs, r, 1);
+                    status |= vxExportToXMLScalar(fp, refs.get(), r, 1);
                 }
             }
             else if (refs[r]->type == VX_TYPE_DELAY ||
@@ -1361,34 +1361,34 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
                             vxGetName(refs[r2]);
                             switch (refs[r2]->type) {
                                 case VX_TYPE_IMAGE:
-                                    status |= vxExportToXMLImage(fp, refs, r2, 2, numrefs);
+                                    status |= vxExportToXMLImage(fp, refs.get(), r2, 2, numrefs);
                                     break;
                                 case VX_TYPE_ARRAY:
-                                    status |= vxExportToXMLArray(fp, refs, r2, 2);
+                                    status |= vxExportToXMLArray(fp, refs.get(), r2, 2);
                                     break;
                                 case VX_TYPE_MATRIX:
-                                    status |= vxExportToXMLMatrix(fp, refs, r2, 2);
+                                    status |= vxExportToXMLMatrix(fp, refs.get(), r2, 2);
                                     break;
                                 case VX_TYPE_CONVOLUTION:
-                                    status |= vxExportToXMLConvolution(fp, refs, r2, 2);
+                                    status |= vxExportToXMLConvolution(fp, refs.get(), r2, 2);
                                     break;
                                 case VX_TYPE_DISTRIBUTION:
-                                    status |= vxExportToXMLDistribution(fp, refs, r2, 2);
+                                    status |= vxExportToXMLDistribution(fp, refs.get(), r2, 2);
                                     break;
                                 case VX_TYPE_REMAP:
-                                    status |= vxExportToXMLRemap(fp, refs, r2, 2);
+                                    status |= vxExportToXMLRemap(fp, refs.get(), r2, 2);
                                     break;
                                 case VX_TYPE_LUT:
-                                    status |= vxExportToXMLLut(fp, refs, r2, 2);
+                                    status |= vxExportToXMLLut(fp, refs.get(), r2, 2);
                                     break;
                                 case VX_TYPE_PYRAMID:
-                                    status |= vxExportToXMLPyramid(fp, refs, r2, 2, numrefs);
+                                    status |= vxExportToXMLPyramid(fp, refs.get(), r2, 2, numrefs);
                                     break;
                                 case VX_TYPE_THRESHOLD:
-                                    status |= vxExportToXMLThreshold(fp, refs, r2, 2);
+                                    status |= vxExportToXMLThreshold(fp, refs.get(), r2, 2);
                                     break;
                                 case VX_TYPE_SCALAR:
-                                    status |= vxExportToXMLScalar(fp, refs, r2, 2);
+                                    status |= vxExportToXMLScalar(fp, refs.get(), r2, 2);
                                     break;
                                 default:
                                     fprintf(fp, "<unsupported %s object=\"%x\" />\n", objectName, refs[r]->type);
@@ -1409,7 +1409,6 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportToXML(vx_context context, vx_char xml
         fprintf(fp,"</openvx>\n");
         fclose(fp);
     }
-    free(refs);
     return status;
 }
 

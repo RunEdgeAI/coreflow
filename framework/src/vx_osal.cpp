@@ -345,11 +345,11 @@ void ownDestroyThreadpool(vx_threadpool_t **ppool)
             ownDestroyQueue(&pool->workers[i].queue);
             pool->workers[i].queue = (vx_queue_t *)nullptr;
         }
-        free(pool->workers);
+        delete[](pool->workers);
         pool->workers = (vx_threadpool_worker_t *)nullptr;
         ownDestroySem(&pool->sem);
         ownDeinitEvent(&pool->completed);
-        free(pool);
+        delete(pool);
         *ppool = nullptr;
     }
 }
@@ -416,7 +416,7 @@ vx_threadpool_t *ownCreateThreadpool(vx_uint32 numThreads,
         pool->numWorkItems = numWorkItems;
         pool->sizeWorkItem = (uint32_t)sizeWorkItem;
         ownInitEvent(&pool->completed, vx_false_e);
-        pool->workers = (vx_threadpool_worker_t *)calloc(pool->numWorkers, sizeof(vx_threadpool_worker_t));
+        pool->workers = new vx_threadpool_worker_t[pool->numWorkers]();
         if (pool->workers)
         {
             VX_PRINT(VX_ZONE_OSAL, "Created %u threadpool workers\n", pool->numWorkers);
@@ -610,7 +610,7 @@ void ownDestroyQueue(vx_queue_t **pq)
     if (q)
     {
         ownDeinitQueue(q);
-        free(q);
+        delete(q);
         *pq = nullptr;
     }
 }

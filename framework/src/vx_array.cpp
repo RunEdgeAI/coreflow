@@ -180,7 +180,7 @@ vx_status Array::accessArrayRange(vx_size start, vx_size end, vx_size *pStride, 
             vx_size size = ((end - start) * item_size);
             vx_uint32 a = 0u;
 
-            vx_size *stride_save = (vx_size*)calloc(1, sizeof(vx_size));
+            vx_size *stride_save = new vx_size(0);
             *stride_save = item_size;
 
             if (context->addAccessor(size, usage, *ptr, (vx_reference)this, &a, stride_save) == vx_true_e)
@@ -215,7 +215,7 @@ vx_status Array::accessArrayRange(vx_size start, vx_size end, vx_size *pStride, 
         vx_size size = ((end - start) * item_size);
         vx_uint32 a = 0u;
 
-        vx_size *stride_save = (vx_size*)calloc(1, sizeof(vx_size));
+        vx_size *stride_save = new vx_size(0);
         if (pStride == nullptr) {
             *stride_save = item_size;
             pStride = stride_save;

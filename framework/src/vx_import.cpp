@@ -45,7 +45,7 @@ vx_import Import::createImportInt(vx_context context,
     import = (vx_import)Reference::createReference(context, VX_TYPE_IMPORT, VX_EXTERNAL, context);
     if (import && import->type == VX_TYPE_IMPORT)
     {
-        import->refs = (vx_reference *)calloc(count, sizeof(vx_reference));
+        import->refs = new vx_reference[count]();
         import->import_type = type;
         import->count = count;
         VX_PRINT(VX_ZONE_INFO, "Creating Import of %u objects of type %x!\n", count, type);
@@ -65,7 +65,7 @@ void Import::destruct()
     }
     if (refs)
     {
-        free(refs);
+        delete[](refs);
     }
 }
 

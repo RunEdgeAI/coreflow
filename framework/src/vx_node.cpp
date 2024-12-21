@@ -107,7 +107,7 @@ void Node::destruct()
     /* free the local memory */
     if (attributes.localDataPtr)
     {
-        free(attributes.localDataPtr);
+        ::operator delete(attributes.localDataPtr);
         attributes.localDataPtr = nullptr;
     }
 
@@ -754,26 +754,24 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetNodeTarget(vx_node node, vx_enum target_
             case VX_TARGET_STRING:
                 {
                     size_t len = strlen(target_string);
-                    char* target_lower_string = (char*)calloc(len + 1, sizeof(char));
-                    if (target_lower_string)
+                    std::string target_lower_string(len + 1, '\0');
+                    if (target_lower_string.size() > 0)
                     {
                         unsigned int i;
                         /* to lower case */
                         for (i = 0; target_string[i] != 0; i++)
                         {
-                            target_lower_string[i] = (char)tolower(target_string[i]);
+                            target_lower_string[i] = std::tolower(target_string[i]);
                         }
 
                         for (t = 0; (t < context->num_targets) && (kernel == nullptr); t++)
                         {
                             rt = context->priority_targets[t];
-                            if (Target::matchTargetNameWithString(context->targets[rt]->name, target_lower_string) == vx_true_e)
+                            if (Target::matchTargetNameWithString(context->targets[rt]->name, target_lower_string.c_str()) == vx_true_e)
                             {
                                 kernel = context->targets[rt]->findKernelByEnum(node->kernel->enumeration);
                             }
                         }
-
-                        free(target_lower_string);
                     }
                 }
                 break;

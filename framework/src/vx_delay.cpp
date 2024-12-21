@@ -107,7 +107,7 @@ vx_bool Delay::removeAssociationToDelay(vx_reference value, vx_node n, vx_uint32
                     (*ptr)->node = 0;
                     (*ptr)->index = 0;
                     next = (*ptr)->next;
-                    free(*ptr);
+                    delete(*ptr);
                     *ptr = next;
                     break;
                 }
@@ -142,7 +142,7 @@ void Delay::destruct()
         {
             Reference::releaseReference((vx_reference*)&delay->pyr[i], VX_TYPE_DELAY, VX_INTERNAL, nullptr);
         }
-        free(delay->pyr);
+        delete[](delay->pyr);
     }
 
     for (i = 0; i < delay->count; i++)
@@ -158,16 +158,16 @@ void Delay::destruct()
             while (cur != nullptr)
             {
                 vx_delay_param_t *next = cur->next;
-                free(cur);
+                delete(cur);
                 cur = next;
             }
         }
-        free(delay->set);
+        delete[](delay->set);
     }
 
     if (delay->refs)
     {
-        free(delay->refs);
+        delete[](delay->refs);
     }
 }
 
@@ -290,8 +290,8 @@ VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
     {
         vx_size i = 0;
         delay->pyr = nullptr;
-        delay->set = (vx_delay_param_t *)calloc(count, sizeof(vx_delay_param_t));
-        delay->refs = (vx_reference *)calloc(count, sizeof(vx_reference));
+        delay->set = new vx_delay_param_t[count]();
+        delay->refs = new vx_reference[count]();
         delay->type = exemplar->type;
         delay->count = count;
         VX_PRINT(VX_ZONE_DELAY, "Creating Delay of %u objects of type %x!\n", count, exemplar->type);
@@ -391,7 +391,7 @@ VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
             /* create internal delays for each pyramid level */
             vx_size j = 0;
             vx_size numLevels = ((vx_pyramid)exemplar)->numLevels;
-            delay->pyr = (vx_delay *)calloc(numLevels, sizeof(vx_delay));
+            delay->pyr = new vx_delay[numLevels]();
             vx_delay pyrdelay = nullptr;
             for (j = 0; j < numLevels; ++j)
             {
@@ -399,8 +399,8 @@ VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
                 delay->pyr[j] = pyrdelay;
                 if (vxGetStatus((vx_reference)pyrdelay) == VX_SUCCESS && pyrdelay->type == VX_TYPE_DELAY)
                 {
-                    pyrdelay->set = (vx_delay_param_t *)calloc(count, sizeof(vx_delay_param_t));
-                    pyrdelay->refs = (vx_reference *)calloc(count, sizeof(vx_reference));
+                    pyrdelay->set = new vx_delay_param_t[count]();
+                    pyrdelay->refs = new vx_reference[count]();
                     pyrdelay->type = VX_TYPE_IMAGE;
                     pyrdelay->count = count;
                     for (i = 0; i < count; i++)

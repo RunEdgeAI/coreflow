@@ -187,7 +187,7 @@ static int isImmutable(vx_kernel k, vx_uint32 p)
     return retval;
 }
 
-static void malloc_export(VXBinExport *xport)
+static void alloc_export(VXBinExport *xport)
 {
     xport->export_buffer = nullptr;
     /* allocate memory for an export */
@@ -196,7 +196,7 @@ static void malloc_export(VXBinExport *xport)
         for (int i = 0; i < MAX_CONCURRENT_EXPORTS && nullptr == xport->export_buffer; ++i)
             if (nullptr == exports[i])
             {
-                xport->export_buffer = (vx_uint8 *)malloc(xport->export_length);
+                xport->export_buffer = new vx_uint8[xport->export_length]();
                 exports[i] = xport->export_buffer;
             }
     }
@@ -958,11 +958,10 @@ static vx_status exportScalar(VXBinExport *xport, const vx_size i, int calcSize)
     if (VX_IX_USE_EXPORT_VALUES == xport->ref_table[i].use &&
         vx_false_e == scalar->is_virtual)
     {
-        void * data = malloc(item_size);
+        std::unique_ptr<vx_char[]> data = std::make_unique<vx_char[]>(item_size);
         status |= exportVxUint32(xport, item_size, calcSize);                       /* Size of data following */
-        status |= vxCopyScalar(scalar, data, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);    /* Read the data */
+        status |= vxCopyScalar(scalar, data.get(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);    /* Read the data */
         status |= exportBytes(xport, &scalar->data, item_size, calcSize);           /* Export the data */
-        free(data);
     }
     else
     {
@@ -1516,7 +1515,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportObjectsToMemory (
     if (VX_SUCCESS == retval)
     {
         /* First, make a table of unique references to export; first allocate an array big enough for any eventuality */
-        xport.ref_table = (VXBinExportRefTable *)calloc(sizeof(VXBinExportRefTable), context->num_references);
+        xport.ref_table = new VXBinExportRefTable[context->num_references]();
         xport.actual_numrefs = numrefs;
         /* Now, populate the table and find the actual number of references to export */
         if (xport.ref_table)
@@ -1555,7 +1554,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportObjectsToMemory (
         if (VX_SUCCESS == retval)
         {
             /* Now allocate buffer for the export */
-            malloc_export(&xport);
+            alloc_export(&xport);
             /* And actually do the export */
             retval = exportObjects(&xport, 0);
             /* Now fix up duplicates */
@@ -1580,7 +1579,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportObjectsToMemory (
                 retval = exportVxUint32(&xport, checksum, 0);
             }
         }
-        free(xport.ref_table);
+        delete[](xport.ref_table);
     }
     if (VX_SUCCESS == retval)
     {
@@ -1611,7 +1610,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseExportedMemory(vx_context context, c
             if (*ptr == exports[i])
             {
                 /* found it, all good, we can free the memory, zero the pointers and set a successful return value */
-                free((void *)*ptr);
+                delete[]((vx_uint8 *)*ptr);
                 *ptr = nullptr;
                 exports[i] = nullptr;
                 --num_exports;
