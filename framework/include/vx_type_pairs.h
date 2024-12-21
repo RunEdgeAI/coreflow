@@ -16,14 +16,13 @@
 #ifndef VX_TYPE_PAIRS_H
 #define VX_TYPE_PAIRS_H
 
-#include <cstdint>
-
 #include <VX/vx.h>
 
 /*! \brief The enum string structure
  * \ingroup group_int_type_pairs
  */
-typedef struct vx_enum_string_t {
+struct vx_enum_string_t
+{
     /*! \brief The data type enumeration */
     vx_enum type;
     /*! \brief A character string to hold the name of the data type enum */
@@ -32,23 +31,30 @@ typedef struct vx_enum_string_t {
     uintmax_t nibbles;
 };
 
-extern vx_enum_string_t type_pairs[];
+extern const vx_enum_string_t type_pairs[];
 
-/*! \brief Fetch index of string in type pairs list
- * \ingroup group_int_type_pairs
- */
-vx_int32 ownStringFromType(vx_enum type);
+class TypePairs
+{
+public:
+#if defined(EXPERIMENTAL_USE_DOT) || defined(OPENVX_USE_XML)
+    /*! \brief Fetch index of string in type pairs list
+     * \ingroup group_int_type_pairs
+     */
+    static vx_int32 stringFromType(vx_enum type);
 
-#if defined (OPENVX_USE_XML)
-/*! \brief Get enum of type given string
- * \ingroup group_int_type_pairs
- */
-vx_status ownTypeFromString(char *string, vx_enum *type);
+#endif /* defined(EXPERIMENTAL_USE_DOT) || defined(OPENVX_USE_XML) */
 
-/*! \brief Get meta size of type given enum
- * \ingroup group_int_type_pairs
- */
-vx_size ownMetaSizeOfType(vx_enum type);
+#if defined(OPENVX_USE_XML)
+    /*! \brief Get enum of type given string
+     * \ingroup group_int_type_pairs
+     */
+    static vx_status typeFromString(char *string, vx_enum *type);
+
+    /*! \brief Get meta size of type given enum
+     * \ingroup group_int_type_pairs
+     */
+    static vx_size metaSizeOfType(vx_enum type);
 #endif /* defined (OPENVX_USE_XML) */
+};
 
 #endif /* VX_TYPE_PAIRS_H */

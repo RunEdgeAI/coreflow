@@ -416,7 +416,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
 {
     vx_status status = VX_SUCCESS;
     vx_array array = (vx_array)refs[r];
-    vx_int32 j = ownStringFromType(array->item_type);
+    vx_int32 j = TypePairs::stringFromType(array->item_type);
     vx_char indent[10] = {0};
     vx_uint32 i;
     vx_bool skipDataWrite = vx_false_e;
@@ -682,7 +682,7 @@ static vx_status vxExportToXMLLut(FILE* fp, vx_reference refs[], vx_uint32 r, vx
 {
     vx_status status = VX_SUCCESS;
     vx_lut lut = (vx_lut)refs[r];
-    vx_int32 j = ownStringFromType(lut->item_type);
+    vx_int32 j = TypePairs::stringFromType(lut->item_type);
     vx_char indent[10] = {0};
     vx_uint32 i;
 
@@ -719,7 +719,7 @@ static vx_status vxExportToXMLMatrix(FILE* fp, vx_reference refs[], vx_uint32 r,
     vx_status status = VX_SUCCESS;
     vx_matrix mat = (vx_matrix)refs[r];
     vx_size ci,ri;
-    vx_int32 j = ownStringFromType(mat->data_type);
+    vx_int32 j = TypePairs::stringFromType(mat->data_type);
     vx_char indent[10] = {0};
     vx_uint32 i;
 
@@ -892,7 +892,7 @@ static vx_status vxExportToXMLThreshold(FILE* fp, vx_reference refs[], vx_uint32
 {
     vx_status status = VX_SUCCESS;
     vx_threshold thresh = (vx_threshold)refs[r];
-    vx_int32 j = ownStringFromType(thresh->data_type);
+    vx_int32 j = TypePairs::stringFromType(thresh->data_type);
     vx_char indent[10] = {0};
     vx_uint32 i;
 
@@ -980,7 +980,7 @@ static vx_status vxExportToXMLScalar(FILE* fp, vx_reference refs[], vx_uint32 r,
     indent[i] = '\0';
 
     fprintf(fp, "%s<scalar reference=\"%u\" elemType=\"%s\"%s",
-            indent, r, type_pairs[ownStringFromType(scalar->data_type)].name, refNameStr);
+            indent, r, type_pairs[TypePairs::stringFromType(scalar->data_type)].name, refNameStr);
 
     if (refs[r]->is_virtual == vx_true_e) /* is not virtual in 1.0, but check anyway */
     {
