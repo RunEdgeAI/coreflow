@@ -64,7 +64,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
             {
                 for (d = 0u; d < num_data; d++)
                 {
-                    vx_int32 i = ownStringFromType(data[d]->type);
+                    vx_int32 i = TypePairs::stringFromType(data[d]->type);
                     if (data[d] == nullptr) continue;
 
                     switch (data[d]->type)

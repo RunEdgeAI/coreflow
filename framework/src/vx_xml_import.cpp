@@ -837,7 +837,7 @@ static vx_status vxLoadDataForMatrix(vx_matrix matrix, xmlNodePtr cur, vx_size c
 
     if (XML_HAS_CHILD(cur))
     {
-        void *ptr = calloc(rows*cols,ownMetaSizeOfType(type));
+        void *ptr = calloc(rows*cols,TypePairs::metaSizeOfType(type));
         if (ptr)
         {
             if( (status = vxCopyMatrix(matrix, ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST)) == VX_SUCCESS)
@@ -1120,7 +1120,7 @@ static vx_status vxImportFromXMLArray(vx_reference ref, xmlNodePtr cur, vx_refer
     vx_uint32 userNum;
     xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
 
-    if(ownTypeFromString(typeName, &type) != VX_SUCCESS) { /* Type was not found, check if it is a user type */
+    if(TypePairs::typeFromString(typeName, &type) != VX_SUCCESS) { /* Type was not found, check if it is a user type */
         if(sscanf(typeName, "USER_STRUCT_%d", &userNum) == 1) {
             if(vxStructGetEnum(user_struct_table, userNum, &type) != VX_SUCCESS) {
                 return VX_ERROR_INVALID_PARAMETERS; /* INVALID type */
@@ -1340,7 +1340,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
             void *ptr = &nullptrReference;
             vx_char typeName[20];
             xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
-            ownTypeFromString(typeName, &type);
+            TypePairs::typeFromString(typeName, &type);
             if (refIdx >= total) {
                 REFNUM_ERROR;
                 goto exit_error;
@@ -1365,7 +1365,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
             vx_uint32 refIdx = xml_prop_ulong(cur, "reference");
             vx_char typeName[32];
             xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
-            ownTypeFromString(typeName, &type);
+            TypePairs::typeFromString(typeName, &type);
             if (refIdx >= total) {
                 REFNUM_ERROR;
                 goto exit_error;
@@ -1399,7 +1399,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
             vx_size count = xml_prop_ulong(cur, "count");
             vx_char typeName[32] = "VX_TYPE_UINT8";
             xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
-            ownTypeFromString(typeName, &type);
+            TypePairs::typeFromString(typeName, &type);
             if (refIdx >= total) {
                 REFNUM_ERROR;
                 goto exit_error;
@@ -1447,7 +1447,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
             vx_uint32 refIdx = xml_prop_ulong(cur, "reference");
             vx_char typeName[32] = "VX_TYPE_UINT8"; // default value
             xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
-            ownTypeFromString(typeName, &type);
+            TypePairs::typeFromString(typeName, &type);
             status = VX_SUCCESS;
             if (refIdx < total) {
                 vx_int32 true_value = (vx_int32)xml_prop_ulong(cur, "true_value");
@@ -1489,7 +1489,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
             vx_uint32 childNum = 0;
             vx_char objType[32] = "VX_TYPE_IMAGE";  // default value
             xml_prop_string(cur, "objType", objType, sizeof(objType));
-            ownTypeFromString(objType, &type);
+            TypePairs::typeFromString(objType, &type);
 
             if(tag == DELAY_TAG)
             {
@@ -1564,7 +1564,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                             vx_uint32 userNum;
                             xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
 
-                            if(ownTypeFromString(typeName, &type) != VX_SUCCESS) { /* Type was not found, check if it is a user type */
+                            if(TypePairs::typeFromString(typeName, &type) != VX_SUCCESS) { /* Type was not found, check if it is a user type */
                                 if(sscanf(typeName, "USER_STRUCT_%d", &userNum) == 1) {
                                     if(vxStructGetEnum(user_struct_table, userNum, &type) != VX_SUCCESS) {
                                         status = VX_ERROR_INVALID_TYPE; /* INVALID type */
@@ -1678,7 +1678,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                             vx_size cols = xml_prop_ulong(cur, "columns");
                             vx_char typeName[32];
                             xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
-                            ownTypeFromString(typeName, &type);
+                            TypePairs::typeFromString(typeName, &type);
                             if(childNum == 0) { /* Create delay object based on first child */
                                 vx_matrix exemplar = nullptr;
                                 status = vxReserveReferences(context, count+1);
@@ -1727,7 +1727,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                             vx_size lut_count = xml_prop_ulong(cur, "count");
                             vx_char typeName[32] = "VX_TYPE_UINT8";
                             xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
-                            ownTypeFromString(typeName, &type);
+                            TypePairs::typeFromString(typeName, &type);
                             if (lut_count == 0)
                                 lut_count = 256;
                             if(childNum == 0) { /* Create delay object based on first child */
@@ -1928,7 +1928,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                         {
                             vx_char typeName[32] = "VX_TYPE_UINT8"; // default value
                             xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
-                            ownTypeFromString(typeName, &type);
+                            TypePairs::typeFromString(typeName, &type);
                             vx_int32 true_value = (vx_int32)xml_prop_ulong(cur, "true_value");
                             vx_int32 false_value = (vx_int32)xml_prop_ulong(cur, "false_value");
                             if(childNum == 0) { /* Create delay object based on first child */
@@ -2011,7 +2011,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                         {
                             vx_char typeName[20];
                             xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
-                            ownTypeFromString(typeName, &type);
+                            TypePairs::typeFromString(typeName, &type);
                             vx_size nullptrReference = 0;
                             void *ptr = &nullptrReference;
                             if(childNum == 0) { /* Create delay object based on first child */

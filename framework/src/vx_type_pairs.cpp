@@ -16,11 +16,9 @@
 #include "vx_internal.h"
 #include "vx_type_pairs.h"
 
-#if defined(EXPERIMENTAL_USE_DOT) || defined(OPENVX_USE_XML)
-
 #include "vx_type_pairs.h"
 
-vx_enum_string_t type_pairs[] = {
+const vx_enum_string_t type_pairs[] = {
     {VX_STRINGERIZE(VX_TYPE_INVALID),0},
     /* scalar objects */
     {VX_STRINGERIZE(VX_TYPE_CHAR),sizeof(vx_char)*2},
@@ -59,7 +57,9 @@ vx_enum_string_t type_pairs[] = {
 #endif
 };
 
-vx_int32 ownStringFromType(vx_enum type)
+#if defined(EXPERIMENTAL_USE_DOT) || defined(OPENVX_USE_XML)
+
+vx_int32 TypePairs::stringFromType(vx_enum type)
 {
     vx_uint32 i = 0u;
     for (i = 0u; i < dimof(type_pairs); i++)
@@ -72,11 +72,11 @@ vx_int32 ownStringFromType(vx_enum type)
     return -1;
 }
 
-#endif
+#endif /* defined(EXPERIMENTAL_USE_DOT) || defined(OPENVX_USE_XML) */
 
 #if defined(OPENVX_USE_XML)
 
-vx_status ownTypeFromString(char *string, vx_enum *type)
+vx_status TypePairs::typeFromString(char *string, vx_enum *type)
 {
     vx_status status = VX_ERROR_INVALID_TYPE;
     vx_uint32 i = 0u;
@@ -93,7 +93,7 @@ vx_status ownTypeFromString(char *string, vx_enum *type)
     return status;
 }
 
-vx_size ownMetaSizeOfType(vx_enum type)
+vx_size TypePairs::metaSizeOfType(vx_enum type)
 {
     vx_size size = 0ul;
     vx_uint32 i = 0u;
@@ -108,4 +108,4 @@ vx_size ownMetaSizeOfType(vx_enum type)
     return size;
 }
 
-#endif /* defined(EXPERIMENTAL_USE_DOT) || defined(OPENVX_USE_XML) */
+#endif /* defined (OPENVX_USE_XML) */
