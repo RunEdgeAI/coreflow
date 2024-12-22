@@ -186,14 +186,14 @@ VX_API_ENTRY vx_status VX_API_CALL vxReadConvolutionCoefficients(vx_convolution 
     if ((Reference::isValidReference(convolution, VX_TYPE_CONVOLUTION) == vx_true_e) &&
         (ownAllocateMemory(convolution->context, &convolution->memory) == vx_true_e))
     {
-        ownSemWait(&convolution->lock);
+        Osal::semWait(&convolution->lock);
         if (array)
         {
             vx_size size = convolution->memory.strides[0][1] *
                            convolution->memory.dims[0][1];
             memcpy(array, convolution->memory.ptrs[0], size);
         }
-        ownSemPost(&convolution->lock);
+        Osal::semPost(&convolution->lock);
         // ownReadFromReference(&convolution);
         status = VX_SUCCESS;
     }
@@ -206,7 +206,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxWriteConvolutionCoefficients(vx_convolution
     if ((Reference::isValidReference(convolution, VX_TYPE_CONVOLUTION) == vx_true_e) &&
         (ownAllocateMemory(convolution->context, &convolution->memory) == vx_true_e))
     {
-        ownSemWait(&convolution->lock);
+        Osal::semWait(&convolution->lock);
         if (array)
         {
             vx_size size = convolution->memory.strides[0][1] *
@@ -214,7 +214,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxWriteConvolutionCoefficients(vx_convolution
 
             memcpy(convolution->memory.ptrs[0], array, size);
         }
-        ownSemPost(&convolution->lock);
+        Osal::semPost(&convolution->lock);
         // ownWroteToReference(&convolution);
         status = VX_SUCCESS;
     }
@@ -260,20 +260,20 @@ vx_status VX_API_CALL vxCopyConvolutionCoefficients(vx_convolution convolution, 
 
             if (usage == VX_READ_ONLY)
             {
-                ownSemWait(&convolution->lock);
+                Osal::semWait(&convolution->lock);
                 if (ptr)
                 {
                     vx_size size = convolution->memory.strides[0][1] *
                                    convolution->memory.dims[0][1];
                     memcpy(ptr, convolution->memory.ptrs[0], size);
                 }
-                ownSemPost(&convolution->lock);
+                Osal::semPost(&convolution->lock);
                 // ownReadFromReference(&convolution);
                 status = VX_SUCCESS;
             }
             else if (usage == VX_WRITE_ONLY)
             {
-                ownSemWait(&convolution->lock);
+                Osal::semWait(&convolution->lock);
                 if (ptr)
                 {
                     vx_size size = convolution->memory.strides[0][1] *
@@ -281,7 +281,7 @@ vx_status VX_API_CALL vxCopyConvolutionCoefficients(vx_convolution convolution, 
 
                     memcpy(convolution->memory.ptrs[0], ptr, size);
                 }
-                ownSemPost(&convolution->lock);
+                Osal::semPost(&convolution->lock);
                 // ownWroteToReference(&convolution);
                 status = VX_SUCCESS;
             }

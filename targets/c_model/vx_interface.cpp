@@ -193,7 +193,7 @@ extern "C" vx_action vxTargetProcess(vx_target target, vx_node nodes[], vx_size 
             nodes[n]->context->targets[nodes[n]->affinity]->name);
 
         if (context->perf_enabled)
-            ownStartCapture(&nodes[n]->perf);
+            Osal::startCapture(&nodes[n]->perf);
 
         if (nodes[n]->is_replicated == vx_true_e)
         {
@@ -276,7 +276,7 @@ extern "C" vx_action vxTargetProcess(vx_target target, vx_node nodes[], vx_size 
         nodes[n]->status = status;
 
         if (context->perf_enabled)
-            ownStopCapture(&nodes[n]->perf);
+            Osal::stopCapture(&nodes[n]->perf);
 
         VX_PRINT(VX_ZONE_GRAPH, "kernel %s returned %d\n", nodes[n]->kernel->name, status);
 
@@ -321,7 +321,7 @@ extern "C" vx_kernel vxTargetAddKernel(vx_target target,
     VX_PRINT(VX_ZONE_INFO, "Entered %s\n", __func__);
     vx_uint32 k = 0u;
     vx_kernel kernel = nullptr;
-    ownSemWait(&target->lock);
+    Osal::semWait(&target->lock);
 
     for (k = 0; k < VX_INT_MAX_KERNELS; k++)
     {
@@ -339,7 +339,7 @@ extern "C" vx_kernel vxTargetAddKernel(vx_target target,
         }
         kernel = nullptr;
     }
-    ownSemPost(&target->lock);
+    Osal::semPost(&target->lock);
 
     return kernel;
 }

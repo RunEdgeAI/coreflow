@@ -460,13 +460,13 @@ extern "C" vx_action vxTargetProcess(vx_target target, vx_node nodes[], vx_size 
             n,
             nodes[n]->context->targets[nodes[n]->affinity]->name);
 
-        ownStartCapture(&nodes[n]->perf);
+        Osal::startCapture(&nodes[n]->perf);
         status = nodes[n]->kernel->function((vx_node)nodes[n],
                                             (vx_reference *)nodes[n]->parameters,
                                             nodes[n]->kernel->signature.num_parameters);
         nodes[n]->executed = vx_true_e;
         nodes[n]->status = status;
-        ownStopCapture(&nodes[n]->perf);
+        Osal::stopCapture(&nodes[n]->perf);
 
         VX_PRINT(VX_ZONE_GRAPH,"kernel %s returned %d\n", nodes[n]->kernel->name, status);
 

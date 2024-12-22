@@ -68,7 +68,7 @@ VX_API_ENTRY vx_error vxGetErrorObject(vx_context context, vx_status status)
 {
     vx_error error = nullptr;
     vx_size i = 0ul;
-    ownSemWait(&context->lock);
+    Osal::semWait(&context->lock);
     for (i = 0ul; i < context->num_references; i++)
     {
         if (context->reftable[i] == nullptr)
@@ -84,7 +84,7 @@ VX_API_ENTRY vx_error vxGetErrorObject(vx_context context, vx_status status)
             error = nullptr;
         }
     }
-    ownSemPost(&context->lock);
+    Osal::semPost(&context->lock);
     return error;
 }
 

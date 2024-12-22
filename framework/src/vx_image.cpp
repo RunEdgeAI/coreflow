@@ -444,7 +444,7 @@ void Image::destruct()
         vx_uint32 p = 0u;
         for (p = 0; p < planes; p++)
         {
-            ownDestroySem(&memory.locks[p]);
+            Osal::destroySem(&memory.locks[p]);
             memory.ptrs[p] = nullptr;
             memory.strides[p][VX_DIM_C] = 0;
             memory.strides[p][VX_DIM_X] = 0;
@@ -881,7 +881,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromChannel(vx_image image, vx_en
                         subimage->memory.ptrs[0] = image->memory.ptrs[p];
                         subimage->memory.nptrs   = 1;
 
-                        ownCreateSem(&subimage->memory.locks[0], 1);
+                        Osal::createSem(&subimage->memory.locks[0], 1);
 
                         break;
                     }
@@ -926,7 +926,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromChannel(vx_image image, vx_en
                         subimage->memory.ptrs[0] = image->memory.ptrs[p];
                         subimage->memory.nptrs = 1;
 
-                        ownCreateSem(&subimage->memory.locks[0], 1);
+                        Osal::createSem(&subimage->memory.locks[0], 1);
 
                         break;
                     }
@@ -1016,7 +1016,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromHandle(vx_context context, vx
                 image->memory.strides[p][VX_DIM_Y] = addrs[p].stride_y;
                 image->memory.stride_x_bits[p] = addrs[p].stride_x_bits;
 
-                ownCreateSem(&image->memory.locks[p], 1);
+                Osal::createSem(&image->memory.locks[p], 1);
             }
         }
     }
@@ -1632,7 +1632,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxAccessImagePatch(vx_image image,
 
         /* lock the memory plane for multiple writers*/
         if (usage != VX_READ_ONLY) {
-            if (ownSemWait(&image->memory.locks[plane_index]) == vx_false_e)
+            if (Osal::semWait(&image->memory.locks[plane_index]) == vx_false_e)
             {
                 status = VX_ERROR_NO_RESOURCES;
                 goto exit;
@@ -1717,7 +1717,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxAccessImagePatch(vx_image image,
             /*! \todo implement overlapping multi-writers lock, not just single writer lock */
             if ((usage == VX_WRITE_ONLY) || (usage == VX_READ_AND_WRITE))
             {
-                if (ownSemWait(&image->memory.locks[plane_index]) == vx_false_e)
+                if (Osal::semWait(&image->memory.locks[plane_index]) == vx_false_e)
                 {
                     status = VX_ERROR_NO_RESOURCES;
                     goto exit;
@@ -2065,7 +2065,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCommitImagePatch(vx_image image,
                 // ownWroteToReference(&image->base);
             }
             status = VX_SUCCESS;
-            ownSemPost(&image->memory.locks[plane_index]);
+            Osal::semPost(&image->memory.locks[plane_index]);
         }
         else if (zero_area == vx_true_e)
         {
@@ -2079,7 +2079,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCommitImagePatch(vx_image image,
                 /*! \bug (possible bug, but maybe not) anyone can decrement an
                  *  image access, should we limit to incrementor? that would be
                  *  a lot to track */
-                ownSemPost(&image->memory.locks[plane_index]);
+                Osal::semPost(&image->memory.locks[plane_index]);
             }
             status = VX_SUCCESS;
         }
@@ -2330,7 +2330,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyImagePatch(
             addr_save.scale_y = VX_SCALE_UNITY / image->scale[plane_index][VX_DIM_Y];
 
             /* lock image plane from multiple writers */
-            if (ownSemWait(&image->memory.locks[plane_index]) == vx_false_e)
+            if (Osal::semWait(&image->memory.locks[plane_index]) == vx_false_e)
             {
                 status = VX_ERROR_NO_RESOURCES;
             }
@@ -2406,7 +2406,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyImagePatch(
 
             // ownWroteToReference(&image->base);
             /* unlock image plane */
-            ownSemPost(&image->memory.locks[plane_index]);
+            Osal::semPost(&image->memory.locks[plane_index]);
         }
 
 #ifdef OPENVX_USE_OPENCL_INTEROP
@@ -2572,7 +2572,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapImagePatch(
             if (VX_READ_ONLY == usage || VX_READ_AND_WRITE == usage)
             {
                 /* lock image plane even for read access to avoid mix of simultaneous read/write */
-                if (vx_true_e == ownSemWait(&image->memory.locks[plane_index]))
+                if (vx_true_e == Osal::semWait(&image->memory.locks[plane_index]))
                 {
                     vx_uint32 y;
                     vx_uint8* pSrc = image->memory.ptrs[plane_index];
@@ -2599,7 +2599,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapImagePatch(
                     // ownReadFromReference(&image->base);
 
                     /* we're done, unlock the image plane */
-                    ownSemPost(&image->memory.locks[plane_index]);
+                    Osal::semPost(&image->memory.locks[plane_index]);
                 }
                 else
                 {
@@ -2702,7 +2702,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapImagePatch(vx_image image, vx_map_id m
                 vx_rectangle_t rect        = map->extra.image_data.rect;
 
                 /* lock image plane for simultaneous write */
-                if (vx_true_e == ownSemWait(&image->memory.locks[plane_index]))
+                if (vx_true_e == Osal::semWait(&image->memory.locks[plane_index]))
                 {
                     vx_uint32 x, y;
                     vx_uint8* pSrc = (vx_uint8*)map->ptr;
@@ -2775,7 +2775,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapImagePatch(vx_image image, vx_map_id m
                     }
 
                     /* we're done, unlock the image plane */
-                    ownSemPost(&image->memory.locks[plane_index]);
+                    Osal::semPost(&image->memory.locks[plane_index]);
                 }
                 else
                 {

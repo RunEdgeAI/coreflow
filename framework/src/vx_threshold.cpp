@@ -675,7 +675,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyThresholdOutput(vx_threshold threshold,
     {
         if (usage == VX_READ_ONLY)
         {
-            ownSemWait(&threshold->lock);
+            Osal::semWait(&threshold->lock);
             vx_size size = sizeof(vx_pixel_value_t);
             if (true_value_ptr)
             {
@@ -685,13 +685,13 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyThresholdOutput(vx_threshold threshold,
             {
                 memcpy(false_value_ptr, &threshold->false_value, size);
             }
-            ownSemPost(&threshold->lock);
+            Osal::semPost(&threshold->lock);
             // ownReadFromReference(&threshold);
             status = VX_SUCCESS;
         }
         else if (usage == VX_WRITE_ONLY)
         {
-            ownSemWait(&threshold->lock);
+            Osal::semWait(&threshold->lock);
             vx_size size = sizeof(vx_pixel_value_t);
             if (true_value_ptr)
             {
@@ -701,7 +701,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyThresholdOutput(vx_threshold threshold,
             {
                 memcpy(&threshold->false_value, false_value_ptr, size);
             }
-            ownSemPost(&threshold->lock);
+            Osal::semPost(&threshold->lock);
             // ownWroteToReference(&threshold);
             status = VX_SUCCESS;
         }
@@ -821,7 +821,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyThresholdRange(vx_threshold threshold,
     {
         if (usage == VX_READ_ONLY)
         {
-            ownSemWait(&threshold->lock);
+            Osal::semWait(&threshold->lock);
             vx_size size = sizeof(vx_pixel_value_t);
             if (lower_value_ptr)
             {
@@ -831,13 +831,13 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyThresholdRange(vx_threshold threshold,
             {
                 memcpy(upper_value_ptr, &threshold->upper, size);
             }
-            ownSemPost(&threshold->lock);
+            Osal::semPost(&threshold->lock);
             // ownReadFromReference(&threshold);
             status = VX_SUCCESS;
         }
         else if (usage == VX_WRITE_ONLY)
         {
-            ownSemWait(&threshold->lock);
+            Osal::semWait(&threshold->lock);
             vx_size size = sizeof(vx_pixel_value_t);
             if (lower_value_ptr)
             {
@@ -847,7 +847,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyThresholdRange(vx_threshold threshold,
             {
                 memcpy(&threshold->upper, upper_value_ptr, size);
             }
-            ownSemPost(&threshold->lock);
+            Osal::semPost(&threshold->lock);
             // ownWroteToReference(&threshold);
             status = VX_SUCCESS;
         }
@@ -942,25 +942,25 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyThresholdValue(vx_threshold threshold,
     {
         if (usage == VX_READ_ONLY)
         {
-            ownSemWait(&threshold->lock);
+            Osal::semWait(&threshold->lock);
             vx_size size = sizeof(vx_pixel_value_t);
             if (value_ptr)
             {
                 memcpy(value_ptr, &threshold->value, size);
             }
-            ownSemPost(&threshold->lock);
+            Osal::semPost(&threshold->lock);
             // ownReadFromReference(&threshold);
             status = VX_SUCCESS;
         }
         else if (usage == VX_WRITE_ONLY)
         {
-            ownSemWait(&threshold->lock);
+            Osal::semWait(&threshold->lock);
             vx_size size = sizeof(vx_pixel_value_t);
             if (value_ptr)
             {
                 memcpy(&threshold->value, value_ptr, size);
             }
-            ownSemPost(&threshold->lock);
+            Osal::semPost(&threshold->lock);
             // ownWroteToReference(&threshold);
             status = VX_SUCCESS;
         }

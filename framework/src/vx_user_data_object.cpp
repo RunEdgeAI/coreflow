@@ -309,7 +309,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapUserDataObject(
         {
             if (VX_READ_ONLY == usage || VX_READ_AND_WRITE == usage)
             {
-                if (ownSemWait(&user_data_object->memory.locks[0]) == vx_true_e)
+                if (Osal::semWait(&user_data_object->memory.locks[0]) == vx_true_e)
                 {
                     vx_uint8 *pSrc = (vx_uint8 *)&user_data_object->memory.ptrs[0][offset];
                     vx_uint8 *pDst = (vx_uint8 *)buf;
@@ -317,7 +317,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapUserDataObject(
 
                     *ptr = buf;
                     user_data_object->incrementReference(VX_EXTERNAL);
-                    ownSemPost(&user_data_object->memory.locks[0]);
+                    Osal::semPost(&user_data_object->memory.locks[0]);
 
                     status = VX_SUCCESS;
                 }
@@ -363,7 +363,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapUserDataObject(vx_user_data_object use
             vx_size end = map->extra.array_data.end;
             if (VX_WRITE_ONLY == map->usage || VX_READ_AND_WRITE == map->usage)
             {
-                if (ownSemWait(&user_data_object->memory.locks[0]) == vx_true_e)
+                if (Osal::semWait(&user_data_object->memory.locks[0]) == vx_true_e)
                 {
                     vx_uint32 offset = (vx_uint32)start;
                     vx_uint8 *pSrc = (vx_uint8 *)map->ptr;
@@ -373,7 +373,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapUserDataObject(vx_user_data_object use
 
                     context->memoryUnmap((vx_uint32)map_id);
                     user_data_object->decrementReference(VX_EXTERNAL);
-                    ownSemPost(&user_data_object->memory.locks[0]);
+                    Osal::semPost(&user_data_object->memory.locks[0]);
                     status = VX_SUCCESS;
                 }
                 else

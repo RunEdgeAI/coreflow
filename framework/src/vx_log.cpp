@@ -21,13 +21,13 @@ VX_API_ENTRY void VX_API_CALL vxRegisterLogCallback(vx_context context, vx_log_c
 {
     if (Context::isValidContext(context) == vx_true_e)
     {
-        ownSemWait(&context->lock);
+        Osal::semWait(&context->lock);
         if ((context->log_callback == nullptr) && (callback != nullptr))
         {
             context->log_enabled = vx_true_e;
             if (reentrant == vx_false_e)
             {
-                ownCreateSem(&context->log_lock, 1);
+                Osal::createSem(&context->log_lock, 1);
             }
             context->log_reentrant = reentrant;
         }
@@ -35,7 +35,7 @@ VX_API_ENTRY void VX_API_CALL vxRegisterLogCallback(vx_context context, vx_log_c
         {
             if (context->log_reentrant == vx_false_e)
             {
-                ownDestroySem(&context->log_lock);
+                Osal::destroySem(&context->log_lock);
             }
             context->log_enabled = vx_false_e;
         }
@@ -43,16 +43,16 @@ VX_API_ENTRY void VX_API_CALL vxRegisterLogCallback(vx_context context, vx_log_c
         {
             if (context->log_reentrant == vx_false_e)
             {
-                ownDestroySem(&context->log_lock);
+                Osal::destroySem(&context->log_lock);
             }
             if (reentrant == vx_false_e)
             {
-                ownCreateSem(&context->log_lock, 1);
+                Osal::createSem(&context->log_lock, 1);
             }
             context->log_reentrant = reentrant;
         }
         context->log_callback = callback;
-        ownSemPost(&context->lock);
+        Osal::semPost(&context->lock);
     }
 }
 
@@ -111,12 +111,12 @@ VX_API_ENTRY void VX_API_CALL vxAddLogEntry(vx_reference ref, vx_status status, 
 
     if (context->log_reentrant == vx_false_e)
     {
-        ownSemWait(&context->log_lock);
+        Osal::semWait(&context->log_lock);
     }
     context->log_callback(context, ref, status, string);
     if (context->log_reentrant == vx_false_e)
     {
-        ownSemPost(&context->log_lock);
+        Osal::semPost(&context->log_lock);
     }
     return;
 }

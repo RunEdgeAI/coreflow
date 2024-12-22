@@ -719,7 +719,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapTensorPatch(vx_tensor tensor, vx_map_i
             /* commit changes for write access */
             if ((VX_WRITE_ONLY == map->usage || VX_READ_AND_WRITE == map->usage) && nullptr != map->ptr)
             {
-                if (vx_true_e == ownSemWait(&tensor->lock))
+                if (vx_true_e == Osal::semWait(&tensor->lock))
                 {
                     vx_uint32 size = Tensor::computePatchSize(map->extra.tensor_data.start,
                                                       map->extra.tensor_data.end,
@@ -741,7 +741,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapTensorPatch(vx_tensor tensor, vx_map_i
                         memcpy (pDst + patch_pos, pSrc + tensor_pos, tensor->stride[0]);
                     }
 
-                    ownSemPost(&tensor->lock);
+                    Osal::semPost(&tensor->lock);
                 }
                 else
                 {

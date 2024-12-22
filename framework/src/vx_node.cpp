@@ -122,7 +122,7 @@ vx_status Node::removeNode()
     {
         vx_uint32 i = 0;
         vx_bool removedFromGraph = vx_false_e;
-        ownSemWait(&graph->lock);
+        Osal::semWait(&graph->lock);
         /* remove the reference from the graph */
         for (i = 0; i < graph->numNodes; i++)
         {
@@ -139,7 +139,7 @@ vx_status Node::removeNode()
                 break;
             }
         }
-        ownSemPost(&graph->lock);
+        Osal::semPost(&graph->lock);
         /* If this node is within a graph, release internal reference to graph */
         if (vx_true_e == removedFromGraph)
         {
@@ -257,7 +257,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxCreateGenericNode(vx_graph graph, vx_kernel k
         if (Reference::isValidReference(reinterpret_cast<vx_reference>(kernel), VX_TYPE_KERNEL) == vx_true_e)
         {
             vx_uint32 n = 0;
-            ownSemWait(&graph->lock);
+            Osal::semWait(&graph->lock);
             for (n = 0; n < VX_INT_MAX_REF; n++)
             {
                 if (graph->nodes[n] == nullptr)
@@ -283,7 +283,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxCreateGenericNode(vx_graph graph, vx_kernel k
                         /* increase the count of nodes in the graph. */
                         graph->numNodes++;
 
-                        ownInitPerf(&graph->nodes[n]->perf);
+                        Osal::initPerf(&graph->nodes[n]->perf);
 
                         /* force a re-verify */
                         graph->reverify = graph->verified;
@@ -295,7 +295,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxCreateGenericNode(vx_graph graph, vx_kernel k
                     break; /* succeed or fail, break. */
                 }
             }
-            ownSemPost(&graph->lock);
+            Osal::semPost(&graph->lock);
             Reference::printReference((vx_reference )node);
         }
         else

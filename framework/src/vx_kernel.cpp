@@ -301,31 +301,31 @@ VX_API_ENTRY vx_status VX_API_CALL vxLoadKernels(vx_context context, const vx_ch
 
     for (m = 0; m < VX_INT_MAX_MODULES; m++)
     {
-        ownSemWait(&context->modules[m].lock);
+        Osal::semWait(&context->modules[m].lock);
         if (context->modules[m].handle != nullptr && strncmp(name, context->modules[m].name, VX_INT_MAX_PATH) == 0)
         {
             context->modules[m].ref_count++;
-            ownSemPost(&context->modules[m].lock);
+            Osal::semPost(&context->modules[m].lock);
             return VX_SUCCESS;
         }
-        ownSemPost(&context->modules[m].lock);
+        Osal::semPost(&context->modules[m].lock);
     }
 
     for (m = 0; m < VX_INT_MAX_MODULES; m++)
     {
-        ownSemWait(&context->modules[m].lock);
+        Osal::semWait(&context->modules[m].lock);
         if (context->modules[m].handle == nullptr)
         {
-            context->modules[m].handle = ownLoadModule(module);
+            context->modules[m].handle = Osal::loadModule(module);
             if (context->modules[m].handle)
             {
-                vx_symbol_t sym = ownGetSymbol(context->modules[m].handle, "vxPublishKernels");
+                vx_symbol_t sym = Osal::getSymbol(context->modules[m].handle, "vxPublishKernels");
                 publish = (vx_publish_kernels_f)sym;
                 if (publish == nullptr)
                 {
                     VX_PRINT(VX_ZONE_ERROR, "Failed to load symbol vxPublishKernels\n");
                     status = VX_ERROR_INVALID_MODULE;
-                    ownUnloadModule(context->modules[m].handle);
+                    Osal::unloadModule(context->modules[m].handle);
                     context->modules[m].handle = nullptr;
                 }
                 else
@@ -335,7 +335,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxLoadKernels(vx_context context, const vx_ch
                     if (status != VX_SUCCESS)
                     {
                         VX_PRINT(VX_ZONE_ERROR, "Failed to publish kernels in module\n");
-                        ownUnloadModule(context->modules[m].handle);
+                        Osal::unloadModule(context->modules[m].handle);
                         context->modules[m].handle = nullptr;
                     }
                     else
@@ -350,14 +350,14 @@ VX_API_ENTRY vx_status VX_API_CALL vxLoadKernels(vx_context context, const vx_ch
             {
                 VX_PRINT(VX_ZONE_ERROR, "Failed to find module %s in libraries path\n", module);
             }
-            ownSemPost(&context->modules[m].lock);
+            Osal::semPost(&context->modules[m].lock);
             break;
         }
         else
         {
             VX_PRINT(VX_ZONE_CONTEXT, "module[%u] is used\n", m);
         }
-        ownSemPost(&context->modules[m].lock);
+        Osal::semPost(&context->modules[m].lock);
     }
     if (status != VX_SUCCESS)
     {
@@ -390,17 +390,17 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnloadKernels(vx_context context, const vx_
 
     for (m = 0; m < VX_INT_MAX_MODULES; m++)
     {
-        ownSemWait(&context->modules[m].lock);
+        Osal::semWait(&context->modules[m].lock);
         if (context->modules[m].handle != nullptr && strncmp(name, context->modules[m].name, VX_INT_MAX_PATH) == 0)
         {
             context->modules[m].ref_count--;
             if (context->modules[m].ref_count != 0)
             {
-                ownSemPost(&context->modules[m].lock);
+                Osal::semPost(&context->modules[m].lock);
                 return VX_SUCCESS;
             }
 
-            vx_symbol_t sym = ownGetSymbol(context->modules[m].handle, "vxUnpublishKernels");
+            vx_symbol_t sym = Osal::getSymbol(context->modules[m].handle, "vxUnpublishKernels");
             unpublish = (vx_unpublish_kernels_f)sym;
             if (unpublish == nullptr)
             {
@@ -417,15 +417,15 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnloadKernels(vx_context context, const vx_
                 }
                 else
                 {
-                    ownUnloadModule(context->modules[m].handle);
+                    Osal::unloadModule(context->modules[m].handle);
                     context->modules[m].handle = nullptr;
                     context->num_modules--;
-                    ownSemPost(&context->modules[m].lock);
+                    Osal::semPost(&context->modules[m].lock);
                     return VX_SUCCESS;
                 }
             }
         }
-        ownSemPost(&context->modules[m].lock);
+        Osal::semPost(&context->modules[m].lock);
     }
 
     VX_PRINT(VX_ZONE_ERROR, "Failed to find module %s in libraries path\n", module);

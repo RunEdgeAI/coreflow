@@ -49,12 +49,12 @@ name{}
     else
         platform = nullptr;
 #endif
-    ownCreateSem(&lock, 1);
+    Osal::createSem(&lock, 1);
 }
 
 Reference::~Reference()
 {
-    ownDestroySem(&lock);
+    Osal::destroySem(&lock);
     /* make sure no existing copies of refs can use ref again */
     magic = VX_BAD_MAGIC;
     // VX_PRINT(VX_ZONE_REFERENCE, ">>>> Reference count was zero, destructed object " VX_FMT_REF "\n", this);
@@ -129,7 +129,7 @@ vx_uint32 Reference::incrementReference(vx_reftype_e refType)
 {
     vx_uint32 count = 0u;
 
-    ownSemWait(&lock);
+    Osal::semWait(&lock);
     if (refType == VX_EXTERNAL || refType == VX_BOTH)
         external_count++;
     if (refType == VX_INTERNAL || refType == VX_BOTH)
@@ -137,7 +137,7 @@ vx_uint32 Reference::incrementReference(vx_reftype_e refType)
     count = internal_count + external_count;
     VX_PRINT(VX_ZONE_REFERENCE, "Incremented Total Reference Count to %u on " VX_FMT_REF
         " [ext:%d, int:%d]\n", count, this, external_count, internal_count);
-    ownSemPost(&lock);
+    Osal::semPost(&lock);
 
     return count;
 }
@@ -146,7 +146,7 @@ vx_uint32 Reference::decrementReference(vx_reftype_e refType)
 {
     vx_uint32 result = UINT32_MAX;
 
-    ownSemWait(&lock);
+    Osal::semWait(&lock);
     if (refType == VX_INTERNAL || refType == VX_BOTH) {
         if (internal_count == 0) {
             VX_PRINT(VX_ZONE_WARNING, "#### INTERNAL REF COUNT IS ALREADY ZERO!!! " VX_FMT_REF " type:%08x #####\n", this, type);
@@ -174,7 +174,7 @@ vx_uint32 Reference::decrementReference(vx_reftype_e refType)
     result = internal_count + external_count;
     VX_PRINT(VX_ZONE_REFERENCE, "Decremented Total Reference Count to %u on " VX_FMT_REF
         " type:%08x [ext:%d, int:%d]\n", result, this, type, external_count, internal_count);
-    ownSemPost(&lock);
+    Osal::semPost(&lock);
 
     return result;
 }
@@ -198,9 +198,9 @@ vx_uint32 Reference::totalReferenceCount()
 {
     vx_uint32 count = 0;
     {
-        ownSemWait(&lock);
+        Osal::semWait(&lock);
         count = external_count + internal_count;
-        ownSemPost(&lock);
+        Osal::semPost(&lock);
     }
     return count;
 }

@@ -159,7 +159,7 @@ vx_status Array::accessArrayRange(vx_size start, vx_size end, vx_size *pStride, 
             status = VX_ERROR_NO_RESOURCES;
 
             /* lock the memory */
-            if(ownSemWait(&memory.locks[0]) == vx_true_e)
+            if(Osal::semWait(&memory.locks[0]) == vx_true_e)
             {
                 vx_size offset = start * item_size;
 
@@ -232,7 +232,7 @@ vx_status Array::accessArrayRange(vx_size start, vx_size end, vx_size *pStride, 
 
             if ((usage == VX_WRITE_ONLY) || (usage == VX_READ_AND_WRITE))
             {
-                if (ownSemWait(&memory.locks[0]) == vx_false_e)
+                if (Osal::semWait(&memory.locks[0]) == vx_false_e)
                 {
                     status = VX_ERROR_NO_RESOURCES;
                 }
@@ -362,7 +362,7 @@ vx_status Array::commitArrayRange(vx_size start, vx_size end, const void *ptr)
                 // ownWroteToReference(&base);
             }
 
-            ownSemPost(&memory.locks[0]);
+            Osal::semPost(&memory.locks[0]);
 
             status = VX_SUCCESS;
         }
@@ -375,7 +375,7 @@ vx_status Array::commitArrayRange(vx_size start, vx_size end, const void *ptr)
             }
             else /* RW|WO */
             {
-                ownSemPost(&memory.locks[0]);
+                Osal::semPost(&memory.locks[0]);
             }
 
             status = VX_SUCCESS;
@@ -450,7 +450,7 @@ vx_status Array::copyArrayRange(vx_size start, vx_size end, vx_size stride, void
     {
         VX_PRINT(VX_ZONE_ARRAY, "CopyArrayRange from ptr %p to " VX_FMT_REF " from %u to %u\n", this, ptr, start, end);
 
-        if (ownSemWait(&memory.locks[0]) == vx_true_e)
+        if (Osal::semWait(&memory.locks[0]) == vx_true_e)
         {
             vx_uint8 *pSrc = (vx_uint8 *)ptr;
             vx_uint8 *pDst = (vx_uint8 *)&memory.ptrs[0][offset];
@@ -471,7 +471,7 @@ vx_status Array::copyArrayRange(vx_size start, vx_size end, vx_size stride, void
             }
 
             // ownWroteToReference(&base);
-            ownSemPost(&memory.locks[0]);
+            Osal::semPost(&memory.locks[0]);
             status = VX_SUCCESS;
         }
         else
@@ -527,7 +527,7 @@ vx_status Array::mapArrayRange(vx_size start, vx_size end, vx_map_id *map_id, vx
     {
         if (VX_READ_ONLY == usage || VX_READ_AND_WRITE == usage)
         {
-            if (ownSemWait(&memory.locks[0]) == vx_true_e)
+            if (Osal::semWait(&memory.locks[0]) == vx_true_e)
             {
                 *stride = item_size;
 
@@ -538,7 +538,7 @@ vx_status Array::mapArrayRange(vx_size start, vx_size end, vx_map_id *map_id, vx
 
                 *ptr = buf;
                 incrementReference(VX_EXTERNAL);
-                ownSemPost(&memory.locks[0]);
+                Osal::semPost(&memory.locks[0]);
 
                 status = VX_SUCCESS;
             }
@@ -596,7 +596,7 @@ vx_status Array::unmapArrayRange(vx_map_id map_id)
         vx_size end = map->extra.array_data.end;
         if (VX_WRITE_ONLY == map->usage || VX_READ_AND_WRITE == map->usage)
         {
-            if (ownSemWait(&memory.locks[0]) == vx_true_e)
+            if (Osal::semWait(&memory.locks[0]) == vx_true_e)
             {
                 vx_uint32 offset = (vx_uint32)(start * item_size);
                 vx_uint8 *pSrc = (vx_uint8 *)map->ptr;
@@ -606,7 +606,7 @@ vx_status Array::unmapArrayRange(vx_map_id map_id)
 
                 context->memoryUnmap((vx_uint32)map_id);
                 decrementReference(VX_EXTERNAL);
-                ownSemPost(&memory.locks[0]);
+                Osal::semPost(&memory.locks[0]);
                 status = VX_SUCCESS;
             }
             else
