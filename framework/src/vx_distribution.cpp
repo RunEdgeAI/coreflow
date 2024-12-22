@@ -217,7 +217,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxAccessDistribution(vx_distribution distribu
     {
         if (ptr != nullptr)
         {
-            ownSemWait(&distribution->lock);
+            Osal::semWait(&distribution->lock);
             {
                 vx_size size = ownComputeMemorySize(&distribution->memory, 0);
                 ownPrintMemory(&distribution->memory);
@@ -230,7 +230,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxAccessDistribution(vx_distribution distribu
                     memcpy(*ptr, distribution->memory.ptrs[0], size);
                 }
             }
-            ownSemPost(&distribution->lock);
+            Osal::semPost(&distribution->lock);
             // ownReadFromReference(&distribution->base);
         }
         distribution->incrementReference(VX_EXTERNAL);
@@ -251,7 +251,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCommitDistribution(vx_distribution distribu
     {
         if (ptr != nullptr)
         {
-            ownSemWait(&distribution->lock);
+            Osal::semWait(&distribution->lock);
             {
                 if (ptr != distribution->memory.ptrs[0])
                 {
@@ -260,7 +260,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCommitDistribution(vx_distribution distribu
                     VX_PRINT(VX_ZONE_INFO, "Copied distribution from %p to %p for " VX_FMT_SIZE " bytes\n", ptr, distribution->memory.ptrs[0], size);
                 }
             }
-            ownSemPost(&distribution->lock);
+            Osal::semPost(&distribution->lock);
             // ownWroteToReference(&distribution->base);
         }
         distribution->decrementReference(VX_EXTERNAL);
@@ -331,20 +331,20 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyDistribution(vx_distribution distributi
     switch (usage)
     {
     case VX_READ_ONLY:
-        if (ownSemWait(&distribution->lock) == vx_true_e)
+        if (Osal::semWait(&distribution->lock) == vx_true_e)
         {
             memcpy(user_ptr, distribution->memory.ptrs[0], size);
-            ownSemPost(&distribution->lock);
+            Osal::semPost(&distribution->lock);
 
             // ownReadFromReference(&distribution->base);
             status = VX_SUCCESS;
         }
         break;
     case VX_WRITE_ONLY:
-        if (ownSemWait(&distribution->lock) == vx_true_e)
+        if (Osal::semWait(&distribution->lock) == vx_true_e)
         {
             memcpy(distribution->memory.ptrs[0], user_ptr, size);
-            ownSemPost(&distribution->lock);
+            Osal::semPost(&distribution->lock);
 
             // ownWroteToReference(&distribution->base);
             status = VX_SUCCESS;
@@ -405,10 +405,10 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapDistribution(vx_distribution distributio
         {
         case VX_READ_ONLY:
         case VX_READ_AND_WRITE:
-            if (ownSemWait(&distribution->lock) == vx_true_e)
+            if (Osal::semWait(&distribution->lock) == vx_true_e)
             {
                 memcpy(*ptr, distribution->memory.ptrs[0], size);
-                ownSemPost(&distribution->lock);
+                Osal::semPost(&distribution->lock);
 
                 // ownReadFromReference(&distribution->base);
                 status = VX_SUCCESS;
@@ -503,10 +503,10 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapDistribution(vx_distribution distribut
             break;
         case VX_READ_AND_WRITE:
         case VX_WRITE_ONLY:
-            if (ownSemWait(&distribution->lock) == vx_true_e)
+            if (Osal::semWait(&distribution->lock) == vx_true_e)
             {
                 memcpy(distribution->memory.ptrs[0], map->ptr, size);
-                ownSemPost(&distribution->lock);
+                Osal::semPost(&distribution->lock);
 
                 // ownWroteToReference(&distribution->base);
                 status = VX_SUCCESS;

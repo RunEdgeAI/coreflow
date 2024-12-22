@@ -191,7 +191,7 @@ void vxContaminateGraphs(vx_reference ref)
         /*! \internal Scan the entire context for graphs which may contain
          * this reference and mark them as unverified.
          */
-        ownSemWait(&context->lock);
+        Osal::semWait(&context->lock);
         for (r = 0u; r < context->num_references; r++)
         {
             if (context->reftable[r] == nullptr)
@@ -222,7 +222,7 @@ void vxContaminateGraphs(vx_reference ref)
                 }
             }
         }
-        ownSemPost(&context->lock);
+        Osal::semPost(&context->lock);
     }
 }
 
@@ -1683,8 +1683,8 @@ VX_API_ENTRY vx_graph VX_API_CALL vxCreateGraph(vx_context context)
         graph = (vx_graph)Reference::createReference(context, VX_TYPE_GRAPH, VX_EXTERNAL, context);
         if (vxGetStatus((vx_reference)graph) == VX_SUCCESS && graph->type == VX_TYPE_GRAPH)
         {
-            ownInitPerf(&graph->perf);
-            ownCreateSem(&graph->lock, 1);
+            Osal::initPerf(&graph->perf);
+            Osal::createSem(&graph->lock, 1);
             VX_PRINT(VX_ZONE_GRAPH,"Created Graph %p\n", graph);
             Reference::printReference((vx_reference)graph);
             graph->reverify = graph->verified;
@@ -1809,7 +1809,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
         vx_bool hasACycle = vx_false_e;
 
         /* lock the graph */
-        ownSemWait(&graph->lock);
+        Osal::semWait(&graph->lock);
 
         /* To properly deal with parameter dependence in the graph, the
           nodes have to be in topological order when their parameters
@@ -2396,7 +2396,7 @@ exit:
         }
 
         /* unlock the graph */
-        ownSemPost(&graph->lock);
+        Osal::semPost(&graph->lock);
     }
     else
     {
@@ -2442,7 +2442,7 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
     graph->clearExecution();
     if (context->perf_enabled)
     {
-        ownStartCapture(&graph->perf);
+        Osal::startCapture(&graph->perf);
     }
     /* initialize the next_nodes as the graph heads */
     memcpy(next_nodes, graph->heads, graph->numHeads * sizeof(vx_uint32));
@@ -2527,11 +2527,11 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
 #if defined(OPENVX_USE_SMP)
         if (depth == 1 && graph->should_serialize == vx_false_e)
         {
-            if (ownIssueThreadpool(graph->context->workers, workitems, numNext) == vx_true_e)
+            if (Osal::issueThreadpool(graph->context->workers, workitems, numNext) == vx_true_e)
             {
                 /* do a blocking complete */
                 VX_PRINT(VX_ZONE_GRAPH, "Issued %u work items!\n", numNext);
-                if (ownCompleteThreadpool(graph->context->workers, vx_true_e) == vx_true_e)
+                if (Osal::completeThreadpool(graph->context->workers, vx_true_e) == vx_true_e)
                 {
                     VX_PRINT(VX_ZONE_GRAPH, "Processed %u items in threadpool!\n", numNext);
                 }
@@ -2570,7 +2570,7 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
     }
     if (context->perf_enabled)
     {
-        ownStopCapture(&graph->perf);
+        Osal::stopCapture(&graph->perf);
     }
     graph->clearVisitation();
 
@@ -2591,10 +2591,10 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
                      n,
                      graph->nodes[n]->kernel->name,
                      graph->nodes[n]->kernel->enumeration,
-                     ownTimeToMS(graph->nodes[n]->perf.tmp),
-                     ownTimeToMS(graph->nodes[n]->perf.avg),
-                     ownTimeToMS(graph->nodes[n]->perf.min),
-                     ownTimeToMS(graph->nodes[n]->perf.max)
+                     Osal::timeToMS(graph->nodes[n]->perf.tmp),
+                     Osal::timeToMS(graph->nodes[n]->perf.avg),
+                     Osal::timeToMS(graph->nodes[n]->perf.min),
+                     Osal::timeToMS(graph->nodes[n]->perf.max)
             );
         }
     }
@@ -2624,13 +2624,13 @@ VX_API_ENTRY vx_status VX_API_CALL vxScheduleGraph(vx_graph graph)
         }
     }
 
-    if (ownSemTryWait(&graph->lock) == vx_true_e)
+    if (Osal::semTryWait(&graph->lock) == vx_true_e)
     {
         vx_sem_t* p_graph_queue_lock = graph->context->p_global_lock;
         vx_uint32 q = 0u;
         vx_value_set_t *pq = nullptr;
 
-        ownSemWait(p_graph_queue_lock);
+        Osal::semWait(p_graph_queue_lock);
         /* acquire a position in the graph queue */
         for (q = 0; q < dimof(graph_queue); q++)
         {
@@ -2641,20 +2641,20 @@ VX_API_ENTRY vx_status VX_API_CALL vxScheduleGraph(vx_graph graph)
                 break;
             }
         }
-        ownSemPost(p_graph_queue_lock);
+        Osal::semPost(p_graph_queue_lock);
         if (pq)
         {
             memset(pq, 0, sizeof(vx_value_set_t));
             pq->v1 = (vx_value_t)graph;
             /* now add the graph to the queue */
             VX_PRINT(VX_ZONE_GRAPH,"Writing graph=" VX_FMT_REF ", status=%d\n",graph, status);
-            if (ownWriteQueue(&graph->context->proc.input, pq) == vx_true_e)
+            if (Osal::writeQueue(&graph->context->proc.input, pq) == vx_true_e)
             {
                 status = VX_SUCCESS;
             }
             else
             {
-                ownSemPost(&graph->lock);
+                Osal::semPost(&graph->lock);
                 status = VX_ERROR_NO_RESOURCES;
             }
         }
@@ -2682,7 +2682,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxWaitGraph(vx_graph graph)
         return VX_ERROR_INVALID_REFERENCE;
     }
 
-    if (ownSemTryWait(&graph->lock) == vx_false_e) /* locked */
+    if (Osal::semTryWait(&graph->lock) == vx_false_e) /* locked */
     {
         vx_sem_t* p_graph_queue_lock = graph->context->p_global_lock;
         vx_graph g2;
@@ -2690,7 +2690,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxWaitGraph(vx_graph graph)
         vx_value_set_t *data = nullptr;
         do
         {
-            ret = ownReadQueue(&graph->context->proc.output, &data);
+            ret = Osal::readQueue(&graph->context->proc.output, &data);
             if (ret == vx_false_e)
             {
                 /* graph was locked but the queue was empty... */
@@ -2704,7 +2704,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxWaitGraph(vx_graph graph)
                 if (g2 == graph) /* great, it's the graph we want. */
                 {
                     vx_uint32 q = 0u;
-                    ownSemWait(p_graph_queue_lock);
+                    Osal::semWait(p_graph_queue_lock);
                     /* find graph in the graph queue */
                     for (q = 0; q < dimof(graph_queue); q++)
                     {
@@ -2715,22 +2715,22 @@ VX_API_ENTRY vx_status VX_API_CALL vxWaitGraph(vx_graph graph)
                             break;
                         }
                     }
-                    ownSemPost(p_graph_queue_lock);
+                    Osal::semPost(p_graph_queue_lock);
                     break;
                 }
                 else
                 {
                     /* not the right graph, put it back. */
-                    ownWriteQueue(&graph->context->proc.output, data);
+                    Osal::writeQueue(&graph->context->proc.output, data);
                 }
             }
         } while (ret == vx_true_e);
-        ownSemPost(&graph->lock); /* unlock the graph. */
+        Osal::semPost(&graph->lock); /* unlock the graph. */
     }
     else
     {
         status = VX_FAILURE;
-        ownSemPost(&graph->lock); /* was free, release */
+        Osal::semPost(&graph->lock); /* was free, release */
     }
 
     return status;
@@ -2751,13 +2751,13 @@ VX_API_ENTRY vx_status VX_API_CALL vxProcessGraph(vx_graph graph)
         static vx_uint32 count = 0;
         vx_sem_t* p_sem = graph->context->p_global_lock;
 
-        ownSemWait(p_sem);
+        Osal::semWait(p_sem);
         count++;
-        ownSemPost(p_sem);
+        Osal::semPost(p_sem);
         status = vxExecuteGraph(graph, count);
-        ownSemWait(p_sem);
+        Osal::semWait(p_sem);
         count--;
-        ownSemPost(p_sem);
+        Osal::semPost(p_sem);
     }
 
     VX_PRINT(VX_ZONE_GRAPH, "%s returned %d\n", __func__, status );

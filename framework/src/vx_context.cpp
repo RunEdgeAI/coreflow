@@ -208,17 +208,17 @@ vx_status Context::loadTarget(const vx_char* targetName)
 #endif
 
         targets[index] = reinterpret_cast<vx_target>(Reference::createReference(this, VX_TYPE_TARGET, VX_INTERNAL, this));
-        targets[index]->module.handle = ownLoadModule(module);
+        targets[index]->module.handle = Osal::loadModule(module);
         if (targets[index]->module.handle)
         {
             targets[index]->incrementReference(VX_INTERNAL);
             {
-                targets[index]->funcs.init     = (vx_target_init_f)    ownGetSymbol(targets[index]->module.handle, "vxTargetInit");
-                targets[index]->funcs.deinit   = (vx_target_deinit_f)  ownGetSymbol(targets[index]->module.handle, "vxTargetDeinit");
-                targets[index]->funcs.supports = (vx_target_supports_f)ownGetSymbol(targets[index]->module.handle, "vxTargetSupports");
-                targets[index]->funcs.process  = (vx_target_process_f) ownGetSymbol(targets[index]->module.handle, "vxTargetProcess");
-                targets[index]->funcs.verify   = (vx_target_verify_f)  ownGetSymbol(targets[index]->module.handle, "vxTargetVerify");
-                targets[index]->funcs.addkernel= (vx_target_addkernel_f)ownGetSymbol(targets[index]->module.handle, "vxTargetAddKernel");
+                targets[index]->funcs.init     = (vx_target_init_f)    Osal::getSymbol(targets[index]->module.handle, "vxTargetInit");
+                targets[index]->funcs.deinit   = (vx_target_deinit_f)  Osal::getSymbol(targets[index]->module.handle, "vxTargetDeinit");
+                targets[index]->funcs.supports = (vx_target_supports_f)Osal::getSymbol(targets[index]->module.handle, "vxTargetSupports");
+                targets[index]->funcs.process  = (vx_target_process_f) Osal::getSymbol(targets[index]->module.handle, "vxTargetProcess");
+                targets[index]->funcs.verify   = (vx_target_verify_f)  Osal::getSymbol(targets[index]->module.handle, "vxTargetVerify");
+                targets[index]->funcs.addkernel= (vx_target_addkernel_f)Osal::getSymbol(targets[index]->module.handle, "vxTargetAddKernel");
 
                 if (targets[index]->funcs.init &&
                     targets[index]->funcs.deinit &&
@@ -272,7 +272,7 @@ vx_status Context::unloadTarget(vx_uint32 index, vx_bool unload_module)
         }
         if (unload_module)
         {
-            ownUnloadModule(target->module.handle);
+            Osal::unloadModule(target->module.handle);
             target->module.handle = VX_MODULE_INIT;
         }
 
@@ -303,7 +303,7 @@ VX_INT_API void Context::removeAccessor(vx_uint32 index)
 vx_bool Context::addReference(const vx_reference& ref)
 {
     vx_bool ret = vx_false_e;
-    ownSemWait(&lock);
+    Osal::semWait(&lock);
     {
         for (vx_uint32 r = 0; r < VX_INT_MAX_REF; r++)
         {
@@ -318,7 +318,7 @@ vx_bool Context::addReference(const vx_reference& ref)
             }
         }
     }
-    ownSemPost(&lock);
+    Osal::semPost(&lock);
     if (vx_false_e == ret)
     {
         VX_PRINT(VX_ZONE_ERROR, "Failed to add ref %p to reftable\n", ref);
@@ -331,7 +331,7 @@ vx_bool Context::removeReference(vx_reference& ref)
 {
     vx_bool ret = vx_false_e;
 
-    ownSemWait(&lock);
+    Osal::semWait(&lock);
     for (vx_uint32 r = 0; r < VX_INT_MAX_REF; r++)
     {
         if (reftable[r] &&
@@ -350,7 +350,7 @@ vx_bool Context::removeReference(vx_reference& ref)
             break;
         }
     }
-    ownSemPost(&lock);
+    Osal::semPost(&lock);
     return ret;
 }
 
@@ -425,7 +425,7 @@ vx_value_t Context::workerGraph(void *arg)
         vx_graph g = 0;
         vx_status s = VX_FAILURE;
         vx_value_set_t *data = nullptr;
-        if (ownReadQueue(&proc->input, &data) == vx_true_e)
+        if (Osal::readQueue(&proc->input, &data) == vx_true_e)
         {
             g = (vx_graph)data->v1;
             // s = (vx_status)v2;
@@ -434,7 +434,7 @@ vx_value_t Context::workerGraph(void *arg)
             VX_PRINT(VX_ZONE_CONTEXT, "Writing graph=" VX_FMT_REF ", status=%d\n",g,s);
             data->v1 = (vx_value_t)g;
             data->v2 = (vx_status)s;
-            if (ownWriteQueue(&proc->output, data) == vx_false_e)
+            if (Osal::writeQueue(&proc->output, data) == vx_false_e)
                 VX_PRINT(VX_ZONE_ERROR, "Failed to write graph=" VX_FMT_REF " status=%d\n", g, s);
         }
     }
@@ -519,7 +519,7 @@ VX_INT_API vx_bool Context::memoryMap(
     vx_bool   worked = vx_false_e;
 
     /* lock the table for modification */
-    if (vx_true_e == ownSemWait(&memory_maps_lock))
+    if (vx_true_e == Osal::semWait(&memory_maps_lock))
     {
         for (id = 0u; id < dimof(memory_maps); id++)
         {
@@ -533,7 +533,7 @@ VX_INT_API vx_bool Context::memoryMap(
                     buf = new vx_uint8[size]();
                     if (buf == nullptr)
                     {
-                        ownSemPost(&memory_maps_lock);
+                        Osal::semPost(&memory_maps_lock);
                         return vx_false_e;
                     }
                 }
@@ -585,7 +585,7 @@ VX_INT_API vx_bool Context::memoryMap(
         }
 
         /* we're done, unlock the table */
-        worked = ownSemPost(&memory_maps_lock);
+        worked = Osal::semPost(&memory_maps_lock);
     }
     else
         worked = vx_false_e;
@@ -604,7 +604,7 @@ VX_INT_API vx_bool Context::findMemoryMap(
     if (id < dimof(memory_maps))
     {
         /* lock the table for exclusive access */
-        if (vx_true_e == ownSemWait(&memory_maps_lock))
+        if (vx_true_e == Osal::semWait(&memory_maps_lock))
         {
             if ((memory_maps[id].used == vx_true_e) && (memory_maps[id].ref == ref))
             {
@@ -612,7 +612,7 @@ VX_INT_API vx_bool Context::findMemoryMap(
             }
 
             /* unlock the table */
-            worked &= ownSemPost(&memory_maps_lock);
+            worked &= Osal::semPost(&memory_maps_lock);
         }
     }
 
@@ -622,7 +622,7 @@ VX_INT_API vx_bool Context::findMemoryMap(
 VX_INT_API void Context::memoryUnmap(vx_uint32 map_id)
 {
     /* lock the table for modification */
-    if (vx_true_e == ownSemWait(&memory_maps_lock))
+    if (vx_true_e == Osal::semWait(&memory_maps_lock))
     {
         if (memory_maps[map_id].used == vx_true_e)
         {
@@ -639,10 +639,10 @@ VX_INT_API void Context::memoryUnmap(vx_uint32 map_id)
         memory_maps[map_id].used = vx_false_e;
 
         /* we're done, unlock the table */
-        ownSemPost(&memory_maps_lock);
+        Osal::semPost(&memory_maps_lock);
     }
     else
-        VX_PRINT(VX_ZONE_ERROR, "ownSemWait() failed!\n");
+        VX_PRINT(VX_ZONE_ERROR, "Osal::semWait() failed!\n");
 
     return;
 } /* MemoryUnmap() */
@@ -702,11 +702,11 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContext(void)
 
     if (single_context == nullptr)
     {
-        ownCreateSem(&context_lock, 1);
-        ownCreateSem(&global_lock, 1);
+        Osal::createSem(&context_lock, 1);
+        Osal::createSem(&global_lock, 1);
     }
 
-    ownSemWait(&context_lock);
+    Osal::semWait(&context_lock);
     if (single_context == nullptr)
     {
         /* read the variables for debugging flags */
@@ -733,7 +733,7 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContext(void)
             context->platform = platform;
 #endif
             context->incrementReference(VX_EXTERNAL);
-            context->workers = ownCreateThreadpool(VX_INT_HOST_CORES,
+            context->workers = Osal::createThreadpool(VX_INT_HOST_CORES,
                                                   VX_INT_MAX_REF, /* very deep queues! */
                                                   sizeof(vx_work_t),
                                                   Context::workerNode,
@@ -743,7 +743,7 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContext(void)
             /* initialize modules */
             for (m = 0u; m < VX_INT_MAX_MODULES; m++)
             {
-                ownCreateSem(&context->modules[m].lock, 1);
+                Osal::createSem(&context->modules[m].lock, 1);
             }
 
             /* load all targets */
@@ -759,7 +759,7 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContext(void)
             {
                 VX_PRINT(VX_ZONE_ERROR, "No targets loaded!\n");
                 // free(context);
-                ownSemPost(&context_lock);
+                Osal::semPost(&context_lock);
                 return nullptr;
             }
 
@@ -812,15 +812,15 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContext(void)
             }
 
             /* create the internal thread which processes graphs for asynchronous mode. */
-            ownInitQueue(&context->proc.input);
-            ownInitQueue(&context->proc.output);
+            Osal::initQueue(&context->proc.input);
+            Osal::initQueue(&context->proc.output);
             context->proc.running = vx_true_e;
-            context->proc.thread = ownCreateThread(Context::workerGraph, &context->proc);
+            context->proc.thread = Osal::createThread(Context::workerGraph, &context->proc);
             context->imm_target_enum = VX_TARGET_ANY;
             memset(context->imm_target_string, 0, sizeof(context->imm_target_string));
 
             /* memory maps table lock */
-            ownCreateSem(&context->memory_maps_lock, 1);
+            Osal::createSem(&context->memory_maps_lock, 1);
         }
     }
     else
@@ -828,7 +828,7 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContext(void)
         context = single_context.get();
         context->incrementReference(VX_EXTERNAL);
     }
-    ownSemPost(&context_lock);
+    Osal::semPost(&context_lock);
 
     return context;
 }
@@ -841,7 +841,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
     vx_uint32 t;
 
     if (c) *c = 0;
-    ownSemWait(&context_lock);
+    Osal::semWait(&context_lock);
     if (Context::isValidContext(context) == vx_true_e)
     {
         if (context->decrementReference(VX_EXTERNAL) == 0)
@@ -858,12 +858,12 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
                 context->opencl_context = nullptr;
             }
 #endif
-            ownDestroyThreadpool(&context->workers);
+            Osal::destroyThreadpool(&context->workers);
             context->proc.running = vx_false_e;
-            ownPopQueue(&context->proc.input);
-            ownJoinThread(context->proc.thread, nullptr);
-            ownDeinitQueue(&context->proc.output);
-            ownDeinitQueue(&context->proc.input);
+            Osal::popQueue(&context->proc.input);
+            Osal::joinThread(context->proc.thread, nullptr);
+            Osal::deinitQueue(&context->proc.output);
+            Osal::deinitQueue(&context->proc.input);
 
             /* Deregister any log callbacks if there is any registered */
             vxRegisterLogCallback(context, nullptr, vx_false_e);
@@ -908,15 +908,15 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
 
             for (m = 0; m < VX_INT_MAX_MODULES; m++)
             {
-                ownSemWait(&context->modules[m].lock);
+                Osal::semWait(&context->modules[m].lock);
                 if (context->modules[m].handle)
                 {
-                    ownUnloadModule(context->modules[m].handle);
+                    Osal::unloadModule(context->modules[m].handle);
                     memset(context->modules[m].name, 0, sizeof(context->modules[m].name));
                     context->modules[m].handle = VX_MODULE_INIT;
                 }
-                ownSemPost(&context->modules[m].lock);
-                ownDestroySem(&context->modules[m].lock);
+                Osal::semPost(&context->modules[m].lock);
+                Osal::destroySem(&context->modules[m].lock);
             }
 
             /* de-initialize and unload each target */
@@ -949,7 +949,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
                 }
             }
 
-            ownDestroySem(&context->memory_maps_lock);
+            Osal::destroySem(&context->memory_maps_lock);
 
             /* By now, all external and internal references should be removed */
             for (r = 0; r < VX_INT_MAX_REF; r++)
@@ -963,10 +963,10 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
 
             /*! \internal wipe away the context memory first */
             /* Normally destroy sem is part of release reference, but can't for context */
-            ownDestroySem(&context->lock);
-            ownDestroySem(&global_lock);
-            ownSemPost(&context_lock);
-            ownDestroySem(&context_lock);
+            Osal::destroySem(&context->lock);
+            Osal::destroySem(&global_lock);
+            Osal::semPost(&context_lock);
+            Osal::destroySem(&context_lock);
             single_context.reset();
             single_context = nullptr;
 
@@ -981,7 +981,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
     {
         status = VX_ERROR_INVALID_REFERENCE;
     }
-    ownSemPost(&context_lock);
+    Osal::semPost(&context_lock);
 
     return status;
 }

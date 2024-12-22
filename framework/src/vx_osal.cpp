@@ -12,13 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <chrono>
 
 #include "vx_internal.h"
 #include "vx_osal.h"
 
-#define BILLION (1000000000)
+#define BILLION (1000000000LLU)
 
-vx_bool ownCreateSem(vx_sem_t *sem, vx_uint32 count)
+vx_bool Osal::createSem(vx_sem_t *sem, vx_uint32 count)
 {
 #if defined(VX_PTHREAD_SEMAPHORE)
     int ret0, ret1;
@@ -40,7 +41,7 @@ vx_bool ownCreateSem(vx_sem_t *sem, vx_uint32 count)
         return vx_false_e;
 }
 
-void ownDestroySem(vx_sem_t *sem)
+void Osal::destroySem(vx_sem_t *sem)
 {
 #if defined(VX_PTHREAD_SEMAPHORE)
     int ret0 = -1, ret1 = -1;
@@ -55,7 +56,7 @@ void ownDestroySem(vx_sem_t *sem)
 #endif
 }
 
-vx_bool ownSemPost(vx_sem_t *sem)
+vx_bool Osal::semPost(vx_sem_t *sem)
 {
 #if defined(VX_PTHREAD_SEMAPHORE)
     int ret0 = -1, ret1 = -1, ret2 = -1;
@@ -91,7 +92,7 @@ vx_bool ownSemPost(vx_sem_t *sem)
         return vx_false_e;
 }
 
-vx_bool ownSemWait(vx_sem_t *sem)
+vx_bool Osal::semWait(vx_sem_t *sem)
 {
 #if defined(VX_PTHREAD_SEMAPHORE)
     vx_bool res = vx_true_e;
@@ -124,7 +125,7 @@ vx_bool ownSemWait(vx_sem_t *sem)
         return vx_false_e;
 }
 
-vx_bool ownSemTryWait(vx_sem_t *sem)
+vx_bool Osal::semTryWait(vx_sem_t *sem)
 {
 #if defined(VX_PTHREAD_SEMAPHORE)
     vx_bool res = vx_true_e;
@@ -153,7 +154,7 @@ vx_bool ownSemTryWait(vx_sem_t *sem)
         return vx_false_e;
 }
 
-vx_bool ownDeinitEvent(vx_internal_event_t *e)
+vx_bool Osal::deinitEvent(vx_internal_event_t *e)
 {
 #if defined(__linux__) || defined(__ANDROID__) || defined(__QNX__) || defined(__CYGWIN__) || defined(__APPLE__)
     int err = 0;
@@ -174,7 +175,7 @@ vx_bool ownDeinitEvent(vx_internal_event_t *e)
 #endif
 }
 
-vx_bool ownInitEvent(vx_internal_event_t *e, vx_bool autoreset)
+vx_bool Osal::initEvent(vx_internal_event_t *e, vx_bool autoreset)
 {
 #if defined(__linux__) || defined(__ANDROID__) || defined(__QNX__) || defined(__CYGWIN__) || defined(__APPLE__)
     int err = 0;
@@ -197,7 +198,7 @@ vx_bool ownInitEvent(vx_internal_event_t *e, vx_bool autoreset)
 }
 
 #if defined(__linux__) || defined(__ANDROID__) || defined(__QNX__) || defined(__CYGWIN__) || defined(__APPLE__)
-vx_bool ownWaitEventInternal(vx_internal_event_t *e, vx_uint32 ms)
+vx_bool Osal::waitEventInternal(vx_internal_event_t *e, vx_uint32 ms)
 {
     int retcode = 0;
     vx_bool ret = vx_false_e;
@@ -228,18 +229,18 @@ vx_bool ownWaitEventInternal(vx_internal_event_t *e, vx_uint32 ms)
 }
 #endif
 
-vx_bool ownWaitEvent(vx_internal_event_t *e, vx_uint32 timeout)
+vx_bool Osal::waitEvent(vx_internal_event_t *e, vx_uint32 timeout)
 {
     vx_bool ret = vx_false_e;
 #if defined(__linux__) || defined(__ANDROID__) || defined(__QNX__) || defined(__CYGWIN__) || defined(__APPLE__)
     pthread_mutex_lock(&e->mutex);
     if (e->autoreset == vx_false_e) {
         if (e->set == vx_false_e)
-            ret = ownWaitEventInternal(e, timeout);
+            ret = Osal::waitEventInternal(e, timeout);
         else
             ret = vx_true_e;
     } else {
-        ret = ownWaitEventInternal(e, timeout);
+        ret = Osal::waitEventInternal(e, timeout);
         if (ret == vx_true_e && e->set == vx_true_e)
             e->set = vx_false_e;
         else if (ret == vx_true_e && e->set == vx_false_e)
@@ -255,7 +256,7 @@ vx_bool ownWaitEvent(vx_internal_event_t *e, vx_uint32 timeout)
     return ret;
 }
 
-vx_bool ownSetEvent(vx_internal_event_t *e)
+vx_bool Osal::setEvent(vx_internal_event_t *e)
 {
 #if defined(__linux__) || defined(__ANDROID__) || defined(__QNX__) || defined(__CYGWIN__) || defined(__APPLE__)
     int err = 0;
@@ -272,7 +273,7 @@ vx_bool ownSetEvent(vx_internal_event_t *e)
 #endif
 }
 
-vx_bool ownResetEvent(vx_internal_event_t *e)
+vx_bool Osal::resetEvent(vx_internal_event_t *e)
 {
 #if defined(__linux__) || defined(__ANDROID__) || defined(__QNX__) || defined(__CYGWIN__) || defined(__APPLE__)
     pthread_mutex_lock(&e->mutex);
@@ -284,7 +285,7 @@ vx_bool ownResetEvent(vx_internal_event_t *e)
 #endif
 }
 
-vx_bool ownJoinThread(vx_thread_t thread, vx_value_t *value)
+vx_bool Osal::joinThread(vx_thread_t thread, vx_value_t *value)
 {
     vx_bool joined = vx_false_e;
     if (thread)
@@ -303,7 +304,7 @@ vx_bool ownJoinThread(vx_thread_t thread, vx_value_t *value)
     return joined;
 }
 
-void ownSleepThread(vx_uint32 milliseconds)
+void Osal::sleepThread(vx_uint32 milliseconds)
 {
 #if defined(__linux__) || defined(__ANDROID__) || defined(__QNX__) || defined(__CYGWIN__)
     struct timespec rtsp;
@@ -315,7 +316,7 @@ void ownSleepThread(vx_uint32 milliseconds)
 #endif
 }
 
-vx_thread_t ownCreateThread(vx_thread_f func, void *arg)
+vx_thread_t Osal::createThread(vx_thread_f func, void *arg)
 {
     vx_thread_t thread = 0;
 #if defined(__linux__) || defined(__ANDROID__) || defined(__QNX__) || defined(__CYGWIN__) || defined(__APPLE__)
@@ -328,8 +329,7 @@ vx_thread_t ownCreateThread(vx_thread_f func, void *arg)
     return thread;
 }
 
-
-void ownDestroyThreadpool(vx_threadpool_t **ppool)
+void Osal::destroyThreadpool(vx_threadpool_t **ppool)
 {
     vx_threadpool_t *pool = (ppool ? *ppool : nullptr);
     if (pool)
@@ -338,30 +338,30 @@ void ownDestroyThreadpool(vx_threadpool_t **ppool)
         for (i = 0u; i < pool->numWorkers; i++)
         {
             vx_value_t ret;
-            ownPopQueue(pool->workers[i].queue);
-            ownJoinThread(pool->workers[i].handle, &ret);
-            ownStopCapture(&pool->workers[i].perf);
+            Osal::popQueue(pool->workers[i].queue);
+            Osal::joinThread(pool->workers[i].handle, &ret);
+            Osal::stopCapture(&pool->workers[i].perf);
             pool->workers[i].handle = 0;
-            ownDestroyQueue(&pool->workers[i].queue);
+            Osal::destroyQueue(&pool->workers[i].queue);
             pool->workers[i].queue = (vx_queue_t *)nullptr;
         }
         delete[](pool->workers);
         pool->workers = (vx_threadpool_worker_t *)nullptr;
-        ownDestroySem(&pool->sem);
-        ownDeinitEvent(&pool->completed);
+        Osal::destroySem(&pool->sem);
+        Osal::deinitEvent(&pool->completed);
         delete(pool);
         *ppool = nullptr;
     }
 }
 
-static vx_value_t vxWorkerThreadpool(void *arg)
+vx_value_t Osal::workerThreadpool(void *arg)
 {
     vx_threadpool_worker_t *pool_worker = (vx_threadpool_worker_t *)arg;
     vx_bool ret = vx_false_e;
     vx_context context = (vx_context)pool_worker->arg;
 
     /* capture the launch latency */
-    ownStopCapture(&pool_worker->perf);
+    Osal::stopCapture(&pool_worker->perf);
 
     VX_PRINT(VX_ZONE_OSAL, "Threadpool worker %p active, waiting on queue!\n", arg);
 
@@ -369,26 +369,26 @@ static vx_value_t vxWorkerThreadpool(void *arg)
     //thread_nextaffinity();
     if (context->perf_enabled)
     {
-        ownInitPerf(&pool_worker->perf); // reset
-        ownStartCapture(&pool_worker->perf);
+        Osal::initPerf(&pool_worker->perf); // reset
+        Osal::startCapture(&pool_worker->perf);
     }
-    while (ownReadQueue(pool_worker->queue, &pool_worker->data) == vx_true_e)
+    while (Osal::readQueue(pool_worker->queue, &pool_worker->data) == vx_true_e)
     {
         vx_threadpool_f function = pool_worker->function;
         VX_PRINT(VX_ZONE_OSAL, "Worker received workitem!\n");
         pool_worker->active = vx_true_e;
-        ownStopCapture(&pool_worker->perf);
+        Osal::stopCapture(&pool_worker->perf);
         ret = function(pool_worker); /* <=== WORK IS DONE HERE */
-        ownSemWait(&pool_worker->pool->sem);
+        Osal::semWait(&pool_worker->pool->sem);
         pool_worker->pool->numCurrentItems--;
         if (pool_worker->pool->numCurrentItems <= 0)
         {
-            ownSetEvent(&pool_worker->pool->completed);
+            Osal::setEvent(&pool_worker->pool->completed);
         }
-        ownSemPost(&pool_worker->pool->sem);
+        Osal::semPost(&pool_worker->pool->sem);
         if (context->perf_enabled)
         {
-            ownStartCapture(&pool_worker->perf);
+            Osal::startCapture(&pool_worker->perf);
         }
         pool_worker->active = vx_false_e;
 
@@ -399,7 +399,7 @@ static vx_value_t vxWorkerThreadpool(void *arg)
     return (vx_value_t)ret;
 }
 
-vx_threadpool_t *ownCreateThreadpool(vx_uint32 numThreads,
+vx_threadpool_t *Osal::createThreadpool(vx_uint32 numThreads,
                                     vx_uint32 numWorkItems,
                                     vx_size sizeWorkItem,
                                     vx_threadpool_f worker,
@@ -411,11 +411,11 @@ vx_threadpool_t *ownCreateThreadpool(vx_uint32 numThreads,
     if (pool)
     {
         uint32_t i;
-        ownCreateSem(&pool->sem, 1u);
+        Osal::createSem(&pool->sem, 1u);
         pool->numWorkers = numThreads;
         pool->numWorkItems = numWorkItems;
         pool->sizeWorkItem = (uint32_t)sizeWorkItem;
-        ownInitEvent(&pool->completed, vx_false_e);
+        Osal::initEvent(&pool->completed, vx_false_e);
         pool->workers = new vx_threadpool_worker_t[pool->numWorkers]();
         if (pool->workers)
         {
@@ -423,30 +423,30 @@ vx_threadpool_t *ownCreateThreadpool(vx_uint32 numThreads,
             for (i = 0u; i < pool->numWorkers; i++)
             {
                 vx_threadpool_worker_t *pool_worker = &pool->workers[i];
-                pool_worker->queue = ownCreateQueue();
+                pool_worker->queue = Osal::createQueue();
                 pool_worker->index = i;
                 pool_worker->arg = tmp_arg;
                 pool_worker->function = worker;
                 pool_worker->pool = pool; /* back reference to top level info */
                 if (context->perf_enabled)
                 {
-                    ownInitPerf(&pool_worker->perf);
-                    ownStartCapture(&pool_worker->perf); /* capture the launch latency */
+                    Osal::initPerf(&pool_worker->perf);
+                    Osal::startCapture(&pool_worker->perf); /* capture the launch latency */
                 }
-                pool_worker->handle = ownCreateThread(&vxWorkerThreadpool, pool_worker);
+                pool_worker->handle = Osal::createThread(&Osal::workerThreadpool, pool_worker);
             }
         }
     }
     return pool;
 }
 
-vx_bool ownIssueThreadpool(vx_threadpool_t *pool, vx_value_set_t workitems[], uint32_t numWorkItems)
+vx_bool Osal::issueThreadpool(vx_threadpool_t *pool, vx_value_set_t workitems[], uint32_t numWorkItems)
 {
     uint32_t i;
     vx_bool wrote = vx_false_e;
 
-    ownSemWait(&pool->sem);
-    ownResetEvent(&pool->completed); /* we're going to have items to work on, so clear the event */
+    Osal::semWait(&pool->sem);
+    Osal::resetEvent(&pool->completed); /* we're going to have items to work on, so clear the event */
     for (i = 0u; i < numWorkItems; i++)
     {
         uint32_t index = 0xFFFFFFFFu;
@@ -457,7 +457,7 @@ vx_bool ownIssueThreadpool(vx_threadpool_t *pool, vx_value_set_t workitems[], ui
             index = pool->nextWorkerIndex;
             pool->nextWorkerIndex = (pool->nextWorkerIndex + 1u) % pool->numWorkers;
             pool->numCurrentItems++;
-            wrote = ownWriteQueue(pool->workers[index].queue, &workitems[i]);
+            wrote = Osal::writeQueue(pool->workers[index].queue, &workitems[i]);
             if (wrote == vx_false_e)
             {
                 pool->numCurrentItems--;
@@ -473,18 +473,18 @@ vx_bool ownIssueThreadpool(vx_threadpool_t *pool, vx_value_set_t workitems[], ui
     /* if none of the writes worked for whatever reason, and we didn't have any previous pending work (how?) then set the completed event */
     if (pool->numCurrentItems == 0)
     {
-        ownSetEvent(&pool->completed);
+        Osal::setEvent(&pool->completed);
     }
-    ownSemPost(&pool->sem);
+    Osal::semPost(&pool->sem);
     return wrote;
 }
 
-vx_bool ownCompleteThreadpool(vx_threadpool_t *pool, vx_bool blocking)
+vx_bool Osal::completeThreadpool(vx_threadpool_t *pool, vx_bool blocking)
 {
     vx_bool ret = vx_false_e;
     if (blocking)
     {
-        ret = ownWaitEvent(&pool->completed, VX_INT_FOREVER);
+        ret = Osal::waitEvent(&pool->completed, VX_INT_FOREVER);
     }
     else
     {
@@ -496,64 +496,44 @@ vx_bool ownCompleteThreadpool(vx_threadpool_t *pool, vx_bool blocking)
     return ret;
 }
 
-
-vx_uint64 ownCaptureTime()
+vx_uint64 Osal::getCaptureTime()
 {
-    vx_uint64 cap = 0;
-#if defined(__linux__) || defined(__ANDROID__) || defined(__QNX__) || defined(__CYGWIN__)
-    struct timespec t;
-    clock_gettime(CLOCK_MONOTONIC, &t);
-    cap = (vx_uint64)((vx_uint64)t.tv_nsec + (vx_uint64)t.tv_sec*BILLION);
-#elif defined(__APPLE__)
-    cap = mach_absolute_time();
-#elif defined(_WIN32) || defined(UNDER_CE)
-    LARGE_INTEGER t;
-    QueryPerformanceCounter(&t);
-    cap = (vx_uint64)t.QuadPart;
-#endif
-    return cap;
+    auto now = std::chrono::steady_clock::now();
+    auto duration = now.time_since_epoch();
+    auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
+    return static_cast<vx_uint64>(nanoseconds);
 }
 
-vx_uint64 ownGetClockRate()
+vx_uint64 Osal::getClockRate()
 {
     vx_uint64 freq = 0;
-#if defined(__linux__) || defined(__ANDROID__) || defined(__QNX__) || defined(__CYGWIN__)
-    struct timespec t;
-    clock_getres(CLOCK_MONOTONIC, &t);
-    freq = (vx_uint64)(BILLION/t.tv_nsec);
-#elif defined(__APPLE__)
-    freq = BILLION;
-#elif defined(_WIN32) || defined(UNDER_CE)
-    LARGE_INTEGER f;
-    QueryPerformanceFrequency(&f);
-    freq = (vx_uint64)f.QuadPart;
-#endif
+
+    if constexpr (std::chrono::steady_clock::is_steady)
+    {
+        freq = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::duration(1)).count();
+    }
+    else
+    {
+        // Fallback for systems where steady_clock is not steady
+        freq = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::duration(1)).count();
+    }
+
     return freq;
 }
 
-void ownStartCapture(vx_perf_t *perf)
+void Osal::startCapture(vx_perf_t *perf)
 {
-    perf->beg = ownCaptureTime();
+    perf->beg = Osal::getCaptureTime();
 }
 
-vx_float32 ownTimeToMS(vx_uint64 c) {
-#define NS_PER_MSEC  (1000000.0f)
-    return (vx_float32)c/NS_PER_MSEC;
-}
-
-void ownStopCapture(vx_perf_t *perf)
+void Osal::stopCapture(vx_perf_t *perf)
 {
-#if defined(__APPLE__)
-    static mach_timebase_info_data_t    sTimebaseInfo;
-#endif
-    perf->end = ownCaptureTime();
+    auto now = std::chrono::steady_clock::now();
+    auto end_time = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+    perf->end = static_cast<vx_uint64>(end_time);
+
     perf->tmp = perf->end - perf->beg;
-#if defined(__APPLE__)
-    if (sTimebaseInfo.denom == 0) {
-        (void) mach_timebase_info(&sTimebaseInfo);
-    }
-    perf->tmp = perf->tmp * sTimebaseInfo.numer / sTimebaseInfo.denom;
-#endif
+
     perf->sum += perf->tmp;
     perf->num++;
     perf->avg = perf->sum / perf->num;
@@ -561,23 +541,178 @@ void ownStopCapture(vx_perf_t *perf)
     perf->max = (perf->max > perf->tmp ? perf->max : perf->tmp);
 }
 
-void ownPrintPerf(vx_perf_t *perf) {
-    VX_PRINT(VX_ZONE_PERF, "beg:" VX_FMT_TIME "ms end:" VX_FMT_TIME "ms tmp:" VX_FMT_TIME "ms sum:" VX_FMT_TIME "ms num:%d avg:" VX_FMT_TIME "ms\n",
-             ownTimeToMS(perf->beg),
-             ownTimeToMS(perf->end),
-             ownTimeToMS(perf->tmp),
-             ownTimeToMS(perf->sum),
-             (int)perf->num,
-             ownTimeToMS(perf->avg));
+vx_float32 Osal::timeToMS(vx_uint64 c)
+{
+#define NS_PER_MSEC  (1000000.0f)
+    return (vx_float32)c/NS_PER_MSEC;
 }
 
-void ownInitPerf(vx_perf_t *perf)
+void Osal::initPerf(vx_perf_t *perf)
 {
     memset(perf, 0, sizeof(vx_perf_t));
     perf->min = UINT64_MAX;
 }
 
-void vxPrintQueue(vx_queue_t *q)
+void Osal::printPerf(vx_perf_t *perf)
+{
+    VX_PRINT(VX_ZONE_PERF, "beg:" VX_FMT_TIME "ms end:" VX_FMT_TIME "ms tmp:" VX_FMT_TIME "ms sum:" VX_FMT_TIME "ms num:%d avg:" VX_FMT_TIME "ms\n",
+            Osal::timeToMS(perf->beg),
+            Osal::timeToMS(perf->end),
+            Osal::timeToMS(perf->tmp),
+            Osal::timeToMS(perf->sum),
+            (int)perf->num,
+            Osal::timeToMS(perf->avg));
+}
+
+void Osal::initQueue(vx_queue_t *q)
+{
+    if (q)
+    {
+        memset(q->data, 0, sizeof(q->data));
+        q->start_index = 0;
+        q->end_index = -1;
+        Osal::createSem(&q->lock, 1);
+        Osal::initEvent(&q->readEvent, vx_false_e);
+        Osal::initEvent(&q->writeEvent, vx_false_e);
+        Osal::setEvent(&q->writeEvent);
+    }
+}
+
+vx_queue_t *Osal::createQueue()
+{
+    vx_queue_t *q = VX_CALLOC(vx_queue_t);
+    if (q) Osal::initQueue(q);
+    return q;
+}
+
+vx_queue_t *Osal::createQueue(vx_uint32 numItems, vx_size itemSize)
+{
+    (void)numItems;
+    (void)itemSize;
+
+    vx_queue_t *q = VX_CALLOC(vx_queue_t);
+    if (q) Osal::initQueue(q);
+    return q;
+}
+
+vx_bool Osal::readQueue(vx_queue_t *q, vx_value_set_t **data)
+{
+    vx_bool red = vx_false_e;
+    if (q)
+    {
+        VX_PRINT(VX_ZONE_OSAL, "About to wait on queue %p\n", q);
+        while (Osal::waitEvent(&q->readEvent, VX_INT_FOREVER) == vx_true_e)
+        {
+            VX_PRINT(VX_ZONE_OSAL, "Signalled!\n");
+            Osal::semWait(&q->lock);
+            if (q->popped == vx_false_e)
+            {
+                if (q->end_index != -1) // not empty
+                {
+                    *data = q->data[q->start_index];
+                    q->data[q->start_index] = nullptr;
+                    q->start_index = (q->start_index + 1)%VX_INT_MAX_QUEUE_DEPTH;
+                    red = vx_true_e;
+                    if (q->start_index == q->end_index) // wrapped to empty
+                    {
+                        Osal::resetEvent(&q->readEvent);
+                        q->end_index = -1;
+                    }
+                    Osal::printQueue(q);
+                }
+
+                Osal::setEvent(&q->writeEvent);
+            }
+            Osal::semPost(&q->lock);
+            if (q->popped == vx_true_e || red == vx_true_e)
+                break;
+        }
+        VX_PRINT(VX_ZONE_OSAL, "Leaving with %d\n", red);
+    }
+    return red;
+}
+
+vx_bool Osal::writeQueue(vx_queue_t *q, vx_value_set_t *data)
+{
+    vx_bool wrote = vx_false_e;
+    if (q)
+    {
+        // wait for the queue to be writeable
+        VX_PRINT(VX_ZONE_OSAL, "About to wait on queue %p\n", q);
+        while (Osal::waitEvent(&q->writeEvent, VX_INT_FOREVER) == vx_true_e)
+        {
+            VX_PRINT(VX_ZONE_OSAL, "Signalled!\n");
+            Osal::semWait(&q->lock);
+            if (q->popped == vx_false_e)
+            {
+                // cause other writers to block
+                Osal::resetEvent(&q->writeEvent);
+                // add the value to the data array if space is available
+                if (q->start_index != q->end_index)
+                {
+                    if (q->end_index == -1) // empty
+                        q->end_index = q->start_index;
+                    q->data[q->end_index] = data;
+                    q->end_index = (q->end_index + 1)%VX_INT_MAX_QUEUE_DEPTH;
+                    wrote = vx_true_e;
+                    // cause other writers to unblock.
+                    if (q->start_index != q->end_index)
+                        Osal::setEvent(&q->writeEvent);
+                    Osal::printQueue(q);
+                }
+                else
+                {
+                    // two writers may have raced to enter...
+                    // the second may have a full queue here...
+                }
+
+                if (q->end_index != -1)
+                    Osal::setEvent(&q->readEvent);
+            }
+            Osal::semPost(&q->lock);
+            if (q->popped == vx_true_e || wrote == vx_true_e)
+                break;
+        }
+    }
+    return wrote;
+}
+
+void Osal::popQueue(vx_queue_t *q)
+{
+    if (q)
+    {
+        Osal::semWait(&q->lock);
+        q->popped = vx_true_e;
+        Osal::setEvent(&q->readEvent);
+        Osal::setEvent(&q->writeEvent);
+        Osal::semPost(&q->lock);
+    }
+}
+
+void Osal::destroyQueue(vx_queue_t **pq)
+{
+    vx_queue_t *q = (pq ? *pq : nullptr);
+    if (q)
+    {
+        Osal::deinitQueue(q);
+        delete(q);
+        *pq = nullptr;
+    }
+}
+
+void Osal::deinitQueue(vx_queue_t *q)
+{
+    if (q)
+    {
+        q->start_index = 0;
+        q->end_index = -1;
+        Osal::destroySem(&q->lock);
+        Osal::deinitEvent(&q->readEvent);
+        Osal::deinitEvent(&q->writeEvent);
+    }
+}
+
+void Osal::printQueue(vx_queue_t *q)
 {
     vx_uint32 i;
     VX_PRINT(VX_ZONE_OSAL, "Queue: %p, lock=%p s,e=[%d,%d] popped=%s\n",q, &q->lock, q->start_index, q->end_index, (q->popped?"yes":"no"));
@@ -590,153 +725,7 @@ void vxPrintQueue(vx_queue_t *q)
     }
 }
 
-void ownInitQueue(vx_queue_t *q)
-{
-    if (q)
-    {
-        memset(q->data, 0, sizeof(q->data));
-        q->start_index = 0;
-        q->end_index = -1;
-        ownCreateSem(&q->lock, 1);
-        ownInitEvent(&q->readEvent, vx_false_e);
-        ownInitEvent(&q->writeEvent, vx_false_e);
-        ownSetEvent(&q->writeEvent);
-    }
-}
-
-void ownDestroyQueue(vx_queue_t **pq)
-{
-    vx_queue_t *q = (pq ? *pq : nullptr);
-    if (q)
-    {
-        ownDeinitQueue(q);
-        delete(q);
-        *pq = nullptr;
-    }
-}
-
-vx_queue_t *ownCreateQueue() {
-    vx_queue_t *q = VX_CALLOC(vx_queue_t);
-    if (q) ownInitQueue(q);
-    return q;
-}
-
-vx_queue_t *ownCreateQueue(vx_uint32 numItems, vx_size itemSize) {
-    (void)numItems;
-    (void)itemSize;
-
-    vx_queue_t *q = VX_CALLOC(vx_queue_t);
-    if (q) ownInitQueue(q);
-    return q;
-}
-
-vx_bool ownWriteQueue(vx_queue_t *q, vx_value_set_t *data)
-{
-    vx_bool wrote = vx_false_e;
-    if (q)
-    {
-        // wait for the queue to be writeable
-        VX_PRINT(VX_ZONE_OSAL, "About to wait on queue %p\n", q);
-        while (ownWaitEvent(&q->writeEvent, VX_INT_FOREVER) == vx_true_e)
-        {
-            VX_PRINT(VX_ZONE_OSAL, "Signalled!\n");
-            ownSemWait(&q->lock);
-            if (q->popped == vx_false_e)
-            {
-                // cause other writers to block
-                ownResetEvent(&q->writeEvent);
-                // add the value to the data array if space is available
-                if (q->start_index != q->end_index)
-                {
-                    if (q->end_index == -1) // empty
-                        q->end_index = q->start_index;
-                    q->data[q->end_index] = data;
-                    q->end_index = (q->end_index + 1)%VX_INT_MAX_QUEUE_DEPTH;
-                    wrote = vx_true_e;
-                    // cause other writers to unblock.
-                    if (q->start_index != q->end_index)
-                        ownSetEvent(&q->writeEvent);
-                    vxPrintQueue(q);
-                }
-                else
-                {
-                    // two writers may have raced to enter...
-                    // the second may have a full queue here...
-                }
-
-                if (q->end_index != -1)
-                    ownSetEvent(&q->readEvent);
-            }
-            ownSemPost(&q->lock);
-            if (q->popped == vx_true_e || wrote == vx_true_e)
-                break;
-        }
-    }
-    return wrote;
-}
-
-vx_bool ownReadQueue(vx_queue_t *q, vx_value_set_t **data)
-{
-    vx_bool red = vx_false_e;
-    if (q)
-    {
-        VX_PRINT(VX_ZONE_OSAL, "About to wait on queue %p\n", q);
-        while (ownWaitEvent(&q->readEvent, VX_INT_FOREVER) == vx_true_e)
-        {
-            VX_PRINT(VX_ZONE_OSAL, "Signalled!\n");
-            ownSemWait(&q->lock);
-            if (q->popped == vx_false_e)
-            {
-                if (q->end_index != -1) // not empty
-                {
-                    *data = q->data[q->start_index];
-                    q->data[q->start_index] = nullptr;
-                    q->start_index = (q->start_index + 1)%VX_INT_MAX_QUEUE_DEPTH;
-                    red = vx_true_e;
-                    if (q->start_index == q->end_index) // wrapped to empty
-                    {
-                        ownResetEvent(&q->readEvent);
-                        q->end_index = -1;
-                    }
-                    vxPrintQueue(q);
-                }
-
-                ownSetEvent(&q->writeEvent);
-            }
-            ownSemPost(&q->lock);
-            if (q->popped == vx_true_e || red == vx_true_e)
-                break;
-        }
-        VX_PRINT(VX_ZONE_OSAL, "Leaving with %d\n", red);
-    }
-    return red;
-}
-
-void ownPopQueue(vx_queue_t *q)
-{
-    if (q)
-    {
-        ownSemWait(&q->lock);
-        q->popped = vx_true_e;
-        ownSetEvent(&q->readEvent);
-        ownSetEvent(&q->writeEvent);
-        ownSemPost(&q->lock);
-    }
-}
-
-void ownDeinitQueue(vx_queue_t *q)
-{
-    if (q)
-    {
-        q->start_index = 0;
-        q->end_index = -1;
-        ownDestroySem(&q->lock);
-        ownDeinitEvent(&q->readEvent);
-        ownDeinitEvent(&q->writeEvent);
-    }
-}
-
-vx_module_handle_t ownLoadModule(vx_char * name)
+vx_module_handle_t Osal::loadModule(vx_char * name)
 {
     vx_module_handle_t mod;
 
@@ -752,7 +741,7 @@ vx_module_handle_t ownLoadModule(vx_char * name)
     return mod;
 }
 
-void ownUnloadModule(vx_module_handle_t mod)
+void Osal::unloadModule(vx_module_handle_t mod)
 {
 #if defined(__linux__) || defined(__ANDROID__) || defined(__APPLE__) || defined(__QNX__) || defined(__CYGWIN__)
     dlclose(mod);
@@ -761,12 +750,12 @@ void ownUnloadModule(vx_module_handle_t mod)
 #endif
 }
 
-vx_symbol_t ownGetSymbol(vx_module_handle_t mod, const vx_char* name)
+vx_symbol_t Osal::getSymbol(vx_module_handle_t mod, const vx_char* name)
 {
 #if defined(__linux__) || defined(__ANDROID__) || defined(__APPLE__) || defined(__QNX__) || defined(__CYGWIN__)
-    return (vx_symbol_t)dlsym(mod, name);
+    return reinterpret_cast<vx_symbol_t>(dlsym(mod, name));
 #elif defined(_WIN32)
-    return (vx_symbol_t)GetProcAddress(mod, name);
+    return reinterpret_cast<vx_symbol_t>(GetProcAddress(mod, name));
 #endif
 }
 

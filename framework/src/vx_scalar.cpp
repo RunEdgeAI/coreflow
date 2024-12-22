@@ -248,7 +248,7 @@ static vx_status own_scalar_to_host_mem(vx_scalar scalar, void* user_ptr)
 {
     vx_status status = VX_SUCCESS;
 
-    if (vx_false_e == ownSemWait(&scalar->lock))
+    if (vx_false_e == Osal::semWait(&scalar->lock))
         return VX_ERROR_NO_RESOURCES;
 
     Scalar::printScalarValue(scalar);
@@ -280,7 +280,7 @@ static vx_status own_scalar_to_host_mem(vx_scalar scalar, void* user_ptr)
         break;
     }
 
-    if (vx_false_e == ownSemPost(&scalar->lock))
+    if (vx_false_e == Osal::semPost(&scalar->lock))
         return VX_ERROR_NO_RESOURCES;
 
     // ownReadFromReference(&scalar->base);
@@ -292,7 +292,7 @@ static vx_status own_host_mem_to_scalar(vx_scalar scalar, void* user_ptr)
 {
     vx_status status = VX_SUCCESS;
 
-    if (vx_false_e == ownSemWait(&scalar->lock))
+    if (vx_false_e == Osal::semWait(&scalar->lock))
         return VX_ERROR_NO_RESOURCES;
 
     switch (scalar->data_type)
@@ -324,7 +324,7 @@ static vx_status own_host_mem_to_scalar(vx_scalar scalar, void* user_ptr)
 
     Scalar::printScalarValue(scalar);
 
-    if (vx_false_e == ownSemPost(&scalar->lock))
+    if (vx_false_e == Osal::semPost(&scalar->lock))
         return VX_ERROR_NO_RESOURCES;
 
     // ownWroteToReference(&scalar->base);
@@ -474,7 +474,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReadScalarValue(vx_scalar scalar, void *ptr
     if (ptr == nullptr)
         return VX_ERROR_INVALID_PARAMETERS;
 
-    ownSemWait(&scalar->lock);
+    Osal::semWait(&scalar->lock);
     Scalar::printScalarValue(scalar);
     switch (scalar->data_type)
     {
@@ -533,7 +533,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReadScalarValue(vx_scalar scalar, void *ptr
             status = VX_ERROR_NOT_SUPPORTED;
             break;
     }
-    ownSemPost(&scalar->lock);
+    Osal::semPost(&scalar->lock);
     // ownReadFromReference(&scalar->base);
     return status;
 }
@@ -548,7 +548,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxWriteScalarValue(vx_scalar scalar, const vo
     if (ptr == nullptr)
         return VX_ERROR_INVALID_PARAMETERS;
 
-    ownSemWait(&scalar->lock);
+    Osal::semWait(&scalar->lock);
     switch (scalar->data_type)
     {
         case VX_TYPE_CHAR:
@@ -607,7 +607,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxWriteScalarValue(vx_scalar scalar, const vo
             break;
     }
     Scalar::printScalarValue(scalar);
-    ownSemPost(&scalar->lock);
+    Osal::semPost(&scalar->lock);
     // ownWroteToReference(&scalar->base);
     return status;
 }

@@ -31,7 +31,7 @@ vx_bool ownFreeMemory(vx_context context, vx_memory_t *memory)
             {
                 VX_PRINT(VX_ZONE_INFO, "Freeing %p\n", memory->ptrs[p]);
                 delete[](memory->ptrs[p]);
-                ownDestroySem(&memory->locks[p]);
+                Osal::destroySem(&memory->locks[p]);
                 memory->ptrs[p] = nullptr;
             }
         }
@@ -108,7 +108,7 @@ vx_bool ownAllocateMemory(vx_context context, vx_memory_t *memory)
             }
             else
             {
-                ownCreateSem(&memory->locks[p], 1);
+                Osal::createSem(&memory->locks[p], 1);
                 VX_PRINT(VX_ZONE_INFO, "Allocated %p for " VX_FMT_SIZE " bytes\n", memory->ptrs[p], size);
             }
         }
@@ -124,10 +124,10 @@ void ownPrintMemory(vx_memory_t *mem)
     vx_uint32 p = 0;
     for (p = 0; p < mem->nptrs; p++)
     {
-        vx_bool gotlock = ownSemTryWait(&mem->locks[p]);
+        vx_bool gotlock = Osal::semTryWait(&mem->locks[p]);
         if (gotlock == vx_true_e)
         {
-            ownSemPost(&mem->locks[p]);
+            Osal::semPost(&mem->locks[p]);
         }
         VX_PRINT(VX_ZONE_INFO, "ptr[%u]=%p %s stride_x_bits[%u]=%u\n", p, mem->ptrs[p],
                 (gotlock==vx_true_e?"UNLOCKED":"LOCKED"), p, mem->stride_x_bits[p]);

@@ -160,7 +160,7 @@ VX_API_ENTRY vx_matrix VX_API_CALL vxCreateMatrixFromPattern(vx_context context,
     {
         if (ownAllocateMemory(matrix->context, &matrix->memory) == vx_true_e)
         {
-            ownSemWait(&matrix->lock);
+            Osal::semWait(&matrix->lock);
             vx_uint8* ptr = matrix->memory.ptrs[0];
             vx_size x, y;
             for (y = 0; y < rows; ++y)
@@ -182,7 +182,7 @@ VX_API_ENTRY vx_matrix VX_API_CALL vxCreateMatrixFromPattern(vx_context context,
                 }
             }
 
-            ownSemPost(&matrix->lock);
+            Osal::semPost(&matrix->lock);
             // ownWroteToReference(&matrix);
             matrix->pattern = pattern;
         }
@@ -304,14 +304,14 @@ VX_API_ENTRY vx_status VX_API_CALL vxReadMatrix(vx_matrix matrix, void *array)
     {
         if (ownAllocateMemory(matrix->context, &matrix->memory) == vx_true_e)
         {
-            ownSemWait(&matrix->lock);
+            Osal::semWait(&matrix->lock);
             if (array)
             {
                 vx_size size = matrix->memory.strides[0][1] *
                                matrix->memory.dims[0][1];
                 memcpy(array, matrix->memory.ptrs[0], size);
             }
-            ownSemPost(&matrix->lock);
+            Osal::semPost(&matrix->lock);
             // ownReadFromReference(&matrix);
             status = VX_SUCCESS;
         }
@@ -335,14 +335,14 @@ VX_API_ENTRY vx_status VX_API_CALL vxWriteMatrix(vx_matrix matrix, const void *a
     {
         if (ownAllocateMemory(matrix->context, &matrix->memory) == vx_true_e)
         {
-            ownSemWait(&matrix->lock);
+            Osal::semWait(&matrix->lock);
             if (array)
             {
                 vx_size size = matrix->memory.strides[0][1] *
                                matrix->memory.dims[0][1];
                 memcpy(matrix->memory.ptrs[0], array, size);
             }
-            ownSemPost(&matrix->lock);
+            Osal::semPost(&matrix->lock);
             // ownWroteToReference(&matrix);
             status = VX_SUCCESS;
         }
@@ -397,27 +397,27 @@ vx_status VX_API_CALL vxCopyMatrix(vx_matrix matrix, void *ptr, vx_enum usage, v
 #endif
             if (usage == VX_READ_ONLY)
             {
-                ownSemWait(&matrix->lock);
+                Osal::semWait(&matrix->lock);
                 if (ptr)
                 {
                     vx_size size = matrix->memory.strides[0][1] *
                                    matrix->memory.dims[0][1];
                     memcpy(ptr, matrix->memory.ptrs[0], size);
                 }
-                ownSemPost(&matrix->lock);
+                Osal::semPost(&matrix->lock);
                 // ownReadFromReference(&matrix);
                 status = VX_SUCCESS;
             }
             else if (usage == VX_WRITE_ONLY)
             {
-                ownSemWait(&matrix->lock);
+                Osal::semWait(&matrix->lock);
                 if (ptr)
                 {
                     vx_size size = matrix->memory.strides[0][1] *
                                    matrix->memory.dims[0][1];
                     memcpy(matrix->memory.ptrs[0], ptr, size);
                 }
-                ownSemPost(&matrix->lock);
+                Osal::semPost(&matrix->lock);
                 // ownWroteToReference(&matrix);
                 status = VX_SUCCESS;
             }

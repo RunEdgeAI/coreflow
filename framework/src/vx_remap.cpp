@@ -548,7 +548,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapRemapPatch(vx_remap remap,
             if (VX_READ_ONLY == usage || VX_READ_AND_WRITE == usage)
             {
 
-                if (ownSemWait(&remap->memory.locks[0]) == vx_true_e)
+                if (Osal::semWait(&remap->memory.locks[0]) == vx_true_e)
                 {
                     *stride_y = user_stride_y;
 
@@ -569,7 +569,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapRemapPatch(vx_remap remap,
                         *ptr = buf;
                         remap->incrementReference(VX_EXTERNAL);
                     }
-                    ownSemPost(&remap->memory.locks[0]);
+                    Osal::semPost(&remap->memory.locks[0]);
                 }
                 else
                 {
