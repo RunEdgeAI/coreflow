@@ -1260,6 +1260,7 @@ vx_status vx_test_graph_bikegray(int argc, char *argv[])
                 vxReleaseGraph(&graph);
             }
             status |= vxUnloadKernels(context, "openvx-debug");
+            status |= vxUnloadKernels(context, "openvx-extras");
         }
         for (i = 0; i < dimof(images); i++)
         {
@@ -1577,6 +1578,7 @@ vx_status vx_test_graph_accum(int argc, char *argv[])
                             /* wrong error code! */
                             status = VX_ERROR_NOT_SUFFICIENT;
                         }
+                        vxReleaseNode(&node);
                     }
                     for (i = 0; i < dimof(nodes); i++)
                     {
@@ -2358,6 +2360,10 @@ vx_status vx_test_graph_dot_export(int argc, char *argv[])
             {
                 status = vxExportGraphToDot(graph, (vx_char*)"blur.dot", vx_false_e);
                 status = vxExportGraphToDot(graph, (vx_char*)"blur_data.dot", vx_true_e);
+            }
+            for (n = 0; n < dimof(nodes); n++)
+            {
+                vxReleaseNode(&nodes[n]);
             }
             vxReleaseGraph(&graph);
         }

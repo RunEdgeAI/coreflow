@@ -1662,10 +1662,6 @@ void Graph::destruct()
             {
                 node->removeNode();
             }
-            else
-            {
-                numNodes--;
-            }
         }
     }
 }
