@@ -2,7 +2,7 @@
 cc_library(
     name = "nnef",
     srcs = glob([
-        "*.cpp",
+       # "*.cpp",
         "src/*.cpp"
     ]),
     hdrs = glob([
