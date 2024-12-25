@@ -20,8 +20,8 @@
  * \author Erik Rainey <erik.rainey@gmail.com>
  */
 
-#include <stdio.h>
-#include <assert.h>
+#include <cstdio>
+#include <string>
 
 #include <VX/vx.h>
 #include <VX/vx_lib_debug.h>
@@ -56,8 +56,12 @@ vx_node vxFWriteImageNode(vx_graph graph, vx_image image, vx_char name[VX_MAX_FI
     vx_node node = 0;
     vx_context context = vxGetContext((vx_reference)graph);
     vx_array filepath = vxCreateArray(context, VX_TYPE_CHAR, VX_MAX_FILE_NAME);
-    if (vxGetStatus((vx_reference)filepath) == VX_SUCCESS) {
-        status = vxAddArrayItems(filepath, VX_MAX_FILE_NAME, &name[0], sizeof(name[0]));
+    if (vxGetStatus((vx_reference)filepath) == VX_SUCCESS)
+    {
+        vx_size length = strnlen(name, VX_MAX_FILE_NAME);
+        std::string str = std::string(name, length);
+        str.reserve(VX_MAX_FILE_NAME);
+        status = vxAddArrayItems(filepath, VX_MAX_FILE_NAME, str.c_str(), sizeof(vx_char));
         if (status == VX_SUCCESS)
         {
             vx_reference params[] = {
@@ -78,7 +82,8 @@ vx_node vxFWriteArrayNode(vx_graph graph, vx_array arr, vx_char name[VX_MAX_FILE
     vx_node node = 0;
     vx_context context = vxGetContext((vx_reference)graph);
     vx_array filepath = vxCreateArray(context, VX_TYPE_CHAR, VX_MAX_FILE_NAME);
-    if (vxGetStatus((vx_reference)filepath) == VX_SUCCESS) {
+    if (vxGetStatus((vx_reference)filepath) == VX_SUCCESS)
+    {
         status = vxAddArrayItems(filepath, VX_MAX_FILE_NAME, &name[0], sizeof(name[0]));
         if (status == VX_SUCCESS)
         {
@@ -100,8 +105,12 @@ vx_node vxFReadImageNode(vx_graph graph, vx_char name[VX_MAX_FILE_NAME], vx_imag
     vx_node node = 0;
     vx_context context = vxGetContext((vx_reference)graph);
     vx_array filepath = vxCreateArray(context, VX_TYPE_CHAR, VX_MAX_FILE_NAME);
-    if (vxGetStatus((vx_reference)filepath) == VX_SUCCESS) {
-        status = vxAddArrayItems(filepath, VX_MAX_FILE_NAME, &name[0], sizeof(name[0]));
+    if (vxGetStatus((vx_reference)filepath) == VX_SUCCESS)
+    {
+        vx_size length = strnlen(name, VX_MAX_FILE_NAME);
+        std::string str = std::string(name, length);
+        str.reserve(VX_MAX_FILE_NAME);
+        status = vxAddArrayItems(filepath, VX_MAX_FILE_NAME, str.c_str(), sizeof(vx_char));
         if (status == VX_SUCCESS)
         {
             vx_reference params[] = {
@@ -122,7 +131,8 @@ vx_node vxFReadArrayNode(vx_graph graph, vx_char name[VX_MAX_FILE_NAME], vx_arra
     vx_node node = 0;
     vx_context context = vxGetContext((vx_reference)graph);
     vx_array filepath = vxCreateArray(context, VX_TYPE_CHAR, VX_MAX_FILE_NAME);
-    if (vxGetStatus((vx_reference)filepath) == VX_SUCCESS) {
+    if (vxGetStatus((vx_reference)filepath) == VX_SUCCESS)
+    {
         status = vxAddArrayItems(filepath, VX_MAX_FILE_NAME, &name[0], sizeof(name[0]));
         if (status == VX_SUCCESS)
         {
