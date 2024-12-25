@@ -18,6 +18,13 @@ cc_library(
         "include",
         "framework/include"
     ],
+    copts = select({
+        "@platforms//os:linux": [
+            "-I/usr/include/libxml2",
+        ],
+        "//conditions:default": [
+        ],
+    }),
     linkopts = select({
         "@platforms//os:osx": [
             "-framework OpenCL",
