@@ -226,7 +226,7 @@ extern "C" vx_status vxTargetInit(vx_target target)
                         CASE_STRINGERIZE2(CL_UNSIGNED_INT32, datat);
                         CASE_STRINGERIZE2(CL_HALF_FLOAT, datat);
                         CASE_STRINGERIZE2(CL_FLOAT, datat);
-    #if defined(CL_VERSION_2_0)
+    #if defined(CL_VERSION_2_0) && defined(CL_UNORM_INT24)
                         CASE_STRINGERIZE2(CL_UNORM_INT24, datat);
     #endif
                         default:
