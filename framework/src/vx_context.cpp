@@ -956,8 +956,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
             {
                 if (context->reftable[r])
                 {
-                    VX_PRINT(VX_ZONE_ERROR, "Reference %p, type %x not removed\n",
-                        context->reftable[r], context->reftable[r]->type);
+                    VX_PRINT(VX_ZONE_ERROR, "Reference %p, type %x not removed [%d:%d]\n",
+                        context->reftable[r], context->reftable[r]->type,
+                        context->reftable[r]->internal_count, context->reftable[r]->external_count);
                 }
             }
 

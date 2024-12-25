@@ -79,26 +79,26 @@ vx_status Target::deinitializeTarget()
 {
     vx_uint32 k = 0u;
     vx_status status = VX_SUCCESS;
-    vx_kernel kernel = nullptr;
 
     for (k = 0u; k < num_kernels; k++)
     {
-        kernel = kernels[k];
-
-        if ((kernel->enabled != vx_false_e) ||
-            (kernel->enumeration != VX_KERNEL_INVALID))
+        if ((kernels[k]) &&
+            (kernels[k]->enabled != vx_false_e ||
+            kernels[k]->enumeration != VX_KERNEL_INVALID))
         {
-            kernel->enabled = vx_false_e;
+            kernels[k]->enabled = vx_false_e;
 
             if (Kernel::isKernelUnique(kernels[k]) == vx_true_e)
             {
                 context->num_unique_kernels--;
             }
 
-            if (kernel->deinitializeKernel() != VX_SUCCESS )
+            if (kernels[k]->deinitializeKernel() != VX_SUCCESS )
             {
                 status = VX_FAILURE;
             }
+
+            kernels[k] = nullptr;
         }
     }
 

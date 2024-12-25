@@ -69,8 +69,8 @@ static void VX_CALLBACK vxcl_platform_notifier(const char *errinfo,
 extern "C" vx_status vxTargetInit(vx_target target)
 {
     vx_status status = VX_ERROR_NO_RESOURCES;
-    cl_int err = 0;
     vx_context context = target->context;
+    cl_int err = 0;
     cl_uint p, d, k;
     char *vx_incs = std::getenv("VX_CL_INCLUDE_DIR");
     //char *vx_incs = "/usr/include -I/home/pi/sample-impl-opencl/include -I/home/pi/sample-impl-opencl/include/VX";
@@ -84,25 +84,16 @@ extern "C" vx_status vxTargetInit(vx_target target)
     if (nullptr == vx_incs)
     {
 #ifdef VX_CL_INCLUDE_DIR
-        const char *idir = VX_CL_INCLUDE_DIR;
-        int len = strlen(idir);
-        vx_incs = (char*)malloc(len);
-        strncpy(vx_incs, idir, len);
+        vx_incs = strdup(VX_CL_INCLUDE_DIR);
 #else
-        const char *idir = "/usr/include/";
-        int len = strlen(idir);
-        vx_incs = (char*)malloc(len);
-        strncpy(vx_incs, idir, len);
+        vx_incs = strdup("/usr/include/");
 #endif
     }
 
     if (nullptr == cl_dirs)
     {
 #ifdef VX_CL_SOURCE_DIR
-        const char *sdir = VX_CL_SOURCE_DIR;
-        int len = strlen(sdir);
-        cl_dirs = (char*)malloc(len);
-        strncpy(cl_dirs, sdir, len);
+        cl_dirs = strdup(VX_CL_SOURCE_DIR);
 #else
         return VX_FAILURE;
 #endif

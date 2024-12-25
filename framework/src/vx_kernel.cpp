@@ -958,6 +958,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxRemoveKernel(vx_kernel kernel)
             {
                 target->kernels[kernelIdx]->enumeration = VX_KERNEL_INVALID;
                 target->kernels[kernelIdx]->user_kernel = vx_false_e;
+                target->kernels[kernelIdx] = nullptr;
             }
             else
             {

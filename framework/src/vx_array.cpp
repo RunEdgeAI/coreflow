@@ -845,8 +845,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxAddArrayItems(vx_array arr, vx_size count, 
                     vx_size i;
                     for (i = 0; i < count; ++i)
                     {
-                        vx_uint8 *tmp = (vx_uint8 *)ptr;
-                        memcpy(&dst_ptr[i * arr->item_size], &tmp[i * stride], arr->item_size);
+                        vx_uint8 *src_ptr = (vx_uint8 *)ptr;
+                        memcpy(&dst_ptr[i * arr->item_size], &src_ptr[i * stride], arr->item_size);
                     }
 
                     arr->num_items += count;

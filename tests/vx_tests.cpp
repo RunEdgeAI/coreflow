@@ -2239,7 +2239,7 @@ vx_status vx_test_graph_tracker(int argc, char *argv[])
         vx_float32 sensitivity = 0.041f;
         vx_int32 gradient_size = 3;
         vx_int32 block_size = 3;
-        vx_uint32 num_corners = 0;
+        vx_size num_corners = 0;
         vx_array old_features = vxCreateArray(context, VX_TYPE_KEYPOINT, 2000);
         vx_array new_features = vxCreateArray(context, VX_TYPE_KEYPOINT, 2000);
         vx_scalar epsilon_s = vxCreateScalar(context,VX_TYPE_FLOAT32,&epsilon);
@@ -2896,7 +2896,7 @@ vx_status vx_xml_fullexport(int argc, char *argv[])
             vxSetThresholdAttribute(dblthr, VX_THRESHOLD_THRESHOLD_UPPER, &th, sizeof(th));
             {
                 vx_map_id map_id = 0;
-                vx_uint32 ptr = 0;
+                vx_uint32* ptr = 0;
                 vx_size nbins = 0;
                 vxQueryDistribution(dist, VX_DISTRIBUTION_BINS, &nbins, sizeof(nbins));
                 vxMapDistribution(dist, &map_id, (void**)&ptr, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST, 0);
