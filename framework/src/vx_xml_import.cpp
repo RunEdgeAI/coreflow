@@ -305,7 +305,8 @@ static int32_t xml_match_tag(xmlNodePtr cur, xml_tag_t tags[], size_t num_tags)
 static vx_status vxReserveReferences(vx_context context, vx_uint32 num)
 {
     vx_status status = VX_SUCCESS;
-
+    (void)context;
+    (void)num;
     return status;
 }
 
@@ -314,7 +315,8 @@ static vx_status vxReserveReferences(vx_context context, vx_uint32 num)
 static vx_status vxReleaseReferences(vx_context context, vx_uint32 num)
 {
     vx_status status = VX_SUCCESS;
-
+    (void)context;
+    (void)num;
     return status;
 }
 
@@ -442,7 +444,7 @@ static vx_status vxLoadDataForImage(vx_image image, xmlNodePtr cur, vx_reference
         if (tag == ROI_TAG) {
             vxImportFromXMLRoi( image, cur, refs, total);
         } else if (tag == RECTANGLE_TAG) {
-            vx_rectangle_t rect = {0};
+            vx_rectangle_t rect = {0,0,0,0};
             vx_uint32 pIdx = xml_prop_ulong(cur, "plane");
             XML_FOREACH_CHILD_TAG (cur, tag, tags) {
                 if (tag == START_X_TAG) {
@@ -455,7 +457,7 @@ static vx_status vxLoadDataForImage(vx_image image, xmlNodePtr cur, vx_reference
                     rect.end_y = xml_ulong(cur);
                 } else if (tag == PIXELS_TAG) {
                     void *base = nullptr;
-                    vx_imagepatch_addressing_t addr = {0};
+                    vx_imagepatch_addressing_t addr = {};
                     status |= vxAccessImagePatch(image, &rect, pIdx, &addr, &base, VX_WRITE_ONLY);
                     if (status == VX_SUCCESS) {
                         XML_FOREACH_CHILD_TAG(cur, tag, tags) {
@@ -628,7 +630,7 @@ static vx_status vxLoadDataForArray(vx_array array, xmlNodePtr cur)
             status |= vxAddArrayItems(array, strlen(str), str, sizeof(char));
             free(str);
         } else if (tag == KEYPOINT_TAG) {
-            vx_keypoint_t kp = {0};
+            vx_keypoint_t kp = {};
             XML_FOREACH_CHILD_TAG(cur, tag, tags) {
                 if (tag == X_TAG) {
                     kp.x = (vx_int32)xml_long(cur);
@@ -648,7 +650,7 @@ static vx_status vxLoadDataForArray(vx_array array, xmlNodePtr cur)
             }
             status |= vxAddArrayItems(array, 1, &kp, sizeof(vx_keypoint_t));
         } else if (tag == COORDINATES2D_TAG) {
-            vx_coordinates2d_t coord = {0};
+            vx_coordinates2d_t coord = {0,0};
             XML_FOREACH_CHILD_TAG(cur, tag, tags) {
                 if (tag == X_TAG) {
                     coord.x = (vx_uint32)xml_ulong(cur);
@@ -658,7 +660,7 @@ static vx_status vxLoadDataForArray(vx_array array, xmlNodePtr cur)
             }
             status |= vxAddArrayItems(array, 1, &coord, sizeof(vx_coordinates2d_t));
         } else if (tag == COORDINATES3D_TAG) {
-            vx_coordinates3d_t coord = {0};
+            vx_coordinates3d_t coord = {0,0,0};
             XML_FOREACH_CHILD_TAG(cur, tag, tags) {
                 if (tag == X_TAG) {
                     coord.x = (vx_uint32)xml_ulong(cur);
@@ -670,7 +672,7 @@ static vx_status vxLoadDataForArray(vx_array array, xmlNodePtr cur)
             }
             status |= vxAddArrayItems(array, 1, &coord, sizeof(vx_coordinates3d_t));
         } else if (tag == RECTANGLE_TAG) {
-            vx_rectangle_t rect = {0};
+            vx_rectangle_t rect = {0,0,0,0};
             XML_FOREACH_CHILD_TAG(cur, tag, tags) {
                 if (tag == START_X_TAG) {
                     rect.start_x = (vx_uint32)xml_ulong(cur);
@@ -792,7 +794,7 @@ static vx_status vxLoadDataForPyramid(vx_pyramid pyr, xmlNodePtr cur, vx_referen
             }
             if (refIdx < total)
             {
-                if((level >= 0) && (level < levels)) {
+                if ((level >= 0) && (level < static_cast<vx_int32>(levels))) {
                     if(pyr->levels[level]->width == width &&
                        pyr->levels[level]->height == height) {
                         refs[refIdx] = (vx_reference)pyr->levels[level];
@@ -876,7 +878,8 @@ static vx_status vxLoadDataForLut(vx_lut lut, xmlNodePtr cur, vx_enum type, vx_s
 {
     vx_status status = VX_SUCCESS;
     vx_xml_tag_e tag = UNKNOWN_TAG;
-
+    (void)type;
+    (void)count;
     if (XML_HAS_CHILD(cur)) {
         void *ptr = nullptr;
         if( (status = vxAccessLUT(lut, &ptr, VX_WRITE_ONLY)) == VX_SUCCESS)

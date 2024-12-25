@@ -5,7 +5,7 @@ common --enable_bzlmod
 build --compiler=g++       # Specify the compiler if needed, e.g., gcc, clang
 build --cxxopt=-std=c++23  # Use C++23 standard (adjust if needed)
 build --cxxopt=-DCL_TARGET_OPENCL_VERSION=300
-# build --per_file_copt=.*,-tests/*.cpp@-Werror
+build --per_file_copt=.*,-tests/*.cpp@-Werror,-Wall,-Wextra,-Wpedantic
 
 # Test settings
 test --test_output=errors  # Show errors from tests

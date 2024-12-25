@@ -228,8 +228,8 @@ static vx_status vxCopyPlaneToImage(vx_image src,
 {
     void *src_base = nullptr;
     void *dst_base = nullptr;
-    vx_imagepatch_addressing_t src_addr = {0};
-    vx_imagepatch_addressing_t dst_addr = {0};
+    vx_imagepatch_addressing_t src_addr = {};
+    vx_imagepatch_addressing_t dst_addr = {};
     vx_rectangle_t src_rect, dst_rect;
     vx_uint32 x, y;
     vx_status status = VX_SUCCESS;

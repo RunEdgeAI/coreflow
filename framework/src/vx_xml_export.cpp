@@ -457,7 +457,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
                 {
                     vx_char *ptr = (vx_char *)array->memory.ptrs[0];
                     fprintf(fp, "%s\t<char>", indent);
-                    for (j = 0; j < array->num_items; j++) {
+                    for (j = 0; j < static_cast<vx_int32>(array->num_items); j++) {
                         /* character array is a string in xsd, not space-separated as lists are */
                         fprintf(fp, "%c",  ptr[j]);
                     }
@@ -468,7 +468,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
                 {
                     vx_int8 *ptr = (vx_int8 *)array->memory.ptrs[0];
                     fprintf(fp, "%s\t<int8>", indent);
-                    for (j = 0; j < array->num_items; j++) {
+                    for (j = 0; j < static_cast<vx_int32>(array->num_items); j++) {
                         fprintf(fp, "%hhd ",  ptr[j]);
                     }
                     fprintf(fp, "</int8>\n");
@@ -478,7 +478,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
                 {
                     vx_int16 *ptr = (vx_int16 *)array->memory.ptrs[0];
                     fprintf(fp, "%s\t<int16>", indent);
-                    for (j = 0; j < array->num_items; j++) {
+                    for (j = 0; j < static_cast<vx_int32>(array->num_items); j++) {
                         fprintf(fp, "%hd ",  ptr[j]);
                     }
                     fprintf(fp, "</int16>\n");
@@ -488,7 +488,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
                 {
                     vx_int32 *ptr = (vx_int32 *)array->memory.ptrs[0];
                     fprintf(fp, "%s\t<int32>", indent);
-                    for (j = 0; j < array->num_items; j++) {
+                    for (j = 0; j < static_cast<vx_int32>(array->num_items); j++) {
                         fprintf(fp, "%d ",  ptr[j]);
                     }
                     fprintf(fp, "</int32>\n");
@@ -498,7 +498,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
                 {
                     vx_int64 *ptr = (vx_int64 *)array->memory.ptrs[0];
                     fprintf(fp, "%s\t<int64>", indent);
-                    for (j = 0; j < array->num_items; j++) {
+                    for (j = 0; j < static_cast<vx_int32>(array->num_items); j++) {
                         fprintf(fp, "%lld ",  ptr[j]);
                     }
                     fprintf(fp, "</int64>\n");
@@ -508,7 +508,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
                 {
                     vx_uint8 *ptr = (vx_uint8 *)array->memory.ptrs[0];
                     fprintf(fp, "%s\t<uint8>", indent);
-                    for (j = 0; j < array->num_items; j++) {
+                    for (j = 0; j < static_cast<vx_int32>(array->num_items); j++) {
                         fprintf(fp, "%hhu ",  ptr[j]);
                     }
                     fprintf(fp, "</uint8>\n");
@@ -518,7 +518,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
                 {
                     vx_uint16 *ptr = (vx_uint16 *)array->memory.ptrs[0];
                     fprintf(fp, "%s\t<uint16>", indent);
-                    for (j = 0; j < array->num_items; j++) {
+                    for (j = 0; j < static_cast<vx_int32>(array->num_items); j++) {
                         fprintf(fp, "%hu ",  ptr[j]);
                     }
                     fprintf(fp, "</uint16>\n");
@@ -528,7 +528,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
                 {
                     vx_uint32 *ptr = (vx_uint32 *)array->memory.ptrs[0];
                     fprintf(fp, "%s\t<uint32>", indent);
-                    for (j = 0; j < array->num_items; j++) {
+                    for (j = 0; j < static_cast<vx_int32>(array->num_items); j++) {
                         fprintf(fp, "%u ",  ptr[j]);
                     }
                     fprintf(fp, "</uint32>\n");
@@ -538,7 +538,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
                 {
                     vx_uint64 *ptr = (vx_uint64 *)array->memory.ptrs[0];
                     fprintf(fp, "%s\t<uint64>", indent);
-                    for (j = 0; j < array->num_items; j++) {
+                    for (j = 0; j < static_cast<vx_int32>(array->num_items); j++) {
                         fprintf(fp, "%llu ",  ptr[j]);
                     }
                     fprintf(fp, "</uint64>\n");
@@ -548,7 +548,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
                 {
                     vx_float32 *ptr = (vx_float32 *)array->memory.ptrs[0];
                     fprintf(fp, "%s\t<float32>", indent);
-                    for (j = 0; j < array->num_items; j++) {
+                    for (j = 0; j < static_cast<vx_int32>(array->num_items); j++) {
                         fprintf(fp, "%f ",  ptr[j]);
                     }
                     fprintf(fp, "</float32>\n");
@@ -558,7 +558,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
                 {
                     vx_float64 *ptr = (vx_float64 *)array->memory.ptrs[0];
                     fprintf(fp, "%s\t<float64>", indent);
-                    for (j = 0; j < array->num_items; j++) {
+                    for (j = 0; j < static_cast<vx_int32>(array->num_items); j++) {
                         fprintf(fp, "%lf ",  ptr[j]);
                     }
                     fprintf(fp, "</float64>\n");
@@ -568,7 +568,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
                 {
                     vx_enum *ptr = (vx_enum *)array->memory.ptrs[0];
                     fprintf(fp, "%s\t<enum>", indent);
-                    for (j = 0; j < array->num_items; j++) {
+                    for (j = 0; j < static_cast<vx_int32>(array->num_items); j++) {
                         fprintf(fp, "%d ",  ptr[j]);
                     }
                     fprintf(fp, "</enum>\n");
@@ -578,7 +578,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
                 {
                     vx_bool *ptr = (vx_bool *)array->memory.ptrs[0];
                     fprintf(fp, "%s\t<bool>", indent);
-                    for (j = 0; j < array->num_items; j++) {
+                    for (j = 0; j < static_cast<vx_int32>(array->num_items); j++) {
                         fprintf(fp, "%s ",  (ptr[j]?"true":"false"));
                     }
                     fprintf(fp, "</bool>\n");
@@ -588,7 +588,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
                 {
                     vx_df_image *ptr = (vx_df_image *)array->memory.ptrs[0];
                     fprintf(fp, "%s\t<df_image>", indent);
-                    for (j = 0; j < array->num_items; j++) {
+                    for (j = 0; j < static_cast<vx_int32>(array->num_items); j++) {
                         fprintf(fp, "%s ",  vxFourCCString(ptr[j]));
                     }
                     fprintf(fp, "</df_image>\n");
@@ -598,7 +598,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
                 {
                     vx_size *ptr = (vx_size *)array->memory.ptrs[0];
                     fprintf(fp, "%s\t<size>", indent);
-                    for (j = 0; j < array->num_items; j++) {
+                    for (j = 0; j < static_cast<vx_int32>(array->num_items); j++) {
                         fprintf(fp, "%zu ",  ptr[j]);
                     }
                     fprintf(fp, "</size>\n");
@@ -607,7 +607,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
                 case VX_TYPE_RECTANGLE:
                 {
                     vx_rectangle_t *rect = (vx_rectangle_t *)array->memory.ptrs[0];
-                    for (j = 0; j < array->num_items; j++) {
+                    for (j = 0; j < static_cast<vx_int32>(array->num_items); j++) {
                         fprintf(fp, "%s\t<rectangle>\n", indent);
                         fprintf(fp, "%s\t\t<start_x>%u</start_x>\n", indent, rect[j].start_x);
                         fprintf(fp, "%s\t\t<start_y>%u</start_y>\n", indent, rect[j].start_y);
@@ -620,7 +620,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
                 case VX_TYPE_KEYPOINT:
                 {
                     vx_keypoint_t *key = (vx_keypoint_t *)array->memory.ptrs[0];
-                    for (j = 0; j < array->num_items; j++) {
+                    for (j = 0; j < static_cast<vx_int32>(array->num_items); j++) {
                         fprintf(fp, "%s\t<keypoint>\n", indent);
                         fprintf(fp, "%s\t\t<x>%u</x>\n", indent, key[j].x);
                         fprintf(fp, "%s\t\t<y>%u</y>\n", indent, key[j].y);
@@ -636,7 +636,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
                 case VX_TYPE_COORDINATES2D:
                 {
                     vx_coordinates2d_t *cord2d = (vx_coordinates2d_t *)array->memory.ptrs[0];
-                    for (j = 0; j < array->num_items; j++) {
+                    for (j = 0; j < static_cast<vx_int32>(array->num_items); j++) {
                         fprintf(fp, "%s\t<coordinates2d>\n", indent);
                         fprintf(fp, "%s\t\t<x>%u</x>\n", indent, cord2d[j].x);
                         fprintf(fp, "%s\t\t<y>%u</y>\n", indent, cord2d[j].y);
@@ -647,7 +647,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
                 case VX_TYPE_COORDINATES3D:
                 {
                     vx_coordinates3d_t *cord3d = (vx_coordinates3d_t *)array->memory.ptrs[0];
-                    for (j = 0; j < array->num_items; j++) {
+                    for (j = 0; j < static_cast<vx_int32>(array->num_items); j++) {
                         fprintf(fp, "%s\t<coordinates3d>\n", indent);
                         fprintf(fp, "%s\t\t<x>%u</x>\n", indent, cord3d[j].x);
                         fprintf(fp, "%s\t\t<y>%u</y>\n", indent, cord3d[j].y);
@@ -659,7 +659,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
                 default:
                     if(isUserType) {
                         vx_uint8 *ptr = (vx_uint8 *)array->memory.ptrs[0];
-                        for (j = 0; j < array->num_items; j++) {
+                        for (j = 0; j < static_cast<vx_int32>(array->num_items); j++) {
                             fprintf(fp, "%s\t<user>", indent);
                             for (i = 0; i < array->item_size; i++) {
                                 fprintf(fp, "%hhu ", ptr[j*array->item_size+i]);
@@ -702,7 +702,7 @@ static vx_status vxExportToXMLLut(FILE* fp, vx_reference refs[], vx_uint32 r, vx
 
         if (refs[r]->write_count > 0)
         {
-            for (j = 0; j < lut->num_items; j++)
+            for (j = 0; j < static_cast<vx_int32>(lut->num_items); j++)
             {
                 vx_uint8 *ptr = (vx_uint8 *)lut->memory.ptrs[0];
                 fprintf(fp, "%s\t<uint8 index=\"%u\">%hhu</uint8>\n",
@@ -812,7 +812,7 @@ static vx_status vxExportToXMLDistribution(FILE* fp, vx_reference refs[], vx_uin
 {
     vx_status status = VX_SUCCESS;
     vx_distribution dist = (vx_distribution)refs[r];
-    vx_int32 b;
+    vx_uint32 b;
     vx_uint32 bins = (vx_uint32)dist->memory.dims[0][VX_DIM_X];
     vx_char indent[10] = {0};
     vx_uint32 i;

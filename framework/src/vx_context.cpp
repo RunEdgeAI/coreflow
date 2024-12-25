@@ -254,7 +254,28 @@ vx_status Context::loadTarget(const vx_char* targetName)
 
 vx_status Context::unloadTarget(const vx_char* targetName)
 {
-    return VX_ERROR_NOT_IMPLEMENTED;
+    vx_status status = VX_FAILURE;
+
+    for (vx_uint32 t = 0u; t < context->num_targets; t++)
+    {
+        if (context->targets[t] &&
+            strncmp(context->targets[t]->name, targetName, VX_MAX_TARGET_NAME) == 0)
+        {
+            memset(&context->targets[t]->funcs, 0xFE, sizeof(vx_target_funcs_t));
+            if (context->targets[t]->decrementReference(VX_INTERNAL) == 0)
+            {
+                /* The ReleaseReference() below errors out if the internal index is 0 */
+                context->targets[t]->incrementReference(VX_INTERNAL);
+            }
+            Osal::unloadModule(context->targets[t]->module.handle);
+            context->targets[t]->module.handle = VX_MODULE_INIT;
+
+            memset(context->targets[t]->module.name, 0, sizeof(context->targets[t]->module.name));
+            status = Reference::releaseReference((vx_reference*)&context->targets[t], VX_TYPE_TARGET, VX_INTERNAL, nullptr);
+        }
+    }
+
+    return status;
 }
 
 vx_status Context::unloadTarget(vx_uint32 index, vx_bool unload_module)

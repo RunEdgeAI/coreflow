@@ -44,7 +44,7 @@ Kernel::Kernel(vx_context context,
             vx_char name[VX_MAX_KERNEL_NAME],
             vx_param_description_t *parameters,
             vx_uint32 numParams,
-            vx_reference scope) : Reference(context, VX_TYPE_KERNEL, context)
+            vx_reference scope) : Reference(context, VX_TYPE_KERNEL, scope)
 {
     /* setup the kernel meta-data */
     strncpy(this->name, name, VX_MAX_KERNEL_NAME - 1);

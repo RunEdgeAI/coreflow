@@ -20,6 +20,7 @@
  * \author Erik Rainey <erik.rainey@gmail.com>
  * \defgroup group_debug_ext Debugging Extension
  */
+#include <vector>
 
 #include <VX/vx.h>
 #include <VX/vx_lib_debug.h>
@@ -89,9 +90,8 @@ VX_CALLBACK ownCompareImagesKernel(vx_node node, const vx_reference parameters[]
 
             if (VX_SUCCESS == status && vxFindOverlapRectangle(&rect_a, &rect_b, &rect) == vx_true_e)
             {
-                const vx_uint32 planeSize = a_planes;
-                vx_map_id a_map_id[planeSize];
-                vx_map_id b_map_id[planeSize];
+                std::vector<vx_map_id> a_map_id(a_planes);
+                std::vector<vx_map_id> b_map_id(a_planes);
 
                 status = VX_SUCCESS;
 

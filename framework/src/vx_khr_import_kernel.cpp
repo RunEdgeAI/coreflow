@@ -71,8 +71,9 @@ static inline void copy_dims(const vx_int32 *dims, vx_int32 num_dims, vx_size *d
 static vx_status VX_CALLBACK vxNNEFInitializer(vx_node node, const vx_reference parameters[], vx_uint32 num)
 {
     vx_char perror[MAXLEN] = "";
-
     vx_status status = VX_SUCCESS;
+    (void)parameters;
+    (void)num;
 
     // copy NNEF graph to node
     node->attributes.localDataPtr = nnef_graph_copy(node->kernel->attributes.localDataPtr);
@@ -90,8 +91,8 @@ static vx_status VX_CALLBACK vxNNEFInitializer(vx_node node, const vx_reference 
 static vx_status VX_CALLBACK vxNNEFDeinitializer(vx_node node, const vx_reference parameters[], vx_uint32 num)
 {
     vx_status status = VX_SUCCESS;
-    vx_int32 i = 0;
-
+    vx_uint32 i = 0;
+    (void)parameters;
     vx_meta_format *meta = node->kernel->signature.meta_formats;;
 
     for (i = 0; i < num; i++)
@@ -124,8 +125,8 @@ static vx_status VX_CALLBACK vxNNEFKernelDeinitializer(vx_kernel nn_kernel)
 static vx_status VX_CALLBACK vxNNEFValidator(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format meta[])
 {
     vx_status status = VX_SUCCESS;
-    vx_int32 i = 0;
-
+    vx_uint32 i = 0;
+    (void)node;
     for (i = 0; i < num; i++)
     {
         status = vxSetMetaFormatFromReference(meta[i], parameters[i]);
@@ -233,7 +234,7 @@ static vx_kernel CreateNNEFKernel(vx_context context, vx_int32 input_num, vx_int
 
     if (kernel)
     {
-        vx_uint32 p = 0;
+        vx_int32 p = 0;
         for (p = 0; p < num_params; p++)
         {
             status = vxAddParameterToKernel(kernel, p,
@@ -297,7 +298,7 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxImportKernelFromURL(vx_context context, con
 {
     vx_kernel kernel = nullptr;
     vx_int32 i = 0, j = 0;
-
+    (void)type;
     vx_char perror[MAXLEN] = "";
     vx_char kernel_name[MAXLEN] = "";
     static vx_int32 counter = 1;
