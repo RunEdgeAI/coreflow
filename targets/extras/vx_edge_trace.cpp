@@ -222,9 +222,9 @@ vx_status VX_CALLBACK own_edge_trace_validator(
     const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[])
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
-    (void)parameters;
 
     if (nullptr != node &&
+        nullptr != parameters &&
         num == dimof(edge_trace_kernel_params) &&
         nullptr != metas)
     {

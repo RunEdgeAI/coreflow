@@ -73,7 +73,7 @@ extern "C" VX_API_ENTRY vx_status VX_API_CALL vxPublishKernels(vx_context contex
                      kernels[k]->validate,
                      kernels[k]->initialize,
                      kernels[k]->deinitialize);
-        if (kernel)
+        if (VX_SUCCESS == vxGetStatus((vx_reference)kernel))
         {
             status = VX_SUCCESS; // temporary
             for (p = 0; p < kernels[k]->numParams; p++)

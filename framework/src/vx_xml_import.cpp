@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <cinttypes>
 
 #include "vx_internal.h"
 #include "vx_type_pairs.h"
@@ -722,7 +723,7 @@ static vx_status vxLoadDataForArray(vx_array array, xmlNodePtr cur)
                     status |= vxAddArrayItems(array, 1, &v, array->item_size);
                 } else if (tag == UINT64_TAG) {
                     vx_uint64 v;
-                    sscanf(tmp, "%llu", &v);
+                    sscanf(tmp, "%" PRIu64, &v);
                     status |= vxAddArrayItems(array, 1, &v, array->item_size);
                 } else if (tag == INT8_TAG) {
                     vx_int8 v;
@@ -738,7 +739,7 @@ static vx_status vxLoadDataForArray(vx_array array, xmlNodePtr cur)
                     status |= vxAddArrayItems(array, 1, &v, array->item_size);
                 } else if (tag == INT64_TAG) {
                     vx_int64 v;
-                    sscanf(tmp, "%lld", &v);
+                    sscanf(tmp, "%" PRId64, &v);
                     status |= vxAddArrayItems(array, 1, &v, array->item_size);
                 } else if (tag == FLOAT32_TAG) {
                     vx_float32 v;
@@ -1019,7 +1020,7 @@ static vx_status vxLoadDataForScalar(vx_scalar scalar, xmlNodePtr cur)
         } else if (tag == UINT64_TAG) {
             vx_uint64 v = 0u;
             xml_string(cur, value, sizeof(value));
-            sscanf(value, "%llu", &v);
+            sscanf(value, "%" PRIu64, &v);
             vxCopyScalar(scalar, &v, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
         } else if (tag == INT8_TAG) {
             vx_int8 v = 0u;
@@ -1039,7 +1040,7 @@ static vx_status vxLoadDataForScalar(vx_scalar scalar, xmlNodePtr cur)
         } else if (tag == INT64_TAG) {
             vx_int64 v = 0u;
             xml_string(cur, value, sizeof(value));
-            sscanf(value, "%lld", &v);
+            sscanf(value, "%" PRId64, &v);
             vxCopyScalar(scalar, &v, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
         } else if (tag == SIZE_TAG) {
             vx_size v = xml_ulong(cur);
@@ -1124,7 +1125,7 @@ static vx_status vxImportFromXMLArray(vx_reference ref, xmlNodePtr cur, vx_refer
     xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
 
     if(TypePairs::typeFromString(typeName, &type) != VX_SUCCESS) { /* Type was not found, check if it is a user type */
-        if(sscanf(typeName, "USER_STRUCT_%d", &userNum) == 1) {
+        if(sscanf(typeName, "USER_STRUCT_%u", &userNum) == 1) {
             if(vxStructGetEnum(user_struct_table, userNum, &type) != VX_SUCCESS) {
                 return VX_ERROR_INVALID_PARAMETERS; /* INVALID type */
             }
@@ -1568,7 +1569,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                             xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
 
                             if(TypePairs::typeFromString(typeName, &type) != VX_SUCCESS) { /* Type was not found, check if it is a user type */
-                                if(sscanf(typeName, "USER_STRUCT_%d", &userNum) == 1) {
+                                if(sscanf(typeName, "USER_STRUCT_%u", &userNum) == 1) {
                                     if(vxStructGetEnum(user_struct_table, userNum, &type) != VX_SUCCESS) {
                                         status = VX_ERROR_INVALID_TYPE; /* INVALID type */
                                         goto exit_error;

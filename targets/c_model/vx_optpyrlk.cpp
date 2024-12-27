@@ -809,9 +809,6 @@ static vx_status VX_CALLBACK vxOpticalFlowPyrLKOutputValidator(vx_node node, vx_
     return status;
 }
 
-#ifdef __cplusplus
-extern "C"
-#endif
 vx_kernel_description_t optpyrlk_kernel =
 {
     VX_KERNEL_OPTICAL_FLOW_PYR_LK,

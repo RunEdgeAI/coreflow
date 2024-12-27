@@ -779,8 +779,8 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContext(void)
             if (context->num_targets == 0)
             {
                 VX_PRINT(VX_ZONE_ERROR, "No targets loaded!\n");
-                // free(context);
                 Osal::semPost(&context_lock);
+                single_context.reset();
                 return nullptr;
             }
 
@@ -795,8 +795,11 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContext(void)
                     {
                         VX_PRINT(VX_ZONE_WARNING, "Target %s failed to initialize!\n", context->targets[t]->name);
                         /* unload this module */
-                        context->unloadTarget(t, vx_true_e);
-                        break;
+                        /* @TODO: unload target now or on context release? */
+                        /*
+                         * context->unloadTarget(t, vx_true_e);
+                         * break;
+                         */
                     }
                     else
                     {
@@ -943,7 +946,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
             /* de-initialize and unload each target */
             for (t = 0u; t < context->num_targets; t++)
             {
-                if (context->targets[t]->enabled == vx_true_e)
+                /* if (context->targets[t]->enabled == vx_true_e) */
                 {
                     context->targets[t]->funcs.deinit(context->targets[t]);
                     context->targets[t]->enabled = vx_false_e;
@@ -1139,7 +1142,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryContext(vx_context context, vx_enum at
             case VX_CONTEXT_EXTENSIONS:
                 if (size <= sizeof(extensions) && ptr)
                 {
-                    strncpy(reinterpret_cast<char*>(ptr), extensions, sizeof(extensions));
+                    strncpy(reinterpret_cast<char*>(ptr), extensions, size);
                 }
                 else
                 {

@@ -326,7 +326,7 @@ void FullyConnectedKernelImpl(
     assert (fmt == TENSOR_C_FMT_Q78 || fmt == TENSOR_C_FMT_U8 || fmt == TENSOR_C_FMT_S8);
 
     const size_t batch_dim_num = output.dim_num - 1;
-    assert (batch_dim_num >= 0 && batch_dim_num <= 3);
+    assert (/* batch_dim_num >= 0 && */ batch_dim_num <= 3);
 
     const size_t core_dim_num = input.dim_num - batch_dim_num;
     assert ((core_dim_num == 1 && weight.dim_num == 2) ||

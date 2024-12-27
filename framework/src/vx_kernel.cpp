@@ -193,7 +193,7 @@ vx_kernel Kernel::addkernel(vx_context context,
     vx_target target = nullptr;
     vx_char targetName[VX_MAX_TARGET_NAME];
 
-    VX_PRINT(VX_ZONE_INFO, "Entered %s\n", __func__);
+    VX_PRINT(VX_ZONE_INFO, "Entered %s for %s\n", __func__, name);
 
     if (Context::isValidContext(context) == vx_false_e)
     {
@@ -201,6 +201,24 @@ vx_kernel Kernel::addkernel(vx_context context,
         return (vx_kernel)nullptr;
     }
 
+    if (func_ptr == nullptr) {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid Parameter: func_ptr is nullptr!\n");
+    }
+    if (validate == nullptr && (input == nullptr || output == nullptr)) {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid Parameter: validate is nullptr and either input or output is nullptr!\n");
+    }
+    if (numParams > VX_INT_MAX_PARAMS) {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid Parameter: numParams exceeds VX_INT_MAX_PARAMS!\n");
+    }
+    if (numParams == 0) {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid Parameter: numParams is 0!\n");
+    }
+    if (name == nullptr) {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid Parameter: name is nullptr!\n");
+    }
+    if (strncmp(name, "", VX_MAX_KERNEL_NAME) == 0) {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid Parameter: name is an empty string!\n");
+    }
     if (func_ptr == nullptr ||
         ((validate == nullptr) &&
          (input == nullptr ||
@@ -556,7 +574,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseKernel(vx_kernel *kernel)
     if (nullptr != kernel)
     {
         vx_kernel ref = *kernel;
-        if (vx_true_e == Reference::isValidReference(ref, VX_TYPE_KERNEL) == vx_true_e)
+        if (vx_true_e == Reference::isValidReference(ref, VX_TYPE_KERNEL))
         {
             VX_PRINT(VX_ZONE_KERNEL, "Releasing kernel " VX_FMT_REF "\n", (void *)ref);
 

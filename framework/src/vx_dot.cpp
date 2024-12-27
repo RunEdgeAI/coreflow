@@ -155,6 +155,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
                             {
                                 fprintf(fp, "\tD%u [shape=box label=\"Distribution\"];\n", d);
                             }
+                            break;
                         }
                         case VX_TYPE_LUT:
                         {

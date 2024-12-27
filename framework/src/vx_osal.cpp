@@ -322,7 +322,10 @@ vx_thread_t Osal::createThread(vx_thread_f func, void *arg)
 {
     vx_thread_t thread = 0;
 #if defined(__linux__) || defined(__ANDROID__) || defined(__QNX__) || defined(__CYGWIN__) || defined(__APPLE__)
-    pthread_create(&thread, nullptr, (pthread_f)func, arg);
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wcast-function-type"
+    pthread_create(&thread, nullptr, reinterpret_cast<pthread_f>(func), arg);
+    #pragma GCC diagnostic pop
 #elif defined(_WIN32) || defined(UNDER_CE)
     thread = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)func, arg, CREATE_SUSPENDED, nullptr);
     if (thread)

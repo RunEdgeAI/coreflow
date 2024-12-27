@@ -2038,8 +2038,8 @@ static vx_status VX_CALLBACK nnDeconvolutionValidator(
             return VX_ERROR_INVALID_DIMENSION;
         }
 
-        UNLESS (a_x >= 0 && a_x < upscale_x &&
-                a_y >= 0 && a_y < upscale_y)
+        UNLESS (/* a_x >= 0 && */ a_x < upscale_x &&
+                /* a_y >= 0 && */ a_y < upscale_y)
         {
             VX_PRINT(VX_ZONE_ERROR, "Deconvolution layer requires 0 <= a < upscale");
             return VX_ERROR_INVALID_DIMENSION;

@@ -160,7 +160,7 @@ vx_node vxCreateNodeByStructure(vx_graph graph,
     vx_node node = 0;
     vx_context context = vxGetContext((vx_reference)graph);
     vx_kernel kernel = vxGetKernelByEnum(context, kernelenum);
-    if (kernel)
+    if (VX_SUCCESS == vxGetStatus((vx_reference)kernel))
     {
         node = vxCreateGenericNode(graph, kernel);
         if (vxGetStatus((vx_reference)node) == VX_SUCCESS)

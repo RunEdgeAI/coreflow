@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <cinttypes>
 
 #include "vx_internal.h"
 #include "vx_type_pairs.h"
@@ -499,7 +500,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
                     vx_int64 *ptr = (vx_int64 *)array->memory.ptrs[0];
                     fprintf(fp, "%s\t<int64>", indent);
                     for (j = 0; j < static_cast<vx_int32>(array->num_items); j++) {
-                        fprintf(fp, "%lld ",  ptr[j]);
+                        fprintf(fp, "%" PRId64 " ",  ptr[j]);
                     }
                     fprintf(fp, "</int64>\n");
                     break;
@@ -539,7 +540,7 @@ static vx_status vxExportToXMLArray(FILE* fp, vx_reference refs[], vx_uint32 r, 
                     vx_uint64 *ptr = (vx_uint64 *)array->memory.ptrs[0];
                     fprintf(fp, "%s\t<uint64>", indent);
                     for (j = 0; j < static_cast<vx_int32>(array->num_items); j++) {
-                        fprintf(fp, "%llu ",  ptr[j]);
+                        fprintf(fp, "%" PRIu64 " ",  ptr[j]);
                     }
                     fprintf(fp, "</uint64>\n");
                     break;
@@ -1004,7 +1005,7 @@ static vx_status vxExportToXMLScalar(FILE* fp, vx_reference refs[], vx_uint32 r,
                 fprintf(fp, "%s\t<int32>%d</int32>\n", indent, scalar->data.s32);
                 break;
             case VX_TYPE_INT64:
-                fprintf(fp, "%s\t<int64>%lld</int64>\n", indent, scalar->data.s64);
+                fprintf(fp, "%s\t<int64>%" PRId64 "</int64>\n", indent, scalar->data.s64);
                 break;
             case VX_TYPE_UINT8:
                 fprintf(fp, "%s\t<uint8>%hhu</uint8>\n", indent, scalar->data.u08);
@@ -1016,7 +1017,7 @@ static vx_status vxExportToXMLScalar(FILE* fp, vx_reference refs[], vx_uint32 r,
                 fprintf(fp, "%s\t<uint32>%u</uint32>\n", indent, scalar->data.u32);
                 break;
             case VX_TYPE_UINT64:
-                fprintf(fp, "%s\t<uint64>%llu</uint64>\n", indent, scalar->data.u64);
+                fprintf(fp, "%s\t<uint64>%" PRIu64 "</uint64>\n", indent, scalar->data.u64);
                 break;
             case VX_TYPE_FLOAT32:
                 fprintf(fp, "%s\t<float32>%f</float32>\n", indent, scalar->data.f32);
