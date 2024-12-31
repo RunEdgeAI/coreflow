@@ -136,7 +136,7 @@ int16_t conversion_24_8(int32_t acc_value)
     }
     else
     {
-        out = 0x8000;
+        out = static_cast<int16_t>(0x8000);
     }
     return(out);
 }

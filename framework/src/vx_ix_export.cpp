@@ -268,6 +268,7 @@ static void calculateUses(VXBinExport *xport)
                 break;          /* Already assigned, do nothing */
             case VX_OUTPUT:     /* Part processed by putInTable, is a net output */
                 xport->ref_table[i].use = VX_IX_USE_NO_EXPORT_VALUES;
+                break;
             default:            /* All other cases, assume we need to export values unless virtual */
                 xport->ref_table[i].use = xport->ref_table[i].ref->is_virtual ?
                                             VX_IX_USE_NO_EXPORT_VALUES :

@@ -36,7 +36,7 @@ static vx_kernel_description_t* kernels[] =
     &harris_score_kernel,
     &laplacian3x3_kernel,
     &image_lister_kernel,
-    &nonmaxsuppression_kernel,
+    &extras_nonmaxsuppression_kernel,
     &norm_kernel,
     &scharr3x3_kernel,
     &sobelMxN_kernel,
@@ -73,7 +73,7 @@ extern "C" VX_API_ENTRY vx_status VX_API_CALL vxPublishKernels(vx_context contex
                      kernels[k]->validate,
                      kernels[k]->initialize,
                      kernels[k]->deinitialize);
-        if (kernel)
+        if (VX_SUCCESS == vxGetStatus((vx_reference)kernel))
         {
             status = VX_SUCCESS; // temporary
             for (p = 0; p < kernels[k]->numParams; p++)

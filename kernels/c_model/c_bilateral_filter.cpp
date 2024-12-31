@@ -143,7 +143,7 @@ static vx_status bilateralFilter_8u(void* src, vx_size* src_strides, vx_size* di
     vx_float32 *color_weight = nullptr;
     vx_float32 *space_weight = nullptr;
     vx_uint8 cn = num_of_dims == 2 ? 1 : 3;
-
+    (void)dst_strides;
     vx_float64 gauss_color_coeff = -0.5/(sigma_color*sigma_color);
     vx_float64 gauss_space_coeff = -0.5/(sigma_space*sigma_space);
 
@@ -158,9 +158,9 @@ static vx_status bilateralFilter_8u(void* src, vx_size* src_strides, vx_size* di
     if (bordermode->mode == VX_BORDER_UNDEFINED)
     {
         low_x = radius;
-        high_x = (dims[num_of_dims - 2] >= radius) ? dims[num_of_dims - 2] - radius : 0;
+        high_x = (dims[num_of_dims - 2] >= static_cast<vx_size>(radius)) ? dims[num_of_dims - 2] - radius : 0;
         low_y = radius;
-        high_y = (dims[num_of_dims - 1] >= radius) ? dims[num_of_dims - 1] - radius : 0;
+        high_y = (dims[num_of_dims - 1] >= static_cast<vx_size>(radius)) ? dims[num_of_dims - 1] - radius : 0;
     }
     else
     {
@@ -190,11 +190,11 @@ static vx_status bilateralFilter_8u(void* src, vx_size* src_strides, vx_size* di
                         }
                         vx_int32 neighbor_x = x + radius_x;
                         vx_int32 neighbor_y = y + radius_y;
-                        vx_int32 tmpx = neighbor_x < 0 ? 0 : (neighbor_x > (dims[0] - 1) ? (dims[0] - 1) : neighbor_x);
-                        vx_int32 tmpy = neighbor_y < 0 ? 0 : (neighbor_y > (dims[1] - 1) ? (dims[1] - 1) : neighbor_y);
+                        vx_int32 tmpx = neighbor_x < 0 ? 0 : (neighbor_x > static_cast<vx_int32>(dims[0] - 1) ? static_cast<vx_int32>(dims[0] - 1) : neighbor_x);
+                        vx_int32 tmpy = neighbor_y < 0 ? 0 : (neighbor_y > static_cast<vx_int32>(dims[1] - 1) ? static_cast<vx_int32>(dims[1] - 1) : neighbor_y);
                         vx_uint8 neighborVal = 0;
                         neighborVal = *((vx_uint8 *)src + tmpy * src_strides[1] + tmpx * src_strides[0]);
-                        if (neighbor_x < 0 || neighbor_y < 0 || neighbor_x >= dims[0] || neighbor_y >= dims[1])
+                        if (neighbor_x < 0 || neighbor_y < 0 || neighbor_x >= static_cast<vx_int32>(dims[0]) || neighbor_y >= static_cast<vx_int32>(dims[1]))
                         {
                             if (border_mode == VX_BORDER_MODE_CONSTANT)
                             {
@@ -231,8 +231,8 @@ static vx_status bilateralFilter_8u(void* src, vx_size* src_strides, vx_size* di
                         }
                         vx_int32 neighbor_x = x + radius_x;
                         vx_int32 neighbor_y = y + radius_y;
-                        vx_int32 tmpx = neighbor_x < 0 ? 0 : (neighbor_x > (dims[1] - 1) ? (dims[1] - 1) : neighbor_x);
-                        vx_int32 tmpy = neighbor_y < 0 ? 0 : (neighbor_y > (dims[2] - 1) ? (dims[2] - 1) : neighbor_y);
+                        vx_int32 tmpx = neighbor_x < 0 ? 0 : (neighbor_x > static_cast<vx_int32>(dims[1] - 1) ? (dims[1] - 1) : neighbor_x);
+                        vx_int32 tmpy = neighbor_y < 0 ? 0 : (neighbor_y > static_cast<vx_int32>(dims[2] - 1) ? (dims[2] - 1) : neighbor_y);
                         vx_uint8 b = 0, g = 0, r = 0;
                         b = *((vx_uint8 *)src + tmpy * src_strides[2] + tmpx * src_strides[1] + 0 * src_strides[0]);
                         g = *((vx_uint8 *)src + tmpy * src_strides[2] + tmpx * src_strides[1] + 1 * src_strides[0]);
@@ -271,7 +271,7 @@ static vx_status bilateralFilter_s16(void* src, vx_size* src_strides, vx_size* d
                                      void* dst, vx_size* dst_strides, vx_border_t *bordermode)
 {
     vx_status status = VX_FAILURE;
-    vx_int32 y = 0, x = 0;
+    vx_size y = 0, x = 0;
     vx_int32 low_x, low_y, high_x, high_y;
     vx_int32 radius_y, radius_x;
     vx_int32 radius = diameter/2;
@@ -326,7 +326,7 @@ static vx_status bilateralFilter_s16(void* src, vx_size* src_strides, vx_size* d
         return VX_ERROR_NO_MEMORY;
     }
     scale_index = kExpNumBins / len;
-    for (vx_uint32 i = 0; i < (kExpNumBins + 2); i++)
+    for (vx_int32 i = 0; i < (kExpNumBins + 2); i++)
     {
         if (lastExpVal > 0.f)
         {
@@ -351,23 +351,23 @@ static vx_status bilateralFilter_s16(void* src, vx_size* src_strides, vx_size* d
     if (bordermode->mode == VX_BORDER_UNDEFINED)
     {
         low_x = radius;
-        high_x = (dims[num_of_dims - 2] >= radius) ? dims[num_of_dims - 2] - radius : 0;
+        high_x = (static_cast<vx_int32>(dims[num_of_dims - 2]) >= radius) ? static_cast<vx_int32>(dims[num_of_dims - 2]) - radius : 0;
         low_y = radius;
-        high_y = (dims[num_of_dims - 1] >= radius) ? dims[num_of_dims - 1] - radius : 0;
+        high_y = (static_cast<vx_int32>(dims[num_of_dims - 1]) >= radius) ? static_cast<vx_int32>(dims[num_of_dims - 1]) - radius : 0;
     }
     else
     {
         low_x = 0;
-        high_x = dims[num_of_dims - 2];
+        high_x = static_cast<vx_int32>(dims[num_of_dims - 2]);
         low_y = 0;
-        high_y = dims[num_of_dims - 1];
+        high_y = static_cast<vx_int32>(dims[num_of_dims - 1]);
     }
 
-    for (y = low_y; y < high_y; y++)
+    for (y = low_y; y < static_cast<vx_size>(high_y); y++)
     {
         if (num_of_dims == 2)
         {
-            for (x = low_x; x < high_x; x++)
+            for (x = low_x; x < static_cast<vx_size>(high_x); x++)
             {
                 vx_int16 val0 = *(vx_int16 *)((vx_int8 *)src + y * src_strides[1] + x * src_strides[0]);
                 vx_float32 sum = 0, wsum = 0;
@@ -383,8 +383,8 @@ static vx_status bilateralFilter_s16(void* src, vx_size* src_strides, vx_size* d
                         }
                         vx_int32 neighbor_x = x + radius_x;
                         vx_int32 neighbor_y = y + radius_y;
-                        vx_int32 tmpx = neighbor_x < 0 ? 0 : (neighbor_x > (dims[0] - 1) ? (dims[0] - 1) : neighbor_x);
-                        vx_int32 tmpy = neighbor_y < 0 ? 0 : (neighbor_y > (dims[1] - 1) ? (dims[1] - 1) : neighbor_y);
+                        vx_int32 tmpx = neighbor_x < 0 ? 0 : (neighbor_x > static_cast<vx_int32>(dims[0] - 1) ? static_cast<vx_int32>(dims[0] - 1) : neighbor_x);
+                        vx_int32 tmpy = neighbor_y < 0 ? 0 : (neighbor_y > static_cast<vx_int32>(dims[1] - 1) ? static_cast<vx_int32>(dims[1] - 1) : neighbor_y);
                         vx_int16 val = *(vx_int16 *)((vx_int8 *)src + tmpy * src_strides[1] + tmpx * src_strides[0]);
                         if (neighbor_x < 0 || neighbor_y < 0)
                         {
@@ -409,7 +409,7 @@ static vx_status bilateralFilter_s16(void* src, vx_size* src_strides, vx_size* d
         }
         else if (num_of_dims == 3)
         {
-            for (x = low_x; x < high_x; x++)
+            for (x = low_x; x < static_cast<vx_size>(high_x); x++)
             {
                 vx_float32 sum_b = 0, sum_g = 0, sum_r = 0, wsum = 0;
                 vx_int16 b0 = *(vx_int16 *)((vx_uint8 *)src + y * src_strides[2] + x * src_strides[1] + 0 * src_strides[0]);
@@ -427,8 +427,8 @@ static vx_status bilateralFilter_s16(void* src, vx_size* src_strides, vx_size* d
                         }
                         vx_int32 neighbor_x = x + radius_x;
                         vx_int32 neighbor_y = y + radius_y;
-                        vx_int32 tmpx = neighbor_x < 0 ? 0 : (neighbor_x > (dims[1] - 1) ? (dims[1] - 1) : neighbor_x);
-                        vx_int32 tmpy = neighbor_y < 0 ? 0 : (neighbor_y > (dims[2] - 1) ? (dims[2] - 1) : neighbor_y);
+                        vx_int32 tmpx = neighbor_x < 0 ? 0 : (neighbor_x > static_cast<vx_int32>(dims[1] - 1) ? static_cast<vx_int32>(dims[1] - 1) : neighbor_x);
+                        vx_int32 tmpy = neighbor_y < 0 ? 0 : (neighbor_y > static_cast<vx_int32>(dims[2] - 1) ? static_cast<vx_int32>(dims[2] - 1) : neighbor_y);
                         vx_int16 b = *(vx_int16 *)((vx_uint8 *)src + tmpy * src_strides[2] + tmpx * src_strides[1] + 0 * src_strides[0]);
                         vx_int16 g = *(vx_int16 *)((vx_uint8 *)src + tmpy * src_strides[2] + tmpx * src_strides[1] + 1 * src_strides[0]);
                         vx_int16 r = *(vx_int16 *)((vx_uint8 *)src + tmpy * src_strides[2] + tmpx * src_strides[1] + 2 * src_strides[0]);

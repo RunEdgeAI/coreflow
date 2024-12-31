@@ -44,7 +44,7 @@ Kernel::Kernel(vx_context context,
             vx_char name[VX_MAX_KERNEL_NAME],
             vx_param_description_t *parameters,
             vx_uint32 numParams,
-            vx_reference scope) : Reference(context, VX_TYPE_KERNEL, context)
+            vx_reference scope) : Reference(context, VX_TYPE_KERNEL, scope)
 {
     /* setup the kernel meta-data */
     strncpy(this->name, name, VX_MAX_KERNEL_NAME - 1);
@@ -556,7 +556,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseKernel(vx_kernel *kernel)
     if (nullptr != kernel)
     {
         vx_kernel ref = *kernel;
-        if (vx_true_e == Reference::isValidReference(ref, VX_TYPE_KERNEL) == vx_true_e)
+        if (vx_true_e == Reference::isValidReference(ref, VX_TYPE_KERNEL))
         {
             VX_PRINT(VX_ZONE_KERNEL, "Releasing kernel " VX_FMT_REF "\n", (void *)ref);
 

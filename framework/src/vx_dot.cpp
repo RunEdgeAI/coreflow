@@ -88,7 +88,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
                         {
                             vx_pyramid pyr = (vx_pyramid)data[d];
                             fprintf(fp, "\tD%u [shape=triangle label=\"Pyramid\\n%lfx" VX_FMT_REF "\\nLevels: %zu\"];\n",
-                                    d, pyr->scale, pyr->levels, pyr->numLevels);
+                                    d, pyr->scale, (void*)pyr->levels, pyr->numLevels);
                             break;
                         }
                         case VX_TYPE_SCALAR:
@@ -155,6 +155,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
                             {
                                 fprintf(fp, "\tD%u [shape=box label=\"Distribution\"];\n", d);
                             }
+                            break;
                         }
                         case VX_TYPE_LUT:
                         {

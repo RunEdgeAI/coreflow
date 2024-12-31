@@ -27,46 +27,47 @@
 
 namespace nnef
 {
-    
+
     struct ParseCallback : public Parser::Callback
     {
         Graph& graph;
-        
+
         std::istream& qis;
         const std::string& qfn;
         Dictionary<Dictionary<Value>> quantizations;
-        
+
         ParseCallback( Graph& graph, std::istream& qis, const std::string& qfn )
         : graph(graph), qis(qis), qfn(qfn)
         {
         }
-        
+
         virtual void beginGraph( const Prototype& proto, const Dictionary<Prototype>& fragments )
         {
             graph.name = proto.name();
             graph.operations.clear();
             graph.tensors.clear();
-            
+
             graph.inputs.resize(proto.paramCount());
             for ( size_t i = 0; i < proto.paramCount(); ++i )
             {
                 graph.inputs[i] = proto.param(i).name();
             }
-            
+
             graph.outputs.resize(proto.resultCount());
             for ( size_t i = 0; i < proto.resultCount(); ++i )
             {
                 graph.outputs[i] = proto.result(i).name();
             }
-            
+
             if ( qis )
             {
                 quantizations = nnef::QuantParser::parse(qis, qfn.c_str(), fragments);
             }
         }
-        
+
         virtual void endGraph( const Prototype& proto, const Dictionary<Typename>& dtypes )
         {
+            (void)proto;
             for ( auto& it : dtypes )
             {
                 Tensor tensor;
@@ -79,17 +80,18 @@ namespace nnef
                         tensor.quantization.push_back(item);
                     }
                 }
-                
+
                 graph.tensors.emplace(it.first, std::move(tensor));
             }
         }
-        
+
         virtual void operation( const Prototype& proto, const Dictionary<Value>& args, const Dictionary<Typename>& dtypes )
         {
+            (void)dtypes;
             Operation operation;
             operation.name = proto.name();
             operation.dtype = args.count("?") ? args.at("?").string() : std::string();
-            
+
             for ( size_t i = 0; i < proto.paramCount(); ++i )
             {
                 auto& param = proto.param(i);
@@ -109,31 +111,31 @@ namespace nnef
                 auto& value = args.at(result.name());
                 operation.outputs.emplace_back(result.name(), value);
             }
-            
+
             graph.operations.push_back(std::move(operation));
         }
     };
-    
+
     std::string format_error_position( const Error::Position& pos )
     {
         return "'" + std::string(pos.filename) + "' [" + std::to_string(pos.line) + ":" + std::to_string(pos.column) + "]";
     }
-    
+
     bool parse( std::istream& graph_is, const std::string& graph_fn, std::istream& quant_is, const std::string& quant_fn,
                Graph& graph, std::string& error, const std::string& stdlib, const std::set<std::string>& lowered ) noexcept
     {
         ParseCallback callback(graph, quant_is, quant_fn);
         CompParser parser(stdlib, lowered);
-        
+
         try
         {
             parser.parse(graph_is, graph_fn.c_str(), callback);
             return true;
         }
-        catch ( nnef::Error e )
+        catch ( nnef::Error& e )
         {
             error = "Parse error in file " + format_error_position(e.position()) + " " + e.what();
-            
+
             auto origin = e.position().origin;
             while ( origin )
             {
@@ -143,7 +145,7 @@ namespace nnef
             return false;
         }
     }
-    
+
     bool parse_file( const std::string& graph_fn, const std::string& quant_fn, Graph& graph, std::string& error,
                      const std::string& stdlib, const std::set<std::string>& lowered ) noexcept
     {
@@ -153,7 +155,7 @@ namespace nnef
             error = "Could not open graph file: " + std::string(graph_fn);
             return false;
         }
-        
+
         std::ifstream quant_is(quant_fn);
         if ( !quant_fn.empty() )
         {
@@ -164,10 +166,10 @@ namespace nnef
                 return false;
             }
         }
-        
+
         return parse(graph_is, graph_fn, quant_is, quant_fn, graph, error, stdlib, lowered);
     }
-    
+
     bool parse_string( const std::string& graph_str, const std::string& quant_str, Graph& graph, std::string& error,
                       const std::string& stdlib, const std::set<std::string>& lowered ) noexcept
     {
@@ -184,7 +186,7 @@ namespace nnef
     {
         return dtype == "scalar" ? sizeof(float) : dtype == "integer" ? sizeof(int) : dtype == "logical" ? sizeof(bool) : 0;
     }
-    
+
     size_t item_bits( const std::string& dtype )
     {
         return dtype == "scalar" ? 32 : dtype == "integer" ? 32 : dtype == "logical" ? 1 : 0;
@@ -198,21 +200,21 @@ namespace nnef
         {
             header.item_type = TensorHeader::Int;
         }
-        
+
         try
         {
             validate_tensor_header(header);
             tensor.shape.assign(header.extents, header.extents + header.rank);
         }
-        catch ( nnef::Error e )
+        catch ( nnef::Error& e )
         {
             error = "Invalid tensor header: " + std::string(e.what());
             return false;
         }
-        
+
         std::vector<char> bytes(header.data_length);
         is.read(bytes.data(), bytes.size());
-        
+
         if ( !is )
         {
             error = "Failed to read tensor data";
@@ -220,7 +222,7 @@ namespace nnef
         }
 
         const size_t count = volume_of(tensor.shape);
-        
+
         if ( header.item_type == TensorHeader::Float )
         {
             tensor.dtype = "scalar";
@@ -251,7 +253,7 @@ namespace nnef
             error = "Unsupported tensor item-type '" + std::to_string(header.item_type) + "' and bits per item '" + std::to_string(header.bits_per_item) + "'";
             return false;
         }
-        
+
         return (bool)is;
     }
 
@@ -262,20 +264,20 @@ namespace nnef
             error = "Tensor rank " + std::to_string(tensor.shape.size()) + " exceeds maximum allowed rank (" + std::to_string(TensorHeader::MaxRank) + ")";
             return false;
         }
-        
+
         const bool quantized = !tensor.quantization.empty();
         const bool is_signed = (bool)tensor.quantization.get("signed", Value::logical(true));
         const TensorHeader::ItemType item_type = quantized ? (is_signed ? TensorHeader::Qint : TensorHeader::Quint) :
                                                  tensor.dtype == "scalar" ? TensorHeader::Float :
                                                  tensor.dtype == "integer" ? TensorHeader::Int : TensorHeader::Bool;
-        
+
         TensorHeader header;
         const size_t version[] = { 1, 0 };
         fill_tensor_header(header, version, tensor.shape.size(), tensor.shape.data(), item_bits(tensor.dtype), item_type);
-        
+
         const size_t count = volume_of(tensor.shape);
         std::vector<char> bytes(header.data_length);
-        
+
         if ( tensor.dtype == "scalar" )
         {
             if ( quantized )
@@ -300,10 +302,10 @@ namespace nnef
             error = "Invalid tensor data-type: '" + tensor.dtype + "'";
             return false;
         }
-        
+
         os.write((char*)&header, sizeof(header));
         os.write(bytes.data(), bytes.size());
-        
+
         if ( !os )
         {
             error = "Failed to write tensor data";
@@ -333,11 +335,11 @@ namespace nnef
         }
         return write_tensor(os, tensor, error);
     }
-    
+
     bool load_variables( const std::string& path, Graph& graph, std::string& error ) noexcept
     {
         const std::string sep = path.back() == '/' || path.back() == '\\' ? "" : "/";
-        
+
         for ( auto& op : graph.operations )
         {
             if ( op.name == "variable" )
@@ -346,26 +348,26 @@ namespace nnef
                 auto& shape = op.attribs.get("shape");
                 auto& id = op.outputs.begin()->second.identifier();
                 auto& tensor = graph.tensors.at(id);
-                
+
                 const std::string filename = path + sep + label + ".dat";
                 if ( !read_tensor(filename, tensor, error) )
                 {
                     return false;
                 }
-                
+
                 if ( tensor.dtype != op.dtype )
                 {
                     error = "item-type " + tensor.dtype + " in variable file '" + filename + "' does not match data-type " + op.dtype + " defined in network structure";
                     return false;
                 }
-                
+
                 Value::items_t items(tensor.shape.size());
                 for ( size_t i = 0; i < items.size(); ++i )
                 {
                     items[i] = Value::integer(tensor.shape[i]);
                 }
                 Value tensorShape = Value::array(items);
-                
+
                 if ( tensorShape != shape )
                 {
                     error = "shape " + tensorShape.toString() + " in variable file '" + filename + "' does not match shape "
@@ -376,25 +378,25 @@ namespace nnef
         }
         return true;
     }
-    
+
     bool file_exists( const std::string& path )
     {
         std::ifstream is(path);
         return is.is_open();
     }
-    
+
     bool load_graph( const std::string& path, Graph& graph, std::string& error,
                     const std::string& stdlib, const std::set<std::string>& lowered ) noexcept
     {
         const std::string sep = path.back() == '/' || path.back() == '\\' ? "" : "/";
         const std::string graph_fn = path + sep + "graph.nnef";
         const std::string quant_fn = path + sep + "graph.quant";
-        
+
         if ( !file_exists(graph_fn) )
         {
             return parse_file(path, "", graph, error, stdlib, lowered);
         }
-        
+
         if ( !parse_file(graph_fn, file_exists(quant_fn) ? quant_fn : "", graph, error, stdlib, lowered) )
         {
             return false;
@@ -405,48 +407,48 @@ namespace nnef
         }
         return true;
     }
-    
-    
+
+
     namespace impl
     {
-        
+
         template<size_t...> struct index_sequence {};
-        
+
         template<std::size_t N, std::size_t... Next>
         struct index_sequence_maker : public index_sequence_maker<N-1U, N-1U, Next...> {};
-        
+
         template<std::size_t... Next>
         struct index_sequence_maker<0U, Next ... > { using type = index_sequence<Next ... >; };
-        
+
         template<std::size_t N>
         using make_index_sequence = typename index_sequence_maker<N>::type;
-        
-        
+
+
         template<typename T, typename... Args>
         struct front_count_of
         {
             enum { value = 0 };
         };
-        
+
         template<typename T, typename... Args>
         struct front_count_of<T,T,Args...>
         {
             enum { value = front_count_of<T,Args...>::value + 1 };
         };
-        
-        
+
+
         const Shape& shape_of( const Graph& graph, const Value& value )
         {
             static const Shape singleton;
             return value.kind() == Value::Identifier ? graph.tensors.at(value.identifier()).shape : singleton;
         }
-        
+
         Shape& shape_ref( Graph& graph, const Value& value )
         {
             return graph.tensors[value.identifier()].shape;
         }
-        
-        
+
+
         template<typename... Args, size_t... Idxs1, size_t... Idxs2>
         ShapeFunc make_shape_func( Shape(*func)(const Args&...), index_sequence<Idxs1...>, index_sequence<Idxs2...> )
         {
@@ -459,24 +461,24 @@ namespace nnef
                 }
             };
         }
-        
+
         template<typename... Args, size_t... Idxs>
         ShapeFunc make_shape_func( std::vector<Shape>(*func)(const Shape&,const Args&...), index_sequence<Idxs...> )
         {
             return [=]( const Operation& op, Graph& graph )
             {
                 const std::vector<Shape> shapes = func(shape_of(graph, op.inputs.front().second), op.attribs[Idxs].second...);
-                
+
                 const auto& outputs = op.outputs.front().second;
                 check(shapes.size() == outputs.size(), "number of shapes (%d) does not match number of outputs (%d)", (int)shapes.size(), (int)outputs.size());
-                
+
                 for ( size_t i = 0; i < outputs.size(); ++i )
                 {
                     shape_ref(graph, outputs[i]) = shapes[i];
                 }
             };
         }
-        
+
         template<typename... Args, size_t... Idxs>
         ShapeFunc make_shape_func( Shape(*func)(const std::vector<Shape>&,const Args&...), index_sequence<Idxs...> )
         {
@@ -488,7 +490,7 @@ namespace nnef
                 {
                     shapes[i] = shape_of(graph, inputs[i]);
                 }
-                
+
                 const Shape shape = func(shapes, op.attribs[Idxs].second...);
                 for ( size_t i = 0; i < op.outputs.size(); ++i )
                 {
@@ -496,41 +498,41 @@ namespace nnef
                 }
             };
         }
-        
+
     }   // namespace impl
-    
-    
+
+
     template<typename... Args>
     ShapeFunc make_shape_func( Shape(*func)(const Value&,const Args&...) )
     {
         return impl::make_shape_func(func, impl::make_index_sequence<0>(), impl::make_index_sequence<sizeof...(Args)+1>());
     }
-    
+
     template<typename... Args, size_t N = impl::front_count_of<Shape,Args...>::value>
     ShapeFunc make_shape_func( Shape(*func)(const Shape&,const Args&...) )
     {
         return impl::make_shape_func(func, impl::make_index_sequence<N+1>(), impl::make_index_sequence<sizeof...(Args)-N>());
     }
-    
+
     template<typename... Args>
     ShapeFunc make_shape_func( Shape(*func)(const std::vector<Shape>&,const Args&...) )
     {
         return impl::make_shape_func(func, impl::make_index_sequence<sizeof...(Args)>());
     }
-    
+
     template<typename... Args>
     ShapeFunc make_shape_func( std::vector<Shape>(*func)(const Shape&,const Args&...) )
     {
         return impl::make_shape_func(func, impl::make_index_sequence<sizeof...(Args)>());
     }
-    
-    
+
+
     static const std::map<std::string,ShapeFunc> StandardShapeFuncs =
     {
         { "external", make_shape_func(nullary_shape) },
         { "constant", make_shape_func(constant_shape) },
         { "variable", make_shape_func(nullary_shape) },
-        
+
         { "copy", make_shape_func(unary_shape) },
         { "neg", make_shape_func(unary_shape) },
         { "not", make_shape_func(unary_shape) },
@@ -559,7 +561,7 @@ namespace nnef
         { "rsqr", make_shape_func(unary_shape) },
         { "rsqrt", make_shape_func(unary_shape) },
         { "log2", make_shape_func(unary_shape) },
-        
+
         { "relu", make_shape_func(unary_shape) },
         { "sigmoid", make_shape_func(unary_shape) },
         { "elu", make_shape_func(unary_shape) },
@@ -570,12 +572,12 @@ namespace nnef
         { "softplus", make_shape_func(unary_shape) },
         { "leaky_relu", make_shape_func(unary_shape) },
         { "prelu", make_shape_func(asymmetric_binary_shape) },
-        
+
         { "linear_quantize", make_shape_func(linear_quantize_shape) },
         { "logarithmic_quantize", make_shape_func(logarithmic_quantize_shape) },
         { "min_max_linear_quantize", make_shape_func(linear_quantize_shape) },
         { "zero_point_linear_quantize", make_shape_func(zero_point_linear_quantize_shape) },
-        
+
         { "add", make_shape_func(binary_shape) },
         { "sub", make_shape_func(binary_shape) },
         { "mul", make_shape_func(binary_shape) },
@@ -591,12 +593,12 @@ namespace nnef
         { "ne",  make_shape_func(binary_shape) },
         { "and", make_shape_func(binary_shape) },
         { "or",  make_shape_func(binary_shape) },
-        
+
         { "conv", make_shape_func(conv_shape) },
         { "deconv", make_shape_func(deconv_shape) },
         { "separable_conv", make_shape_func(separable_conv_shape) },
         { "separable_deconv", make_shape_func(separable_deconv_shape) },
-        
+
         { "box", make_shape_func(pool_shape) },
         { "max_pool", make_shape_func(pool_shape) },
         { "argmax_pool", make_shape_func(pool_shape) },
@@ -606,7 +608,7 @@ namespace nnef
         { "debox", make_shape_func(unpool_shape) },
         { "sample", make_shape_func(sample_shape) },
         { "desample", make_shape_func(desample_shape) },
-        
+
         { "sum_reduce", make_shape_func(reduce_shape) },
         { "min_reduce", make_shape_func(reduce_shape) },
         { "max_reduce", make_shape_func(reduce_shape) },
@@ -616,12 +618,12 @@ namespace nnef
         { "any_reduce", make_shape_func(reduce_shape) },
         { "all_reduce", make_shape_func(reduce_shape) },
         { "moments", make_shape_func(reduce_shape) },
-        
+
         { "nearest_downsample", make_shape_func(downsample_shape) },
         { "area_downsample", make_shape_func(downsample_shape) },
         { "nearest_upsample", make_shape_func(upsample_shape) },
         { "multilinear_upsample", make_shape_func(upsample_shape) },
-        
+
         { "local_response_normalization", make_shape_func(normalize_shape_size) },
         { "local_mean_normalization", make_shape_func(normalize_shape_size) },
         { "local_variance_normalization", make_shape_func(normalize_shape_size) },
@@ -629,13 +631,13 @@ namespace nnef
         { "l1_normalization", make_shape_func(normalize_shape_axes) },
         { "l2_normalization", make_shape_func(normalize_shape_axes) },
         { "batch_normalization", make_shape_func(batchnorm_shape) },
-        
+
         { "avg_roi_pool", make_shape_func(roi_shape) },
         { "max_roi_pool", make_shape_func(roi_shape) },
         { "avg_roi_align", make_shape_func(roi_shape) },
         { "max_roi_align", make_shape_func(roi_shape) },
         { "roi_resample", make_shape_func(roi_shape_resample) },
-        
+
         { "reshape", make_shape_func(reshape_shape) },
         { "transpose", make_shape_func(transpose_shape) },
         { "split", make_shape_func(split_shape) },
@@ -658,8 +660,8 @@ namespace nnef
         { "select", make_shape_func(ternary_shape) },
         { "clamp", make_shape_func(ternary_shape) },
     };
-    
-    
+
+
     bool infer_shapes( Graph& graph, std::string& error, const std::map<std::string,Shape>& input_shapes,
                       const std::map<std::string,ShapeFunc>& custom_shapes ) noexcept
     {
@@ -676,7 +678,7 @@ namespace nnef
 				}
             }
             auto func = it->second;
-            
+
             if ( op.name == "external" )
             {
                 auto& id = op.outputs.get("output").identifier();
@@ -694,12 +696,12 @@ namespace nnef
                     continue;
                 }
             }
-            
+
             try
             {
                 func(op, graph);
             }
-            catch ( std::exception e )
+            catch ( std::exception& e )
             {
                 auto& output = op.outputs.front().second;
                 auto& id = output.kind() == Value::Identifier ? output.identifier() : output[0].identifier();
@@ -710,10 +712,11 @@ namespace nnef
         }
         return true;
     }
-    
-    
+
+
     bool allocate_buffers( Graph& graph, std::string& error ) noexcept
     {
+        (void)error;
         for ( auto& item : graph.tensors )
         {
             auto& tensor = item.second;
@@ -721,7 +724,7 @@ namespace nnef
         }
         return true;
     }
-    
+
 
     bool execute( Graph& graph, std::string& error ) noexcept
     {
@@ -739,11 +742,11 @@ namespace nnef
             }
             return true;
         }
-        catch ( std::runtime_error e )
+        catch ( std::runtime_error& e )
         {
             error = "Runtime error: " + std::string(e.what());
             return false;
         }
     }
-    
+
 }   // namespace nnef

@@ -28,9 +28,8 @@
 
 static vx_status VX_CALLBACK vxColorConvertKernel(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    (void)node;
-
-    if (num == 2)
+    if (vx_true_e == Reference::isValidReference(node, VX_TYPE_NODE) &&
+        (2 == num))
     {
         vx_image src = (vx_image)parameters[0];
         vx_image dst = (vx_image)parameters[1];
@@ -72,6 +71,7 @@ static vx_status VX_CALLBACK vxColorConvertInputValidator(vx_node node, vx_uint3
                             break;
                         }
                         /* no break */
+                        /* fall through */
                     case VX_DF_IMAGE_YUYV: /* 4:2:2 interleaved */
                     case VX_DF_IMAGE_UYVY: /* 4:2:2 interleaved */
                         if (width & 1)

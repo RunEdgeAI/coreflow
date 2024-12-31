@@ -23,23 +23,14 @@
 #ifndef _VX_EXTRAS_MODULE_H_
 #define _VX_EXTRAS_MODULE_H_
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
-
 extern vx_kernel_description_t edge_trace_kernel;
 extern vx_kernel_description_t euclidean_nonmaxsuppression_harris_kernel;
 extern vx_kernel_description_t harris_score_kernel;
 extern vx_kernel_description_t laplacian3x3_kernel;
 extern vx_kernel_description_t image_lister_kernel;
-extern vx_kernel_description_t nonmaxsuppression_kernel;
+extern vx_kernel_description_t extras_nonmaxsuppression_kernel;
 extern vx_kernel_description_t norm_kernel;
 extern vx_kernel_description_t scharr3x3_kernel;
 extern vx_kernel_description_t sobelMxN_kernel;
 
-#ifdef  __cplusplus
-}
-#endif
-
 #endif  /* _VX_EXTRAS_MODULE_H_ */
-

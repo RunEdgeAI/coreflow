@@ -153,6 +153,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxLocalResponseNormalizationLayer(vx_graph grap
 		vx_float32 bias,
 		vx_tensor outputs)
 {
+    (void)bias;
     vx_context context = vxGetContext((vx_reference)graph);
     vx_scalar type_scalar = vxCreateScalar(context, VX_TYPE_ENUM, &type);
     vx_scalar norm_size_scalar = vxCreateScalar(context, VX_TYPE_SIZE, &normalization_size);
