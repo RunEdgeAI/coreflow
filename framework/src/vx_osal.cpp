@@ -209,7 +209,7 @@ vx_bool Osal::waitEventInternal(vx_internal_event_t *e, vx_uint32 ms)
         gettimeofday(&now, nullptr);
         time_spec.tv_sec = now.tv_sec + (ms / 1000);
         time_spec.tv_nsec = (now.tv_usec * 1000) + ((ms%1000) * 1000000);
-        if (time_spec.tv_nsec > BILLION) {
+        if (static_cast<unsigned long long>(time_spec.tv_nsec) > BILLION) {
             time_spec.tv_sec += 1;
             time_spec.tv_nsec -= BILLION;
         }
@@ -313,6 +313,8 @@ void Osal::sleepThread(vx_uint32 milliseconds)
     nanosleep(&rtsp, nullptr);
 #elif defined(_WIN32) || defined(UNDER_CE)
     Sleep(milliseconds);
+#else
+    (void)milliseconds;
 #endif
 }
 
@@ -320,7 +322,10 @@ vx_thread_t Osal::createThread(vx_thread_f func, void *arg)
 {
     vx_thread_t thread = 0;
 #if defined(__linux__) || defined(__ANDROID__) || defined(__QNX__) || defined(__CYGWIN__) || defined(__APPLE__)
-    pthread_create(&thread, nullptr, (pthread_f)func, arg);
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wcast-function-type"
+    pthread_create(&thread, nullptr, reinterpret_cast<pthread_f>(func), arg);
+    #pragma GCC diagnostic pop
 #elif defined(_WIN32) || defined(UNDER_CE)
     thread = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)func, arg, CREATE_SUSPENDED, nullptr);
     if (thread)

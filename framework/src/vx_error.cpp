@@ -29,7 +29,8 @@ status(VX_SUCCESS)
 Error::~Error()
 {
     vx_error ref = this;
-    releaseError(&ref);
+    if (internal_count)
+        releaseError(&ref);
 }
 
 void Error::releaseError(vx_error* error)

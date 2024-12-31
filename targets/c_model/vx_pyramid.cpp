@@ -1224,8 +1224,8 @@ static vx_status VX_CALLBACK vxLaplacianReconstructInitializer(vx_node node, con
 static vx_status VX_CALLBACK vxLaplacianReconstructDeinitializer(vx_node node, const vx_reference parameters[], vx_uint32 num)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
+    (void)node;
     (void)parameters;
-
     if (num == dimof(laplacian_reconstruct_kernel_params))
     {
         status = VX_SUCCESS;

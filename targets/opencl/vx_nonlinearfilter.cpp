@@ -26,7 +26,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
 {
     vx_status status = VX_FAILURE;
     vx_context context = node->context;
-
+    (void)num;
     vx_cl_kernel_description_t *vxclk = vxclFindKernel(node->kernel->enumeration);
     vx_uint32 pln, didx, plidx, argidx;
     cl_int err = 0;
@@ -127,9 +127,9 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
     status |= vxCopyMatrix(mask, m, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     int mask_index = 0;
     int count_mask = 0;
-    for (int r = 0; r < mat->rows; ++r)
+    for (vx_size r = 0; r < mat->rows; ++r)
     {
-        for (int c = 0; c < mat->columns; ++c, ++mask_index)
+        for (vx_size c = 0; c < mat->columns; ++c, ++mask_index)
         {
             if (m[mask_index])
                 ++count_mask;

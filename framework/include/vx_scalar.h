@@ -93,7 +93,7 @@ public:
         /*! \brief Signed 64 bit */
         vx_int64  s64;
         /*! \brief Unsigned 64 bit */
-        vx_int64  u64;
+        vx_uint64  u64;
 #if defined(EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT)
         /*! \brief 16 bit float */
         vx_float16 f16;

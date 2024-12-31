@@ -374,7 +374,7 @@ vx_status VX_CALLBACK own_nonmaxsuppresson_validator(
     return status;
 } /* own_nonmaxsuppresson_validator() */
 
-vx_kernel_description_t nonmaxsuppression_kernel =
+vx_kernel_description_t extras_nonmaxsuppression_kernel =
 {
     VX_KERNEL_EXTRAS_NONMAXSUPPRESSION_CANNY,
     "org.khronos.extra.nonmaximasuppression",

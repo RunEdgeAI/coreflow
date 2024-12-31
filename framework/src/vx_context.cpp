@@ -254,7 +254,28 @@ vx_status Context::loadTarget(const vx_char* targetName)
 
 vx_status Context::unloadTarget(const vx_char* targetName)
 {
-    return VX_ERROR_NOT_IMPLEMENTED;
+    vx_status status = VX_FAILURE;
+
+    for (vx_uint32 t = 0u; t < context->num_targets; t++)
+    {
+        if (context->targets[t] &&
+            strncmp(context->targets[t]->name, targetName, VX_MAX_TARGET_NAME) == 0)
+        {
+            memset(&context->targets[t]->funcs, 0xFE, sizeof(vx_target_funcs_t));
+            if (context->targets[t]->decrementReference(VX_INTERNAL) == 0)
+            {
+                /* The ReleaseReference() below errors out if the internal index is 0 */
+                context->targets[t]->incrementReference(VX_INTERNAL);
+            }
+            Osal::unloadModule(context->targets[t]->module.handle);
+            context->targets[t]->module.handle = VX_MODULE_INIT;
+
+            memset(context->targets[t]->module.name, 0, sizeof(context->targets[t]->module.name));
+            status = Reference::releaseReference((vx_reference*)&context->targets[t], VX_TYPE_TARGET, VX_INTERNAL, nullptr);
+        }
+    }
+
+    return status;
 }
 
 vx_status Context::unloadTarget(vx_uint32 index, vx_bool unload_module)
@@ -758,8 +779,8 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContext(void)
             if (context->num_targets == 0)
             {
                 VX_PRINT(VX_ZONE_ERROR, "No targets loaded!\n");
-                // free(context);
                 Osal::semPost(&context_lock);
+                single_context.reset();
                 return nullptr;
             }
 
@@ -774,8 +795,11 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContext(void)
                     {
                         VX_PRINT(VX_ZONE_WARNING, "Target %s failed to initialize!\n", context->targets[t]->name);
                         /* unload this module */
-                        context->unloadTarget(t, vx_true_e);
-                        break;
+                        /* @TODO: unload target now or on context release? */
+                        /*
+                         * context->unloadTarget(t, vx_true_e);
+                         * break;
+                         */
                     }
                     else
                     {
@@ -922,7 +946,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
             /* de-initialize and unload each target */
             for (t = 0u; t < context->num_targets; t++)
             {
-                if (context->targets[t]->enabled == vx_true_e)
+                /* if (context->targets[t]->enabled == vx_true_e) */
                 {
                     context->targets[t]->funcs.deinit(context->targets[t]);
                     context->targets[t]->enabled = vx_false_e;
@@ -1118,7 +1142,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryContext(vx_context context, vx_enum at
             case VX_CONTEXT_EXTENSIONS:
                 if (size <= sizeof(extensions) && ptr)
                 {
-                    strncpy(reinterpret_cast<char*>(ptr), extensions, sizeof(extensions));
+                    strncpy(reinterpret_cast<char*>(ptr), extensions, size);
                 }
                 else
                 {

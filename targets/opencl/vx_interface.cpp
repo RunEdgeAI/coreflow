@@ -64,6 +64,9 @@ static void VX_CALLBACK vxcl_platform_notifier(const char *errinfo,
 {
     //vx_target target = (vx_target)user_data;
     VX_PRINT(VX_ZONE_ERROR, "%s\n", errinfo);
+    (void)private_info;
+    (void)cb;
+    (void)user_data;
 }
 
 extern "C" vx_status vxTargetInit(vx_target target)
@@ -443,6 +446,7 @@ extern "C" vx_action vxTargetProcess(vx_target target, vx_node nodes[], vx_size 
     vx_action action = VX_ACTION_CONTINUE;
     vx_status status = VX_SUCCESS;
     vx_size n = 0;
+    (void)target;
     for (n = startIndex; (n < (startIndex + numNodes)) && (action == VX_ACTION_CONTINUE); n++)
     {
         VX_PRINT(VX_ZONE_GRAPH,"Executing Kernel %s:%d in Nodes[%u] on target %s\n",
@@ -482,6 +486,8 @@ extern "C" vx_action vxTargetProcess(vx_target target, vx_node nodes[], vx_size 
 extern "C" vx_status vxTargetVerify(vx_target target, vx_node node)
 {
     vx_status status = VX_SUCCESS;
+    (void)target;
+    (void)node;
     return status;
 }
 
@@ -552,7 +558,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
 {
     static struct timeval start, start1, end;
     gettimeofday(&start, nullptr);
-
+    (void)parameters;
     vx_status status = VX_FAILURE;
     vx_context context = node->context;
     __attribute__((unused))
@@ -685,7 +691,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                     }
                 } else if (memory->cl_type == CL_MEM_OBJECT_IMAGE2D)
                 {
-                    vx_rectangle_t rect = {0};
+                    vx_rectangle_t rect = {0,0,0,0};
                     vx_image image = (vx_image)ref;
                     vxGetValidRegionImage(image, &rect);
                     size_t origin[3] = {rect.start_x, rect.start_y, 0};
@@ -825,7 +831,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
                         CL_ERROR_MSG(err, "clEnqueueReadBuffer");
                     } else if (memory->cl_type == CL_MEM_OBJECT_IMAGE2D)
                     {
-                        vx_rectangle_t rect = {0};
+                        vx_rectangle_t rect = {0,0,0,0};
                         vx_image image = (vx_image)ref;
                         vxGetValidRegionImage(image, &rect);
                         size_t origin[3] = {rect.start_x, rect.start_y, 0};

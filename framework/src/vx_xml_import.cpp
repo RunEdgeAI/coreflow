@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <cinttypes>
 
 #include "vx_internal.h"
 #include "vx_type_pairs.h"
@@ -305,7 +306,8 @@ static int32_t xml_match_tag(xmlNodePtr cur, xml_tag_t tags[], size_t num_tags)
 static vx_status vxReserveReferences(vx_context context, vx_uint32 num)
 {
     vx_status status = VX_SUCCESS;
-
+    (void)context;
+    (void)num;
     return status;
 }
 
@@ -314,7 +316,8 @@ static vx_status vxReserveReferences(vx_context context, vx_uint32 num)
 static vx_status vxReleaseReferences(vx_context context, vx_uint32 num)
 {
     vx_status status = VX_SUCCESS;
-
+    (void)context;
+    (void)num;
     return status;
 }
 
@@ -442,7 +445,7 @@ static vx_status vxLoadDataForImage(vx_image image, xmlNodePtr cur, vx_reference
         if (tag == ROI_TAG) {
             vxImportFromXMLRoi( image, cur, refs, total);
         } else if (tag == RECTANGLE_TAG) {
-            vx_rectangle_t rect = {0};
+            vx_rectangle_t rect = {0,0,0,0};
             vx_uint32 pIdx = xml_prop_ulong(cur, "plane");
             XML_FOREACH_CHILD_TAG (cur, tag, tags) {
                 if (tag == START_X_TAG) {
@@ -455,7 +458,7 @@ static vx_status vxLoadDataForImage(vx_image image, xmlNodePtr cur, vx_reference
                     rect.end_y = xml_ulong(cur);
                 } else if (tag == PIXELS_TAG) {
                     void *base = nullptr;
-                    vx_imagepatch_addressing_t addr = {0};
+                    vx_imagepatch_addressing_t addr = {};
                     status |= vxAccessImagePatch(image, &rect, pIdx, &addr, &base, VX_WRITE_ONLY);
                     if (status == VX_SUCCESS) {
                         XML_FOREACH_CHILD_TAG(cur, tag, tags) {
@@ -628,7 +631,7 @@ static vx_status vxLoadDataForArray(vx_array array, xmlNodePtr cur)
             status |= vxAddArrayItems(array, strlen(str), str, sizeof(char));
             free(str);
         } else if (tag == KEYPOINT_TAG) {
-            vx_keypoint_t kp = {0};
+            vx_keypoint_t kp = {};
             XML_FOREACH_CHILD_TAG(cur, tag, tags) {
                 if (tag == X_TAG) {
                     kp.x = (vx_int32)xml_long(cur);
@@ -648,7 +651,7 @@ static vx_status vxLoadDataForArray(vx_array array, xmlNodePtr cur)
             }
             status |= vxAddArrayItems(array, 1, &kp, sizeof(vx_keypoint_t));
         } else if (tag == COORDINATES2D_TAG) {
-            vx_coordinates2d_t coord = {0};
+            vx_coordinates2d_t coord = {0,0};
             XML_FOREACH_CHILD_TAG(cur, tag, tags) {
                 if (tag == X_TAG) {
                     coord.x = (vx_uint32)xml_ulong(cur);
@@ -658,7 +661,7 @@ static vx_status vxLoadDataForArray(vx_array array, xmlNodePtr cur)
             }
             status |= vxAddArrayItems(array, 1, &coord, sizeof(vx_coordinates2d_t));
         } else if (tag == COORDINATES3D_TAG) {
-            vx_coordinates3d_t coord = {0};
+            vx_coordinates3d_t coord = {0,0,0};
             XML_FOREACH_CHILD_TAG(cur, tag, tags) {
                 if (tag == X_TAG) {
                     coord.x = (vx_uint32)xml_ulong(cur);
@@ -670,7 +673,7 @@ static vx_status vxLoadDataForArray(vx_array array, xmlNodePtr cur)
             }
             status |= vxAddArrayItems(array, 1, &coord, sizeof(vx_coordinates3d_t));
         } else if (tag == RECTANGLE_TAG) {
-            vx_rectangle_t rect = {0};
+            vx_rectangle_t rect = {0,0,0,0};
             XML_FOREACH_CHILD_TAG(cur, tag, tags) {
                 if (tag == START_X_TAG) {
                     rect.start_x = (vx_uint32)xml_ulong(cur);
@@ -720,7 +723,7 @@ static vx_status vxLoadDataForArray(vx_array array, xmlNodePtr cur)
                     status |= vxAddArrayItems(array, 1, &v, array->item_size);
                 } else if (tag == UINT64_TAG) {
                     vx_uint64 v;
-                    sscanf(tmp, "%llu", &v);
+                    sscanf(tmp, "%" PRIu64, &v);
                     status |= vxAddArrayItems(array, 1, &v, array->item_size);
                 } else if (tag == INT8_TAG) {
                     vx_int8 v;
@@ -736,7 +739,7 @@ static vx_status vxLoadDataForArray(vx_array array, xmlNodePtr cur)
                     status |= vxAddArrayItems(array, 1, &v, array->item_size);
                 } else if (tag == INT64_TAG) {
                     vx_int64 v;
-                    sscanf(tmp, "%lld", &v);
+                    sscanf(tmp, "%" PRId64, &v);
                     status |= vxAddArrayItems(array, 1, &v, array->item_size);
                 } else if (tag == FLOAT32_TAG) {
                     vx_float32 v;
@@ -792,7 +795,7 @@ static vx_status vxLoadDataForPyramid(vx_pyramid pyr, xmlNodePtr cur, vx_referen
             }
             if (refIdx < total)
             {
-                if((level >= 0) && (level < levels)) {
+                if ((level >= 0) && (level < static_cast<vx_int32>(levels))) {
                     if(pyr->levels[level]->width == width &&
                        pyr->levels[level]->height == height) {
                         refs[refIdx] = (vx_reference)pyr->levels[level];
@@ -876,7 +879,8 @@ static vx_status vxLoadDataForLut(vx_lut lut, xmlNodePtr cur, vx_enum type, vx_s
 {
     vx_status status = VX_SUCCESS;
     vx_xml_tag_e tag = UNKNOWN_TAG;
-
+    (void)type;
+    (void)count;
     if (XML_HAS_CHILD(cur)) {
         void *ptr = nullptr;
         if( (status = vxAccessLUT(lut, &ptr, VX_WRITE_ONLY)) == VX_SUCCESS)
@@ -1016,7 +1020,7 @@ static vx_status vxLoadDataForScalar(vx_scalar scalar, xmlNodePtr cur)
         } else if (tag == UINT64_TAG) {
             vx_uint64 v = 0u;
             xml_string(cur, value, sizeof(value));
-            sscanf(value, "%llu", &v);
+            sscanf(value, "%" PRIu64, &v);
             vxCopyScalar(scalar, &v, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
         } else if (tag == INT8_TAG) {
             vx_int8 v = 0u;
@@ -1036,7 +1040,7 @@ static vx_status vxLoadDataForScalar(vx_scalar scalar, xmlNodePtr cur)
         } else if (tag == INT64_TAG) {
             vx_int64 v = 0u;
             xml_string(cur, value, sizeof(value));
-            sscanf(value, "%lld", &v);
+            sscanf(value, "%" PRId64, &v);
             vxCopyScalar(scalar, &v, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
         } else if (tag == SIZE_TAG) {
             vx_size v = xml_ulong(cur);
@@ -1121,7 +1125,7 @@ static vx_status vxImportFromXMLArray(vx_reference ref, xmlNodePtr cur, vx_refer
     xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
 
     if(TypePairs::typeFromString(typeName, &type) != VX_SUCCESS) { /* Type was not found, check if it is a user type */
-        if(sscanf(typeName, "USER_STRUCT_%d", &userNum) == 1) {
+        if(sscanf(typeName, "USER_STRUCT_%u", &userNum) == 1) {
             if(vxStructGetEnum(user_struct_table, userNum, &type) != VX_SUCCESS) {
                 return VX_ERROR_INVALID_PARAMETERS; /* INVALID type */
             }
@@ -1565,7 +1569,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                             xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
 
                             if(TypePairs::typeFromString(typeName, &type) != VX_SUCCESS) { /* Type was not found, check if it is a user type */
-                                if(sscanf(typeName, "USER_STRUCT_%d", &userNum) == 1) {
+                                if(sscanf(typeName, "USER_STRUCT_%u", &userNum) == 1) {
                                     if(vxStructGetEnum(user_struct_table, userNum, &type) != VX_SUCCESS) {
                                         status = VX_ERROR_INVALID_TYPE; /* INVALID type */
                                         goto exit_error;

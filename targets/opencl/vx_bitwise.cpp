@@ -124,7 +124,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
 {
     vx_status status = VX_FAILURE;
     vx_context context = node->context;
-
+    (void)parameters;
     vx_cl_kernel_description_t *vxclk = vxclFindKernel(node->kernel->enumeration);
     vx_uint32 pidx, pln, didx, plidx, argidx;
     cl_int err = 0;
