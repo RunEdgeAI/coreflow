@@ -36,7 +36,7 @@ static vx_kernel_description_t* kernels[] =
     &harris_score_kernel,
     &laplacian3x3_kernel,
     &image_lister_kernel,
-    &nonmaxsuppression_kernel,
+    &extras_nonmaxsuppression_kernel,
     &norm_kernel,
     &scharr3x3_kernel,
     &sobelMxN_kernel,
