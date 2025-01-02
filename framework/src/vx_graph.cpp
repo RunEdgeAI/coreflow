@@ -2113,7 +2113,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                     else if (graph->nodes[n]->parameters[p]->type == VX_TYPE_LUT)
                     {
                         vx_lut_t lut = (vx_lut_t)graph->nodes[n]->parameters[p];
-                        if (ownAllocateMemory(graph->context, &lut->memory) == vx_false_e)
+                        if (Memory::allocateMemory(graph->context, &lut->memory) == vx_false_e)
                         {
                             vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate lut at node[%u] %s parameter[%u]\n",
                                 n, graph->nodes[n]->kernel->name, p);
@@ -2123,7 +2123,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                     else if (graph->nodes[n]->parameters[p]->type == VX_TYPE_DISTRIBUTION)
                     {
                         vx_distribution dist = (vx_distribution)graph->nodes[n]->parameters[p];
-                        if (ownAllocateMemory(graph->context, &dist->memory) == vx_false_e)
+                        if (Memory::allocateMemory(graph->context, &dist->memory) == vx_false_e)
                         {
                             vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate distribution at node[%u] %s parameter[%u]\n",
                                 n, graph->nodes[n]->kernel->name, p);
@@ -2148,7 +2148,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                               (graph->nodes[n]->parameters[p]->type == VX_TYPE_CONVOLUTION))
                     {
                         vx_matrix mat = (vx_matrix)graph->nodes[n]->parameters[p];
-                        if (ownAllocateMemory(graph->context, &mat->memory) == vx_false_e)
+                        if (Memory::allocateMemory(graph->context, &mat->memory) == vx_false_e)
                         {
                             vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate matrix (or subtype) at node[%u] %s parameter[%u]\n",
                                 n, graph->nodes[n]->kernel->name, p);
@@ -2346,13 +2346,13 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                         {
                             vx_image image = (vx_image)ref;
                             for (i = 0; i < image->memory.nptrs; i++)
-                                graph->nodes[n]->costs.bandwidth += ownComputeMemorySize(&image->memory, i);
+                                graph->nodes[n]->costs.bandwidth += Memory::computeMemorySize(&image->memory, i);
                             break;
                         }
                         case VX_TYPE_ARRAY:
                         {
                             vx_array array = (vx_array)ref;
-                            graph->nodes[n]->costs.bandwidth += ownComputeMemorySize(&array->memory, 0);
+                            graph->nodes[n]->costs.bandwidth += Memory::computeMemorySize(&array->memory, 0);
                             break;
                         }
                         case VX_TYPE_PYRAMID:
@@ -2364,7 +2364,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                                 vx_image image = pyr->levels[j];
                                 for (i = 0; i < image->memory.nptrs; i++)
                                 {
-                                    graph->nodes[n]->costs.bandwidth += ownComputeMemorySize(&image->memory, i);
+                                    graph->nodes[n]->costs.bandwidth += Memory::computeMemorySize(&image->memory, i);
                                 }
                             }
                             break;

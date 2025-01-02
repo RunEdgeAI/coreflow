@@ -180,6 +180,12 @@ public:
      */
     static void printImage(vx_image image);
 
+    /*! \brief Prints the addressing information of an image patch.
+     * \param [in] addr The addressing structure.
+     * \ingroup group_int_image
+     */
+    static void printImageAddressing(const vx_imagepatch_addressing_t *addr);
+
     /*! \brief Used to free an image object.
      * Only the data is freed, not the
      * meta-data structure.

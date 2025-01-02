@@ -268,8 +268,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetParameterByIndex(vx_node node, vx_uint32
         else
         {
             VX_PRINT(VX_ZONE_ERROR, "Invalid type %s (0x%08x), expected %s (0x%08x)\n",
-                     ownGetObjectTypeName(type), type,
-                     ownGetObjectTypeName(node->kernel->signature.types[index]),
+                     vxGetObjectTypeName(type), type,
+                     vxGetObjectTypeName(node->kernel->signature.types[index]),
                      node->kernel->signature.types[index]);
             status = VX_ERROR_INVALID_TYPE;
             *((volatile vx_uint8 *)nullptr) = 0;

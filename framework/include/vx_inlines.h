@@ -19,26 +19,21 @@
 
 #include "vx_internal.h"
 
-static VX_INLINE void *ownFormatMemoryPtr(vx_memory_t *memory,
-                                          vx_uint32 c,
-                                          vx_uint32 x,
-                                          vx_uint32 y,
-                                          vx_uint32 p)
-{
-    intmax_t offset = (memory->strides[p][VX_DIM_Y] * y) +
-                      (memory->strides[p][VX_DIM_X] * x) +
-                      (memory->strides[p][VX_DIM_C] * c);
-    void *ptr = (void *)&memory->ptrs[p][offset];
-    //ownPrintMemory(memory);
-    //VX_PRINT(VX_ZONE_INFO, "&(%p[%zu]) = %p\n", memory->ptrs[p], offset, ptr);
-    return ptr;
-}
+/*!
+ * \file
+ * \brief A set of internal utility functions.
+ *
+ * \defgroup group_int_inlines Internal Utility Functions
+ * \ingroup group_internal
+ * \brief Static internal utility functions
+ */
 
-static VX_INLINE int isodd(size_t a)
-{
-    return (int)(a & 1);
-}
-
+/**
+ * @brief Is the number odd?
+ * @ingroup group_int_inlines
+ * @param a The number to check
+ * @return vx_true_e if odd, else vx_false_e
+ */
 static VX_INLINE vx_bool vxIsOdd(vx_uint32 a)
 {
     if (a & 0x1)
@@ -47,6 +42,12 @@ static VX_INLINE vx_bool vxIsOdd(vx_uint32 a)
         return vx_false_e;
 }
 
+/**
+ * @brief Is the number a power of two?
+ * @ingroup group_int_inlines
+ * @param a The number to check
+ * @return vx_true_e if even, else vx_false_e
+ */
 static VX_INLINE vx_bool vxIsPowerOfTwo(vx_uint32 a)
 {
     if (a == 0)
@@ -57,6 +58,14 @@ static VX_INLINE vx_bool vxIsPowerOfTwo(vx_uint32 a)
         return vx_false_e;
 }
 
+/**
+ * @brief Count the number of occurrences of a character in a string.
+ * @ingroup group_int_inlines
+ * @param string The string to search
+ * @param size   The size of the string
+ * @param c      The character to count
+ * @return       The number of occurrences of the character in the string.
+ */
 static VX_INLINE vx_size strncount(const vx_char string[], vx_size size, vx_char c)
 {
     vx_size i = 0ul, count = 0ul;
@@ -66,6 +75,14 @@ static VX_INLINE vx_size strncount(const vx_char string[], vx_size size, vx_char
     return count;
 }
 
+/**
+ * @brief Find the index of a character in a string.
+ * @ingroup group_int_inlines
+ * @param str    The string to search
+ * @param c      The character to find
+ * @param limit  The maximum number of characters to search
+ * @return       The index of the character in the string.
+ */
 static VX_INLINE vx_size strnindex(const vx_char *str, vx_char c, vx_size limit)
 {
     vx_size index = 0;
@@ -82,6 +99,13 @@ static VX_INLINE vx_size strnindex(const vx_char *str, vx_char c, vx_size limit)
     return index;
 }
 
+/**
+ * @brief Is valid format?
+ * @ingroup group_int_inlines
+ * @param data_type         data type
+ * @param fixed_point_pos   fixed point position
+ * @return                  vx_true_e if valid, else vx_false_e
+ */
 static VX_INLINE int validFormat(vx_enum data_type, vx_uint8 fixed_point_pos)
 {
         return
@@ -94,6 +118,64 @@ static VX_INLINE int validFormat(vx_enum data_type, vx_uint8 fixed_point_pos)
             (data_type == VX_TYPE_INT16 && fixed_point_pos == Q78_FIXED_POINT_POSITION) ||
             (data_type == VX_TYPE_INT8 && fixed_point_pos == 0) ||
             (data_type == VX_TYPE_UINT8 && fixed_point_pos == 0);
+}
+
+/*! \brief Prints the name of an object type.
+ * \ingroup group_int_inlines
+ */
+static VX_INLINE const char* vxGetObjectTypeName(vx_enum type)
+{
+    const char *name = "";
+
+    switch(type)
+    {
+        case VX_TYPE_CONTEXT:
+            name = "CONTEXT"; break;
+        case VX_TYPE_GRAPH:
+            name = "GRAPH"; break;
+        case VX_TYPE_NODE:
+            name = "NODE"; break;
+        case VX_TYPE_KERNEL:
+            name = "KERNEL"; break;
+        case VX_TYPE_TARGET:
+            name = "TARGET"; break;
+        case VX_TYPE_PARAMETER:
+            name = "PARAMETER"; break;
+        case VX_TYPE_DELAY:
+            name = "DELAY"; break;
+        case VX_TYPE_LUT:
+            name = "LUT"; break;
+        case VX_TYPE_DISTRIBUTION:
+            name = "DISTRIBUTION"; break;
+        case VX_TYPE_PYRAMID:
+            name = "PYRAMID"; break;
+        case VX_TYPE_THRESHOLD:
+            name = "THRESHOLD"; break;
+        case VX_TYPE_MATRIX:
+            name = "MATRIX"; break;
+        case VX_TYPE_CONVOLUTION:
+            name = "CONVOLUTION"; break;
+        case VX_TYPE_SCALAR:
+            name = "SCALAR"; break;
+        case VX_TYPE_ARRAY:
+            name = "ARRAY"; break;
+        case VX_TYPE_IMAGE:
+            name = "IMAGE"; break;
+        case VX_TYPE_REMAP:
+            name = "REMAP"; break;
+        case VX_TYPE_ERROR:
+            name = "<ERROR OBJECT>"; break;
+        case VX_TYPE_META_FORMAT:
+            name = "META_FORMAT"; break;
+        case VX_TYPE_OBJECT_ARRAY:
+            name = "OBJECT_ARRAY"; break;
+        case VX_TYPE_TENSOR:
+            name = "TENSOR"; break;
+        default:
+            name = "<UNKNOWN TYPE>";
+    }
+
+    return name;
 }
 
 #endif /* VX_INLINES_H */

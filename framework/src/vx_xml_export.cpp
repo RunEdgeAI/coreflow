@@ -836,7 +836,7 @@ static vx_status vxExportToXMLDistribution(FILE* fp, vx_reference refs[], vx_uin
         {
             for (b = 0; b < bins; b++)
             {
-                vx_int32 *ptr = (vx_int32*)ownFormatMemoryPtr(&dist->memory, 0, b, 0, 0);
+                vx_int32 *ptr = (vx_int32*)Memory::formatMemoryPtr(&dist->memory, 0, b, 0, 0);
                 fprintf(fp, "%s\t<frequency bin=\"%u\">%d</frequency>\n", indent, b, *ptr);
             }
         }
@@ -874,8 +874,8 @@ static vx_status vxExportToXMLRemap(FILE* fp, vx_reference refs[], vx_uint32 r, 
                 for (x = 0u; x < remap->dst_width; x++)
                 {
                     vx_float32 *coords[] = {
-                         (vx_float32 *)ownFormatMemoryPtr(&remap->memory, 0, x, y, 0),
-                         (vx_float32 *)ownFormatMemoryPtr(&remap->memory, 1, x, y, 0),
+                         (vx_float32 *)Memory::formatMemoryPtr(&remap->memory, 0, x, y, 0),
+                         (vx_float32 *)Memory::formatMemoryPtr(&remap->memory, 1, x, y, 0),
                     };
                     vx_float32 src_x = *coords[0];
                     vx_float32 src_y = *coords[1];

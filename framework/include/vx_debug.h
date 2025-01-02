@@ -171,18 +171,6 @@ vx_bool vx_get_debug_zone(vx_enum zone);
  */
 void vx_set_debug_zone_from_env(void);
 
-/*!
- * \brief Prints the value of an addressing structure.
- * \param [in] addr
- * \ingroup group_int_image
- */
-void ownPrintImageAddressing(const vx_imagepatch_addressing_t *addr);
-
-/*! \brief Prints the name of an object type.
- * \ingroup group_int_debug
- */
-const char *ownGetObjectTypeName(vx_enum type);
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

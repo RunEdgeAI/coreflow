@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
+
 #include <VX/vx.h>
 #include <VX/vx_helper.h>
 #include <VX/vx_lib_extras.h>
 /* TODO: remove vx_compatibility.h after transition period */
 #include <VX/vx_compatibility.h>
 
-/*! \file vx_helper.c
+/*! \file vx_helper.cpp
  * \brief The OpenVX Helper Implementation.
  * \author Erik Rainey <erik.rainey@gmail.com>
  * \example vx_helper.c
@@ -41,7 +42,6 @@ uint32_t math_gcd(uint32_t a, uint32_t b)
     }
     return 0;
 }
-
 
 static vx_log_t helper_log;
 
@@ -193,7 +193,6 @@ vx_node vxCreateNodeByStructure(vx_graph graph,
     return node;
 }
 
-
 void vxClearLog(vx_reference ref)
 {
     char message[VX_MAX_LOG_MESSAGE_LEN];
@@ -255,7 +254,6 @@ vx_status vxLinkParametersByReference(vx_parameter a, vx_parameter b) {
     }
     return status;
 }
-
 
 vx_status vxSetAffineRotationMatrix(vx_matrix matrix,
                                     vx_float32 angle,
@@ -519,7 +517,6 @@ static vx_float32 vxh_matrix_trace_f32(vx_size columns, vx_size rows, vx_float32
     return trace;
 }
 
-
 static vx_int32 vxh_matrix_trace_i32(vx_size columns, vx_size rows, vx_int32 matrix[rows][columns]) {
     vx_int32 trace = 0;
     vx_size i = 0ul;
@@ -617,5 +614,4 @@ vx_status vxMatrixInverse(vx_matrix input, vx_matrix output) {
     return status;
 }
 
-#endif
-
+#endif /* __STDC_VERSION__ == 199901L // C99 */

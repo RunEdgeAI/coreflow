@@ -439,12 +439,12 @@ vx_status vxConvertColor(vx_image src, vx_image dst)
     for (p = 0; p < src_planes; p++)
     {
         status |= vxMapImagePatch(src, &rect, p, &map_id[p], &src_addr[p], &src_base[p], VX_READ_ONLY, VX_MEMORY_TYPE_HOST, 0);
-        ownPrintImageAddressing(&src_addr[p]);
+        Image::printImageAddressing(&src_addr[p]);
     }
     for (p = 0; p < dst_planes; p++)
     {
         status |= vxMapImagePatch(dst, &rect, p, &result_map_id[p], &dst_addr[p], &dst_base[p], VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST, 0);
-        ownPrintImageAddressing(&dst_addr[p]);
+        Image::printImageAddressing(&dst_addr[p]);
     }
     if (status != VX_SUCCESS)
     {

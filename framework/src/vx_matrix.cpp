@@ -49,7 +49,7 @@ Matrix::~Matrix()
 
 void Matrix::destructMatrix()
 {
-    ownFreeMemory(context, &memory);
+    Memory::freeMemory(context, &memory);
 }
 
 /******************************************************************************/
@@ -158,7 +158,7 @@ VX_API_ENTRY vx_matrix VX_API_CALL vxCreateMatrixFromPattern(vx_context context,
     vx_matrix matrix = vxCreateMatrix(context, VX_TYPE_UINT8, columns, rows);
     if (Reference::isValidReference(matrix, VX_TYPE_MATRIX) == vx_true_e)
     {
-        if (ownAllocateMemory(matrix->context, &matrix->memory) == vx_true_e)
+        if (Memory::allocateMemory(matrix->context, &matrix->memory) == vx_true_e)
         {
             Osal::semWait(&matrix->lock);
             vx_uint8* ptr = matrix->memory.ptrs[0];
@@ -302,7 +302,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReadMatrix(vx_matrix matrix, void *array)
     vx_status status = VX_ERROR_INVALID_REFERENCE;
     if (Reference::isValidReference(matrix, VX_TYPE_MATRIX) == vx_true_e)
     {
-        if (ownAllocateMemory(matrix->context, &matrix->memory) == vx_true_e)
+        if (Memory::allocateMemory(matrix->context, &matrix->memory) == vx_true_e)
         {
             Osal::semWait(&matrix->lock);
             if (array)
@@ -333,7 +333,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxWriteMatrix(vx_matrix matrix, const void *a
     vx_status status = VX_ERROR_INVALID_REFERENCE;
     if (Reference::isValidReference(matrix, VX_TYPE_MATRIX) == vx_true_e)
     {
-        if (ownAllocateMemory(matrix->context, &matrix->memory) == vx_true_e)
+        if (Memory::allocateMemory(matrix->context, &matrix->memory) == vx_true_e)
         {
             Osal::semWait(&matrix->lock);
             if (array)
@@ -366,7 +366,7 @@ vx_status VX_API_CALL vxCopyMatrix(vx_matrix matrix, void *ptr, vx_enum usage, v
 
     if (Reference::isValidReference(matrix, VX_TYPE_MATRIX) == vx_true_e)
     {
-        if (ownAllocateMemory(matrix->context, &matrix->memory) == vx_true_e)
+        if (Memory::allocateMemory(matrix->context, &matrix->memory) == vx_true_e)
         {
 #ifdef OPENVX_USE_OPENCL_INTEROP
             void * ptr_given = ptr;
