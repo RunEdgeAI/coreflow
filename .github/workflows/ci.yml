@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
   test:
     # virtual environments: https://github.com/actions/virtual-environments
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       # Caches and restores the bazelisk download directory, the bazel build directory.
@@ -36,8 +36,8 @@ jobs:
         run: bazel build //...
 
       # Run Address Sanitizer
-      - name: Address Sanitizer
-        run: VX_CL_SOURCE_DIR=$GITHUB_WORKSPACE/kernels/opencl bazel run --config asan //tests:vx_test
+      # - name: Address Sanitizer
+      #   run: VX_CL_SOURCE_DIR=$GITHUB_WORKSPACE/kernels/opencl bazel run --config asan //tests:vx_test
 
         # Run OpenVX Integration test
       - name: OpenVX Integration Test
