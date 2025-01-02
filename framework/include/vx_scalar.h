@@ -59,9 +59,29 @@ public:
     void* allocateScalarMemory(vx_size size);
 
     /**
+     * @brief   Get host memory from scalar obj
+     *
+     * @param scalar    scalar obj
+     * @param user_ptr  pointer to user memory
+     * @return vx_status VX_SUCCESS on success
+     * @ingroup group_int_scalar
+     */
+    static vx_status scalarToHostMem(vx_scalar scalar, void* user_ptr);
+
+    /**
+     * @brief Get scalar from host memory
+     *
+     * @param scalar   scalar obj
+     * @param user_ptr pointer to user memory
+     * @return vx_status VX_SUCCESS on success
+     * @ingroup group_int_scalar
+     */
+    static vx_status hostMemToScalar(vx_scalar scalar, void* user_ptr);
+
+    /**
      * @brief Print scalar object
      *
-     * @param scalar
+     * @param scalar scalar obj
      * @ingroup group_int_scalar
      */
     static void printScalarValue(vx_scalar scalar);

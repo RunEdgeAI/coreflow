@@ -37,7 +37,7 @@ type_name()
 
 UserDataObject::~UserDataObject()
 {
-    ownFreeMemory(context, &memory);
+    Memory::freeMemory(context, &memory);
 }
 
 vx_bool UserDataObject::allocateUserDataObject()
@@ -45,7 +45,7 @@ vx_bool UserDataObject::allocateUserDataObject()
     vx_bool res = vx_false_e;
     if (size > 0)
     {
-        res = ownAllocateMemory(context, &memory);
+        res = Memory::allocateMemory(context, &memory);
     }
     return res;
 }

@@ -50,14 +50,14 @@ vx_status Remap::setCoordValue(vx_uint32 dst_x, vx_uint32 dst_y, vx_float32 src_
 {
     vx_status status = VX_FAILURE;
     if ((Reference::isValidReference(this, VX_TYPE_REMAP) == vx_true_e) &&
-         (ownAllocateMemory(context, &memory) == vx_true_e))
+         (Memory::allocateMemory(context, &memory) == vx_true_e))
     {
         if ((dst_x < dst_width) &&
             (dst_y < dst_height))
         {
             vx_float32 *coords[] = {
-                 (vx_float32*)ownFormatMemoryPtr(&memory, 0, dst_x, dst_y, 0),
-                 (vx_float32*)ownFormatMemoryPtr(&memory, 1, dst_x, dst_y, 0),
+                 (vx_float32*)Memory::formatMemoryPtr(&memory, 0, dst_x, dst_y, 0),
+                 (vx_float32*)Memory::formatMemoryPtr(&memory, 1, dst_x, dst_y, 0),
             };
             *coords[0] = src_x;
             *coords[1] = src_y;
@@ -88,8 +88,8 @@ vx_status Remap::getCoordValue(vx_uint32 dst_x, vx_uint32 dst_y, vx_float32 *src
             (dst_y < dst_height))
         {
             vx_float32 *coords[] = {
-                 (vx_float32*)ownFormatMemoryPtr(&memory, 0, dst_x, dst_y, 0),
-                 (vx_float32*)ownFormatMemoryPtr(&memory, 1, dst_x, dst_y, 0),
+                 (vx_float32*)Memory::formatMemoryPtr(&memory, 0, dst_x, dst_y, 0),
+                 (vx_float32*)Memory::formatMemoryPtr(&memory, 1, dst_x, dst_y, 0),
             };
             *src_x = *coords[0];
             *src_y = *coords[1];
@@ -114,7 +114,7 @@ vx_status Remap::getCoordValue(vx_uint32 dst_x, vx_uint32 dst_y, vx_float32 *src
 
 void Remap::destruct()
 {
-    ownFreeMemory(context, &memory);
+    Memory::freeMemory(context, &memory);
 }
 
 /*****************************************************************************/
@@ -233,14 +233,14 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetRemapPoint(vx_remap remap, vx_uint32 dst
 {
     vx_status status = VX_FAILURE;
     if ((Reference::isValidReference(remap, VX_TYPE_REMAP) == vx_true_e) &&
-         (ownAllocateMemory(remap->context, &remap->memory) == vx_true_e))
+         (Memory::allocateMemory(remap->context, &remap->memory) == vx_true_e))
     {
         if ((dst_x < remap->dst_width) &&
             (dst_y < remap->dst_height))
         {
             vx_float32 *coords[] = {
-                 (vx_float32*)ownFormatMemoryPtr(&remap->memory, 0, dst_x, dst_y, 0),
-                 (vx_float32*)ownFormatMemoryPtr(&remap->memory, 1, dst_x, dst_y, 0),
+                 (vx_float32*)Memory::formatMemoryPtr(&remap->memory, 0, dst_x, dst_y, 0),
+                 (vx_float32*)Memory::formatMemoryPtr(&remap->memory, 1, dst_x, dst_y, 0),
             };
             *coords[0] = src_x;
             *coords[1] = src_y;
@@ -272,8 +272,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxGetRemapPoint(vx_remap remap, vx_uint32 dst
             (dst_y < remap->dst_height))
         {
             vx_float32 *coords[] = {
-                 (vx_float32*)ownFormatMemoryPtr(&remap->memory, 0, dst_x, dst_y, 0),
-                 (vx_float32*)ownFormatMemoryPtr(&remap->memory, 1, dst_x, dst_y, 0),
+                 (vx_float32*)Memory::formatMemoryPtr(&remap->memory, 0, dst_x, dst_y, 0),
+                 (vx_float32*)Memory::formatMemoryPtr(&remap->memory, 1, dst_x, dst_y, 0),
             };
             *src_x = *coords[0];
             *src_y = *coords[1];

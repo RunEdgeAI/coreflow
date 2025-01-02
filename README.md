@@ -1,5 +1,5 @@
 # CoreVX Project
-This project is an implementation of the OpenVX specification version 1.3.1, with various extensions and features enabled. 
+This project is an implementation of the OpenVX specification version 1.3.1, with various extensions and features enabled.
 The project is built using Google's Bazel build system and is validated by unit tests, integration tests, and the OpenVX conformance tests.
 
 ## Project Structure
@@ -52,6 +52,7 @@ The following extensions and features are enabled in the CoreVX project, as defi
 - **OPENVX_USE_S16**: Enables support for 16-bit signed integer data types.
 - **OPENVX_USE_OPENCL_INTEROP**: Enables interoperability with OpenCL, allowing OpenVX to leverage OpenCL for acceleration.
 - **OPENVX_USE_NN**: Enables the neural network extension, providing support for neural network operations within OpenVX.
+- **OPENVX_USE_NN_16**: Enables half float (float16) support for the neural network extension.
 
 ### Conditional Extensions for ARM Architectures
 The following extensions are conditionally enabled for ARM and ARM64 architectures:

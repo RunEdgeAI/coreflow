@@ -17,6 +17,7 @@
 #define OPENVX_USE_S16
 #define OPENVX_USE_OPENCL_INTEROP
 #define OPENVX_USE_NN
+#define OPENVX_USE_NN_16
 
 #if defined(__arm__) || defined(__arm64__)
 #define OPENVX_USE_TILING
