@@ -15,7 +15,9 @@
  */
 
 #include <VX/vx.h>
-#include <vx_debug.h>
+
+#include "vx_debug.h"
+#include "vx_internal.h"
 
 #include <cstdarg>
 #include <cstdio>
@@ -237,6 +239,8 @@ const char* ownGetObjectTypeName(vx_enum type) {
         name = "NODE"; break;
     case VX_TYPE_KERNEL:
         name = "KERNEL"; break;
+    case VX_TYPE_TARGET:
+        name = "TARGET"; break;
     case VX_TYPE_PARAMETER:
         name = "PARAMETER"; break;
     case VX_TYPE_DELAY:
