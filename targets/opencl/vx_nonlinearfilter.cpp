@@ -80,7 +80,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         memory->hdls[pln],
         CL_TRUE,
         0,
-        ownComputeMemorySize(memory, pln),
+        Memory::computeMemorySize(memory, pln),
         memory->ptrs[pln],
         0,
         nullptr,
@@ -91,7 +91,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
     ref = node->parameters[2];
     memory = &((vx_matrix)ref)->memory;
 
-    size = ownComputeMemorySize(memory, pln);
+    size = Memory::computeMemorySize(memory, pln);
 
     memory->hdls[pln] = clCreateBuffer(context->global[0], CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, size, memory->ptrs[pln], &err);
     err = clEnqueueWriteBuffer(context->queues[plidx][didx],
@@ -194,7 +194,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
 
     err = clEnqueueReadBuffer(context->queues[plidx][didx],
         memory->hdls[pln],
-        CL_TRUE, 0, ownComputeMemorySize(memory, pln),
+        CL_TRUE, 0, Memory::computeMemorySize(memory, pln),
         memory->ptrs[pln],
         0, nullptr, nullptr);
 

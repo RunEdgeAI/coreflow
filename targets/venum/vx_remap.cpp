@@ -75,7 +75,7 @@ static void remapNearest(void *src, vx_imagepatch_addressing_t *src_addr, vx_rem
 
     for (y = 0; y < dst_addr->dim_y; y++)
     {
-        float *ptr_map = (float *)ownFormatMemoryPtr(&table->memory, 0, 0, y, 0);
+        float *ptr_map = (float *)Memory::formatMemoryPtr(&table->memory, 0, 0, y, 0);
         vx_uint8 *ptr_dst = (vx_uint8 *)dst + y * dst_addr->stride_y;
         for (x = 0; x < w8; x += 8)
         {
@@ -204,7 +204,7 @@ static void remapBilinear(void *src, vx_imagepatch_addressing_t *src_addr, vx_re
 
     for (y = 0; y < dst_addr->dim_y; y++)
     {
-        float *ptr_map = (float *)ownFormatMemoryPtr(&table->memory, 0, 0, y, 0);
+        float *ptr_map = (float *)Memory::formatMemoryPtr(&table->memory, 0, 0, y, 0);
         vx_uint8 *ptr_dst = (vx_uint8 *)dst + y * dst_addr->stride_y;
         for (x = 0; x < w8; x += 8)
         {

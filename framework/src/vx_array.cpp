@@ -62,7 +62,7 @@ vx_array Array::createArray(vx_context context, vx_enum item_type, vx_size capac
 
 void Array::destruct()
 {
-    ownFreeMemory(context, &memory);
+    Memory::freeMemory(context, &memory);
 }
 
 vx_bool Array::initVirtualArray(vx_enum item_type, vx_size capacity)
@@ -106,7 +106,7 @@ vx_bool Array::allocateArray()
     vx_bool res = vx_false_e;
     if (capacity > 0)
     {
-        res = ownAllocateMemory(context, &memory);
+        res = Memory::allocateMemory(context, &memory);
     }
     return res;
 }

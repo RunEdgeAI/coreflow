@@ -35,7 +35,7 @@ Distribution::~Distribution()
 
 void Distribution::destruct()
 {
-    ownFreeMemory(context, &memory);
+    Memory::freeMemory(context, &memory);
 }
 
 /******************************************************************************/
@@ -213,14 +213,14 @@ VX_API_ENTRY vx_status VX_API_CALL vxAccessDistribution(vx_distribution distribu
     (void)usage;
 
     if ((Reference::isValidReference(distribution, VX_TYPE_DISTRIBUTION) == vx_true_e) &&
-        (ownAllocateMemory(distribution->context, &distribution->memory) == vx_true_e))
+        (Memory::allocateMemory(distribution->context, &distribution->memory) == vx_true_e))
     {
         if (ptr != nullptr)
         {
             Osal::semWait(&distribution->lock);
             {
-                vx_size size = ownComputeMemorySize(&distribution->memory, 0);
-                ownPrintMemory(&distribution->memory);
+                vx_size size = Memory::computeMemorySize(&distribution->memory, 0);
+                Memory::printMemory(&distribution->memory);
                 if (*ptr == nullptr)
                 {
                     *ptr = distribution->memory.ptrs[0];
@@ -247,7 +247,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCommitDistribution(vx_distribution distribu
 {
     vx_status status = VX_FAILURE;
     if ((Reference::isValidReference(distribution, VX_TYPE_DISTRIBUTION) == vx_true_e) &&
-        (ownAllocateMemory(distribution->context, &distribution->memory) == vx_true_e))
+        (Memory::allocateMemory(distribution->context, &distribution->memory) == vx_true_e))
     {
         if (ptr != nullptr)
         {
@@ -255,7 +255,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCommitDistribution(vx_distribution distribu
             {
                 if (ptr != distribution->memory.ptrs[0])
                 {
-                    vx_size size = ownComputeMemorySize(&distribution->memory, 0);
+                    vx_size size = Memory::computeMemorySize(&distribution->memory, 0);
                     memcpy(distribution->memory.ptrs[0], ptr, size);
                     VX_PRINT(VX_ZONE_INFO, "Copied distribution from %p to %p for " VX_FMT_SIZE " bytes\n", ptr, distribution->memory.ptrs[0], size);
                 }
@@ -280,7 +280,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyDistribution(vx_distribution distributi
 
     /* bad references */
     if ((Reference::isValidReference(distribution, VX_TYPE_DISTRIBUTION) != vx_true_e) ||
-        (ownAllocateMemory(distribution->context, &distribution->memory) != vx_true_e))
+        (Memory::allocateMemory(distribution->context, &distribution->memory) != vx_true_e))
     {
         status = VX_ERROR_INVALID_REFERENCE;
         VX_PRINT(VX_ZONE_ERROR, "Not a valid distribution object!\n");
@@ -297,8 +297,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyDistribution(vx_distribution distributi
     }
 
     /* copy data */
-    size = ownComputeMemorySize(&distribution->memory, 0);
-    ownPrintMemory(&distribution->memory);
+    size = Memory::computeMemorySize(&distribution->memory, 0);
+    Memory::printMemory(&distribution->memory);
 
 #ifdef OPENVX_USE_OPENCL_INTEROP
     void * user_ptr_given = user_ptr;
@@ -371,7 +371,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapDistribution(vx_distribution distributio
 
     /* bad references */
     if ((Reference::isValidReference(distribution, VX_TYPE_DISTRIBUTION) != vx_true_e) ||
-        (ownAllocateMemory(distribution->context, &distribution->memory) != vx_true_e))
+        (Memory::allocateMemory(distribution->context, &distribution->memory) != vx_true_e))
     {
         status = VX_ERROR_INVALID_REFERENCE;
         VX_PRINT(VX_ZONE_ERROR, "Not a valid distribution object!\n");
@@ -396,8 +396,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapDistribution(vx_distribution distributio
     }
 
     /* map data */
-    size = ownComputeMemorySize(&distribution->memory, 0);
-    ownPrintMemory(&distribution->memory);
+    size = Memory::computeMemorySize(&distribution->memory, 0);
+    Memory::printMemory(&distribution->memory);
 
     if (distribution->context->memoryMap((vx_reference)distribution, size, usage, mem_type, flags, nullptr, ptr, map_id) == vx_true_e)
     {
@@ -457,7 +457,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapDistribution(vx_distribution distribut
 
     /* bad references */
     if ((Reference::isValidReference(distribution, VX_TYPE_DISTRIBUTION) != vx_true_e) ||
-        (ownAllocateMemory(distribution->context, &distribution->memory) != vx_true_e))
+        (Memory::allocateMemory(distribution->context, &distribution->memory) != vx_true_e))
     {
         status = VX_ERROR_INVALID_REFERENCE;
         VX_PRINT(VX_ZONE_ERROR, "Not a valid distribution object!\n");
@@ -489,8 +489,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapDistribution(vx_distribution distribut
 #endif
 
     /* unmap data */
-    size = ownComputeMemorySize(&distribution->memory, 0);
-    ownPrintMemory(&distribution->memory);
+    size = Memory::computeMemorySize(&distribution->memory, 0);
+    Memory::printMemory(&distribution->memory);
 
     {
         vx_uint32 id = (vx_uint32)map_id;

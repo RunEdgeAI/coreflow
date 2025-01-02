@@ -32,7 +32,7 @@ Convolution::~Convolution()
 
 void Convolution::destruct()
 {
-    ownFreeMemory(context, &memory);
+    Memory::freeMemory(context, &memory);
 }
 
 /******************************************************************************/
@@ -60,7 +60,7 @@ VX_API_ENTRY vx_convolution VX_API_CALL vxCreateConvolution(vx_context context, 
 
     if (Context::isValidContext(context) == vx_true_e)
     {
-        if (isodd(columns) && columns >= 3 && isodd(rows) && rows >= 3)
+        if (vxIsOdd(columns) && columns >= 3 && vxIsOdd(rows) && rows >= 3)
         {
             convolution = (vx_convolution)Reference::createReference(context, VX_TYPE_CONVOLUTION, VX_EXTERNAL, context);
             if (vxGetStatus((vx_reference)convolution) == VX_SUCCESS && convolution->type == VX_TYPE_CONVOLUTION)
@@ -184,7 +184,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReadConvolutionCoefficients(vx_convolution 
 {
     vx_status status = VX_ERROR_INVALID_REFERENCE;
     if ((Reference::isValidReference(convolution, VX_TYPE_CONVOLUTION) == vx_true_e) &&
-        (ownAllocateMemory(convolution->context, &convolution->memory) == vx_true_e))
+        (Memory::allocateMemory(convolution->context, &convolution->memory) == vx_true_e))
     {
         Osal::semWait(&convolution->lock);
         if (array)
@@ -204,7 +204,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxWriteConvolutionCoefficients(vx_convolution
 {
     vx_status status = VX_ERROR_INVALID_REFERENCE;
     if ((Reference::isValidReference(convolution, VX_TYPE_CONVOLUTION) == vx_true_e) &&
-        (ownAllocateMemory(convolution->context, &convolution->memory) == vx_true_e))
+        (Memory::allocateMemory(convolution->context, &convolution->memory) == vx_true_e))
     {
         Osal::semWait(&convolution->lock);
         if (array)
@@ -228,7 +228,7 @@ vx_status VX_API_CALL vxCopyConvolutionCoefficients(vx_convolution convolution, 
 
     if (Reference::isValidReference(convolution, VX_TYPE_CONVOLUTION) == vx_true_e)
     {
-        if (ownAllocateMemory(convolution->context, &convolution->memory) == vx_true_e)
+        if (Memory::allocateMemory(convolution->context, &convolution->memory) == vx_true_e)
         {
 #ifdef OPENVX_USE_OPENCL_INTEROP
             void * ptr_given = ptr;

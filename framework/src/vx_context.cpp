@@ -909,7 +909,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
                 if (ref && ref->external_count > 0)
                 {
                     VX_PRINT(VX_ZONE_WARNING,"Stale reference " VX_FMT_REF " of type %s at external count %u, internal count %u\n",
-                             ref, ownGetObjectTypeName(ref->type), ref->external_count, ref->internal_count);
+                             ref, vxGetObjectTypeName(ref->type), ref->external_count, ref->internal_count);
                 }
 
                 /* These were internally opened during creation, so should internally close ERRORs */

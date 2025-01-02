@@ -184,7 +184,7 @@ void Image::initImage(vx_uint32 width, vx_uint32 height, vx_df_image color)
 
 void Image::freeImage()
 {
-    ownFreeMemory(context, &memory);
+    Memory::freeMemory(context, &memory);
 }
 
 /* Allocate the memory for an image. The function returns vx_false_e in case
@@ -197,10 +197,10 @@ vx_bool Image::allocateImage()
     vx_bool ret = vx_true_e;
 
     /*
-     * Note: ownAllocateMemory allocates memory when the 'memory->allocated' flag
+     * Note: Memory::allocateMemory allocates memory when the 'memory->allocated' flag
      * is 'vx_false_e'. For images created from handle, this flag is set to
      * 'vx_false_e' when there is no handle and no memory allocation should be done
-     * by OpenVX. ownAllocateMemory then must not be called for images created from
+     * by OpenVX. Memory::allocateMemory then must not be called for images created from
      * handle.
      */
 
@@ -208,8 +208,8 @@ vx_bool Image::allocateImage()
     if (memory_type == VX_MEMORY_TYPE_NONE)
     {
         /* Standard image */
-        ret = ownAllocateMemory(context, &memory);
-        ownPrintMemory(&memory);
+        ret = Memory::allocateMemory(context, &memory);
+        Memory::printMemory(&memory);
     }
     else
     {
@@ -428,6 +428,20 @@ void Image::printImage(vx_image image)
     }
 }
 
+void Image::printImageAddressing(const vx_imagepatch_addressing_t *addr)
+{
+    if (addr)
+    {
+        VX_PRINT(VX_ZONE_IMAGE, "addr:%p dim={%u,%u} stride={%d,%d} stride_x_bits={%u} scale={%u,%u} step={%u,%u}\n",
+                addr,
+                addr->dim_x, addr->dim_y,
+                addr->stride_x, addr->stride_y,
+                addr->stride_x_bits,
+                addr->scale_x, addr->scale_y,
+                addr->step_x, addr->step_y);
+    }
+}
+
 void Image::destruct()
 {
     /* if it's not imported and does not have a parent, free it */
@@ -491,7 +505,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateUniformImage(vx_context context, vx_ui
             void *base = nullptr;
             if (vxAccessImagePatch(image, &rect, p, &addr, &base, VX_WRITE_ONLY) == VX_SUCCESS)
             {
-                ownPrintImageAddressing(&addr);
+                Image::printImageAddressing(&addr);
                 for (y = 0; y < addr.dim_y; y+=addr.step_y)
                 {
                     for (x = 0; x < addr.dim_x; x+=addr.step_x)
@@ -1306,7 +1320,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetImagePixelValues(vx_image image, const v
             void *base = nullptr;
             if (vxAccessImagePatch(image, &rect, p, &addr, &base, VX_WRITE_ONLY) == VX_SUCCESS)
             {
-                ownPrintImageAddressing(&addr);
+                Image::printImageAddressing(&addr);
                 width  = (format == VX_DF_IMAGE_U1) ? addr.dim_x - rect.start_x % 8 : addr.dim_x;
                 height = addr.dim_y;
                 for (y = 0; y < height; y+=addr.step_y)
@@ -1638,7 +1652,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxAccessImagePatch(vx_image image,
                 goto exit;
             }
         }
-        ownPrintMemory(&image->memory);
+        Memory::printMemory(&image->memory);
         p = (vx_uint8 *)image->memory.ptrs[plane_index];
 
         /* use the addressing of the internal format */
@@ -1825,7 +1839,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCommitImagePatch(vx_image image,
         image, ptr, plane_index, start_x, start_y, end_x, end_y);
 
     Image::printImage(image);
-    ownPrintImageAddressing(addr);
+    Image::printImageAddressing(addr);
 
     /* determine if virtual before checking for memory */
     if (image->is_virtual == vx_true_e && zero_area == vx_false_e)
@@ -2578,7 +2592,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapImagePatch(
                     vx_uint8* pSrc = image->memory.ptrs[plane_index];
                     vx_uint8* pDst = buf;
 
-                    ownPrintMemory(&image->memory);
+                    Memory::printMemory(&image->memory);
 
                     /* Both have compact lines */
                     for (y = start_y; y < end_y; y += addr->step_y)
