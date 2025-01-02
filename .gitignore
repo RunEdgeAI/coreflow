@@ -1,6 +1,9 @@
 # vscode files
 **/.vscode
 
+# dev container files
+**/.devcontainer/**
+
 # Prerequisites
 *.d
 

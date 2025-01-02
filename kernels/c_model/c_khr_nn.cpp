@@ -508,7 +508,7 @@ void PoolingKernelImpl(
         if (!max_pooling)
         {
             //result = conversion_24_8(result / (int16_t)(size_x * size_y));
-            result = static_cast<int_fast32_t>(CLAMP(result / static_cast<vx_int32>(size_x * size_y), getMinValue(fmt), getMaxValue(fmt)));
+            result = static_cast<int32_t>(CLAMP(result / static_cast<int32_t>(size_x * size_y), getMinValue(fmt), getMaxValue(fmt)));
         }
 
         const size_t output_byte_offset =
@@ -804,10 +804,10 @@ void ROIPoolingKernelImpl(
         const int dy_after = ((y + 1) * roi_h + (out_h - 1)) / out_h;
 
         // clamp in case roi_x or roi_y were unreasonable
-        const int x_begin = static_cast<int>(CLAMP(roi_x0 + dx_begin, 0, static_cast<int>(data_w)));
-        const int y_begin = static_cast<int>(CLAMP(roi_y0 + dy_begin, 0, static_cast<int>(data_h)));
-        const int x_after = static_cast<int>(CLAMP(roi_x0 + dx_after, 0, static_cast<int>(data_w)));
-        const int y_after = static_cast<int>(CLAMP(roi_y0 + dy_after, 0, static_cast<int>(data_h)));
+        const int x_begin = static_cast<int>(CLAMP(static_cast<size_t>(roi_x0 + dx_begin), 0, data_w));
+        const int y_begin = static_cast<int>(CLAMP(static_cast<size_t>(roi_y0 + dy_begin), 0, data_h));
+        const int x_after = static_cast<int>(CLAMP(static_cast<size_t>(roi_x0 + dx_after), 0, data_w));
+        const int y_after = static_cast<int>(CLAMP(static_cast<size_t>(roi_y0 + dy_after), 0, data_h));
 
         const char * data_b_ptr = (char*)in0_ptr + in0.strides[3] * b + in0.strides[2] * c;
 

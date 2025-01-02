@@ -93,12 +93,11 @@ Context::~Context()
     vx_uint32 r;
     for (r = 0; r < VX_INT_MAX_REF; r++)
     {
-        vx_reference ref = reftable[r];
-        if (ref)
+        if (reftable[r])
         {
             // VX_PRINT(VX_ZONE_INFO, "ref removed:\n");
             // Reference::printReference(ref); // For debugging
-            delete reftable[r];
+            // delete reftable[r];
             reftable[r] = nullptr;
             num_references--;
         }
@@ -358,11 +357,11 @@ vx_bool Context::removeReference(vx_reference& ref)
         if (reftable[r] &&
             reftable[r] == ref)
         {
-            if (0u == ref->totalReferenceCount())
+            // if (0u == ref->totalReferenceCount())
             {
                 VX_PRINT(VX_ZONE_LOG, "Removing:\n");
                 Reference::printReference(ref); // For debugging
-                delete reftable[r];
+                // delete reftable[r];
                 reftable[r] = nullptr;
             }
             ref = nullptr;

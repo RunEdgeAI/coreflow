@@ -39,6 +39,10 @@ jobs:
       - name: OpenVX Integration Test
         run: VX_CL_SOURCE_DIR=$GITHUB_WORKSPACE/kernels/opencl bazel run //tests:vx_test
 
+      # Run OpenVX Conformance tests
+      - name: OpenVX Conformance Tests
+        run: ./test_vx_conformance.sh
+
       # Test the project
       # - name: Run Bazel tests
       #   run: |
