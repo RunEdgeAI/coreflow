@@ -37,8 +37,8 @@ enum vx_node_attribute_internal_e {
 };
 
 /*! \brief Used to set the graph as a child of the node within another graph.
- * \param [in] n The node.
- * \param [in] g The child graph.
+ * \param [in] node The node.
+ * \param [in] graph The child graph.
  * \retval VX_ERROR_INVALID_GRAPH The Graph's parameters do not match the Node's
  * parameters.
  * \ingroup group_int_node
@@ -46,7 +46,7 @@ enum vx_node_attribute_internal_e {
 vx_status ownSetChildGraphOfNode(vx_node node, vx_graph graph);
 
 /*! \brief Retrieves the handle of the child graph, if it exists.
- * \param [in] n The node.
+ * \param [in] node The node.
  * \return Returns the handle of the child graph or zero if it doesn't have one.
  * \ingroup group_int_node
  */

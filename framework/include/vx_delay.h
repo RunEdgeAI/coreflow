@@ -14,6 +14,15 @@
 
 #include "vx_internal.h"
 
+/*!
+ * \file
+ * \brief The internal Delay implementation
+ *
+ * \defgroup group_int_delay Internal Delay API
+ * \ingroup group_internal
+ * \brief The Internal Delay API.
+ */
+
 /*! \brief The internal representation of any delay object.
  * \ingroup group_int_delay
  */
@@ -47,7 +56,6 @@ public:
      * \param [in] value The delay slot object reference.
      * \param [in] n The node reference.
      * \param [in] i The index of the parameter.
-     * \param [in] d The direction of the parameter.
      * \ingroup group_int_delay
      */
     static vx_bool addAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i);

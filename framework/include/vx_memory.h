@@ -26,7 +26,7 @@
  * \brief The Internal Memory API.
  */
 
-/*! \brief The internal representation of a \ref vx_memory
+/*! \brief The internal representation of a \ref vx_memory_t
  * \ingroup group_int_memory
  */
 class Memory

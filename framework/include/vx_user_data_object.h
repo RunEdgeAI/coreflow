@@ -13,6 +13,15 @@
 
 #include "vx_internal.h"
 
+/*!
+ * \file
+ * \brief The internal user data object implementation
+ *
+ * \defgroup group_int_user_data_object Internal User Data Object API
+ * \ingroup group_internal
+ * \brief The Internal User Data Object API.
+ */
+
 /*! \brief user data object descriptor as placed in shared memory
  * \ingroup group_int_user_data_object
  */

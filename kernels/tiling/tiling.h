@@ -157,10 +157,14 @@ extern "C" {
  * \param [in] flexible_func_ptr The process-local flexible function pointer to be invoked.
  * \param [in] fast_func_ptr The process-local fast function pointer to be invoked.
  * \param [in] num_params The number of parameters for this kernel.
+ * \param [in] validate The pointer to a function which will validate the parameters
+ * to this kernel.
  * \param [in] input The pointer to a function which will validate the
  * input parameters to this kernel.
  * \param [in] output The pointer to a function which will validate the
  * output parameters to this kernel.
+ * \param [in] initialize The pointer to a function which will initialize the kernel.
+ * \param [in] deinitialize The pointer to a function which will deinitialize the kernel.
  * \note Tiling Kernels do not have access to any of the normal node attributes listed
  * in \ref vx_node_attribute_e.
  * \post Call <tt>\ref vxAddParameterToKernel</tt> for as many parameters as the function has,

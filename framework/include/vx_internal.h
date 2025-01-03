@@ -22,10 +22,10 @@
  * \brief The internal implementation header.
  * \author Erik Rainey <erik.rainey@gmail.com>
  *
- * \defgroup group_internal OpenVX Sample Implementation
- * \brief The Sample OpenVX Implementation.
- * \details A free, Open Source implementation of the OpenVX implementation that
- * vendors may use as a basis of developing their own version of OpenVX.
+ * \defgroup group_internal OpenVX Implementation
+ * \brief The OpenVX Implementation.
+ * \details A proprietary, Closed Source implementation of the OpenVX implementation
+ * by Edge.AI.
  *
  * \defgroup group_int_types Internal Types
  * \ingroup group_internal
@@ -574,7 +574,6 @@ typedef vx_status (*vx_target_deinit_f)(vx_target target);
  * \param [in] target The pointer to the target context.
  * \param [in] targetName The name of the abstract target.
  * \param [in] kernelName The name of the kernel.
- * \param [in] variantName The variant name of the kernel.
  * \param [out] pIndex The pointer to the index of the kernel in the target's list
  * if the kernel is supported (the function will return VX_SUCCESS).
  * \note The target interface function must be exported as "vxTargetSupports"
@@ -611,7 +610,7 @@ typedef vx_status (*vx_target_verify_f)(vx_target target, vx_node node);
  * \param [in] name
  * \param [in] enumeration
  * \param [in] func_ptr
- * \param [in] numParams
+ * \param [in] num_parameters
  * \param [in] validate
  * \param [in] input
  * \param [in] output

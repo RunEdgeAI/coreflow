@@ -21,6 +21,15 @@
 
 #define VX_BAD_MAGIC (42)
 
+/*!
+ * \file
+ * \brief The internal Reference implementation
+ *
+ * \defgroup group_int_reference Internal Reference API
+ * \ingroup group_internal
+ * \brief The Internal Reference API.
+ */
+
 /*! \brief The most basic type in the OpenVX system. Any type that inherits
  *  from vx_reference must have a vx_reference as its first memeber
  *  to allow casting to this type.
@@ -48,6 +57,8 @@ public:
      * \note This does not add the reference to the system context yet.
      * \param [in] context The system context.
      * \param [in] type The \ref vx_type_e type desired.
+     * \param [in] refType The reference type.
+     * \param [in] scope The parent reference.
      * \ingroup group_int_reference
      */
     static vx_reference createReference(vx_context context, vx_enum type, vx_reftype_e refType, vx_reference scope);
@@ -96,7 +107,7 @@ public:
     /*! \brief Used to destroy a reference.
      * \param [in] ref The reference to release.
      * \param [in] type The \ref vx_type_e to check against.
-     * \param [in] internal If true, the internal count is decremented, else the external
+     * \param [in] reftype The reference type.
      * \param [in] special_destructor The a special function to call after the total count has reached zero, if NULL, a default destructor is used.
      * \ingroup group_int_reference
      */
@@ -106,8 +117,8 @@ public:
                                       vx_destructor_f special_destructor);
 
     /*! \brief Used to initialize any vx_reference as a delay element
-    * \param [in] d The delay to which the object belongs
-    * \param [in] the index in the delay
+    * \param [in] delay The delay to which the object belongs
+    * \param [in] index The index in the delay
     * \ingroup group_int_reference
     */
     void initReferenceForDelay(vx_delay delay, vx_int32 index);

@@ -18,6 +18,15 @@
 
 #include <VX/vx.h>
 
+/*!
+ * \file
+ * \brief The internal type pairs implementation
+ *
+ * \defgroup group_int_type_pairs Internal Type Pairs Helper API
+ * \ingroup group_internal
+ * \brief The Internal Type Pairs Helper API.
+ */
+
 /*! \brief The enum string structure
  * \ingroup group_int_type_pairs
  */
