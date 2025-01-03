@@ -83,8 +83,7 @@ public:
     vx_target* findTargetByString(const char* target_string);
 
     /*! \brief This allows the implementation to load a target interface into OpenVX.
-     * \param [in] context The overall context pointer.
-     * \param [in] name The shortened name of the target module.
+     * \param [in] targetName The shortened name of the target module.
      * \ingroup group_int_target
      */
     vx_status loadTarget(const vx_char* targetName);
@@ -96,8 +95,8 @@ public:
     vx_status unloadTarget(const vx_char* targetName);
 
     /*! \brief This unloads a specific target in the targets list.
-     * \param [in] context The overall context pointer.
      * \param [in] index The index into the context's target array.
+     * \param [in] unload_module If true, the module will be unloaded.
      * \ingroup group_int_target
      */
     vx_status unloadTarget(vx_uint32 index, vx_bool unload_module);
@@ -131,7 +130,6 @@ public:
     vx_bool addReference(const vx_reference& ref);
 
     /*! \brief Used to remove a reference from the context.
-     * \param [in] context The system context.
      * \param [in] ref The pointer to the reference object.
      * \ingroup group_int_reference
      */

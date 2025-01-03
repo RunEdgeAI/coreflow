@@ -19,6 +19,15 @@
 
 #include <VX/vx.h>
 
+/*!
+ * \file
+ * \brief The internal object array implementation
+ *
+ * \defgroup group_int_object_array Internal Object Array API
+ * \ingroup group_internal
+ * \brief The Internal Object Array API.
+ */
+
 /*! \brief The internal representation of a \ref vx_object_array
  * \ingroup group_int_object_array
  */

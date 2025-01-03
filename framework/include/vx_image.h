@@ -51,7 +51,7 @@ public:
     ~Image();
 
     /*! \brief Used to validate the vx_image types.
-     * \param [in] img The vx_image to validate.
+     * \param [in] image The vx_image to validate.
      * \ingroup group_int_image
      */
     static vx_bool isValidImage(vx_image image);
@@ -75,7 +75,8 @@ public:
 
     /*! \brief Used to initialize a single plane in an image object.
      * \param [in] index The index to the plane.
-     * \param [in] bpp The unit size (size of pixel).
+     * \param [in] soc The unit size (size of pixel).
+     * \param [in] channels The number of channels in the plane.
      * \param [in] width The width in pixels.
      * \param [in] height The height in pixels.
      * \ingroup group_int_image
@@ -88,7 +89,6 @@ public:
 
     /*! \brief Used to initialize the image meta-data structure with the correct
      * values per the df_image code.
-     * \param [in,out] image The image object.
      * \param [in] width Width in pixels
      * \param [in] height Height in pixels
      * \param [in] color VX_DF_IMAGE color space.
@@ -97,7 +97,6 @@ public:
     void initImage(vx_uint32 width, vx_uint32 height, vx_df_image color);
 
     /*! \brief Used to allocate an image object.
-     * \param [in,out] image The image object.
      * \ingroup group_int_image
      */
     vx_bool allocateImage();

@@ -73,7 +73,6 @@ public:
     static const char* reverse_strstr(const char* string, const char* substr);
 
     /*! \brief Initializes a target's kernels list.
-     * \param [in] target The pointer to the target struct.
      * \param [in] kernels The array of kernels that the target supports.
      * \param [in] numkernels The length of the kernels list.
      * \ingroup group_int_target
@@ -82,9 +81,6 @@ public:
                              vx_uint32 numkernels);
 
     /*! \brief Deinitializes a target's kernels list.
-     * \param [in] target The pointer to the target struct.
-     * \param [in] kernels The array of kernels that the target supports.
-     * \param [in] numkernels The length of the kernels list.
      * \ingroup group_int_target
      */
     vx_status deinitializeTarget();

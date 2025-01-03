@@ -83,8 +83,8 @@ public:
      * \param [in] parameters The list of parameters for each kernel.
      * \param [in] numParams The number of parameters in the list.
      * \param [in] validator The function pointer to the params validator.
-     * \param [in] in_validator The function pointer to the input validator.
-     * \param [in] out_validator The function pointer to the output validator.
+     * \param [in] input_validator The function pointer to the input validator.
+     * \param [in] output_validator The function pointer to the output validator.
      * \param [in] initialize The function to call to initialize the kernel.
      * \param [in] deinitialize The function to call to deinitialize the kernel.
      * \ingroup group_int_kernel
@@ -130,7 +130,6 @@ public:
                            vx_bool valid_rect_reset);
 
     /*! \brief Used to deinitialize a kernel object in a target kernel list.
-     * \param [in] kernel The pointer to the kernel structure.
      * \ingroup group_int_kernel
      */
     vx_status deinitializeKernel();

@@ -19,6 +19,15 @@
 
 #include "vx_reference.h"
 
+/*!
+ * \file
+ * \brief The internal array implementation
+ *
+ * \defgroup group_int_array Internal Array API
+ * \ingroup group_internal
+ * \brief The Internal Array API.
+ */
+
 /*! \brief The internal representation of a \ref vx_array
  * \ingroup group_int_array
  */
