@@ -66,6 +66,7 @@ void Import::destruct()
     if (refs)
     {
         delete[](refs);
+        refs = nullptr;
     }
 }
 

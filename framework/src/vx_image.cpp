@@ -275,7 +275,11 @@ vx_image Image::createImage(vx_context context,
 
 vx_uint32 Image::computePatchOffset(vx_uint32 x, vx_uint32 y, const vx_imagepatch_addressing_t* addr)
 {
-    if (addr->stride_x == 0 && addr->stride_x_bits != 0)
+    if (nullptr == addr)
+    {
+        return 0u;
+    }
+    else if (addr->stride_x == 0 && addr->stride_x_bits != 0)
     {
         /* data type has non-integer byte size */
         return ( (addr->stride_y * ((addr->scale_y * y)/VX_SCALE_UNITY)) +
@@ -290,7 +294,11 @@ vx_uint32 Image::computePatchOffset(vx_uint32 x, vx_uint32 y, const vx_imagepatc
 
 vx_uint32 Image::computePlaneOffset(vx_image image, vx_uint32 x, vx_uint32 y, vx_uint32 p)
 {
-    if (image->memory.strides[p][VX_DIM_X] == 0 && image->memory.stride_x_bits[p] != 0)
+    if (p > image->planes)
+    {
+        return 0;
+    }
+    else if (image->memory.strides[p][VX_DIM_X] == 0 && image->memory.stride_x_bits[p] != 0)
     {
         /* data type has non-integer byte size */
         return ( ((y * image->memory.strides[p][VX_DIM_Y]) / image->scale[p][VX_DIM_Y]) +
@@ -305,7 +313,11 @@ vx_uint32 Image::computePlaneOffset(vx_image image, vx_uint32 x, vx_uint32 y, vx
 
 vx_uint32 Image::computePatchRangeSize(vx_uint32 range, const vx_imagepatch_addressing_t* addr)
 {
-    if (addr->stride_x == 0 && addr->stride_x_bits != 0)
+    if (nullptr == addr)
+    {
+        return 0;
+    }
+    else if (addr->stride_x == 0 && addr->stride_x_bits != 0)
     {
         /* data type has non-integer byte size */
         return (((range * addr->stride_x_bits * addr->scale_x) / VX_SCALE_UNITY) + 7u) / 8u;
@@ -318,7 +330,11 @@ vx_uint32 Image::computePatchRangeSize(vx_uint32 range, const vx_imagepatch_addr
 
 vx_uint32 Image::computePlaneRangeSize(vx_image image, vx_uint32 range, vx_uint32 p)
 {
-    if (image->memory.strides[p][VX_DIM_X] == 0 && image->memory.stride_x_bits[p] != 0)
+    if (p > image->planes)
+    {
+        return 0u;
+    }
+    else if (image->memory.strides[p][VX_DIM_X] == 0 && image->memory.stride_x_bits[p] != 0)
     {
         /* data type has non-integer byte size */
         return (((range * image->memory.stride_x_bits[p]) / image->scale[p][VX_DIM_X]) + 7u) / 8u;
