@@ -51,9 +51,9 @@ jobs:
         run: ./test_vx_conformance.sh
 
       # Test the project
-      # - name: Run Bazel tests
-      #   run: |
-      #     bazel test //...
+      - name: Run Unit tests
+        run: |
+          bazel test //...
 
       # (Optional) Linting or Formatting
       # - name: Run Linter

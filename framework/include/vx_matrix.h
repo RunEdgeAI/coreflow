@@ -62,7 +62,7 @@ public:
     /*! \brief Destroys a matrix objects
      * \ingroup group_int_matrix
      */
-    void destructMatrix();
+    void destruct() override;
 
     /*! \brief Memory Layout */
     vx_memory_t memory;
