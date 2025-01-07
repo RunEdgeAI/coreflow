@@ -44,10 +44,10 @@ pattern()
 
 Matrix::~Matrix()
 {
-    destructMatrix();
+
 }
 
-void Matrix::destructMatrix()
+void Matrix::destruct()
 {
     Memory::freeMemory(context, &memory);
 }

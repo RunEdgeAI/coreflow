@@ -358,10 +358,12 @@ vx_status Reference::releaseReference(vx_reference* r,
                                       vx_destructor_f special_destructor)
 {
     vx_status status = VX_SUCCESS;
-    vx_reference ref = *r;
-    if (Reference::isValidReference(ref, type) == vx_true_e &&
-        type == ref->type)
+
+    if (nullptr != r &&
+        Reference::isValidReference(*r, type) == vx_true_e &&
+        type == (*r)->type)
     {
+        vx_reference ref = *r;
         if (ref->decrementReference(reftype) == 0)
         {
             vx_destructor_f destructor = special_destructor;
