@@ -17,8 +17,6 @@
 #ifndef _OPENVX_TYPES_H_
 #define _OPENVX_TYPES_H_
 
-#include <VX/vx_corevx_ext.h>
-
 /*!
  * \file vx_types.h
  * \brief The type definitions required by OpenVX Library.
@@ -113,7 +111,8 @@ typedef int64_t  vx_int64;
 
 typedef uint32_t vx_bitfield;
 
-// #define EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT
+/* see VX/vx_corevx_ext.h */
+#define EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT
 #if defined(EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT)
 
 /*! \brief A 16-bit float value.

@@ -1,0 +1,58 @@
+diff --git a/cmake/deps.txt b/cmake/deps.txt
+index d16245ba83..3f873e97ee 100644
+--- cmake/deps.txt
++++ cmake/deps.txt
+@@ -15,7 +15,7 @@ flatbuffers;https://github.com/google/flatbuffers/archive/refs/tags/v1.12.0.zip;
+ fp16;https://github.com/Maratyszcza/FP16/archive/0a92994d729ff76a58f692d3028ca1b64b145d91.zip;b985f6985a05a1c03ff1bb71190f66d8f98a1494
+ fxdiv;https://github.com/Maratyszcza/FXdiv/archive/63058eff77e11aa15bf531df5dd34395ec3017c8.zip;a5658f4036402dbca7cebee32be57fb8149811e1
+ google_benchmark;https://github.com/google/benchmark/archive/refs/tags/v1.7.0.zip;e97c368b176e8614e3f1bf13dd9abcf6a7ad9908
+-google_nsync;https://github.com/google/nsync/archive/refs/tags/1.23.0.zip;f3233450cf7156fc0bedd1b0e884eddec264897c
++google_nsync;https://github.com/amikhail48/nsync/archive/refs/tags/1.29.3.zip;1cdfb3b740dadf9a6cc6d6b65976d31f9d9c2900
+ googletest;https://github.com/google/googletest/archive/519beb0e52c842729b4b53731d27c0e0c32ab4a2.zip;4b3c37972e4c1bef1185d46f702082f8772ee73f
+ googlexnnpack;https://github.com/google/XNNPACK/archive/003c580e696a774afdc984996ee909b7c8d8128c.zip;9f192e3f15e1e37ae9c78d53eeea47e45c5eb31c
+ json;https://github.com/nlohmann/json/archive/refs/tags/v3.10.5.zip;f257f8dc27c5b8c085dc887b40cddd18ae1f725c
+
+diff --git a/onnxruntime/core/providers/cpu/nn/string_normalizer.cc b/onnxruntime/core/providers/cpu/nn/string_normalizer.cc
+index dd2e6727a7..50304b3c9e 100644
+--- onnxruntime/core/providers/cpu/nn/string_normalizer.cc
++++ onnxruntime/core/providers/cpu/nn/string_normalizer.cc
+@@ -19,6 +19,9 @@
+ #include <functional>
+ #include <unordered_set>
+
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++
+ namespace onnxruntime {
+
+ ONNX_CPU_OPERATOR_KERNEL(
+@@ -389,3 +392,4 @@ Status StringNormalizer::Compute(OpKernelContext* ctx) const {
+   return status;
+ }
+ }  // namespace onnxruntime
++#pragma GCC diagnostic pop
+diff --git a/cmake/CMakeLists.txt b/cmake/CMakeLists.txt
+index a5d28fb516..b28f631a37 100644
+--- cmake/CMakeLists.txt
++++ cmake/CMakeLists.txt
+@@ -1268,6 +1268,7 @@ if (onnxruntime_USE_CUDA)
+       set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode=arch=compute_53,code=sm_53") # TX1, Nano
+       set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode=arch=compute_62,code=sm_62") # TX2
+       set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode=arch=compute_72,code=sm_72") # AGX Xavier, NX Xavier
++      set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode=arch=compute_75,code=sm_75") # T4
+       if (CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 11)
+         set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode=arch=compute_87,code=sm_87") # AGX Orin, NX Orin
+       endif()
+diff --git a/cmake/external/onnxruntime_external_deps.cmake b/cmake/external/onnxruntime_external_deps.cmake
+index 0c41945778..662841d750 100644
+--- cmake/external/onnxruntime_external_deps.cmake
++++ cmake/external/onnxruntime_external_deps.cmake
+@@ -115,7 +115,7 @@ FetchContent_Declare(
+   URL_HASH SHA1=${DEP_SHA1_protobuf}
+   SOURCE_SUBDIR  cmake
+   PATCH_COMMAND ${ONNXRUNTIME_PROTOBUF_PATCH_COMMAND}
+-  FIND_PACKAGE_ARGS 3.20.2 NAMES Protobuf
++  # FIND_PACKAGE_ARGS 3.20.2 NAMES Protobuf
+ )
+ set(protobuf_BUILD_TESTS OFF CACHE BOOL "Build protobuf tests" FORCE)
+ if (CMAKE_SYSTEM_NAME STREQUAL "Android")

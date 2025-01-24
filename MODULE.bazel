@@ -1,37 +1,59 @@
 """
 bzlmod defs
 """
+
 module(
     name = "corevx",
     version = "1.0",
 )
 
 # Import external dependencies
-bazel_dep(name = "rules_cc", version = "0.0.9")
-bazel_dep(name = "rules_foreign_cc", version = "0.12.0")
-bazel_dep(name = "platforms", version = "0.0.10")
+bazel_dep(name = "rules_cc", version = "0.1.0")
+bazel_dep(name = "rules_foreign_cc", version = "0.11.1")
 bazel_dep(name = "rules_python", version = "0.37.2")
+bazel_dep(name = "platforms", version = "0.0.10")
 bazel_dep(name = "googletest", version = "1.15.2")
 bazel_dep(name = "apple_support", version = "1.17.1", repo_name = "build_bazel_apple_support")
 
+# Use archive_override to patch rules_foreign_cc to default to specific cmake version
+archive_override(
+    module_name = "rules_foreign_cc",
+    integrity = "sha256-SzPWLPEJvMzyhrMO1xIRKcw0z09O2dihHzjZEI9AunQ=",
+    patch_strip = 1,
+    patches = [
+        "//third_party/patch:foreign_cc.patch",
+    ],
+    strip_prefix = "rules_foreign_cc-0.11.1",
+    urls = [
+        "https://github.com/bazelbuild/rules_foreign_cc/releases/download/0.11.1/rules_foreign_cc-0.11.1.tar.gz",
+    ],
+)
+
+tools = use_extension("@rules_foreign_cc//foreign_cc:extensions.bzl", "tools")
+tools.cmake(version = "3.29.5")
+use_repo(tools, "cmake_3.29.5_toolchains")
+
+cuda_home_repository = use_repo_rule("//:build_tools/cuda_defs.bzl", "cuda_home_repository")
+cuda_home_repository(name = "cuda_env")
+
 # Load third-party modules
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-git_repository = use_repo_rule("@bazel//tools/build_defs/repo:git.bzl", "git_repository")
+
+git_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
+new_git_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 
 http_archive(
     name = "libxml2-remote",
-    url = "https://gitlab.gnome.org/GNOME/libxml2/-/archive/v2.13.4/libxml2-v2.13.4.tar.gz",
-    strip_prefix = "libxml2-v2.13.4",
-    sha256 = "832f8c4c652f813c9d0a01adcaf86145b77c64e56c71ed85db8071aa78beb98f",
     build_file_content = """
-    """
+    """,
+    sha256 = "832f8c4c652f813c9d0a01adcaf86145b77c64e56c71ed85db8071aa78beb98f",
+    strip_prefix = "libxml2-v2.13.4",
+    url = "https://gitlab.gnome.org/GNOME/libxml2/-/archive/v2.13.4/libxml2-v2.13.4.tar.gz",
 )
 
 http_archive(
     name = "opencl_headers",
-    url = "https://github.com/KhronosGroup/OpenCL-Headers/archive/refs/tags/v2023.04.17.tar.gz",
-    strip_prefix = "OpenCL-Headers-2023.04.17",
-    sha256 = "0ce992f4167f958f68a37918dec6325be18f848dee29a4521c633aae3304915d",
     build_file_content = """
         cc_library(
             name = "cl_headers",
@@ -40,10 +62,25 @@ http_archive(
             visibility = ["//visibility:public"],
         )
     """,
+    sha256 = "0ce992f4167f958f68a37918dec6325be18f848dee29a4521c633aae3304915d",
+    strip_prefix = "OpenCL-Headers-2023.04.17",
+    url = "https://github.com/KhronosGroup/OpenCL-Headers/archive/refs/tags/v2023.04.17.tar.gz",
 )
 
-git_repository(
-    name = "pytorch",
-    remote = "https://github.com/pytorch/pytorch.git",
-    commit = "7c98e70d44abc7a1aead68b6ea6c8adc8c554db5",
+new_git_repository(
+    name = "onnx_runtime",
+    build_file = "//third_party:onnxruntime.BUILD",
+    # branch= "rel-1.14.1",
+    commit = "c57cf374b67f72575546d7b4c69a1af4972e2b54",
+    patches = ["//third_party/patch:onnx.patch"],
+    recursive_init_submodules = True,
+    remote = "https://github.com/microsoft/onnxruntime",
+)
+
+new_git_repository(
+    name = "onnx_runtime_extensions",
+    build_file = "//third_party:onnxruntime_extensions.BUILD",
+    commit = "81e7799c69044c745239202085eb0a98f102937b",
+    patches = ["//third_party/patch:onnx_ext.patch"],
+    remote = "https://github.com/microsoft/onnxruntime-extensions",
 )

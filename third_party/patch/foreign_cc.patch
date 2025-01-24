@@ -1,0 +1,108 @@
+diff --git a/MODULE.bazel b/MODULE.bazel
+index 2b9a0b1..3e048e6 100644
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -23,7 +23,7 @@ use_repo(python, "python_3_9")
+ tools = use_extension("@rules_foreign_cc//foreign_cc:extensions.bzl", "tools")
+ use_repo(
+     tools,
+-    "cmake_3.23.2_toolchains",
++    "cmake_3.29.5_toolchains",
+     "cmake_src",
+     "gettext_runtime",
+     "glib_dev",
+@@ -38,7 +38,7 @@ use_repo(
+
+ register_toolchains(
+     "@rules_foreign_cc_framework_toolchains//:all",
+-    "@cmake_3.23.2_toolchains//:all",
++    "@cmake_3.29.5_toolchains//:all",
+     "@ninja_1.12.0_toolchains//:all",
+     "@python_3_9//:all",
+     "@rules_foreign_cc//toolchains:all",
+diff --git a/foreign_cc/extensions.bzl b/foreign_cc/extensions.bzl
+index ca23924..cb7cf4c 100644
+--- a/foreign_cc/extensions.bzl
++++ b/foreign_cc/extensions.bzl
+@@ -3,7 +3,7 @@
+ load("//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
+ load("//toolchains:prebuilt_toolchains.bzl", "prebuilt_toolchains")
+
+-_DEFAULT_CMAKE_VERSION = "3.23.2"
++_DEFAULT_CMAKE_VERSION = "3.29.5"
+ _DEFAULT_NINJA_VERSION = "1.12.0"
+
+ cmake_toolchain_version = tag_class(attrs = {
+diff --git a/foreign_cc/private/cc_toolchain_util.bzl b/foreign_cc/private/cc_toolchain_util.bzl
+index 9b33974..acf21f9 100644
+--- a/foreign_cc/private/cc_toolchain_util.bzl
++++ b/foreign_cc/private/cc_toolchain_util.bzl
+@@ -188,6 +188,17 @@ def is_debug_mode(ctx):
+     # https://docs.bazel.build/versions/master/command-line-reference.html#flag--compilation_mode
+     return ctx.var.get("COMPILATION_MODE", "fastbuild") == "dbg"
+
++def pick_cpp_toolchain(cxx):
++    cxx_splitted = cxx.split("/")
++    if(cxx_splitted[-1].startswith("gcc")):
++        cxx_splitted[-1] = cxx_splitted[-1].replace("gcc", "g++")
++        cxx = "/".join(cxx_splitted)
++    if(cxx_splitted[-1].startswith("clang")):
++        cxx_splitted[-1] = cxx_splitted[-1].replace("clang", "clang++")
++        cxx = "/".join(cxx_splitted)
++
++    return cxx
++
+ def get_tools_info(ctx):
+     """Takes information about tools paths from cc_toolchain, returns CxxToolsInfo
+
+@@ -205,18 +216,18 @@ def get_tools_info(ctx):
+             feature_configuration = feature_configuration,
+             action_name = ACTION_NAMES.c_compile,
+         ),
+-        cxx = cc_common.get_tool_for_action(
++        cxx = pick_cpp_toolchain(cc_common.get_tool_for_action(
+             feature_configuration = feature_configuration,
+             action_name = ACTION_NAMES.cpp_compile,
+-        ),
+-        cxx_linker_static = cc_common.get_tool_for_action(
++        )),
++        cxx_linker_static = pick_cpp_toolchain(cc_common.get_tool_for_action(
+             feature_configuration = feature_configuration,
+             action_name = ACTION_NAMES.cpp_link_static_library,
+-        ),
+-        cxx_linker_executable = cc_common.get_tool_for_action(
++        )),
++        cxx_linker_executable = pick_cpp_toolchain(cc_common.get_tool_for_action(
+             feature_configuration = feature_configuration,
+             action_name = ACTION_NAMES.cpp_link_executable,
+-        ),
++        )),
+         ld = cc_toolchain.ld_executable,
+     )
+
+diff --git a/foreign_cc/private/configure_script.bzl b/foreign_cc/private/configure_script.bzl
+index 06c516e..095697a 100644
+--- a/foreign_cc/private/configure_script.bzl
++++ b/foreign_cc/private/configure_script.bzl
+@@ -69,7 +69,7 @@ def create_configure_script(
+         ).lstrip())
+
+     script.append("##mkdirs## $$BUILD_TMPDIR$$/$$INSTALL_PREFIX$$")
+-    script.append("{env_vars} {prefix}\"{configure}\" {prefix_flag}$$BUILD_TMPDIR$$/$$INSTALL_PREFIX$$ {user_options}".format(
++    script.append("{env_vars} {prefix}\"{configure}\" {user_options} --prefix=$$BUILD_TMPDIR$$/$$INSTALL_PREFIX$$".format(
+         env_vars = get_make_env_vars(workspace_name, tools, flags, env_vars, deps, inputs),
+         prefix = configure_prefix,
+         configure = configure_path,
+diff --git a/foreign_cc/repositories.bzl b/foreign_cc/repositories.bzl
+index 3350993..bde540c 100644
+--- a/foreign_cc/repositories.bzl
++++ b/foreign_cc/repositories.bzl
+@@ -9,7 +9,7 @@ load("//toolchains:toolchains.bzl", "built_toolchains", "prebuilt_toolchains", "
+ def rules_foreign_cc_dependencies(
+         native_tools_toolchains = [],
+         register_default_tools = True,
+-        cmake_version = "3.23.2",
++        cmake_version = "3.29.5",
+         make_version = "4.4.1",
+         ninja_version = "1.12.0",
+         meson_version = "1.1.1",
