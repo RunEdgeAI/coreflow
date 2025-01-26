@@ -70,9 +70,8 @@ http_archive(
 new_git_repository(
     name = "onnx_runtime",
     build_file = "//third_party:onnxruntime.BUILD",
-    # branch= "rel-1.14.1",
-    commit = "c57cf374b67f72575546d7b4c69a1af4972e2b54",
-    patches = ["//third_party/patch:onnx.patch"],
+    branch= "rel-1.20.1",
+    # patches = ["//third_party/patch:onnx.patch.new"],
     recursive_init_submodules = True,
     remote = "https://github.com/microsoft/onnxruntime",
 )

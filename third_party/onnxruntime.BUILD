@@ -4,7 +4,7 @@ load("@cuda_env//:cudnn_home.bzl", "CUDNN_HOME")
 
 filegroup(
     name = "all_srcs",
-    srcs = glob(["**"]),
+    srcs = glob(["**"], exclude = ["**/foo.onnx"]),
     visibility = ["//visibility:public"],
 )
 
@@ -42,7 +42,7 @@ cp $BUILD_TMPDIR/_deps/onnx-build/libonnx_proto.a $INSTALLDIR/lib/_deps/onnx-bui
 cp $BUILD_TMPDIR/_deps/re2-build/libre2.a $INSTALLDIR/lib/_deps/re2-build
 cp -r $BUILD_TMPDIR/_deps/abseil_cpp-build/. $INSTALLDIR/lib/_deps/abseil_cpp-build
 cp $BUILD_TMPDIR/_deps/google_nsync-build/libnsync_cpp.a $INSTALLDIR/lib/_deps/google_nsync-build
-cp $BUILD_TMPDIR/_deps/pytorch_cpuinfo-build/deps/clog/libclog.a $INSTALLDIR/lib/_deps/pytorch_cpuinfo-build/deps/clog
+# cp $BUILD_TMPDIR/_deps/pytorch_cpuinfo-build/deps/clog/libclog.a $INSTALLDIR/lib/_deps/pytorch_cpuinfo-build/deps/clog
 cp $BUILD_TMPDIR/_deps/pytorch_cpuinfo-build/libcpuinfo.a $INSTALLDIR/lib/_deps/pytorch_cpuinfo-build
 cp $BUILD_TMPDIR/_deps/protobuf-build/libprotobuf.a $INSTALLDIR/lib/_deps/protobuf-build
 # cp $BUILD_TMPDIR/_deps/opencv-build/lib/libopencv_imgcodecs.a $INSTALLDIR/lib/_deps/opencv-build/lib
@@ -117,7 +117,7 @@ __ONNXRUNTIME_WITHOUT_CUDA = {
 'onnxruntime_BUILD_BENCHMARKS':'OFF',
 'onnxruntime_USE_ROCM':'OFF',
 'Onnxruntime_GCOV_COVERAGE':'OFF',
-'onnxruntime_USE_MPI':'ON',
+'onnxruntime_USE_MPI':'OFF',
 'onnxruntime_ENABLE_MEMORY_PROFILE':'OFF',
 'onnxruntime_ENABLE_CUDA_LINE_NUMBER_INFO':'OFF',
 'onnxruntime_BUILD_WEBASSEMBLY':'OFF',
@@ -141,7 +141,7 @@ __ONNXRUNTIME_WITHOUT_CUDA = {
 'onnxruntime_ENABLE_MEMLEAK_CHECKER':'OFF',
 'CMAKE_BUILD_TYPE':'Release',
 'onnxruntime_USE_EXTENSIONS': 'OFF',
-'onnxruntime_EXTENSIONS_PATH': '$EXT_BUILD_ROOT/external/_main~_repo_rules~onnx_runtime_extensions',
+'onnxruntime_EXTENSIONS_PATH': '$EXT_BUILD_ROOT/external/onnx_runtime/cmake/external/onnxruntime-extensions',
 'onnxruntime_USE_FULL_PROTOBUF': 'ON',
 'Protobuf_USE_STATIC_LIBS': 'ON',
 'OCOS_ENABLE_BLINGFIRE': 'OFF'
@@ -204,7 +204,7 @@ __ONNXRUNTIME_WITH_CUDA = {
 'onnxruntime_BUILD_BENCHMARKS':'OFF',
 'onnxruntime_USE_ROCM':'OFF',
 'Onnxruntime_GCOV_COVERAGE':'OFF',
-'onnxruntime_USE_MPI':'ON',
+'onnxruntime_USE_MPI':'OFF',
 'onnxruntime_ENABLE_MEMORY_PROFILE':'OFF',
 'onnxruntime_ENABLE_CUDA_LINE_NUMBER_INFO':'OFF',
 'onnxruntime_BUILD_WEBASSEMBLY':'OFF',
@@ -285,7 +285,7 @@ cmake(
         "_deps/abseil_cpp-build/absl/hash/libabsl_low_level_hash.a",
         "_deps/google_nsync-build/libnsync_cpp.a",
         "_deps/pytorch_cpuinfo-build/libcpuinfo.a",
-        "_deps/pytorch_cpuinfo-build/deps/clog/libclog.a",
+        # "_deps/pytorch_cpuinfo-build/deps/clog/libclog.a",
         "_deps/protobuf-build/libprotobuf.a",
         # "_deps/opencv-build/lib/libopencv_imgcodecs.a",
         # "_deps/opencv-build/lib/libopencv_imgproc.a",
@@ -308,7 +308,7 @@ cc_library(
     deps = [
         ":hdrs",
         ":onnxruntime",
-        "@onnx_runtime_extensions//:operators",
+        # "@onnx_runtime_extensions//:operators",
     ],
     includes= ["onnxruntime/include/onnxruntime"],
     alwayslink = True,
