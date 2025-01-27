@@ -71,7 +71,7 @@ new_git_repository(
     name = "onnx_runtime",
     build_file = "//third_party:onnxruntime.BUILD",
     branch= "rel-1.20.1",
-    # patches = ["//third_party/patch:onnx.patch.new"],
+    patches = ["//third_party/patch:onnx.patch"],
     recursive_init_submodules = True,
     remote = "https://github.com/microsoft/onnxruntime",
 )
