@@ -31,7 +31,7 @@ mkdir -p $INSTALLDIR/lib/_deps/abseil_cpp-build/absl/container
 mkdir -p $INSTALLDIR/lib/_deps/abseil_cpp-build/absl/hash
 mkdir -p $INSTALLDIR/lib/_deps/pytorch_cpuinfo-build
 mkdir -p $INSTALLDIR/lib/_deps/pytorch_cpuinfo-build/deps
-mkdir -p $INSTALLDIR/lib/_deps/pytorch_cpuinfo-build/deps/clog
+mkdir -p $INSTALLDIR/lib/_deps/pytorch_clog-build
 mkdir -p $INSTALLDIR/lib/_deps/google_nsync-build
 mkdir -p $INSTALLDIR/lib/_deps/opencv-build
 mkdir -p $INSTALLDIR/lib/_deps/opencv-build/lib
@@ -42,7 +42,7 @@ cp $BUILD_TMPDIR/_deps/onnx-build/libonnx_proto.a $INSTALLDIR/lib/_deps/onnx-bui
 cp $BUILD_TMPDIR/_deps/re2-build/libre2.a $INSTALLDIR/lib/_deps/re2-build
 cp -r $BUILD_TMPDIR/_deps/abseil_cpp-build/. $INSTALLDIR/lib/_deps/abseil_cpp-build
 cp $BUILD_TMPDIR/_deps/google_nsync-build/libnsync_cpp.a $INSTALLDIR/lib/_deps/google_nsync-build
-# cp $BUILD_TMPDIR/_deps/pytorch_cpuinfo-build/deps/clog/libclog.a $INSTALLDIR/lib/_deps/pytorch_cpuinfo-build/deps/clog
+cp $BUILD_TMPDIR/_deps/pytorch_clog-build/libclog.a $INSTALLDIR/lib/_deps/pytorch_clog-build
 cp $BUILD_TMPDIR/_deps/pytorch_cpuinfo-build/libcpuinfo.a $INSTALLDIR/lib/_deps/pytorch_cpuinfo-build
 cp $BUILD_TMPDIR/_deps/protobuf-build/libprotobuf.a $INSTALLDIR/lib/_deps/protobuf-build
 # cp $BUILD_TMPDIR/_deps/opencv-build/lib/libopencv_imgcodecs.a $INSTALLDIR/lib/_deps/opencv-build/lib
@@ -262,16 +262,16 @@ cmake(
         "-Wno-deprecated-declarations"
     ],
     out_static_libs=[
-        "libonnxruntime_session.a",
-        "libonnxruntime_optimizer.a",
-        "libonnxruntime_providers.a",
-        "libonnxruntime_util.a",
-        "libonnxruntime_framework.a",
-        "libonnxruntime_graph.a",
-        "libonnxruntime_mlas.a",
         "libonnxruntime_common.a",
         "libonnxruntime_flatbuffers.a",
+        "libonnxruntime_framework.a",
+        "libonnxruntime_graph.a",
         "libonnxruntime_lora.a",
+        "libonnxruntime_mlas.a",
+        "libonnxruntime_optimizer.a",
+        "libonnxruntime_session.a",
+        "libonnxruntime_providers.a",
+        "libonnxruntime_util.a",
         # "libortcustomops.a",
         # "libocos_operators.a",
         # "libnoexcep_operators.a",
@@ -350,7 +350,7 @@ cmake(
         "_deps/google_nsync-build/libnsync_cpp.a",
         "_deps/protobuf-build/libprotobuf.a",
         "_deps/pytorch_cpuinfo-build/libcpuinfo.a",
-        # "_deps/pytorch_cpuinfo-build/deps/clog/libclog.a",
+        "_deps/pytorch_clog-build/libclog.a",
         # "_deps/opencv-build/lib/libopencv_imgcodecs.a",
         # "_deps/opencv-build/lib/libopencv_imgproc.a",
         # "_deps/opencv-build/lib/libopencv_core.a",
