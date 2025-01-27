@@ -67,30 +67,68 @@ public:
     // Validate input/output parameters
     vx_status validate(std::vector<std::vector<size_t>>& inputDims, std::vector<std::vector<size_t>>& outputDims)
     {
-        // if (num < 3) return VX_FAILURE;
+        vx_status status = VX_SUCCESS;
 
-        // vx_tensor input = (vx_tensor)parameters[1];
-        // vx_tensor output = (vx_tensor)parameters[2];
+        if (!model_loaded)
+        {
+            status = VX_FAILURE;
+        }
 
-        // // Validate tensor dimensions
-        // vx_size input_dims[4];
-        // vx_size output_dims[4];
-        // vxQueryTensor(input, VX_TENSOR_DIMS, input_dims, sizeof(input_dims));
-        // vxQueryTensor(output, VX_TENSOR_DIMS, output_dims, sizeof(output_dims));
+        if (VX_SUCCESS == status)
+        {
+            if (inputDims.size() != input_shapes.size() ||
+                outputDims.size() != output_shapes.size())
+            {
+                std::cerr << "Number of input/output tensors do not match the model's input/output shape count!" << std::endl;
+                status = VX_FAILURE;
+            }
+        }
 
-        // // Compare dimensions with model input/output shapes
-        // if (input_shapes[0] != -1 && input_dims[0] != static_cast<vx_size>(input_shapes[0]))
-        // {
-        //     std::cerr << "Input tensor dimensions do not match the model's input shape!" << std::endl;
-        //     return VX_FAILURE;
-        // }
-        // if (output_shapes[0] != -1 && output_dims[0] != static_cast<vx_size>(output_shapes[0]))
-        // {
-        //     std::cerr << "Output tensor dimensions do not match the model's output shape!" << std::endl;
-        //     return VX_FAILURE;
-        // }
+        // Compare input/output VX tensor dimensions with model input/output ORT shapes
+        if (VX_SUCCESS == status)
+        {
+            // Check input tensor dimensions
+            for (std::size_t i = 0; i < inputDims.size() && VX_SUCCESS == status; ++i)
+            {
+                if (inputDims[i].size() != input_shapes[i].size())
+                {
+                    std::cerr << "Input tensor dimension mismatch for input " << i << "!" << std::endl;
+                    status = VX_FAILURE;
+                    break;
+                }
+                for (std::size_t j = 0; j < inputDims[i].size(); ++j)
+                {
+                    if (inputDims[i][j] != input_shapes[i][j])
+                    {
+                        std::cerr << "Input tensor dimension mismatch for input " << i << "!" << std::endl;
+                        status = VX_FAILURE;
+                        break;
+                    }
+                }
+            }
 
-        return VX_SUCCESS;
+            // Check output tensor dimensions
+            for (std::size_t i = 0; i < outputDims.size() && VX_SUCCESS == status; ++i)
+            {
+                if (outputDims[i].size() != output_shapes[i].size())
+                {
+                    std::cerr << "Output tensor dimension mismatch for output " << i << "!" << std::endl;
+                    status = VX_FAILURE;
+                    break;
+                }
+                for (std::size_t j = 0; j < outputDims[i].size(); ++j)
+                {
+                    if (outputDims[i][j] != output_shapes[i][j])
+                    {
+                        std::cerr << "Output tensor dimension mismatch for output " << i << "!" << std::endl;
+                        status = VX_FAILURE;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return status;
     }
 
     // Run the kernel (execute the model)
