@@ -691,6 +691,8 @@ enum vx_target_priority_e {
 #endif
     /*! \brief Defines the priority of the C model target */
     VX_TARGET_PRIORITY_C_MODEL,
+    /*! \brief Defines the priority of the ORT target */
+    VX_TARGET_PRIORITY_ORT,
     /*! \brief Defines the maximum priority */
     VX_TARGET_PRIORITY_MAX,
 };

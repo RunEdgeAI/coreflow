@@ -10,6 +10,24 @@
 #ifndef VX_COREVX_EXT_H
 #define VX_COREVX_EXT_H
 
+#include <VX/vx_kernels.h>
+#include <VX/vx_types.h>
+
+/* Define Edge AI Vendor ID */
+enum vx_vendor_id_ext_e
+{
+    VX_ID_EDGE_AI = 0x80D
+};
+
+/* Define Edge AI Kernels */
+enum vx_kernels_ext_e
+{
+    /*!
+     * \brief The ONNX Runtime CPU Inference kernel.
+     */
+    VX_KERNEL_ORT_CPU_INF = VX_KERNEL_BASE(VX_ID_EDGE_AI, VX_LIBRARY_KHR_BASE) + 0x1,
+};
+
 /* ENABLED FEATURES IN COREVX ONLY */
 #define OPENVX_USE_USER_DATA_OBJECT
 #define OPENVX_USE_IX
