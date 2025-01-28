@@ -1,0 +1,25 @@
+diff --git a/cmake/CMakeLists.txt b/cmake/CMakeLists.txt
+index d90a2a3550..d5278575ae 100644
+--- cmake/CMakeLists.txt
++++ cmake/CMakeLists.txt
+@@ -1456,6 +1456,7 @@ if (onnxruntime_USE_CUDA)
+       set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode=arch=compute_53,code=sm_53") # TX1, Nano
+       set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode=arch=compute_62,code=sm_62") # TX2
+       set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode=arch=compute_72,code=sm_72") # AGX Xavier, NX Xavier
++      set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode=arch=compute_75,code=sm_75") # T4
+       if (CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 11)
+         set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode=arch=compute_87,code=sm_87") # AGX Orin, NX Orin
+       endif()
+diff --git a/cmake/deps.txt b/cmake/deps.txt
+index 9219f16be0..e1559bd3da 100644
+--- cmake/deps.txt
++++ cmake/deps.txt
+@@ -27,7 +27,7 @@ flatbuffers;https://github.com/google/flatbuffers/archive/refs/tags/v23.5.26.zip
+ fp16;https://github.com/Maratyszcza/FP16/archive/0a92994d729ff76a58f692d3028ca1b64b145d91.zip;b985f6985a05a1c03ff1bb71190f66d8f98a1494
+ fxdiv;https://github.com/Maratyszcza/FXdiv/archive/63058eff77e11aa15bf531df5dd34395ec3017c8.zip;a5658f4036402dbca7cebee32be57fb8149811e1
+ google_benchmark;https://github.com/google/benchmark/archive/refs/tags/v1.8.5.zip;cd47d3d272faf353600c8cc2fdec2b52d6f69177
+-google_nsync;https://github.com/google/nsync/archive/refs/tags/1.26.0.zip;5e7c00ef6bf5b787386fc040067903ec774e2752
++google_nsync;https://github.com/amikhail48/nsync/archive/refs/tags/1.29.3.zip;1cdfb3b740dadf9a6cc6d6b65976d31f9d9c2900
+ googletest;https://github.com/google/googletest/archive/refs/tags/v1.15.0.zip;9d2d0af8d77ac726ea55d44a8fa727ec98311349
+ #xnnpack 2024.09.04
+ googlexnnpack;https://github.com/google/XNNPACK/archive/309b75c9e56e0a674bf78d59872ce131f814dfb6.zip;39FA5259EAEACE0547284B63D5CEDC4F05553F5A
