@@ -466,7 +466,7 @@ vx_value_t Context::workerGraph(void *arg)
 VX_INT_API vx_bool Context::addAccessor(
                                  vx_size size,
                                  vx_enum usage,
-                                 void *ptr,
+                                 void*& ptr,
                                  vx_reference ref,
                                  vx_uint32 *pIndex,
                                  void *extra_data)
@@ -481,7 +481,7 @@ VX_INT_API vx_bool Context::addAccessor(
             /* Allocation requested */
             if (size > 0ul && ptr == nullptr)
             {
-                accessors[a].ptr = new vx_char[size]();
+                ptr = accessors[a].ptr = new vx_char[size]();
                 if (accessors[a].ptr == nullptr)
                     return vx_false_e;
                 accessors[a].allocated = vx_true_e;
@@ -510,15 +510,13 @@ VX_INT_API vx_bool Context::findAccessor(const void* ptr, vx_uint32* pIndex)
     vx_bool worked = vx_false_e;
     for (a = 0u; a < dimof(accessors); a++)
     {
-        if (accessors[a].used == vx_true_e)
+        if (accessors[a].used == vx_true_e &&
+            accessors[a].ptr == ptr)
         {
-            if (accessors[a].ptr == ptr)
-            {
-                VX_PRINT(VX_ZONE_CONTEXT, "Found accessors[%u] for %p\n", a, ptr);
-                worked = vx_true_e;
-                if (pIndex) *pIndex = a;
-                break;
-            }
+            VX_PRINT(VX_ZONE_CONTEXT, "Found accessors[%u] for %p\n", a, ptr);
+            worked = vx_true_e;
+            if (pIndex) *pIndex = a;
+            break;
         }
     }
     return worked;

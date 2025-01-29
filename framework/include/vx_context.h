@@ -108,7 +108,7 @@ public:
     VX_INT_API vx_bool addAccessor(
                                  vx_size size,
                                  vx_enum usage,
-                                 void *ptr,
+                                 void*& ptr,
                                  vx_reference ref,
                                  vx_uint32 *pIndex,
                                  void *extra_data);
