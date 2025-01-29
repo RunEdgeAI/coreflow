@@ -124,7 +124,7 @@ vx_bool Context::isValidContext(vx_context context)
     return ret;
 }
 
-VX_INT_API vx_bool Context::isValidType(vx_enum type)
+vx_bool Context::isValidType(vx_enum type)
 {
     vx_bool ret = vx_false_e;
     if (type <= VX_TYPE_INVALID)
@@ -157,7 +157,7 @@ VX_INT_API vx_bool Context::isValidType(vx_enum type)
     return ret; /* otherwise, not a valid type */
 }
 
-VX_INT_API vx_bool Context::isValidImport(vx_enum type)
+vx_bool Context::isValidImport(vx_enum type)
 {
     vx_bool ret = vx_false_e;
     switch(type)
@@ -303,7 +303,7 @@ vx_status Context::unloadTarget(vx_uint32 index, vx_bool unload_module)
     return status;
 }
 
-VX_INT_API void Context::removeAccessor(vx_uint32 index)
+void Context::removeAccessor(vx_uint32 index)
 {
     if (index < dimof(accessors))
     {
@@ -374,7 +374,7 @@ vx_bool Context::removeReference(vx_reference& ref)
     return ret;
 }
 
-VX_INT_API vx_bool Context::isValidBorderMode(vx_enum mode)
+vx_bool Context::isValidBorderMode(vx_enum mode)
 {
     vx_bool ret = vx_true_e;
     switch (mode)
@@ -463,7 +463,7 @@ vx_value_t Context::workerGraph(void *arg)
 }
 
 
-VX_INT_API vx_bool Context::addAccessor(
+vx_bool Context::addAccessor(
                                  vx_size size,
                                  vx_enum usage,
                                  void*& ptr,
@@ -504,7 +504,7 @@ VX_INT_API vx_bool Context::addAccessor(
     return worked;
 }
 
-VX_INT_API vx_bool Context::findAccessor(const void* ptr, vx_uint32* pIndex)
+vx_bool Context::findAccessor(const void* ptr, vx_uint32* pIndex)
 {
     vx_uint32 a;
     vx_bool worked = vx_false_e;
@@ -522,7 +522,7 @@ VX_INT_API vx_bool Context::findAccessor(const void* ptr, vx_uint32* pIndex)
     return worked;
 }
 
-VX_INT_API vx_bool Context::memoryMap(
+vx_bool Context::memoryMap(
     vx_reference ref,
     vx_size      size,
     vx_enum      usage,
@@ -611,7 +611,7 @@ VX_INT_API vx_bool Context::memoryMap(
     return worked;
 } /* MemoryMap() */
 
-VX_INT_API vx_bool Context::findMemoryMap(
+vx_bool Context::findMemoryMap(
     vx_reference ref,
     vx_map_id    map_id)
 {
@@ -637,7 +637,7 @@ VX_INT_API vx_bool Context::findMemoryMap(
     return worked;
 } /* FindMemoryMap() */
 
-VX_INT_API void Context::memoryUnmap(vx_uint32 map_id)
+void Context::memoryUnmap(vx_uint32 map_id)
 {
     /* lock the table for modification */
     if (vx_true_e == Osal::semWait(&memory_maps_lock))
