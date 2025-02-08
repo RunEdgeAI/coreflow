@@ -61,6 +61,7 @@
 #elif defined(_WIN32) || defined(UNDER_CE)
 #include <windows.h>
 #endif
+#include <iostream>
 #include <thread>
 
 #include <VX/vx.h>
@@ -95,8 +96,6 @@
 #define VX_MAX_TENSOR_DIMENSIONS 6
 #define Q78_FIXED_POINT_POSITION 8
 
-#define VX_MAX_TENSOR_DIMENSIONS 6
-#define Q78_FIXED_POINT_POSITION 8
 /*! \def VX_INT_API Used to deliniate APIs which are not intended to be exported.
  * \ingroup group_int_defines
  */

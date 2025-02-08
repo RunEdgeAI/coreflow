@@ -393,6 +393,37 @@ VX_API_ENTRY vx_object_array VX_API_CALL vxCreateObjectArray(vx_context context,
     return arr;
 }
 
+VX_API_ENTRY vx_object_array VX_API_CALL vxCreateObjectArray(vx_context context, vx_enum type)
+{
+    vx_object_array arr = nullptr;
+
+    if (Context::isValidContext(context) == vx_true_e)
+    {
+        if ((type != VX_TYPE_CONTEXT) &&
+            (type != VX_TYPE_DELAY) &&
+            (type != VX_TYPE_OBJECT_ARRAY))
+        {
+            arr = (vx_object_array)Reference::createReference(context, VX_TYPE_OBJECT_ARRAY, VX_EXTERNAL, context);
+            if (vxGetStatus((vx_reference)arr) == VX_SUCCESS && arr->type == VX_TYPE_OBJECT_ARRAY)
+            {
+                arr->scope = context;
+                arr->is_virtual = vx_false_e;
+                arr->item_type = type;
+            }
+            else
+            {
+                arr = (vx_object_array)vxGetErrorObject(context, VX_ERROR_NO_MEMORY);
+            }
+        }
+        else
+        {
+            arr = (vx_object_array)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+        }
+    }
+
+    return arr;
+}
+
 VX_API_ENTRY vx_object_array VX_API_CALL vxCreateVirtualObjectArray(vx_graph graph, vx_reference exemplar, vx_size count)
 {
     vx_object_array arr = nullptr;
@@ -492,4 +523,24 @@ VX_API_ENTRY vx_reference VX_API_CALL vxGetObjectArrayItem(vx_object_array arr, 
     }
 
     return item;
+}
+
+VX_API_ENTRY vx_status VX_API_CALL vxSetObjectArrayItem(vx_object_array arr, vx_uint32 index, vx_reference ref)
+{
+    vx_status status = VX_SUCCESS;
+
+    if (ObjectArray::isValidObjectArray(arr) != vx_true_e ||
+        Reference::isValidReference(ref) != vx_true_e ||
+        index >= VX_INT_MAX_REF)
+    {
+        status = VX_ERROR_INVALID_PARAMETERS;
+    }
+
+    if (VX_SUCCESS == status)
+    {
+        arr->items[index] = ref;
+        arr->num_items++;
+    }
+
+    return status;
 }

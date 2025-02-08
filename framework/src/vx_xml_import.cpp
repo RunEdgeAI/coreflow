@@ -1483,6 +1483,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                     tag == OBJECT_ARRAY_TAG) {
 
             typedef vx_reference (*createFunction)(vx_context context, vx_reference exemplar, vx_size count);
+            typedef vx_object_array (*objArrCreateFunction)(vx_context context, vx_reference exemplar, vx_size count);
             createFunction createFn;
             char objectName[16];
             vx_int32 parentType;
@@ -1504,7 +1505,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
             else
             {
                 parentType = VX_TYPE_OBJECT_ARRAY;
-                createFn = (createFunction)(&vxCreateObjectArray);
+                createFn = (createFunction)((objArrCreateFunction)(&vxCreateObjectArray));
                 snprintf(objectName, sizeof(objectName), "object_array");
             }
 

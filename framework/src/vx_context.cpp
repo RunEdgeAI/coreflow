@@ -33,6 +33,7 @@ vx_char targetModules[][VX_MAX_TARGET_NAME] = {
     "openvx-venum",
 #endif
     "openvx-c_model",
+    "openvx-onnxRT",
 };
 
 const vx_char extensions[] =

@@ -10,3 +10,11 @@ filegroup(
     ]),
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "models",
+    srcs = glob([
+        "*.onnx",
+    ]),
+    visibility = ["//visibility:public"],
+)
