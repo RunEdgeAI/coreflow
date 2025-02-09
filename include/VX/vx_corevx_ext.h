@@ -56,7 +56,7 @@ enum vx_tensor_attribute_ext_e
  *
  * \ingroup group_object_array
  */
-VX_API_ENTRY vx_object_array VX_API_CALL vxCreateObjectArray(vx_context context, vx_enum type);
+VX_API_ENTRY vx_object_array VX_API_CALL vxCreateObjectArrayWithType(vx_context context, vx_enum type);
 
 /*!
  * \brief                 Adds the reference to the OpenVX Object in location index of the ObjectArray.

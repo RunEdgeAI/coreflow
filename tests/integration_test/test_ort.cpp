@@ -74,8 +74,8 @@ TEST_F(OrtIntegrationTest, OnnxMatMul)
     ASSERT_EQ(VX_SUCCESS, vxQueryTensor(output_c, VX_TENSOR_STRIDE, outputStride, sizeof(outputStride)));
 
     // Create object arrays for inputs and outputs
-    vx_object_array input_tensors = vxCreateObjectArray(context, VX_TYPE_TENSOR);
-    vx_object_array output_tensors = vxCreateObjectArray(context, VX_TYPE_TENSOR);
+    vx_object_array input_tensors = vxCreateObjectArrayWithType(context, VX_TYPE_TENSOR);
+    vx_object_array output_tensors = vxCreateObjectArrayWithType(context, VX_TYPE_TENSOR);
     ASSERT_EQ(vxGetStatus(input_tensors), VX_SUCCESS);
     ASSERT_EQ(vxGetStatus(output_tensors), VX_SUCCESS);
 

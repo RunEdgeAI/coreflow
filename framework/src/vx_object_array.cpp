@@ -393,7 +393,7 @@ VX_API_ENTRY vx_object_array VX_API_CALL vxCreateObjectArray(vx_context context,
     return arr;
 }
 
-VX_API_ENTRY vx_object_array VX_API_CALL vxCreateObjectArray(vx_context context, vx_enum type)
+VX_API_ENTRY vx_object_array VX_API_CALL vxCreateObjectArrayWithType(vx_context context, vx_enum type)
 {
     vx_object_array arr = nullptr;
 
