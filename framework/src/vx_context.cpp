@@ -33,6 +33,7 @@ vx_char targetModules[][VX_MAX_TARGET_NAME] = {
     "openvx-venum",
 #endif
     "openvx-c_model",
+    "openvx-onnxRT",
 };
 
 const vx_char extensions[] =
@@ -124,7 +125,7 @@ vx_bool Context::isValidContext(vx_context context)
     return ret;
 }
 
-VX_INT_API vx_bool Context::isValidType(vx_enum type)
+vx_bool Context::isValidType(vx_enum type)
 {
     vx_bool ret = vx_false_e;
     if (type <= VX_TYPE_INVALID)
@@ -157,7 +158,7 @@ VX_INT_API vx_bool Context::isValidType(vx_enum type)
     return ret; /* otherwise, not a valid type */
 }
 
-VX_INT_API vx_bool Context::isValidImport(vx_enum type)
+vx_bool Context::isValidImport(vx_enum type)
 {
     vx_bool ret = vx_false_e;
     switch(type)
@@ -303,7 +304,7 @@ vx_status Context::unloadTarget(vx_uint32 index, vx_bool unload_module)
     return status;
 }
 
-VX_INT_API void Context::removeAccessor(vx_uint32 index)
+void Context::removeAccessor(vx_uint32 index)
 {
     if (index < dimof(accessors))
     {
@@ -374,7 +375,7 @@ vx_bool Context::removeReference(vx_reference& ref)
     return ret;
 }
 
-VX_INT_API vx_bool Context::isValidBorderMode(vx_enum mode)
+vx_bool Context::isValidBorderMode(vx_enum mode)
 {
     vx_bool ret = vx_true_e;
     switch (mode)
@@ -463,10 +464,10 @@ vx_value_t Context::workerGraph(void *arg)
 }
 
 
-VX_INT_API vx_bool Context::addAccessor(
+vx_bool Context::addAccessor(
                                  vx_size size,
                                  vx_enum usage,
-                                 void *ptr,
+                                 void*& ptr,
                                  vx_reference ref,
                                  vx_uint32 *pIndex,
                                  void *extra_data)
@@ -481,7 +482,7 @@ VX_INT_API vx_bool Context::addAccessor(
             /* Allocation requested */
             if (size > 0ul && ptr == nullptr)
             {
-                accessors[a].ptr = new vx_char[size]();
+                ptr = accessors[a].ptr = new vx_char[size]();
                 if (accessors[a].ptr == nullptr)
                     return vx_false_e;
                 accessors[a].allocated = vx_true_e;
@@ -504,27 +505,25 @@ VX_INT_API vx_bool Context::addAccessor(
     return worked;
 }
 
-VX_INT_API vx_bool Context::findAccessor(const void* ptr, vx_uint32* pIndex)
+vx_bool Context::findAccessor(const void* ptr, vx_uint32* pIndex)
 {
     vx_uint32 a;
     vx_bool worked = vx_false_e;
     for (a = 0u; a < dimof(accessors); a++)
     {
-        if (accessors[a].used == vx_true_e)
+        if (accessors[a].used == vx_true_e &&
+            accessors[a].ptr == ptr)
         {
-            if (accessors[a].ptr == ptr)
-            {
-                VX_PRINT(VX_ZONE_CONTEXT, "Found accessors[%u] for %p\n", a, ptr);
-                worked = vx_true_e;
-                if (pIndex) *pIndex = a;
-                break;
-            }
+            VX_PRINT(VX_ZONE_CONTEXT, "Found accessors[%u] for %p\n", a, ptr);
+            worked = vx_true_e;
+            if (pIndex) *pIndex = a;
+            break;
         }
     }
     return worked;
 }
 
-VX_INT_API vx_bool Context::memoryMap(
+vx_bool Context::memoryMap(
     vx_reference ref,
     vx_size      size,
     vx_enum      usage,
@@ -613,7 +612,7 @@ VX_INT_API vx_bool Context::memoryMap(
     return worked;
 } /* MemoryMap() */
 
-VX_INT_API vx_bool Context::findMemoryMap(
+vx_bool Context::findMemoryMap(
     vx_reference ref,
     vx_map_id    map_id)
 {
@@ -639,7 +638,7 @@ VX_INT_API vx_bool Context::findMemoryMap(
     return worked;
 } /* FindMemoryMap() */
 
-VX_INT_API void Context::memoryUnmap(vx_uint32 map_id)
+void Context::memoryUnmap(vx_uint32 map_id)
 {
     /* lock the table for modification */
     if (vx_true_e == Osal::semWait(&memory_maps_lock))

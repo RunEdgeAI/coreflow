@@ -19,6 +19,26 @@ cc_test(
 )
 
 cc_test(
+    name = "test_context",
+    srcs = [
+        "test_context.cpp"
+    ],
+    includes = [
+        "include",
+        "framework/include"
+    ],
+    deps = [
+        "//:corevx",
+        "@googletest//:gtest_main",
+        "//targets/c_model:imported_openvx_c_model",
+        "//targets/debug:imported_openvx_debug",
+        "//targets/extras:imported_openvx_extras",
+        "//targets/opencl:imported_openvx_opencl",
+    ],
+    size = "small"
+)
+
+cc_test(
     name = "test_delay",
     srcs = [
         "test_delay.cpp"

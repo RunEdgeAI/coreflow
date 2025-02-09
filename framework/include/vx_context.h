@@ -105,23 +105,22 @@ public:
      * will allocate memory if needed.
      * \ingroup group_int_context
      */
-    VX_INT_API vx_bool addAccessor(
-                                 vx_size size,
-                                 vx_enum usage,
-                                 void *ptr,
-                                 vx_reference ref,
-                                 vx_uint32 *pIndex,
-                                 void *extra_data);
+    vx_bool addAccessor(vx_size size,
+                        vx_enum usage,
+                        void*& ptr,
+                        vx_reference ref,
+                        vx_uint32 *pIndex,
+                        void *extra_data);
 
     /*! \brief Finds and removes an accessor from the list.
      * \ingroup group_int_context
      */
-    VX_INT_API void removeAccessor(vx_uint32 index);
+    void removeAccessor(vx_uint32 index);
 
     /*! \brief Finds the accessor in the list and returns the index.
      * \ingroup group_int_context
      */
-    VX_INT_API vx_bool findAccessor(const void* ptr, vx_uint32* pIndex);
+    vx_bool findAccessor(const void* ptr, vx_uint32* pIndex);
 
     /*! \brief Used to add a reference to the context.
      * \param [in] ref The pointer to the reference object.
@@ -139,7 +138,7 @@ public:
      *  allocate memory for mapped buffer.
      * \ingroup group_int_context
      */
-    VX_INT_API vx_bool memoryMap(
+    vx_bool memoryMap(
         vx_reference ref,
         vx_size      size,
         vx_enum      usage,
@@ -153,23 +152,23 @@ public:
      *  into memory maps list.
      * \ingroup group_int_context
      */
-    VX_INT_API vx_bool findMemoryMap(
+    vx_bool findMemoryMap(
         vx_reference ref,
         vx_map_id    map_id);
 
     /*! \brief Finds and removes a map_id from the list.
      * \ingroup group_int_context
      */
-    VX_INT_API void memoryUnmap(vx_uint32 map_id);
+    void memoryUnmap(vx_uint32 map_id);
 
     /**
      * @brief Validate border mode supported
      *
      * @param mode     border mode
-     * @return VX_INT_API
+     * @return vx_bool vx_true_e if valid, vx_false_e otherwise
      * @ingroup group_int_context
      */
-    VX_INT_API static vx_bool isValidBorderMode(vx_enum mode);
+    static vx_bool isValidBorderMode(vx_enum mode);
 
     /**
      * @brief Launch worker graph thread
@@ -178,7 +177,7 @@ public:
      * @return vx_value_t
      * @ingroup group_int_context
      */
-    VX_INT_API static vx_value_t workerGraph(void *arg);
+    static vx_value_t workerGraph(void *arg);
 
     /**
      * @brief Launch worker node thread
@@ -187,7 +186,7 @@ public:
      * @return vx_bool
      * @ingroup group_int_context
      */
-    VX_INT_API static vx_bool workerNode(vx_threadpool_worker_t *worker);
+    static vx_bool workerNode(vx_threadpool_worker_t *worker);
 
     /*! \brief The pointer to process global lock */
     vx_sem_t*           p_global_lock;

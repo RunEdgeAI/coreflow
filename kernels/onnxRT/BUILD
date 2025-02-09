@@ -3,10 +3,10 @@ cc_library(
     name = "ort_kernels",
     srcs = glob([
         "*.cpp",
-        "*.hpp"
     ]),
     hdrs = glob([
-        "*.h"
+        "*.h",
+        "*.hpp",
     ]),
     includes = [
         ".",
