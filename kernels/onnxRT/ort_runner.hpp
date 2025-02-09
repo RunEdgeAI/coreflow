@@ -1,5 +1,5 @@
 /**
- * @file onnx_runner.cpp
+ * @file ort_runner.hpp
  * @brief ONNX Runtime Model Runner
  * @version 0.2
  * @date 2025-01-07
@@ -16,28 +16,57 @@
 #include <core/session/onnxruntime_cxx_api.h>
 #include <VX/vx.h>
 
+/**
+ * @brief Onnx Runtime Model Runner Object
+ */
 class OnnxRuntimeRunner
 {
 public:
+    /**
+     * @brief Onnx Runtime Model Runner Constructor
+     */
     OnnxRuntimeRunner() : model_loaded(false) {}
 
-    // Initialize the kernel (load the model)
+    /**
+     * @brief Onnx Runtime Model Runner Destructor
+     */
+    virtual ~OnnxRuntimeRunner()
+    {
+        for (auto& ptr : input_names)
+        {
+            delete(ptr);
+        }
+        for (auto& ptr : output_names)
+        {
+            delete(ptr);
+        }
+    }
+
+    /**
+     * @brief Initialize the kernel (load the model)
+     * @param model_path Path to the ONNX model file
+     * @return VX_SUCCESS on success, VX_FAILURE otherwise
+     */
     vx_status init(const std::string& model_path)
     {
         try
         {
             Ort::SessionOptions session_options;
+            std::string input_name, output_name;
+            // Forces single-threaded execution within operators
+            session_options.SetIntraOpNumThreads(1);
             session_options.SetGraphOptimizationLevel(ORT_ENABLE_ALL);
 
             // Load the model
-            session = std::make_unique<Ort::Session>(env, model_path.c_str(), session_options);
+            session = std::make_unique<Ort::Session>(getEnv(), model_path.c_str(), session_options);
             model_loaded = true;
             this->model_path = model_path;
 
             // Cache input/output names and shapes
-            for (std::size_t i = 0; i < session->GetInputCount(); i++)
+            for (std::size_t i = 0; i < session->GetInputCount(); ++i)
             {
-                input_names.emplace_back(session->GetInputNameAllocated(i, allocator).get());
+                input_name = session->GetInputNameAllocated(i, allocator).get();
+                input_names.emplace_back(strdup(input_name.c_str()));
                 auto shape = session->GetInputTypeInfo(i).GetTensorTypeAndShapeInfo().GetShape();
                 // some models might have negative shape values to indicate dynamic shape, e.g., for variable batch size.
                 for (auto& s : shape)
@@ -49,9 +78,10 @@ public:
                 }
                 input_shapes.emplace_back(shape);
             }
-            for (std::size_t i = 0; i < session->GetOutputCount(); i++)
+            for (std::size_t i = 0; i < session->GetOutputCount(); ++i)
             {
-                output_names.emplace_back(session->GetOutputNameAllocated(i, allocator).get());
+                output_name = session->GetOutputNameAllocated(i, allocator).get();
+                output_names.emplace_back(strdup(output_name.c_str()));
                 output_shapes.emplace_back(session->GetOutputTypeInfo(i).GetTensorTypeAndShapeInfo().GetShape());
             }
 
@@ -64,7 +94,12 @@ public:
         }
     }
 
-    // Validate input/output parameters
+    /**
+     * @brief Validate input/output parameters
+     * @param inputDims  Input tensor dimensions
+     * @param outputDims Output tensor dimensions
+     * @return VX_SUCCESS on success, VX_FAILURE otherwise
+     */
     vx_status validate(std::vector<std::vector<size_t>>& inputDims, std::vector<std::vector<size_t>>& outputDims)
     {
         vx_status status = VX_SUCCESS;
@@ -92,7 +127,8 @@ public:
             {
                 if (inputDims[i].size() != input_shapes[i].size())
                 {
-                    std::cerr << "Input tensor dimension mismatch for input " << i << "!" << std::endl;
+                    std::cerr << "Input tensor dimension mismatch for input " << i << "!" << std::endl
+                                << "VX: " << inputDims[i].size() << " ORT: " << input_shapes[i].size() << std::endl;
                     status = VX_FAILURE;
                     break;
                 }
@@ -100,7 +136,8 @@ public:
                 {
                     if (inputDims[i][j] != input_shapes[i][j])
                     {
-                        std::cerr << "Input tensor dimension mismatch for input " << i << "!" << std::endl;
+                        std::cerr << "Input tensor dimension mismatch for input " << i << "!" << std::endl
+                                    << "VX: " << inputDims[i][j] << " ORT: " << input_shapes[i][j] << std::endl;
                         status = VX_FAILURE;
                         break;
                     }
@@ -112,7 +149,8 @@ public:
             {
                 if (outputDims[i].size() != output_shapes[i].size())
                 {
-                    std::cerr << "Output tensor dimension mismatch for output " << i << "!" << std::endl;
+                    std::cerr << "Output tensor dimension mismatch for output " << i << "!" << std::endl
+                                << "VX: " << outputDims[i].size() << " ORT: " << output_shapes[i].size() << std::endl;
                     status = VX_FAILURE;
                     break;
                 }
@@ -120,7 +158,8 @@ public:
                 {
                     if (outputDims[i][j] != output_shapes[i][j])
                     {
-                        std::cerr << "Output tensor dimension mismatch for output " << i << "!" << std::endl;
+                        std::cerr << "Output tensor dimension mismatch for output " << i << "!" << std::endl
+                                    << "VX: " << outputDims[i][j] << " ORT: " << output_shapes[i][j] << std::endl;
                         status = VX_FAILURE;
                         break;
                     }
@@ -131,33 +170,33 @@ public:
         return status;
     }
 
-    // Run the kernel (execute the model)
-    vx_status run(const vx_reference* parameters, __attribute__((unused)) vx_uint32 num)
+    /**
+     * @brief Run the kernel (execute the model)
+     * @param inputTensors  Input tensors
+     * @param outputTensosrs Output tensors
+     * @return VX_SUCCESS on success, VX_FAILURE otherwise
+     */
+    vx_status run(std::vector<std::pair<float*, vx_size>>& inputTensors, std::vector<std::pair<float*, vx_size>>& outputTensors)
     {
         if (!model_loaded) return VX_FAILURE;
 
         std::vector<Ort::Value> input_tensors;
         std::vector<Ort::Value> output_tensors;
-        // Convert OpenVX tensors to std::vector<float>
-        std::vector<float> input_data;
-        std::vector<float> output_data;
-        if (!extract_tensor_data((vx_tensor)parameters[1], input_data)) return VX_FAILURE;
-        if (!extract_tensor_data((vx_tensor)parameters[2], output_data)) return VX_FAILURE;
 
         // Prepare ORT tensors for inputs
         Ort::MemoryInfo mem_info =
-        Ort::MemoryInfo::CreateCpu(OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);
+            Ort::MemoryInfo::CreateCpu(OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);
         for (std::size_t i = 0; i < input_names.size(); ++i)
         {
             input_tensors.emplace_back(Ort::Value::CreateTensor<float>(
-                mem_info, input_data.data(), input_data.size(), input_shapes[i].data(), input_shapes[i].size()));
+                mem_info, inputTensors[i].first, inputTensors[i].second, input_shapes[i].data(), input_shapes[i].size()));
         }
 
         // Prepare ORT tensors for outputs
         for (std::size_t i = 0; i < output_names.size(); ++i)
         {
             output_tensors.emplace_back(Ort::Value::CreateTensor<float>(
-                mem_info, output_data.data(), output_data.size(), output_shapes[i].data(), output_shapes[i].size()));
+                mem_info, outputTensors[i].first, outputTensors[i].second, output_shapes[i].data(), output_shapes[i].size()));
         }
 
         // Run inference
@@ -173,12 +212,45 @@ public:
             return VX_FAILURE;
         }
 
-        // Write the output back to the OpenVX tensor
-        if (!populate_tensor_data((vx_tensor)parameters[2], output_data)) return VX_FAILURE;
-
         return VX_SUCCESS;
     }
 
+private:
+    bool model_loaded;
+    std::string model_path;
+    Ort::AllocatorWithDefaultOptions allocator;
+    std::unique_ptr<Ort::Session> session;
+    std::vector<const char*> input_names;
+    std::vector<const char*> output_names;
+    std::vector<std::vector<int64_t>> input_shapes;
+    std::vector<std::vector<int64_t>> output_shapes;
+
+    /**
+     * @brief Get the ONNX runtime environment
+     * @return Ort::Env& ONNX runtime environment reference
+     */
+    static Ort::Env& getEnv()
+    {
+        static Ort::Env env{ORT_LOGGING_LEVEL_WARNING, "OnnxRuntimeRunner"};
+        return env;
+    }
+
+    /**
+     * @brief pretty prints a shape dimension vector
+     * @param v Shape dimension vector
+     * @return std::string Pretty printed shape
+     */
+    std::string print_shape(const std::vector<std::int64_t>& v)
+    {
+        std::stringstream ss("");
+        for (std::size_t i = 0; i < v.size() - 1; i++) ss << v[i] << "x";
+        ss << v[v.size() - 1];
+        return ss.str();
+    }
+
+    /**
+     * @brief Pretty print the input/output tensor names and shapes for debugging
+     */
     void debugPrint()
     {
         // print name/shape of inputs
@@ -196,58 +268,5 @@ public:
             auto output_shape = session->GetOutputTypeInfo(i).GetTensorTypeAndShapeInfo().GetShape();
             std::cout << "\t" << output_names.at(i) << " : " << print_shape(output_shape) << std::endl;
         }
-    }
-
-private:
-    bool model_loaded;
-    std::string model_path;
-    Ort::Env env{ORT_LOGGING_LEVEL_WARNING, "OnnxRuntimeRunner"};
-    Ort::AllocatorWithDefaultOptions allocator;
-    std::unique_ptr<Ort::Session> session;
-    std::vector<const char*> input_names;
-    std::vector<const char*> output_names;
-    std::vector<std::vector<int64_t>> input_shapes;
-    std::vector<std::vector<int64_t>> output_shapes;
-
-    // pretty prints a shape dimension vector
-    std::string print_shape(const std::vector<std::int64_t>& v)
-    {
-        std::stringstream ss("");
-        for (std::size_t i = 0; i < v.size() - 1; i++) ss << v[i] << "x";
-        ss << v[v.size() - 1];
-        return ss.str();
-    }
-
-    // Utility function to extract tensor data from OpenVX tensor to std::vector
-    bool extract_tensor_data(vx_tensor vx_tensor, std::vector<float>& data)
-    {
-        vx_size dims[4];
-        vxQueryTensor(vx_tensor, VX_TENSOR_DIMS, dims, sizeof(dims));
-
-        size_t num_elements = dims[0] * dims[1] * dims[2] * dims[3];
-        data.resize(num_elements);
-
-        void* data_ptr;
-        // vxAccessTensor(vx_tensor, 0, nullptr, nullptr, nullptr, &data_ptr, VX_READ_ONLY);
-        memcpy(data.data(), data_ptr, num_elements * sizeof(float));
-        // vxCommitTensor(vx_tensor, nullptr, nullptr, data_ptr);
-
-        return true;
-    }
-
-    // Utility function to populate data into OpenVX tensor from std::vector
-    bool populate_tensor_data(vx_tensor vx_tensor, const std::vector<float>& data)
-    {
-        vx_size dims[4];
-        vxQueryTensor(vx_tensor, VX_TENSOR_DIMS, dims, sizeof(dims));
-
-        size_t num_elements = dims[0] * dims[1] * dims[2] * dims[3];
-
-        void* data_ptr = nullptr;
-        // vxAccessTensor(vx_tensor, 0, nullptr, nullptr, nullptr, &data_ptr, VX_WRITE_ONLY);
-        memcpy(data_ptr, data.data(), num_elements * sizeof(float));
-        // vxCommitTensor(vx_tensor, nullptr, nullptr, data_ptr);
-
-        return true;
     }
 };

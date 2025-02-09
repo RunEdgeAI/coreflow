@@ -569,6 +569,31 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryTensor(vx_tensor tensor, vx_enum attri
                 *(vx_int8 *)ptr = tensor->fixed_point_position;
             }
             break;
+        case VX_TENSOR_STRIDE:
+            if (size >= (sizeof(vx_size)*tensor->number_of_dimensions) && ((vx_size)ptr & 0x3) == 0)
+            {
+                memcpy(ptr, tensor->stride, sizeof(vx_size)*tensor->number_of_dimensions);
+            }
+            else
+            {
+                status = VX_ERROR_INVALID_PARAMETERS;
+            }
+            break;
+        case VX_TENSOR_TOTAL_SIZE:
+            if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
+            {
+                vx_size total_size = Reference::sizeOfType(tensor->data_type);
+                for (vx_uint32 i = 0; i < tensor->number_of_dimensions; i++)
+                {
+                    total_size *= tensor->dimensions[i];
+                }
+                *(vx_size *)ptr = total_size;
+            }
+            else
+            {
+                status = VX_ERROR_INVALID_PARAMETERS;
+            }
+            break;
         default:
             status = VX_ERROR_NOT_SUPPORTED;
             break;
@@ -619,7 +644,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapTensorPatch(vx_tensor tensor, vx_size nu
     }
     if (tensor->addr == nullptr)
     {
-        if (usage != VX_WRITE_ONLY || tensor->allocateTensorMemory() == nullptr)
+        if ( // usage != VX_WRITE_ONLY ||
+            tensor->allocateTensorMemory() == nullptr)
         {
             VX_PRINT(VX_ZONE_ERROR, "Tensor memory was allocated failed!\n");
             status = VX_ERROR_NO_MEMORY;
@@ -796,7 +822,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyTensorPatch(vx_tensor tensor, vx_size n
 
     if (VX_SUCCESS == status && tensor->addr == nullptr)
     {
-        if (usage != VX_WRITE_ONLY || tensor->allocateTensorMemory() == nullptr)
+        if ( // usage != VX_WRITE_ONLY ||
+            tensor->allocateTensorMemory() == nullptr)
         {
             VX_PRINT(VX_ZONE_ERROR, "Tensor memory was not allocated!\n");
             status = VX_ERROR_NOT_ALLOCATED;

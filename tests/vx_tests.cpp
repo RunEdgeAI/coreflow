@@ -43,6 +43,7 @@
 #include <math.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <inttypes.h>
 
 #define VX_KERNEL_FAKE_MAX  (VX_KERNEL_CHANNEL_EXTRACT) // supposed to be VX_KERNEL_MAX but until all the kernels are implemented, this will be used.
 
@@ -2438,7 +2439,7 @@ vx_status vx_xml_fullimport(int argc, char *argv[])
                             vx_perf_t perf;
                             graphStatus |= vxProcessGraph((vx_graph)ref);
                             vxQueryGraph((vx_graph)ref, VX_GRAPH_PERFORMANCE, &perf, sizeof(perf));
-                            printf("Graph " VX_FMT_SIZE " avg time: %llu\n", (vx_size)ref, perf.avg);
+                            printf("Graph " VX_FMT_SIZE " avg time: %" PRIu64 "\n", (vx_size)ref, perf.avg);
                         }
                         vxReleaseReference(&ref);
                     }
@@ -2456,7 +2457,7 @@ vx_status vx_xml_fullimport(int argc, char *argv[])
                         vx_perf_t perf;
                         graphStatus |= vxProcessGraph((vx_graph)refs[i]);
                         vxQueryGraph((vx_graph)refs[i], VX_GRAPH_PERFORMANCE, &perf, sizeof(perf));
-                        printf("Graph " VX_FMT_SIZE " avg time: %llu\n", (vx_size)refs[i], perf.avg);
+                        printf("Graph " VX_FMT_SIZE " avg time: %" PRIu64 "\n", (vx_size)refs[i], perf.avg);
                         vxReleaseReference(&refs[i]);
                     }
                 }
@@ -2471,7 +2472,7 @@ vx_status vx_xml_fullimport(int argc, char *argv[])
                         vx_perf_t perf;
                         graphStatus |= vxProcessGraph((vx_graph)refs[i]);
                         vxQueryGraph((vx_graph)refs[i], VX_GRAPH_PERFORMANCE, &perf, sizeof(perf));
-                        printf("Graph " VX_FMT_SIZE " avg time: %llu\n", (vx_size)refs[i], perf.avg);
+                        printf("Graph " VX_FMT_SIZE " avg time: %" PRIu64 "\n", (vx_size)refs[i], perf.avg);
                         vxReleaseReference(&refs[i]);
                     }
                 }

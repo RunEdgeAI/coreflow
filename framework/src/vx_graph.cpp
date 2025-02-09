@@ -1580,6 +1580,8 @@ vx_bool Graph::postprocessOutput(vx_uint32 n, vx_uint32 p, vx_reference* vref, v
                 nodes[n]->kernel->name, p, objarr->item_type, objarr->num_items);
             VX_PRINT(VX_ZONE_ERROR, "Node: %s: parameter[%u] has an invalid item type 0x%08x or num_items " VX_FMT_SIZE "\n",
                 nodes[n]->kernel->name, p, objarr->item_type, objarr->num_items);
+            VX_PRINT(VX_ZONE_ERROR, "Node: %s: Expected item type 0x%08x or num_items " VX_FMT_SIZE "\n",
+                nodes[n]->kernel->name, meta->dim.object_array.item_type, meta->dim.object_array.num_items);
             (*num_errors)++;
             return vx_false_e; //break;
         }

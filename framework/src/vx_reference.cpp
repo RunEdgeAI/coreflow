@@ -184,8 +184,10 @@ vx_size Reference::sizeOfType(vx_enum type)
     vx_uint32 i = 0;
     vx_size size = 0ul;
 
-    for (i = 0; i < dimof(type_sizes); i++) {
-        if (type == type_sizes[i].type) {
+    for (i = 0; i < dimof(type_sizes); i++)
+    {
+        if (type == type_sizes[i].type)
+        {
             size = type_sizes[i].size;
             break;
         }

@@ -312,7 +312,7 @@ exit:
         VX_PRINT(VX_ZONE_PARAMETER, "Assigned Node[%u] %p type:%08x ref=" VX_FMT_REF "\n",
                  index, node, type, value);
     }
-    else
+    else if (vx_true_e == Reference::isValidReference(reinterpret_cast<vx_reference>(node), VX_TYPE_NODE))
     {
         VX_PRINT(VX_ZONE_ERROR, "Specified: parameter[%u] type:%08x => " VX_FMT_REF "\n",
                         index, type, value);
@@ -321,6 +321,11 @@ exit:
             node->kernel->signature.directions[index],
             node->kernel->signature.types[index]);
     }
+    else
+    {
+        VX_PRINT(VX_ZONE_ERROR, "%s: Invalid node reference provided\n", __func__);
+    }
+
     return status;
 }
 
