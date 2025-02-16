@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openvx xmlns:xsi="https://www.w3.org/TR/xmlschema-1"
+        xmlns="https://www.khronos.org/registry/vx/schema"
+        xsi:schemaLocation="https://registry.khronos.org/OpenVX/schema/openvx-1-1.xsd"
+        references="178">
+	<library>openvx-debug</library>
+	<struct size="16">USER_STRUCT_0</struct>
+	<image reference="0" width="6" height="4" format="U008" name="INPUT_IMG">
+		<roi reference="1" start_x="2" start_y="1" end_x="4" end_y="2">
+			<roi reference="2" start_x="0" start_y="0" end_x="1" end_y="1" />
+		</roi>
+		<roi reference="3" start_x="2" start_y="1" end_x="4" end_y="2" />
+	</image>
+	<image reference="4" width="6" height="4" format="U008" name="OUTPUT_IMG">
+	</image>
+	<image reference="5" width="6" height="4" format="S016">
+	</image>
+	<image reference="6" width="6" height="4" format="U016">
+	</image>
+	<image reference="7" width="6" height="4" format="S032">
+	</image>
+	<image reference="8" width="6" height="4" format="U032">
+	</image>
+	<image reference="9" width="6" height="4" format="RGB2">
+	</image>
+	<image reference="10" width="6" height="4" format="RGBA">
+	</image>
+	<image reference="11" width="6" height="4" format="UYVY">
+	</image>
+	<image reference="12" width="6" height="4" format="YUYV">
+	</image>
+	<image reference="13" width="6" height="4" format="IYUV">
+	</image>
+	<image reference="14" width="6" height="4" format="YUV4">
+	</image>
+	<image reference="15" width="6" height="4" format="NV12">
+	</image>
+	<image reference="16" width="6" height="4" format="NV21">
+	</image>
+	<matrix reference="17" elemType="VX_TYPE_FLOAT32" rows="3" columns="3">
+	</matrix>
+	<matrix reference="18" elemType="VX_TYPE_INT32" rows="3" columns="3">
+	</matrix>
+	<scalar reference="19" elemType="VX_TYPE_CHAR">
+		<char>z</char>
+	</scalar>
+	<scalar reference="20" elemType="VX_TYPE_UINT8">
+		<uint8>255</uint8>
+	</scalar>
+	<scalar reference="21" elemType="VX_TYPE_INT8">
+		<int8>-128</int8>
+	</scalar>
+	<scalar reference="22" elemType="VX_TYPE_FLOAT32">
+		<float32>3.141593</float32>
+	</scalar>
+	<scalar reference="23" elemType="VX_TYPE_FLOAT64">
+		<float64>6.283185</float64>
+	</scalar>
+	<scalar reference="24" elemType="VX_TYPE_DF_IMAGE">
+		<df_image>NV12</df_image>
+	</scalar>
+	<scalar reference="25" elemType="VX_TYPE_UINT16">
+		<uint16>65535</uint16>
+	</scalar>
+	<scalar reference="26" elemType="VX_TYPE_INT16">
+		<int16>-32768</int16>
+	</scalar>
+	<scalar reference="27" elemType="VX_TYPE_UINT64">
+		<uint64>18446744073709551615</uint64>
+	</scalar>
+	<scalar reference="28" elemType="VX_TYPE_INT64">
+		<int64>-9223372036854775808</int64>
+	</scalar>
+	<scalar reference="29" elemType="VX_TYPE_UINT32">
+		<uint32>4294967295</uint32>
+	</scalar>
+	<scalar reference="30" elemType="VX_TYPE_SIZE">
+		<size>100</size>
+	</scalar>
+	<scalar reference="31" elemType="VX_TYPE_BOOL">
+		<bool>true</bool>
+	</scalar>
+	<threshold reference="32" elemType="VX_TYPE_UINT8">
+		<binary>240</binary>
+	</threshold>
+	<threshold reference="33" elemType="VX_TYPE_UINT8">
+		<range lower="10" upper="240" />
+	</threshold>
+	<convolution reference="34" rows="3" columns="3" scale="16">
+	</convolution>
+	<lut reference="35" count="256" elemType="VX_TYPE_UINT8">
+	</lut>
+	<remap reference="36" src_width="6" src_height="4" dst_width="6" dst_height="4">
+	</remap>
+	<distribution reference="37" bins="16" offset="0" range="256">
+	</distribution>
+	<pyramid reference="38" width="24" height="16" format="U008" scale="0.500000" levels="4">
+		<image reference="39" width="24" height="16" format="U008">
+		</image>
+		<image reference="40" width="12" height="8" format="U008">
+		</image>
+		<image reference="41" width="6" height="4" format="U008">
+		</image>
+		<image reference="42" width="3" height="2" format="U008">
+		</image>
+	</pyramid>
+	<pyramid reference="43" width="24" height="16" format="U008" scale="0.500000" levels="4">
+		<image reference="44" width="24" height="16" format="U008">
+		</image>
+		<image reference="45" width="12" height="8" format="U008">
+		</image>
+		<image reference="46" width="6" height="4" format="U008">
+		</image>
+		<image reference="47" width="3" height="2" format="U008">
+		</image>
+	</pyramid>
+	<pyramid reference="48" width="24" height="16" format="U008" scale="0.500000" levels="4">
+		<image reference="49" width="24" height="16" format="U008">
+		</image>
+		<image reference="50" width="12" height="8" format="U008">
+		</image>
+		<image reference="51" width="6" height="4" format="U008">
+		</image>
+		<image reference="52" width="3" height="2" format="U008">
+		</image>
+	</pyramid>
+	<graph reference="53" name="GRAPH1">
+		<node reference="54" bordermode="CONSTANT">
+			<kernel>org.khronos.openvx.sobel_3x3</kernel>
+			<parameter index="0" reference="0" />
+			<parameter index="1" reference="57" />
+			<parameter index="2" reference="58" />
+			<borderconst>#bfeff105</borderconst>
+		</node>
+		<node reference="55">
+			<kernel>org.khronos.openvx.convertdepth</kernel>
+			<parameter index="0" reference="57" />
+			<parameter index="1" reference="4" />
+			<parameter index="2" reference="68" />
+			<parameter index="3" reference="67" />
+		</node>
+		<node reference="56" is_replicated="true">
+			<kernel>org.khronos.openvx.add</kernel>
+			<parameter index="0" reference="39" replicate_flag="true" />
+			<parameter index="1" reference="44" replicate_flag="true" />
+			<parameter index="2" reference="69" replicate_flag="false" />
+			<parameter index="3" reference="49" replicate_flag="true" />
+		</node>
+		<parameter index="0" node="54" parameter="0" />
+		<parameter index="1" node="55" parameter="1" />
+		<image reference="57" width="0" height="0" format="VIRT" />
+		<image reference="58" width="0" height="0" format="S016" />
+		<image reference="59" width="320" height="240" format="VIRT" />
+		<image reference="60" width="640" height="480" format="U008" />
+		<pyramid reference="61" width="0" height="0" format="VIRT" scale="0.500000" levels="4" />
+		<pyramid reference="62" width="640" height="480" format="VIRT" scale="0.500000" levels="4" />
+		<pyramid reference="63" width="640" height="480" format="U008" scale="0.500000" levels="4" />
+		<array reference="64" capacity="0" elemType="VX_TYPE_INVALID" />
+		<array reference="65" capacity="0" elemType="VX_TYPE_KEYPOINT" />
+		<array reference="66" capacity="1000" elemType="VX_TYPE_KEYPOINT" />
+	</graph>
+	<scalar reference="67" elemType="VX_TYPE_INT32">
+		<int32>7</int32>
+	</scalar>
+	<scalar reference="68" elemType="VX_TYPE_ENUM">
+		<enum>40961</enum>
+	</scalar>
+	<scalar reference="69" elemType="VX_TYPE_ENUM">
+		<enum>40961</enum>
+	</scalar>
+	<array reference="70" capacity="10" elemType="VX_TYPE_UINT8">
+	</array>
+	<delay reference="71" count="3">
+		<image reference="72" width="6" height="4" format="U008">
+		</image>
+		<image reference="73" width="6" height="4" format="U008">
+		</image>
+		<image reference="74" width="6" height="4" format="U008">
+		</image>
+	</delay>
+	<delay reference="75" count="2">
+		<lut reference="76" count="256" elemType="VX_TYPE_UINT8">
+		</lut>
+		<lut reference="77" count="256" elemType="VX_TYPE_UINT8">
+		</lut>
+	</delay>
+	<delay reference="78" count="2">
+		<matrix reference="90" elemType="VX_TYPE_FLOAT32" rows="3" columns="3">
+		</matrix>
+		<matrix reference="91" elemType="VX_TYPE_FLOAT32" rows="3" columns="3">
+		</matrix>
+	</delay>
+	<delay reference="79" count="2">
+		<pyramid reference="80" width="24" height="16" format="U008" scale="0.500000" levels="4">
+			<image reference="81" width="24" height="16" format="U008">
+			</image>
+			<image reference="82" width="12" height="8" format="U008">
+			</image>
+			<image reference="83" width="6" height="4" format="U008">
+			</image>
+			<image reference="84" width="3" height="2" format="U008">
+			</image>
+		</pyramid>
+		<pyramid reference="85" width="24" height="16" format="U008" scale="0.500000" levels="4">
+			<image reference="86" width="24" height="16" format="U008">
+			</image>
+			<image reference="87" width="12" height="8" format="U008">
+			</image>
+			<image reference="88" width="6" height="4" format="U008">
+			</image>
+			<image reference="89" width="3" height="2" format="U008">
+			</image>
+		</pyramid>
+	</delay>
+	<delay reference="92" count="2">
+		<convolution reference="93" rows="3" columns="3" scale="1">
+		</convolution>
+		<convolution reference="94" rows="3" columns="3" scale="1">
+		</convolution>
+	</delay>
+	<delay reference="95" count="2">
+		<distribution reference="96" bins="16" offset="0" range="256">
+		</distribution>
+		<distribution reference="97" bins="16" offset="0" range="256">
+		</distribution>
+	</delay>
+	<delay reference="98" count="2">
+		<threshold reference="99" elemType="VX_TYPE_UINT8">
+			<binary>0</binary>
+		</threshold>
+		<threshold reference="100" elemType="VX_TYPE_UINT8">
+			<binary>0</binary>
+		</threshold>
+	</delay>
+	<delay reference="101" count="2">
+		<threshold reference="102" elemType="VX_TYPE_UINT8">
+			<range lower="0" upper="0" />
+		</threshold>
+		<threshold reference="103" elemType="VX_TYPE_UINT8">
+			<range lower="0" upper="0" />
+		</threshold>
+	</delay>
+	<delay reference="104" count="4">
+		<scalar reference="105" elemType="VX_TYPE_UINT8">
+			<uint8>0</uint8>
+		</scalar>
+		<scalar reference="106" elemType="VX_TYPE_UINT8">
+			<uint8>0</uint8>
+		</scalar>
+		<scalar reference="107" elemType="VX_TYPE_UINT8">
+			<uint8>0</uint8>
+		</scalar>
+		<scalar reference="108" elemType="VX_TYPE_UINT8">
+			<uint8>0</uint8>
+		</scalar>
+	</delay>
+	<delay reference="109" count="2">
+		<remap reference="110" src_width="6" src_height="4" dst_width="6" dst_height="4">
+		</remap>
+		<remap reference="111" src_width="6" src_height="4" dst_width="6" dst_height="4">
+		</remap>
+	</delay>
+	<object_array reference="112" count="3">
+		<image reference="113" width="6" height="4" format="U008">
+		</image>
+		<image reference="114" width="6" height="4" format="U008">
+		</image>
+		<image reference="115" width="6" height="4" format="U008">
+		</image>
+	</object_array>
+	<object_array reference="116" count="2">
+		<lut reference="117" count="256" elemType="VX_TYPE_UINT8">
+		</lut>
+		<lut reference="118" count="256" elemType="VX_TYPE_UINT8">
+		</lut>
+	</object_array>
+	<object_array reference="119" count="2">
+		<matrix reference="131" elemType="VX_TYPE_FLOAT32" rows="3" columns="3">
+		</matrix>
+		<matrix reference="132" elemType="VX_TYPE_FLOAT32" rows="3" columns="3">
+		</matrix>
+	</object_array>
+	<object_array reference="120" count="2">
+		<pyramid reference="121" width="24" height="16" format="U008" scale="0.500000" levels="4">
+			<image reference="122" width="24" height="16" format="U008">
+			</image>
+			<image reference="123" width="12" height="8" format="U008">
+			</image>
+			<image reference="124" width="6" height="4" format="U008">
+			</image>
+			<image reference="125" width="3" height="2" format="U008">
+			</image>
+		</pyramid>
+		<pyramid reference="126" width="24" height="16" format="U008" scale="0.500000" levels="4">
+			<image reference="127" width="24" height="16" format="U008">
+			</image>
+			<image reference="128" width="12" height="8" format="U008">
+			</image>
+			<image reference="129" width="6" height="4" format="U008">
+			</image>
+			<image reference="130" width="3" height="2" format="U008">
+			</image>
+		</pyramid>
+	</object_array>
+	<object_array reference="133" count="2">
+		<distribution reference="134" bins="16" offset="0" range="256">
+		</distribution>
+		<distribution reference="135" bins="16" offset="0" range="256">
+		</distribution>
+	</object_array>
+	<object_array reference="136" count="2">
+		<threshold reference="137" elemType="VX_TYPE_UINT8">
+			<binary>0</binary>
+		</threshold>
+		<threshold reference="138" elemType="VX_TYPE_UINT8">
+			<binary>0</binary>
+		</threshold>
+	</object_array>
+	<object_array reference="139" count="2">
+		<threshold reference="140" elemType="VX_TYPE_UINT8">
+			<range lower="0" upper="0" />
+		</threshold>
+		<threshold reference="141" elemType="VX_TYPE_UINT8">
+			<range lower="0" upper="0" />
+		</threshold>
+	</object_array>
+	<object_array reference="142" count="4">
+		<scalar reference="143" elemType="VX_TYPE_UINT8">
+			<uint8>0</uint8>
+		</scalar>
+		<scalar reference="144" elemType="VX_TYPE_UINT8">
+			<uint8>0</uint8>
+		</scalar>
+		<scalar reference="145" elemType="VX_TYPE_UINT8">
+			<uint8>0</uint8>
+		</scalar>
+		<scalar reference="146" elemType="VX_TYPE_UINT8">
+			<uint8>0</uint8>
+		</scalar>
+	</object_array>
+	<object_array reference="147" count="2">
+		<remap reference="148" src_width="6" src_height="4" dst_width="6" dst_height="4">
+		</remap>
+		<remap reference="149" src_width="6" src_height="4" dst_width="6" dst_height="4">
+		</remap>
+	</object_array>
+	<array reference="150" capacity="20" elemType="VX_TYPE_CHAR">
+	</array>
+	<array reference="151" capacity="4" elemType="VX_TYPE_ENUM">
+	</array>
+	<array reference="152" capacity="4" elemType="VX_TYPE_DF_IMAGE">
+	</array>
+	<array reference="153" capacity="3" elemType="VX_TYPE_KEYPOINT">
+	</array>
+	<array reference="154" capacity="5" elemType="VX_TYPE_RECTANGLE">
+	</array>
+	<array reference="155" capacity="6" elemType="VX_TYPE_COORDINATES2D">
+	</array>
+	<array reference="156" capacity="6" elemType="VX_TYPE_COORDINATES3D">
+	</array>
+	<array reference="157" capacity="8" elemType="VX_TYPE_INT8">
+	</array>
+	<array reference="158" capacity="6" elemType="VX_TYPE_INT16">
+	</array>
+	<array reference="159" capacity="6" elemType="VX_TYPE_INT32">
+	</array>
+	<array reference="160" capacity="3" elemType="VX_TYPE_BOOL">
+	</array>
+	<array reference="161" capacity="4" elemType="VX_TYPE_SIZE">
+	</array>
+	<array reference="162" capacity="2" elemType="VX_TYPE_FLOAT64">
+	</array>
+	<array reference="163" capacity="8" elemType="VX_TYPE_UINT64">
+	</array>
+	<array reference="164" capacity="6" elemType="VX_TYPE_UINT16">
+	</array>
+	<array reference="165" capacity="6" elemType="VX_TYPE_UINT32">
+	</array>
+	<array reference="166" capacity="2" elemType="VX_TYPE_FLOAT32">
+	</array>
+	<array reference="167" capacity="8" elemType="VX_TYPE_INT64">
+	</array>
+	<array reference="168" capacity="4" elemType="USER_STRUCT_0">
+	</array>
+	<delay reference="169" count="4">
+		<array reference="170" capacity="6" elemType="VX_TYPE_COORDINATES2D">
+		</array>
+		<array reference="171" capacity="6" elemType="VX_TYPE_COORDINATES2D">
+		</array>
+		<array reference="172" capacity="6" elemType="VX_TYPE_COORDINATES2D">
+		</array>
+		<array reference="173" capacity="6" elemType="VX_TYPE_COORDINATES2D">
+		</array>
+	</delay>
+	<image reference="174" width="64" height="32" format="RGB2">
+		<uniform>
+			<rgb>#00ff80</rgb>
+		</uniform>
+	</image>
+	<delay reference="175" count="2">
+		<array reference="176" capacity="4" elemType="USER_STRUCT_0">
+		</array>
+		<array reference="177" capacity="4" elemType="USER_STRUCT_0">
+		</array>
+	</delay>
+</openvx>
