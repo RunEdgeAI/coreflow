@@ -185,7 +185,8 @@ class GraphEditorState extends State<GraphEditor> {
   }
 
   void _addNode(Graph graph, Offset position, Size panelSize) {
-    final nodeRadius = 25.0; // Assuming the radius of the node is 25
+    // Assuming the radius of the node is 25
+    final nodeRadius = 25.0;
     final clampedX = position.dx.clamp(nodeRadius, panelSize.width - nodeRadius);
     final clampedY = position.dy.clamp(nodeRadius, panelSize.height - nodeRadius);
     final clampedPosition = Offset(clampedX, clampedY);
@@ -350,7 +351,8 @@ class GraphEditorState extends State<GraphEditor> {
             tooltip: 'Export DOT',
             onPressed: () {
               if (graphs.isNotEmpty) {
-                final dot = _exportDOT(graphs[selectedGraphIndex]); // Export the selected graph
+                // Export the selected graph
+                final dot = _exportDOT(graphs[selectedGraphIndex]);
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
@@ -372,7 +374,8 @@ class GraphEditorState extends State<GraphEditor> {
             tooltip: 'Export XML',
             onPressed: () {
               if (graphs.isNotEmpty) {
-                final xml = _exportXML(graphs[selectedGraphIndex]); // Export the selected graph
+                // Export the selected graph
+                final xml = _exportXML(graphs[selectedGraphIndex]);
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
@@ -433,7 +436,8 @@ class GraphEditorState extends State<GraphEditor> {
                             setState(() {
                               selectedGraphIndex = index;
                               selectedGraphRow = index;
-                              selectedNode = null; // Reset selected node when switching graphs
+                              // Reset selected node when switching graphs
+                              selectedNode = null;
                             });
                           },
                         );
@@ -458,21 +462,28 @@ class GraphEditorState extends State<GraphEditor> {
                                   final tappedEdge = _findEdgeAt(graph, details.localPosition);
                                   setState(() {
                                     if (tappedNode != null) {
-                                      selectedEdge = null; // Deselect the selected edge
+                                      // Deselect the selected edge
+                                      selectedEdge = null;
                                       if (selectedNode == null) {
                                         selectedNode = tappedNode;
                                       } else {
                                         _addEdge(graph, selectedNode!, tappedNode);
-                                        selectedNode = null; // Deselect the selected node
+                                        // Deselect the selected node
+                                        selectedNode = null;
                                       }
                                     } else if (tappedEdge != null) {
-                                      selectedNode = null; // Deselect the selected node
-                                      selectedEdge = tappedEdge; // Select the tapped edge
+                                      // Deselect the selected node
+                                      selectedNode = null;
+                                      // Select the tapped edge
+                                      selectedEdge = tappedEdge;
                                     } else {
                                       _addNode(graph, details.localPosition, constraints.biggest);
-                                      selectedNode = null; // Deselect the selected node
-                                      selectedEdge = null; // Deselect the selected edge
-                                      selectedGraphRow = null; // Deselect the selected graph row
+                                      // Deselect the selected node
+                                      selectedNode = null;
+                                      // Deselect the selected edge
+                                      selectedEdge = null;
+                                      // Deselect the selected graph row
+                                      selectedGraphRow = null;
                                     }
                                   });
                                 },
@@ -480,7 +491,8 @@ class GraphEditorState extends State<GraphEditor> {
                                   if (draggingNode != null) {
                                     setState(() {
                                       final newPosition = draggingNode!.position + details.delta;
-                                      final nodeRadius = 25.0; // Assuming the radius of the node is 25
+                                      // Assuming the radius of the node is 25
+                                      final nodeRadius = 25.0;
                                       // Ensure the node stays within the bounds of the center panel
                                       if (newPosition.dx - nodeRadius >= 0 &&
                                           newPosition.dx + nodeRadius <= constraints.maxWidth &&
@@ -540,7 +552,8 @@ class GraphEditorState extends State<GraphEditor> {
                           decoration: InputDecoration(
                             labelText: 'ID',
                           ),
-                          enabled: false, // Make ID field read-only
+                          // Make ID field read-only
+                          enabled: false,
                         ),
                         SizedBox(height: 8.0),
                         TextField(
@@ -564,7 +577,7 @@ class GraphEditorState extends State<GraphEditor> {
                           value: (selectedNode!.target == 'Default') ?
                             _supported.first.name : selectedNode!.target,
                           decoration: InputDecoration(
-                            constraints: BoxConstraints(maxWidth: double.infinity),
+                            constraints: BoxConstraints(maxWidth: 200),
                             labelText: 'Target',
                             isDense: true,
                           ),
@@ -592,7 +605,7 @@ class GraphEditorState extends State<GraphEditor> {
                           value: (selectedNode!.kernel == 'Default') ?
                             _supported.first.kernels.first.name : selectedNode!.kernel,
                           decoration: InputDecoration(
-                            constraints: BoxConstraints(maxWidth: double.infinity),
+                            constraints: BoxConstraints(maxWidth: 200),
                             labelText: 'Kernel',
                             isDense: true,
                           ),
@@ -628,7 +641,8 @@ class GraphEditorState extends State<GraphEditor> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: _getUpstreamDependencies(selectedNode!).map((dep) => TextField(
                             controller: TextEditingController(text: dep),
-                            enabled: false, // Make Upstream dependencies read-only
+                            // Make Upstream dependencies read-only
+                            enabled: false,
                           )).toList(),
                         ),
                         SizedBox(height: 8.0),
@@ -639,7 +653,8 @@ class GraphEditorState extends State<GraphEditor> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: _getDownstreamDependencies(selectedNode!).map((dep) => TextField(
                             controller: TextEditingController(text: dep),
-                            enabled: false, // Make Downstream dependencies read-only
+                            // Make Downstream dependencies read-only
+                            enabled: false,
                           )).toList(),
                         ),
                         SizedBox(height: 8.0),
@@ -700,7 +715,8 @@ class GraphPainter extends CustomPainter {
 
   void _drawArrow(Canvas canvas, Offset start, Offset end, Paint paint) {
     final double arrowSize = 5.0;
-    final double angle = 25.0 * (3.14159 / 180.0); // 25 degrees in radians
+    // 25 degrees in radians
+    final double angle = 25.0 * (3.14159 / 180.0);
 
     // Calculate the direction vector
     var direction = (end - start);
