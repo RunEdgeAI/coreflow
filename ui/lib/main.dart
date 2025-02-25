@@ -1,9 +1,12 @@
+import 'dart:math';
+import 'objects.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:xml/xml.dart' as xml;
-import 'dart:math';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
   runApp(GraphEditorApp());
 }
 
@@ -26,61 +29,6 @@ class GraphEditorApp extends StatelessWidget {
       home: GraphEditor(),
     );
   }
-}
-
-class Node {
-  final int id;
-  String name;
-  Offset position;
-  String kernel;
-  String target;
-  Node({
-    required this.id,
-    required this.name,
-    required this.position,
-    this.kernel = 'Default',
-    this.target = 'Default'
-  });
-}
-
-class Edge {
-  final Node source;
-  final Node target;
-  Edge({
-    required this.source,
-    required this.target
-  });
-}
-
-class Graph {
-  List<Node> nodes;
-  List<Edge> edges;
-  Graph({
-    required this.nodes,
-    required this.edges
-  });
-}
-
-class Kernel {
-  final String name;
-  final List<String> inputs;
-  final List<String> outputs;
-
-  Kernel({
-    required this.name,
-    required this.inputs,
-    required this.outputs,
-  });
-}
-
-class Target {
-  final String name;
-  final List<Kernel> kernels;
-
-  Target({
-    required this.name,
-    required this.kernels,
-  });
 }
 
 class GraphEditor extends StatefulWidget {
@@ -472,10 +420,15 @@ class GraphEditorState extends State<GraphEditor> {
                                         selectedNode = null;
                                       }
                                     } else if (tappedEdge != null) {
-                                      // Deselect the selected node
-                                      selectedNode = null;
-                                      // Select the tapped edge
-                                      selectedEdge = tappedEdge;
+                                      if (selectedEdge == tappedEdge) {
+                                        // Deselect the tapped edge if it is already selected
+                                        selectedEdge = null;
+                                      } else {
+                                        // Deselect the selected node
+                                        selectedNode = null;
+                                        // Select the tapped edge
+                                        selectedEdge = tappedEdge;
+                                      }
                                     } else {
                                       _addNode(graph, details.localPosition, constraints.biggest);
                                       // Deselect the selected node
@@ -768,7 +721,8 @@ class GraphPainter extends CustomPainter {
 
     // Update edge paint to include selection state
     final selectedEdgePaint = Paint()
-      ..color = Colors.red
+      ..color = Colors.white70
+      // ..color = Colors.red
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
 
