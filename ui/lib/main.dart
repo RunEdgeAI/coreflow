@@ -61,6 +61,28 @@ class Graph {
   });
 }
 
+class Kernel {
+  final String name;
+  final List<String> inputs;
+  final List<String> outputs;
+
+  Kernel({
+    required this.name,
+    required this.inputs,
+    required this.outputs,
+  });
+}
+
+class Target {
+  final String name;
+  final List<Kernel> kernels;
+
+  Target({
+    required this.name,
+    required this.kernels,
+  });
+}
+
 class GraphEditor extends StatefulWidget {
   const GraphEditor({super.key});
 
@@ -81,8 +103,7 @@ class GraphEditorState extends State<GraphEditor> {
   final TextEditingController _nameController = TextEditingController();
   final FocusNode _nameFocusNode = FocusNode();
   // Supported targets/kernels loaded from XML.
-  // Format: { targetName : [kernel, kernel, ...] }
-  Map<String, List<String>> _supported = {};
+  List<Target> _supported = [];
 
   @override
   void initState() {
@@ -99,21 +120,45 @@ class GraphEditorState extends State<GraphEditor> {
     super.dispose();
   }
 
-   Future<void> _loadSupportedXml() async {
+  Future<void> _loadSupportedXml() async {
     // Load the XML file from assets.
     final xmlString = await rootBundle.loadString('assets/supported.xml');
     final document = xml.XmlDocument.parse(xmlString);
 
-    Map<String, List<String>> supported = {};
+    List<Target> supported = [];
 
     // Parse each <Target> element.
     for (var targetElement in document.findAllElements('Target')) {
       final targetName = targetElement.getAttribute('name') ?? 'Default';
-      final kernels = targetElement
-          .findElements('Kernel')
-          .map((element) => element.text.trim())
-          .toList();
-      supported[targetName] = kernels;
+      List<Kernel> kernels = [];
+
+      // Parse each <Kernel> element within the <Target>.
+      for (var kernelElement in targetElement.findElements('Kernel')) {
+        final kernelName = kernelElement.getAttribute('name') ?? 'Unknown';
+        List<String> inputs = [];
+        List<String> outputs = [];
+
+        // Parse <Inputs> and <Outputs> elements within the <Kernel>.
+        final inputsElement = kernelElement.findElements('Inputs').firstOrNull;
+        if (inputsElement != null) {
+          inputs = inputsElement
+              .findElements('Input')
+              .map((element) => element.innerText.trim())
+              .toList();
+        }
+
+        final outputsElement = kernelElement.findElements('Outputs').firstOrNull;
+        if (outputsElement != null) {
+          outputs = outputsElement
+              .findElements('Output')
+              .map((element) => element.innerText.trim())
+              .toList();
+        }
+
+        kernels.add(Kernel(name: kernelName, inputs: inputs, outputs: outputs));
+      }
+
+      supported.add(Target(name: targetName, kernels: kernels));
     }
 
     setState(() {
@@ -513,50 +558,58 @@ class GraphEditorState extends State<GraphEditor> {
                             _focusNode.requestFocus();
                           },
                         ),
-                        SizedBox(width:180, height: 8.0),
+                        SizedBox(height: 8.0),
                         DropdownButtonFormField<String>(
+                          isExpanded: true,
                           value: (selectedNode!.target == 'Default') ?
-                            _supported.keys.first : selectedNode!.target,
+                            _supported.first.name : selectedNode!.target,
                           decoration: InputDecoration(
+                            constraints: BoxConstraints(maxWidth: double.infinity),
                             labelText: 'Target',
+                            isDense: true,
                           ),
-                          items: _supported.keys
+                          items: _supported
                               .map((target) => DropdownMenuItem<String>(
-                                    value: target,
-                                    child: Text(target),
+                                    alignment: Alignment.centerLeft,
+                                    value: target.name,
+                                    child: Text(target.name),
                                   ))
                               .toList(),
                           onChanged: (newValue) {
                             setState(() {
                               selectedNode!.target = newValue!;
                               // Set kernel to the first available value if target changes.
-                              if (_supported.containsKey(newValue) &&
-                                  _supported[newValue]!.isNotEmpty) {
-                                selectedNode!.kernel = _supported[newValue]!.first;
+                              final target = _supported.firstWhere((t) => t.name == newValue);
+                              if (target.kernels.isNotEmpty) {
+                                selectedNode!.kernel = target.kernels.first.name;
                               }
                             });
                           },
                         ),
-                        SizedBox(width: 180, height: 8.0),
+                        SizedBox(height: 8.0),
                         DropdownButtonFormField<String>(
+                          isExpanded: true,
                           value: (selectedNode!.kernel == 'Default') ?
-                            _supported[_supported.keys.first]?.first : selectedNode!.kernel,
+                            _supported.first.kernels.first.name : selectedNode!.kernel,
                           decoration: InputDecoration(
-                              labelText: 'Kernel',
-                            ),
-                          items: (_supported[selectedNode!.target] ?? _supported[_supported.keys.first]!)
+                            constraints: BoxConstraints(maxWidth: double.infinity),
+                            labelText: 'Kernel',
+                            isDense: true,
+                          ),
+                          items: _supported
+                              .firstWhere((target) => target.name == selectedNode!.target,
+                              orElse: () => _supported.first,
+                              )
+                              .kernels
                               .map((kernel) => DropdownMenuItem<String>(
-                                    value: kernel,
-                                    child: Container(
-                                      width: 160,
-                                      child: FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        alignment: Alignment.centerLeft,
-                                        child: Text(
-                                          kernel,
-                                          style: TextStyle(fontSize: 12),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
+                                    value: kernel.name,
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        kernel.name,
+                                        style: TextStyle(fontSize: 12),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                   ))
@@ -588,6 +641,42 @@ class GraphEditorState extends State<GraphEditor> {
                             controller: TextEditingController(text: dep),
                             enabled: false, // Make Downstream dependencies read-only
                           )).toList(),
+                        ),
+                        SizedBox(height: 8.0),
+                        Text(
+                          'Inputs',
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: _supported
+                              .firstWhere((target) => target.name == selectedNode!.target,
+                              orElse: () => _supported.first,
+                              )
+                              .kernels
+                              .firstWhere((kernel) => kernel.name == selectedNode!.kernel,
+                              orElse: () => _supported.first.kernels.first,
+                              )
+                              .inputs
+                              .map((input) => Text(input))
+                              .toList(),
+                        ),
+                        SizedBox(height: 8.0),
+                        Text(
+                          'Outputs',
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: _supported
+                              .firstWhere((target) => target.name == selectedNode!.target,
+                              orElse: () => _supported.first,
+                              )
+                              .kernels
+                              .firstWhere((kernel) => kernel.name == selectedNode!.kernel,
+                              orElse: () => _supported.first.kernels.first,
+                              )
+                              .outputs
+                              .map((output) => Text(output))
+                              .toList(),
                         ),
                         // Add more attributes as needed
                       ],
@@ -651,11 +740,13 @@ class GraphPainter extends CustomPainter {
       ..maskFilter = MaskFilter.blur(BlurStyle.normal, 2);
 
     final selectedNodePaint = Paint()
-      ..color = Colors.red
+      // ..color = Colors.red
+      ..color = Colors.blue.shade400
       ..style = PaintingStyle.fill;
 
     final edgePaint = Paint()
-      ..color = Colors.white.withOpacity(0.7)
+      // ..color = Colors.white.withOpacity(0.7)
+      ..color = Color.alphaBlend(Colors.white.withAlpha(178), Colors.white)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 
@@ -673,7 +764,8 @@ class GraphPainter extends CustomPainter {
       // Draw glow effect for selected edge
       if (isSelected) {
         _drawArrow(canvas, edge.source.position, edge.target.position, Paint()
-          ..color = Colors.red.withOpacity(0.3)
+          // ..color = Color.alphaBlend(Colors.red.withAlpha(77), Colors.red)
+          ..color = Color.alphaBlend(Colors.white.withAlpha(77), Colors.white)
           ..strokeWidth = 6
           ..style = PaintingStyle.stroke
           ..maskFilter = MaskFilter.blur(BlurStyle.normal, 3));
@@ -687,16 +779,19 @@ class GraphPainter extends CustomPainter {
       if (node == selectedNode) {
         // Enhanced glow effect for selected node
         canvas.drawCircle(node.position, 32, Paint()
-          ..color = Colors.red.withOpacity(0.4)
+          // ..color = Colors.red.withOpacity(0.4)
+          ..color = Color.alphaBlend(Colors.blue.shade300.withAlpha(102), Colors.blue.shade300)
           ..maskFilter = MaskFilter.blur(BlurStyle.normal, 12));
 
         canvas.drawCircle(node.position, 30, Paint()
-          ..color = Colors.red.withOpacity(0.3)
+          // ..color = Colors.red.withOpacity(0.3)
+          ..color = Color.alphaBlend(Colors.blue.shade200.withAlpha(77), Colors.blue.shade200)
           ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8));
       } else {
         // Normal glow for unselected nodes
         canvas.drawCircle(node.position, 28, Paint()
-          ..color = Colors.blue.withOpacity(0.2)
+          // ..color = Colors.blue.withOpacity(0.2)
+          ..color = Color.alphaBlend(Colors.blue.withAlpha(51), Colors.blue)
           ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8));
       }
 
@@ -706,7 +801,8 @@ class GraphPainter extends CustomPainter {
 
       // Draw stroke with enhanced highlight
       canvas.drawCircle(node.position, 25, Paint()
-        ..color = node == selectedNode ? Colors.white.withOpacity(0.8) : Colors.blue.shade300
+        ..color = node == selectedNode ? // Colors.white.withOpacity(0.8)
+          Color.alphaBlend(Colors.white.withAlpha(204), Colors.white) : Colors.blue.shade300
         ..style = PaintingStyle.stroke
         ..strokeWidth = node == selectedNode ? 3 : 2);
 
@@ -714,12 +810,14 @@ class GraphPainter extends CustomPainter {
       final textSpan = TextSpan(
         text: node.name,
         style: TextStyle(
-          color: node == selectedNode ? Colors.white : Colors.white.withOpacity(0.9),
+          color: node == selectedNode ? Colors.white : Color.alphaBlend(Colors.white.withAlpha(229), Colors.white),
+          //  Colors.white.withOpacity(0.9),
           fontSize: node == selectedNode ? 14 : 12,
           fontWeight: node == selectedNode ? FontWeight.bold : FontWeight.w500,
           shadows: [
             Shadow(
-              color: Colors.black.withOpacity(0.5),
+              // color: Colors.black.withOpacity(0.5),
+              color: Color.alphaBlend(Colors.black.withAlpha(127), Colors.black),
               offset: Offset(0, 1),
               blurRadius: 3,
             ),
