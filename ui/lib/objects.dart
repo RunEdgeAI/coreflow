@@ -6,12 +6,16 @@ class Node {
   Offset position;
   String kernel;
   String target;
+  List<String> inputs;
+  List<String> outputs;
   Node({
     required this.id,
     required this.name,
     required this.position,
     this.kernel = 'Default',
-    this.target = 'Default'
+    this.target = 'Default',
+    this.inputs = const [],
+    this.outputs = const []
   });
 }
 
