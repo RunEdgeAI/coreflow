@@ -148,7 +148,10 @@ class GraphEditorState extends State<GraphEditor> {
         id: nextId++,
         name: 'Node $nextId',
         position: clampedPosition,
+        target: _supported.first.name,
+        kernel : _supported.first.kernels.first.name,
       );
+      _updateNodeIO(newNode, newNode.kernel);
       graph.nodes.add(newNode);
     });
     _deselectAll();
@@ -446,20 +449,6 @@ class GraphEditorState extends State<GraphEditor> {
                                         // Deselect the selected node
                                         selectedNode = null;
                                       }
-
-                                      // Initialize target and kernel if not already set
-                                      if (selectedNode != null) {
-                                        if (selectedNode!.target == 'Default') {
-                                          selectedNode!.target = _supported.first.name;
-                                        }
-                                        if (selectedNode!.kernel == 'Default') {
-                                          final target = _supported.firstWhere((t) => t.name == selectedNode!.target);
-                                          if (target.kernels.isNotEmpty) {
-                                            selectedNode!.kernel = target.kernels.first.name;
-                                          }
-                                        }
-                                        _updateNodeIO(selectedNode!, selectedNode!.kernel);
-                                      }
                                     } else if (tappedEdge != null) {
                                       if (selectedEdge == tappedEdge) {
                                         // Deselect the tapped edge if it is already selected
@@ -586,7 +575,9 @@ class GraphEditorState extends State<GraphEditor> {
                             value: (selectedNode!.target == 'Default') ?
                               _supported.first.name : selectedNode!.target,
                             decoration: InputDecoration(
-                              labelText: 'Target',
+                              labelText: Text(
+                                          'Target',
+                                          overflow: TextOverflow.ellipsis).data,
                               isDense: true,
                             ),
                             items: _supported
@@ -616,7 +607,9 @@ class GraphEditorState extends State<GraphEditor> {
                             value: (selectedNode!.kernel == 'Default') ?
                               _supported.first.kernels.first.name : selectedNode!.kernel,
                             decoration: InputDecoration(
-                              labelText: 'Kernel',
+                              labelText: Text(
+                                          'Kernel',
+                                          overflow: TextOverflow.ellipsis).data,
                               isDense: true,
                             ),
                             items: _supported
