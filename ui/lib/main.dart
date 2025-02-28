@@ -53,6 +53,9 @@ class GraphEditorState extends State<GraphEditor> {
   // Supported targets/kernels loaded from XML.
   List<Target> _supported = [];
   Offset? mousePosition;
+  Offset? edgeStart;
+  Node? edgeStartNode;
+  String? edgeStartOutput;
 
   @override
   void initState() {
@@ -257,7 +260,7 @@ class GraphEditorState extends State<GraphEditor> {
   }
 
   bool _isPointNearEdge(Offset point, Offset start, Offset end) {
-    final double threshold = 10.0;
+    final double threshold = 20.0;
 
     // Vector from start to end
     final vec = end - start;
@@ -428,7 +431,7 @@ class GraphEditorState extends State<GraphEditor> {
                             children: [
                               graphs.isNotEmpty
                                 ? GestureDetector(
-                                onTapDown: (details) {
+                                  onTapDown: (details) {
                                   final graph = graphs[selectedGraphIndex];
                                   final tappedNode = _findNodeAt(graph, details.localPosition);
                                   final tappedEdge = _findEdgeAt(graph, details.localPosition);
@@ -439,7 +442,7 @@ class GraphEditorState extends State<GraphEditor> {
                                       if (selectedNode == null) {
                                         selectedNode = tappedNode;
                                       } else {
-                                        _addEdge(graph, selectedNode!, tappedNode);
+                                        // _addEdge(graph, selectedNode!, tappedNode);
                                         // Deselect the selected node
                                         selectedNode = null;
                                       }
@@ -475,12 +478,16 @@ class GraphEditorState extends State<GraphEditor> {
                                       selectedEdge = null;
                                       // Deselect the selected graph row
                                       selectedGraphRow = null;
+                                      edgeStart = null;
+                                      edgeStartNode = null;
+                                      edgeStartOutput = null;
                                     }
                                   });
                                 },
                                 onPanUpdate: (details) {
-                                  if (draggingNode != null) {
-                                    setState(() {
+                                  setState(() {
+                                    mousePosition = details.localPosition;
+                                    if (draggingNode != null) {
                                       final newPosition = draggingNode!.position + details.delta;
                                       // Assuming the radius of the node is 25
                                       final nodeRadius = 25.0;
@@ -491,8 +498,8 @@ class GraphEditorState extends State<GraphEditor> {
                                           newPosition.dy + nodeRadius <= constraints.maxHeight) {
                                         draggingNode!.position = newPosition;
                                       }
-                                    });
-                                  }
+                                    }
+                                  });
                                 },
                                 onPanStart: (details) {
                                   setState(() {
@@ -505,17 +512,25 @@ class GraphEditorState extends State<GraphEditor> {
                                   setState(() {
                                     draggingNode = null;
                                     dragOffset = null;
+                                    edgeStart = null;
+                                    edgeStartNode = null;
+                                    edgeStartOutput = null;
+                                    mousePosition = null;
                                   });
                                 },
                                 child: CustomPaint(
-                                  painter: GraphPainter(
-                                    graphs[selectedGraphIndex].nodes,
-                                    graphs[selectedGraphIndex].edges,
-                                    selectedNode,
-                                    selectedEdge,
-                                  ),
+                                  painter: graphs.isNotEmpty
+                                      ? GraphPainter(
+                                          graphs[selectedGraphIndex].nodes,
+                                          graphs[selectedGraphIndex].edges,
+                                          selectedNode,
+                                          selectedEdge,
+                                          edgeStart,
+                                          mousePosition,
+                                        )
+                                      : null,
                                   child: Container(),
-                                ),
+                                  ),
                               )
                                 : Center(child: Text('No graphs available')),
                               ..._buildTooltips(),
@@ -571,7 +586,6 @@ class GraphEditorState extends State<GraphEditor> {
                             value: (selectedNode!.target == 'Default') ?
                               _supported.first.name : selectedNode!.target,
                             decoration: InputDecoration(
-                              constraints: BoxConstraints(maxWidth: 200),
                               labelText: 'Target',
                               isDense: true,
                             ),
@@ -579,7 +593,10 @@ class GraphEditorState extends State<GraphEditor> {
                                 .map((target) => DropdownMenuItem<String>(
                                       alignment: Alignment.centerLeft,
                                       value: target.name,
-                                      child: Text(target.name),
+                                      child: Text(
+                                        target.name,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ))
                                 .toList(),
                             onChanged: (newValue) {
@@ -599,7 +616,6 @@ class GraphEditorState extends State<GraphEditor> {
                             value: (selectedNode!.kernel == 'Default') ?
                               _supported.first.kernels.first.name : selectedNode!.kernel,
                             decoration: InputDecoration(
-                              constraints: BoxConstraints(maxWidth: 200),
                               labelText: 'Kernel',
                               isDense: true,
                             ),
@@ -717,9 +733,32 @@ class GraphEditorState extends State<GraphEditor> {
           tooltips.add(Positioned(
             left: iconOffset.dx - 8,
             top: iconOffset.dy - 8,
-            child: Tooltip(
-              message: node.inputs[i],
-              child: Icon(Icons.input, size: 16, color: Colors.green),
+            child: GestureDetector(
+              onTapDown: (details) {
+                setState(() {
+                  if (edgeStart != null && edgeStartNode != null) {
+                    final graph = graphs[selectedGraphIndex];
+                    _addEdge(graph, edgeStartNode!, node);
+                    edgeStart = null;
+                    edgeStartNode = null;
+                    edgeStartOutput = null;
+                  } else {
+                    edgeStart = iconOffset;
+                    edgeStartNode = node;
+                    edgeStartOutput = 'input_${i}_${node.inputs[i]}';
+                  }
+                });
+              },
+              child: Tooltip(
+                message: node.inputs[i],
+                child: Icon(
+                  Icons.input,
+                  size: 16,
+                  color: edgeStartNode == node && edgeStartOutput == 'input_${i}_${node.inputs[i]}'
+                    ? Colors.white
+                    : Colors.green
+                  ),
+              ),
             ),
           ));
         }
@@ -737,9 +776,24 @@ class GraphEditorState extends State<GraphEditor> {
           tooltips.add(Positioned(
             left: iconOffset.dx - 8,
             top: iconOffset.dy - 8,
-            child: Tooltip(
-              message: node.outputs[i],
-              child: Icon(Icons.output, size: 16, color: Colors.red),
+            child: GestureDetector(
+              onTapDown: (details) {
+                setState(() {
+                  edgeStart = iconOffset;
+                  edgeStartNode = node;
+                  edgeStartOutput = 'output_${i}_${node.outputs[i]}';
+                });
+              },
+              child: Tooltip(
+                message: node.outputs[i],
+                child: Icon(
+                  Icons.output,
+                  size: 16,
+                  color: edgeStartNode == node && edgeStartOutput == 'output_${i}_${node.outputs[i]}'
+                    ? Colors.white
+                    : Colors.green
+                  ),
+              ),
             ),
           ));
         }
@@ -754,20 +808,22 @@ class GraphPainter extends CustomPainter {
   final List<Edge> edges;
   final Node? selectedNode;
   final Edge? selectedEdge;
+  final Offset? edgeStart;
+  final Offset? mousePosition;
 
-  GraphPainter(this.nodes, this.edges, this.selectedNode, this.selectedEdge);
+  GraphPainter(this.nodes, this.edges, this.selectedNode, this.selectedEdge, this.edgeStart, this.mousePosition);
 
   void _drawArrow(Canvas canvas, Offset start, Offset end, Paint paint) {
     final double arrowSize = 5.0;
     // 25 degrees in radians
-    final double angle = 25.0 * (3.14159 / 180.0);
+    final double angle = 25.0 * (pi / 180.0);
 
     // Calculate the direction vector
     var direction = (end - start);
     direction = direction / direction.distance;
 
     // Calculate arrow base point - move back from end by node radius + arrow size
-    var basePoint = end - direction * (25 + arrowSize);
+    var basePoint = end - direction * arrowSize;
 
     // Calculate arrow points
     var leftPoint = basePoint + Offset(
@@ -780,7 +836,7 @@ class GraphPainter extends CustomPainter {
     );
 
     // Draw arrow line
-    canvas.drawLine(start, basePoint, paint);
+    canvas.drawLine(start, end, paint);
 
     // Draw arrowhead
     final Path path = Path()
@@ -800,12 +856,10 @@ class GraphPainter extends CustomPainter {
       ..maskFilter = MaskFilter.blur(BlurStyle.normal, 2);
 
     final selectedNodePaint = Paint()
-      // ..color = Colors.red
       ..color = Colors.blue.shade400
       ..style = PaintingStyle.fill;
 
     final edgePaint = Paint()
-      // ..color = Colors.white.withOpacity(0.7)
       ..color = Color.alphaBlend(Colors.white.withAlpha(178), Colors.white)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
@@ -813,7 +867,6 @@ class GraphPainter extends CustomPainter {
     // Update edge paint to include selection state
     final selectedEdgePaint = Paint()
       ..color = Colors.white70
-      // ..color = Colors.red
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
 
@@ -822,44 +875,63 @@ class GraphPainter extends CustomPainter {
       final isSelected = edge == selectedEdge;
       final paint = isSelected ? selectedEdgePaint : edgePaint;
 
+      final sourceNode = edge.source;
+      final targetNode = edge.target;
+
+      final sourceAngle = (sourceNode.outputs.length == 1)
+          ? 0
+          : (pi / 4) + (sourceNode.outputs.indexOf(edge.source.outputs.first) * (3 * pi / 2) / (sourceNode.outputs.length - 1));
+      final sourceIconOffset = Offset(
+        sourceNode.position.dx + 30 * cos(sourceAngle),
+        sourceNode.position.dy + 30 * sin(sourceAngle),
+      );
+
+      final targetAngle = (targetNode.inputs.length == 1)
+          ? pi
+          : (3 * pi / 4) + (targetNode.inputs.indexOf(edge.target.inputs.first) * (pi / 2) / (targetNode.inputs.length - 1));
+      final targetIconOffset = Offset(
+        targetNode.position.dx + 30 * cos(targetAngle),
+        targetNode.position.dy + 30 * sin(targetAngle),
+      );
+
       // Draw glow effect for selected edge
       if (isSelected) {
-        _drawArrow(canvas, edge.source.position, edge.target.position, Paint()
-          // ..color = Color.alphaBlend(Colors.red.withAlpha(77), Colors.red)
+        _drawArrow(canvas, sourceIconOffset, targetIconOffset, Paint()
           ..color = Color.alphaBlend(Colors.white.withAlpha(77), Colors.white)
           ..strokeWidth = 6
           ..style = PaintingStyle.stroke
           ..maskFilter = MaskFilter.blur(BlurStyle.normal, 3));
       }
 
-      _drawArrow(canvas, edge.source.position, edge.target.position, paint);
+      _drawArrow(canvas, sourceIconOffset, targetIconOffset, paint); // Use icon offsets
+    }
+
+    if (edgeStart != null && mousePosition != null) {
+      // _drawArrow(canvas, edgeStart!, mousePosition!, edgePaint);
     }
 
     // Draw nodes with enhanced glow effect
     for (var node in nodes) {
+      final paint = node == selectedNode ? selectedNodePaint : nodePaint;
+
       if (node == selectedNode) {
         // Enhanced glow effect for selected node
         canvas.drawCircle(node.position, 32, Paint()
-          // ..color = Colors.red.withOpacity(0.4)
           ..color = Color.alphaBlend(Colors.blue.shade300.withAlpha(102), Colors.blue.shade300)
           ..maskFilter = MaskFilter.blur(BlurStyle.normal, 12));
 
         canvas.drawCircle(node.position, 30, Paint()
-          // ..color = Colors.red.withOpacity(0.3)
           ..color = Color.alphaBlend(Colors.blue.shade200.withAlpha(77), Colors.blue.shade200)
           ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8));
       } else {
         // Normal glow for unselected nodes
         canvas.drawCircle(node.position, 28, Paint()
-          // ..color = Colors.blue.withOpacity(0.2)
           ..color = Color.alphaBlend(Colors.blue.withAlpha(51), Colors.blue)
           ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8));
       }
 
       // Draw main circle
-      canvas.drawCircle(node.position, 25,
-        node == selectedNode ? selectedNodePaint : nodePaint);
-
+      canvas.drawCircle(node.position, 25, paint);
       // Draw stroke with enhanced highlight
       canvas.drawCircle(node.position, 25, Paint()
         ..color = node == selectedNode ? // Colors.white.withOpacity(0.8)
@@ -877,7 +949,6 @@ class GraphPainter extends CustomPainter {
           fontWeight: node == selectedNode ? FontWeight.bold : FontWeight.w500,
           shadows: [
             Shadow(
-              // color: Colors.black.withOpacity(0.5),
               color: Color.alphaBlend(Colors.black.withAlpha(127), Colors.black),
               offset: Offset(0, 1),
               blurRadius: 3,
@@ -893,8 +964,7 @@ class GraphPainter extends CustomPainter {
       );
 
       textPainter.layout(minWidth: 0, maxWidth: 50);
-      final offset = node.position -
-          Offset(textPainter.width / 2, textPainter.height / 2);
+      final offset = node.position - Offset(textPainter.width / 2, textPainter.height / 2);
       textPainter.paint(canvas, offset);
     }
   }
