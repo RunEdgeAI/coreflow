@@ -56,6 +56,7 @@ class GraphEditorState extends State<GraphEditor> {
   Offset? edgeStart;
   Node? edgeStartNode;
   String? edgeStartOutput;
+  int _refCount = 0;
 
   @override
   void initState() {
@@ -124,6 +125,7 @@ class GraphEditorState extends State<GraphEditor> {
       selectedGraphIndex = graphs.length - 1;
     });
     _deselectAll();
+    _refCount++;
   }
 
   void _deleteGraph(int index) {
@@ -134,6 +136,7 @@ class GraphEditorState extends State<GraphEditor> {
       }
     });
     _deselectAll();
+    _refCount--;
   }
 
   void _addNode(Graph graph, Offset position, Size panelSize) {
@@ -152,6 +155,7 @@ class GraphEditorState extends State<GraphEditor> {
         kernel : _supported.first.kernels.first.name,
       );
       _updateNodeIO(newNode, newNode.kernel);
+      _refCount += newNode.inputs.length + newNode.outputs.length + 1;
       graph.nodes.add(newNode);
     });
     _deselectAll();
@@ -190,6 +194,7 @@ class GraphEditorState extends State<GraphEditor> {
       if (selectedNode != null) {
         graph.edges.removeWhere((edge) =>
           edge.source == selectedNode || edge.target == selectedNode);
+        _refCount -= selectedNode!.inputs.length + selectedNode!.outputs.length + 1;
         graph.nodes.remove(selectedNode);
         selectedNode = null;
       } else if (selectedEdge != null) {
@@ -213,19 +218,46 @@ class GraphEditorState extends State<GraphEditor> {
   }
 
   String _exportXML(Graph graph) {
-    StringBuffer xml = StringBuffer();
-    xml.writeln('<Graph>');
+    final builder = xml.XmlBuilder();
+    final Set<String> targets = _getTargets(graph);
+
+    builder.processing('xml', 'version="1.0" encoding="utf-8"');
+
+    builder.element('openvx', namespaces: {
+      '': 'https://www.khronos.org/registry/vx/schema',
+      'xsi': 'https://www.w3.org/TR/xmlschema-1'
+    }, attributes: {
+      'xsi:schemaLocation': 'https://registry.khronos.org/OpenVX/schema/openvx-1-1.xsd',
+      'references': _refCount.toString()
+    }, nest: () {
+      // Add library entries for each target
+      for (var target in targets) {
+        builder.element('library', nest: target);
+      }
+
+      // Add input and output references
+
+      // Describe graph
+        // Add node and kernel
+
+          // Add input parameters
+          // Add output parameters
+
+      // Add graph input and output parameters
+    });
+
+    final document = builder.buildDocument();
+    return document.toXmlString(pretty: true);
+  }
+
+  Set<String> _getTargets(Graph graph) {
+    final Set<String> targets = {};
+
     for (var node in graph.nodes) {
-      xml.writeln(
-          '  <Node id="${node.id}" name="${node.name}" x="${node.position.dx}" y="${node.position.dy}" />');
+      targets.add('openvx_${node.target}');
     }
-    xml.writeln('  <Edges>');
-    for (var edge in graph.edges) {
-      xml.writeln('    <Edge source="${edge.source.id}" target="${edge.target.id}" />');
-    }
-    xml.writeln('  </Edges>');
-    xml.writeln('</Graph>');
-    return xml.toString();
+
+    return targets;
   }
 
   List<String> _getUpstreamDependencies(Node node) {
@@ -572,8 +604,7 @@ class GraphEditorState extends State<GraphEditor> {
                           SizedBox(height: 8.0),
                           DropdownButtonFormField<String>(
                             isExpanded: true,
-                            value: (selectedNode!.target == 'Default') ?
-                              _supported.first.name : selectedNode!.target,
+                            value: selectedNode!.target,
                             decoration: InputDecoration(
                               labelText: Text(
                                           'Target',
@@ -604,8 +635,7 @@ class GraphEditorState extends State<GraphEditor> {
                           SizedBox(height: 8.0),
                           DropdownButtonFormField<String>(
                             isExpanded: true,
-                            value: (selectedNode!.kernel == 'Default') ?
-                              _supported.first.kernels.first.name : selectedNode!.kernel,
+                            value: selectedNode!.kernel,
                             decoration: InputDecoration(
                               labelText: Text(
                                           'Kernel',
