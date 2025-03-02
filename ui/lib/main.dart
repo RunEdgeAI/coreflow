@@ -121,11 +121,10 @@ class GraphEditorState extends State<GraphEditor> {
 
   void _addGraph() {
     setState(() {
-      graphs.add(Graph(nodes: [], edges: []));
+      graphs.add(Graph(id: _refCount++, nodes: [], edges: []));
       selectedGraphIndex = graphs.length - 1;
     });
     _deselectAll();
-    _refCount++;
   }
 
   void _deleteGraph(int index) {
@@ -148,14 +147,14 @@ class GraphEditorState extends State<GraphEditor> {
 
     setState(() {
       final newNode = Node(
-        id: nextId++,
+        id: _refCount++,
         name: 'Node $nextId',
         position: clampedPosition,
         target: _supported.first.name,
         kernel : _supported.first.kernels.first.name,
       );
       _updateNodeIO(newNode, newNode.kernel);
-      _refCount += newNode.inputs.length + newNode.outputs.length + 1;
+      nextId++;
       graph.nodes.add(newNode);
     });
     _deselectAll();
@@ -175,6 +174,11 @@ class GraphEditorState extends State<GraphEditor> {
       setState(() {
         final newEdge = Edge(source: source, target: target);
         graph.edges.add(newEdge);
+        // If an input was tapped, update its linkId to be source.id.
+        final index = int.tryParse(edgeStartOutput!) ?? -1;
+        if (index >= 0 && index < target.inputs.length) {
+          target.inputs[index].linkId = source.id;
+        }
       });
       // Deselect selected node and any selected edge after creating an edge
       _deselectAll();
@@ -331,8 +335,8 @@ class GraphEditorState extends State<GraphEditor> {
     final kernel = target.kernels.firstWhere((k) => k.name == kernelName);
 
     setState(() {
-      node.inputs = kernel.inputs;
-      node.outputs = kernel.outputs;
+      node.inputs = kernel.inputs.map((input) => Reference(id: _refCount++, name: input)).toList();
+      node.outputs = kernel.outputs.map((output) => Reference(id: _refCount++, name: output)).toList();
     });
   }
 
@@ -768,16 +772,16 @@ class GraphEditorState extends State<GraphEditor> {
                   } else {
                     edgeStart = iconOffset;
                     edgeStartNode = node;
-                    edgeStartOutput = 'input_${i}_${node.inputs[i]}';
+                    edgeStartOutput = node.inputs[i].id.toString();
                   }
                 });
               },
               child: Tooltip(
-                message: node.inputs[i],
+                message: node.inputs[i].name,
                 child: Icon(
                   Icons.input,
                   size: 16,
-                  color: edgeStartNode == node && edgeStartOutput == 'input_${i}_${node.inputs[i]}'
+                  color: edgeStartNode == node && edgeStartOutput == node.inputs[i].id.toString()
                     ? Colors.white
                     : Colors.green
                   ),
@@ -804,15 +808,15 @@ class GraphEditorState extends State<GraphEditor> {
                 setState(() {
                   edgeStart = iconOffset;
                   edgeStartNode = node;
-                  edgeStartOutput = 'output_${i}_${node.outputs[i]}';
+                  edgeStartOutput = node.outputs[i].id.toString();
                 });
               },
               child: Tooltip(
-                message: node.outputs[i],
+                message: node.outputs[i].name,
                 child: Icon(
                   Icons.output,
                   size: 16,
-                  color: edgeStartNode == node && edgeStartOutput == 'output_${i}_${node.outputs[i]}'
+                  color: edgeStartNode == node && edgeStartOutput == node.outputs[i].id.toString()
                     ? Colors.white
                     : Colors.green
                   ),

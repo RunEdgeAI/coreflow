@@ -1,21 +1,42 @@
 import 'package:flutter/material.dart';
 
-class Node {
+class Reference {
   final int id;
   String name;
+  String type;
+  int linkId;
+  Reference({
+    required this.id,
+    this.name = '',
+    this.type = '',
+    this.linkId = -1,
+  });
+}
+
+class Node extends Reference {
   Offset position;
   String kernel;
   String target;
-  List<String> inputs;
-  List<String> outputs;
+  List<Reference> inputs;
+  List<Reference> outputs;
   Node({
-    required this.id,
-    required this.name,
+    required super.id,
+    required super.name,
     required this.position,
-    this.kernel = 'Default',
-    this.target = 'Default',
+    required this.kernel,
+    required this.target,
     this.inputs = const [],
-    this.outputs = const []
+    this.outputs = const [],
+  });
+}
+
+class Graph extends Reference {
+  List<Node> nodes;
+  List<Edge> edges;
+  Graph({
+    required super.id,
+    required this.nodes,
+    required this.edges
   });
 }
 
@@ -25,15 +46,6 @@ class Edge {
   Edge({
     required this.source,
     required this.target
-  });
-}
-
-class Graph {
-  List<Node> nodes;
-  List<Edge> edges;
-  Graph({
-    required this.nodes,
-    required this.edges
   });
 }
 
