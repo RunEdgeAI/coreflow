@@ -338,6 +338,7 @@ class GraphEditorState extends State<GraphEditor> {
     setState(() {
       node.inputs = kernel.inputs.map((input) => Reference(id: _refCount++, name: input)).toList();
       node.outputs = kernel.outputs.map((output) => Reference(id: _refCount++, name: output)).toList();
+      _buildTooltips();
     });
   }
 
@@ -633,6 +634,7 @@ class GraphEditorState extends State<GraphEditor> {
                                 final target = _supported.firstWhere((t) => t.name == newValue);
                                 if (target.kernels.isNotEmpty) {
                                   selectedNode!.kernel = target.kernels.first.name;
+                                  _updateNodeIO(selectedNode!, selectedNode!.kernel);
                                 }
                               });
                             },
