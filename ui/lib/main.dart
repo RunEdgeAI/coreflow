@@ -30,14 +30,14 @@ class GraphEditorApp extends StatelessWidget {
       home: GraphEditor(),
     );
   }
-}
+} // End of GraphEditorApp
 
 class GraphEditor extends StatefulWidget {
   const GraphEditor({super.key});
 
   @override
   GraphEditorState createState() => GraphEditorState();
-}
+} // End of GraphEditor
 
 class GraphEditorState extends State<GraphEditor> {
   List<Graph> graphs = [];
@@ -54,9 +54,8 @@ class GraphEditorState extends State<GraphEditor> {
   // Supported targets/kernels loaded from XML.
   List<Target> _supported = [];
   Offset? mousePosition;
-  Offset? edgeStart;
   Node? edgeStartNode;
-  String? edgeStartOutput;
+  int? edgeStartOutput;
   int _refCount = 0;
 
   @override
@@ -64,7 +63,7 @@ class GraphEditorState extends State<GraphEditor> {
     super.initState();
     _focusNode.requestFocus();
     _loadSupportedXml();
-  }
+  } // End of initState
 
   @override
   void dispose() {
@@ -72,7 +71,7 @@ class GraphEditorState extends State<GraphEditor> {
     _nameController.dispose();
     _nameFocusNode.dispose();
     super.dispose();
-  }
+  } // End of dispose
 
   Future<void> _loadSupportedXml() async {
     // Load the XML file from assets.
@@ -118,7 +117,7 @@ class GraphEditorState extends State<GraphEditor> {
     setState(() {
       _supported = supported;
     });
-  }
+  } // End of _loadSupportedXml
 
   void _addGraph() {
     setState(() {
@@ -126,7 +125,7 @@ class GraphEditorState extends State<GraphEditor> {
       selectedGraphIndex = graphs.length - 1;
     });
     _deselectAll();
-  }
+  } // End of _addGraph
 
   void _deleteGraph(int index) {
     setState(() {
@@ -137,7 +136,7 @@ class GraphEditorState extends State<GraphEditor> {
     });
     _deselectAll();
     _refCount--;
-  }
+  } // End of _deleteGraph
 
   void _addNode(Graph graph, Offset position, Size panelSize) {
     // Assuming the radius of the node is 25
@@ -159,9 +158,9 @@ class GraphEditorState extends State<GraphEditor> {
       graph.nodes.add(newNode);
     });
     _deselectAll();
-  }
+  } // End of _addNode
 
-  void _addEdge(Graph graph, Node source, Node target) {
+  void _addEdge(Graph graph, Node source, Node target, int srcId, int tgtId) {
     // Check if the source and target nodes are the same
     if (source == target) {
       return;
@@ -169,22 +168,24 @@ class GraphEditorState extends State<GraphEditor> {
 
     // Check if an edge already exists between the same pair of nodes
     bool edgeExists = graph.edges.any((edge) =>
-      (edge.source == source && edge.target == target));
+      (edge.source == source && edge.target == target && edge.srcId == srcId && edge.tgtId == tgtId));
 
     if (!edgeExists) {
       setState(() {
-        final newEdge = Edge(source: source, target: target);
-        graph.edges.add(newEdge);
-        // If an input was tapped, update its linkId to be source.id.
-        final index = int.tryParse(edgeStartOutput!) ?? -1;
+        final index = target.inputs.indexWhere((input) => input.id == tgtId);
         if (index >= 0 && index < target.inputs.length) {
+          // If an input was tapped, update its linkId to be source.id.
+          // target.inputs[index] = source.outputs.firstWhere((output) => output.id == srcId);
           target.inputs[index].linkId = source.id;
+          // Create a new edge
+          final newEdge = Edge(source: source, target: target, srcId: srcId, tgtId: tgtId);
+          graph.edges.add(newEdge);
         }
       });
       // Deselect selected node and any selected edge after creating an edge
       _deselectAll();
     }
-  }
+  } // End of _addEdge
 
   void _deselectAll() {
     setState(() {
@@ -192,7 +193,7 @@ class GraphEditorState extends State<GraphEditor> {
       selectedEdge = null;
       selectedGraphRow = null;
     });
-  }
+  } // End of _deselectAll
 
   void _deleteSelected(Graph graph) {
     setState(() {
@@ -207,7 +208,7 @@ class GraphEditorState extends State<GraphEditor> {
       }
       _deselectAll();
     });
-  }
+  } // End of _deleteSelected
 
   String _exportDOT(Graph graph) {
     StringBuffer dot = StringBuffer();
@@ -220,7 +221,7 @@ class GraphEditorState extends State<GraphEditor> {
     }
     dot.writeln('}');
     return dot.toString();
-  }
+  } // End of _exportDOT
 
   String _exportXML(Graph graph) {
     final builder = xml.XmlBuilder();
@@ -253,7 +254,7 @@ class GraphEditorState extends State<GraphEditor> {
 
     final document = builder.buildDocument();
     return document.toXmlString(pretty: true);
-  }
+  } // End of _exportXML
 
   Set<String> _getTargets(Graph graph) {
     final Set<String> targets = {};
@@ -263,7 +264,7 @@ class GraphEditorState extends State<GraphEditor> {
     }
 
     return targets;
-  }
+  } // End of _getTargets
 
   List<String> _getUpstreamDependencies(Node node) {
     final graph = graphs[selectedGraphIndex];
@@ -271,7 +272,7 @@ class GraphEditorState extends State<GraphEditor> {
         .where((edge) => edge.target == node)
         .map((edge) => edge.source.name)
         .toList();
-  }
+  } // End of _getUpstreamDependencies
 
   List<String> _getDownstreamDependencies(Node node) {
     final graph = graphs[selectedGraphIndex];
@@ -279,7 +280,7 @@ class GraphEditorState extends State<GraphEditor> {
         .where((edge) => edge.source == node)
         .map((edge) => edge.target.name)
         .toList();
-  }
+  } // End of _getDownstreamDependencies
 
   Node? _findNodeAt(Graph graph, Offset position) {
     for (var node in graph.nodes.reversed) {
@@ -288,7 +289,7 @@ class GraphEditorState extends State<GraphEditor> {
       }
     }
     return null;
-  }
+  } // End of _findNodeAt
 
   Edge? _findEdgeAt(Graph graph, Offset position) {
     for (var edge in graph.edges.reversed) {
@@ -297,7 +298,7 @@ class GraphEditorState extends State<GraphEditor> {
       }
     }
     return null;
-  }
+  } // End of _findEdgeAt
 
   bool _isPointNearEdge(Offset point, Offset start, Offset end) {
     final double threshold = 20.0;
@@ -323,24 +324,56 @@ class GraphEditorState extends State<GraphEditor> {
 
     // Check distance to line
     return (point - projection).distance < threshold;
-  }
+  } // End of _isPointNearEdge
 
   void _updateNameController() {
     if (selectedNode != null && _nameController.text != selectedNode!.name) {
       _nameController.text = selectedNode!.name;
     }
-  }
+  } // End of _updateNameController
 
   void _updateNodeIO(Node node, String kernelName) {
     final target = _supported.firstWhere((t) => t.name == node.target);
     final kernel = target.kernels.firstWhere((k) => k.name == kernelName);
 
     setState(() {
-      node.inputs = kernel.inputs.map((input) => Reference(id: _refCount++, name: input)).toList();
-      node.outputs = kernel.outputs.map((output) => Reference(id: _refCount++, name: output)).toList();
+      node.inputs = kernel.inputs.map((input) => _createReference(input)).toList();
+      node.outputs = kernel.outputs.map((output) => _createReference(output)).toList();
       _buildTooltips();
     });
-  }
+  } // End of _updateNodeIO
+
+  Reference _createReference(String name) {
+    // Logic to determine the type of Reference to create
+    if (name == ('VX_TYPE_ARRAY')) {
+      return Array(id: _refCount++, name: name, capacity: 0, elemType: arrayTypes.first);
+    } else if (name.contains('CONVOLUTION')) {
+      return Convolution(id: _refCount++, name: name, rows: 0, cols: 0, scale: 1);
+    } else if (name.contains('IMAGE')) {
+      return Img(id: _refCount++, name: name, width: 0, height: 0, format: imageTypes.first);
+    } else if (name.contains('LUT')) {
+      return Lut(id: _refCount++, name: name, capacity: 0);
+    } else if (name.contains('MATRIX')) {
+      return Matrix(id: _refCount++, name: name, rows: 0, cols: 0, elemType: numTypes.first);
+    } else if (name.contains('OBJECT_ARRAY')) {
+      return ObjectArray(id: _refCount++, name: name, numObjects: 0, elemType: objectArrayTypes.first);
+    } else if (name.contains('PYRAMID')) {
+      return Pyramid(id: _refCount++, name: name, numLevels: 0, width: 0, height: 0, format: imageTypes.first);
+    } else if (name.contains('REMAP')) {
+      return Remap(id: _refCount++, name: name, srcWidth: 0, srcHeight: 0, dstWidth: 0, dstHeight: 0);
+    } else if (name.contains('SCALAR')) {
+      return Scalar(id: _refCount++, name: name, elemType: scalarTypes.first, value: 0.0);
+    } else if (name.contains('TENSOR')) {
+      return Tensor(id: _refCount++, name: name, shape: [], numDims: 0, elemType: numTypes.first);
+    } else if (name.contains('THRESHOLD')) {
+      return Thrshld(id: _refCount++, name: name, thresType: thresholdTypes.first, dataType: thresholdDataTypes.first);
+    } else if (name.contains('USER_DATA_OBJECT')) {
+      return UserDataObject(id: _refCount++, name: name, sizeInBytes: 0);
+    }
+
+    // Add more conditions for other Reference types as needed
+    return Reference(id: _refCount++, name: name);
+  } // End of _createReference
 
   @override
   Widget build(BuildContext context) {
@@ -505,7 +538,6 @@ class GraphEditorState extends State<GraphEditor> {
                                       selectedEdge = null;
                                       // Deselect the selected graph row
                                       selectedGraphRow = null;
-                                      edgeStart = null;
                                       edgeStartNode = null;
                                       edgeStartOutput = null;
                                     }
@@ -539,7 +571,6 @@ class GraphEditorState extends State<GraphEditor> {
                                   setState(() {
                                     draggingNode = null;
                                     dragOffset = null;
-                                    edgeStart = null;
                                     edgeStartNode = null;
                                     edgeStartOutput = null;
                                     mousePosition = null;
@@ -552,7 +583,6 @@ class GraphEditorState extends State<GraphEditor> {
                                           graphs[selectedGraphIndex].edges,
                                           selectedNode,
                                           selectedEdge,
-                                          edgeStart,
                                           mousePosition,
                                         )
                                       : null,
@@ -744,10 +774,11 @@ class GraphEditorState extends State<GraphEditor> {
         ),
       ),
     );
-  }
+  } // End of build method
 
   List<Widget> _buildTooltips() {
     final tooltips = <Widget>[];
+    int? edgeEndInput;
     if (graphs.isNotEmpty) {
       for (var node in graphs[selectedGraphIndex].nodes) {
         for (int i = 0; i < node.inputs.length; i++) {
@@ -766,25 +797,27 @@ class GraphEditorState extends State<GraphEditor> {
             child: GestureDetector(
               onTapDown: (details) {
                 setState(() {
-                  if (edgeStart != null && edgeStartNode != null) {
+                  if (edgeStartNode != null && edgeStartOutput != null) {
                     final graph = graphs[selectedGraphIndex];
-                    _addEdge(graph, edgeStartNode!, node);
-                    edgeStart = null;
+                    _addEdge(graph, edgeStartNode!, node, edgeStartOutput!, node.inputs[i].id);
                     edgeStartNode = null;
+                    edgeEndInput = null;
                     edgeStartOutput = null;
                   } else {
-                    edgeStart = iconOffset;
                     edgeStartNode = node;
-                    edgeStartOutput = node.inputs[i].id.toString();
+                    edgeEndInput = node.inputs[i].id;
                   }
                 });
+              },
+              onDoubleTap: () {
+                _showAttributeDialog(context, node.inputs[i]);
               },
               child: Tooltip(
                 message: node.inputs[i].name,
                 child: Icon(
                   Icons.input,
                   size: 16,
-                  color: edgeStartNode == node && edgeStartOutput == node.inputs[i].id.toString()
+                  color: edgeStartNode == node && edgeEndInput == node.inputs[i].id
                     ? Colors.white
                     : Colors.green
                   ),
@@ -809,17 +842,20 @@ class GraphEditorState extends State<GraphEditor> {
             child: GestureDetector(
               onTapDown: (details) {
                 setState(() {
-                  edgeStart = iconOffset;
+                  edgeEndInput = null;
                   edgeStartNode = node;
-                  edgeStartOutput = node.outputs[i].id.toString();
+                  edgeStartOutput = node.outputs[i].id;
                 });
+              },
+              onDoubleTap: () {
+                _showAttributeDialog(context, node.outputs[i]);
               },
               child: Tooltip(
                 message: node.outputs[i].name,
                 child: Icon(
                   Icons.output,
                   size: 16,
-                  color: edgeStartNode == node && edgeStartOutput == node.outputs[i].id.toString()
+                  color: edgeStartNode == node && edgeStartOutput == node.outputs[i].id
                     ? Colors.white
                     : Colors.green
                   ),
@@ -830,5 +866,346 @@ class GraphEditorState extends State<GraphEditor> {
       }
     }
     return tooltips;
-  }
-}
+  } // End of _buildTooltips
+
+  void _showAttributeDialog(BuildContext context, Reference reference) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Edit ${reference.name} Attributes'),
+          content: SingleChildScrollView(
+            child: Column(
+              children: [
+                TextField(
+                  controller: TextEditingController(text: reference.name),
+                  decoration: InputDecoration(labelText: 'Name'),
+                  onChanged: (value) {
+                    reference.name = value;
+                  },
+                ),
+                if (reference is Array) ...[ // Array specific attributes
+                  TextField(
+                    controller: TextEditingController(text: reference.capacity.toString()),
+                    decoration: InputDecoration(labelText: 'Capacity'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      reference.capacity = int.tryParse(value) ?? reference.capacity;
+                    },
+                  ),
+                  DropdownButtonFormField<String>(
+                    value: reference.elemType,
+                    decoration: InputDecoration(labelText: 'Element Type'),
+                    items: arrayTypes.map((type) {
+                      return DropdownMenuItem<String>(
+                        value: type,
+                        child: Text(type),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      reference.elemType = value!;
+                    },
+                  ),
+                ],
+                if (reference is Convolution) ...[ // Convolution specific attributes
+                  TextField(
+                    controller: TextEditingController(text: reference.rows.toString()),
+                    decoration: InputDecoration(labelText: 'Rows'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      reference.rows = int.tryParse(value) ?? reference.rows;
+                    },
+                  ),
+                  TextField(
+                    controller: TextEditingController(text: reference.cols.toString()),
+                    decoration: InputDecoration(labelText: 'Columns'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      reference.cols = int.tryParse(value) ?? reference.cols;
+                    },
+                  ),
+                  TextField(
+                    controller: TextEditingController(text: reference.scale.toString()),
+                    decoration: InputDecoration(labelText: 'Scale'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      reference.scale = (double.tryParse(value) ?? reference.scale).toInt();
+                    },
+                  ),
+                ],
+                if (reference is Img) ...[ // Img specific attributes
+                  TextField(
+                    controller: TextEditingController(text: reference.width.toString()),
+                    decoration: InputDecoration(labelText: 'Width'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      reference.width = int.tryParse(value) ?? reference.width;
+                    },
+                  ),
+                  TextField(
+                    controller: TextEditingController(text: reference.height.toString()),
+                    decoration: InputDecoration(labelText: 'Height'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      reference.height = int.tryParse(value) ?? reference.height;
+                    },
+                  ),
+                  DropdownButtonFormField<String>(
+                    value: reference.format,
+                    decoration: InputDecoration(labelText: 'Format'),
+                    items: imageTypes.map((type) {
+                      return DropdownMenuItem<String>(
+                        value: type,
+                        child: Text(type),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      reference.format = value!;
+                    },
+                  ),
+                ],
+                if (reference is Lut) ...[ // Lut specific attributes
+                  TextField(
+                    controller: TextEditingController(text: reference.capacity.toString()),
+                    decoration: InputDecoration(labelText: 'Capacity'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      reference.capacity = int.tryParse(value) ?? reference.capacity;
+                    },
+                  ),
+                  TextField(
+                    controller: TextEditingController(text: reference.elemType),
+                    decoration: InputDecoration(labelText: 'Element Type'),
+                    onChanged: (value) {
+                      reference.elemType = value;
+                    },
+                  ),
+                ],
+                if (reference is Matrix) ...[ // Matrix specific attributes
+                  TextField(
+                    controller: TextEditingController(text: reference.rows.toString()),
+                    decoration: InputDecoration(labelText: 'Rows'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      reference.rows = int.tryParse(value) ?? reference.rows;
+                    },
+                  ),
+                  TextField(
+                    controller: TextEditingController(text: reference.cols.toString()),
+                    decoration: InputDecoration(labelText: 'Columns'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      reference.cols = int.tryParse(value) ?? reference.cols;
+                    },
+                  ),
+                  DropdownButtonFormField<String>(
+                    value: reference.elemType,
+                    decoration: InputDecoration(labelText: 'Element Type'),
+                    items: numTypes.map((type) {
+                      return DropdownMenuItem<String>(
+                        value: type,
+                        child: Text(type),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      reference.elemType = value!;
+                    },
+                  ),
+                ],
+                if (reference is ObjectArray) ...[ // ObjectArray specific attributes
+                  TextField(
+                    controller: TextEditingController(text: reference.numObjects.toString()),
+                    decoration: InputDecoration(labelText: 'Number of Objects'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      reference.numObjects = int.tryParse(value) ?? reference.numObjects;
+                    },
+                  ),
+                  DropdownButtonFormField<String>(
+                    value: reference.elemType,
+                    decoration: InputDecoration(labelText: 'Element Type'),
+                    items: objectArrayTypes.map((type) {
+                      return DropdownMenuItem<String>(
+                        value: type,
+                        child: Text(type),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      reference.elemType = value!;
+                    },
+                  ),
+                ],
+                if (reference is Pyramid) ...[ // Pyramid specific attributes
+                  TextField(
+                    controller: TextEditingController(text: reference.numLevels.toString()),
+                    decoration: InputDecoration(labelText: 'Number of Levels'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      reference.numLevels = int.tryParse(value) ?? reference.numLevels;
+                    },
+                  ),
+                  TextField(
+                    controller: TextEditingController(text: reference.width.toString()),
+                    decoration: InputDecoration(labelText: 'Width'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      reference.width = int.tryParse(value) ?? reference.width;
+                    },
+                  ),
+                  TextField(
+                    controller: TextEditingController(text: reference.height.toString()),
+                    decoration: InputDecoration(labelText: 'Height'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      reference.height = int.tryParse(value) ?? reference.height;
+                    },
+                  ),
+                  DropdownButtonFormField<String>(
+                    value: reference.format,
+                    decoration: InputDecoration(labelText: 'Format'),
+                    items: imageTypes.map((type) {
+                      return DropdownMenuItem<String>(
+                        value: type,
+                        child: Text(type),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      reference.format = value!;
+                    },
+                  ),
+                ],
+                if (reference is Remap) ...[ // Remap specific attributes
+                  TextField(
+                    controller: TextEditingController(text: reference.srcWidth.toString()),
+                    decoration: InputDecoration(labelText: 'Source Width'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      reference.srcWidth = int.tryParse(value) ?? reference.srcWidth;
+                    },
+                  ),
+                  TextField(
+                    controller: TextEditingController(text: reference.srcHeight.toString()),
+                    decoration: InputDecoration(labelText: 'Source Height'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      reference.srcHeight = int.tryParse(value) ?? reference.srcHeight;
+                    },
+                  ),
+                  TextField(
+                    controller: TextEditingController(text: reference.dstWidth.toString()),
+                    decoration: InputDecoration(labelText: 'Destination Width'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      reference.dstWidth = int.tryParse(value) ?? reference.dstWidth;
+                    },
+                  ),
+                  TextField(
+                    controller: TextEditingController(text: reference.dstHeight.toString()),
+                    decoration: InputDecoration(labelText: 'Destination Height'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      reference.dstHeight = int.tryParse(value) ?? reference.dstHeight;
+                    },
+                  ),
+                ],
+                if (reference is Scalar) ...[ // Scalar specific attributes
+                  DropdownButtonFormField<String>(
+                    value: reference.elemType,
+                    decoration: InputDecoration(labelText: 'Element Type'),
+                    items: scalarTypes.map((type) {
+                      return DropdownMenuItem<String>(
+                        value: type,
+                        child: Text(type),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      reference.elemType = value!;
+                    },
+                  ),
+                  TextField(
+                    controller: TextEditingController(text: reference.value.toString()),
+                    decoration: InputDecoration(labelText: 'Value'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      reference.value = double.tryParse(value) ?? reference.value;
+                    },
+                  ),
+                ],
+                if (reference is Tensor) ...[ // Tensor specific attributes
+                  TextField(
+                    controller: TextEditingController(text: reference.numDims.toString()),
+                    decoration: InputDecoration(labelText: 'Number of Dimensions'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      reference.numDims = int.tryParse(value) ?? reference.numDims;
+                    },
+                  ),
+                  TextField(
+                    controller: TextEditingController(text: reference.shape.toString()),
+                    decoration: InputDecoration(labelText: 'Shape'),
+                    onChanged: (value) {
+                      reference.shape = value.split(',').map((e) => int.tryParse(e.trim()) ?? 0).toList();
+                    },
+                  ),
+                  DropdownButtonFormField<String>(
+                    value: reference.elemType,
+                    decoration: InputDecoration(labelText: 'Element Type'),
+                    items: numTypes.map((type) {
+                      return DropdownMenuItem<String>(
+                        value: type,
+                        child: Text(type),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      reference.elemType = value!;
+                    },
+                  ),
+                ],
+                if (reference is Thrshld) ...[ // Threshold specific attributes
+                  TextField(
+                    controller: TextEditingController(text: reference.thresType),
+                    decoration: InputDecoration(labelText: 'Threshold Type'),
+                    onChanged: (value) {
+                      reference.thresType = value;
+                    },
+                  ),
+                  DropdownButtonFormField<String>(
+                    value: reference.dataType,
+                    decoration: InputDecoration(labelText: 'Element Type'),
+                    items: thresholdDataTypes.map((type) {
+                      return DropdownMenuItem<String>(
+                        value: type,
+                        child: Text(type),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      reference.dataType = value!;
+                    },
+                  ),
+                ],
+                if (reference is UserDataObject) ...[ // UserDataObject specific attributes
+                  TextField(
+                    controller: TextEditingController(text: reference.sizeInBytes.toString()),
+                    decoration: InputDecoration(labelText: 'Size in Bytes'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      reference.sizeInBytes = int.tryParse(value) ?? reference.sizeInBytes;
+                    },
+                  ),
+                ],
+                // Add more fields for other Reference types as needed
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  } // End of _showAttributeDialog
+} // End of GraphEditorState
+// End of GraphEditorApp

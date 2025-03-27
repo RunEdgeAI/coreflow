@@ -1,5 +1,86 @@
 import 'package:flutter/material.dart';
 
+List<String> refTypes = [
+  "ARRAY",
+  "CONVOLUTION",
+  "IMAGE",
+  "LUT",
+  "MATRIX",
+  "OBJECT_ARRAY",
+  "PYRAMID",
+  "REMAP",
+  "SCALAR",
+  "TENSOR",
+  "THRESHOLD",
+  "USER_DATA_OBJECT",
+];
+
+List<String> objectArrayTypes =
+  refTypes.where((type) => type != 'ARRAY' && type != 'OBJECT_ARRAY').toList();
+
+List<String> imageTypes = [
+  "VIRT",
+  "RGB",
+  "RGBX",
+  "NV12",
+  "NV21",
+  "UYVY",
+  "YUYV",
+  "IYUV",
+  "YUV4",
+  "U1",
+  "U8",
+  "U16",
+  "S16",
+  "U32",
+  "S32",
+];
+
+List<String> numTypes = [
+  "INT8",
+  "UINT8",
+  "INT16",
+  "UINT16",
+  "INT32",
+  "UINT32",
+  "INT64",
+  "UINT64",
+  "FLOAT16",
+  "FLOAT32",
+  "FLOAT64",
+];
+
+List<String> scalarTypes = numTypes + [
+  "CHAR",
+  "DF_IMAGE",
+  "ENUM",
+  "SIZE",
+  "BOOL",
+];
+
+List<String> arrayTypes = scalarTypes + [
+  "RECTANGLE",
+  "KEYPOINT",
+  "COORDINATES2D",
+  "COORDINATES3D",
+  "COORDINATES2DF",
+];
+
+List<String> thresholdTypes = [
+  "TYPE_BINARY",
+  "TYPE_RANGE",
+];
+
+List<String> thresholdDataTypes =
+  scalarTypes.where((type) =>
+    type != 'CHAR' &&
+    type != 'DF_IMAGE' &&
+    type != 'ENUM' &&
+    type != 'SIZE' &&
+    type != 'FLOAT16' &&
+    type != 'FLOAT32' &&
+    type != 'FLOAT64').toList();
+
 class Reference {
   final int id;
   String name;
@@ -22,6 +103,7 @@ class Node extends Reference {
   Node({
     required super.id,
     required super.name,
+    super.type = 'Node',
     required this.position,
     required this.kernel,
     required this.target,
@@ -35,6 +117,7 @@ class Graph extends Reference {
   List<Edge> edges;
   Graph({
     required super.id,
+    super.type = 'Graph',
     required this.nodes,
     required this.edges
   });
@@ -46,6 +129,7 @@ class Array extends Reference {
   Array({
     required super.id,
     required super.name,
+    super.type = 'Array',
     required this.capacity,
     required this.elemType,
   });
@@ -60,16 +144,18 @@ class Convolution extends Matrix {
     required super.cols,
     this.scale = 1,
     super.elemType = 'VX_TYPE_INT16',
+    super.type = 'Convolution',
   });
 }
 
-class Image extends Reference {
+class Img extends Reference {
   int width;
   int height;
   String format;
-  Image({
+  Img({
     required super.id,
     required super.name,
+    super.type = 'Image',
     required this.width,
     required this.height,
     required this.format,
@@ -82,6 +168,7 @@ class Lut extends Array {
     required super.name,
     required super.capacity,
     super.elemType = 'VX_TYPE_UINT8',
+    super.type = 'Lut',
   });
 }
 
@@ -92,6 +179,7 @@ class Matrix extends Reference {
   Matrix({
     required super.id,
     required super.name,
+    super.type = 'Matrix',
     required this.rows,
     required this.cols,
     required this.elemType,
@@ -104,6 +192,7 @@ class ObjectArray extends Reference {
   ObjectArray({
     required super.id,
     required super.name,
+    super.type = 'ObjectArray',
     required this.numObjects,
     required this.elemType,
   });
@@ -115,15 +204,14 @@ class Pyramid extends Reference {
   String format;
   List<Image> levels;
   int numLevels;
-  String elemType;
   Pyramid({
     required super.id,
     required super.name,
+    super.type = 'Pyramid',
     required this.width,
     required this.height,
     required this.format,
     required this.numLevels,
-    required this.elemType,
     this.levels = const [],
   });
 }
@@ -136,6 +224,7 @@ class Remap extends Reference {
   Remap({
     required super.id,
     required super.name,
+    super.type = 'Remap',
     required this.srcWidth,
     required this.srcHeight,
     required this.dstWidth,
@@ -149,6 +238,7 @@ class Scalar extends Reference {
   Scalar({
     required super.id,
     required super.name,
+    super.type = 'Scalar',
     required this.elemType,
     required this.value,
   });
@@ -161,28 +251,32 @@ class Tensor extends Reference {
   Tensor({
     required super.id,
     required super.name,
+    super.type = 'Tensor',
     required this.numDims,
     required this.shape,
     required this.elemType,
   });
 }
 
-class Threshold extends Reference {
+class Thrshld extends Reference {
   String thresType;
   int binary;
   int lower;
   int upper;
   int trueVal;
   int falseVal;
-  Threshold({
+  String dataType;
+  Thrshld({
     required super.id,
     required super.name,
+    super.type = 'Threshold',
     required this.thresType,
     this.binary = 0,
     this.lower = 0,
     this.upper = 0,
     this.trueVal = 0,
     this.falseVal = 0,
+    required this.dataType,
   });
 }
 
@@ -191,6 +285,7 @@ class UserDataObject extends Reference {
   UserDataObject({
     required super.id,
     required super.name,
+    super.type = 'UserDataObject',
     required this.sizeInBytes,
   });
 }
@@ -198,9 +293,13 @@ class UserDataObject extends Reference {
 class Edge {
   final Node source;
   final Node target;
+  final int srcId;
+  final int tgtId;
   Edge({
     required this.source,
-    required this.target
+    required this.target,
+    required this.srcId,
+    required this.tgtId,
   });
 }
 

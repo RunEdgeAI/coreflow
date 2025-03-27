@@ -7,10 +7,9 @@ class GraphPainter extends CustomPainter {
   final List<Edge> edges;
   final Node? selectedNode;
   final Edge? selectedEdge;
-  final Offset? edgeStart;
   final Offset? mousePosition;
 
-  GraphPainter(this.nodes, this.edges, this.selectedNode, this.selectedEdge, this.edgeStart, this.mousePosition);
+  GraphPainter(this.nodes, this.edges, this.selectedNode, this.selectedEdge, this.mousePosition);
 
   void _drawArrow(Canvas canvas, Offset start, Offset end, Paint paint) {
     final double arrowSize = 5.0;
@@ -79,7 +78,7 @@ class GraphPainter extends CustomPainter {
 
       final sourceAngle = (sourceNode.outputs.length == 1)
           ? 0
-          : (pi / 4) + (sourceNode.outputs.indexOf(edge.source.outputs.first) * (3 * pi / 2) / (sourceNode.outputs.length - 1));
+          : (pi / 4) + (sourceNode.outputs.indexWhere((output) => output.id == edge.srcId) * (3 * pi / 2) / (sourceNode.outputs.length - 1));
       final sourceIconOffset = Offset(
         sourceNode.position.dx + 30 * cos(sourceAngle),
         sourceNode.position.dy + 30 * sin(sourceAngle),
@@ -87,13 +86,12 @@ class GraphPainter extends CustomPainter {
 
       final targetAngle = (targetNode.inputs.length == 1)
           ? pi
-          : (3 * pi / 4) + (targetNode.inputs.indexOf(edge.target.inputs.first) * (pi / 2) / (targetNode.inputs.length - 1));
+          : (3 * pi / 4) + (targetNode.inputs.indexWhere((input) => input.id == edge.tgtId) * (pi / 2) / (targetNode.inputs.length - 1));
       final targetIconOffset = Offset(
         targetNode.position.dx + 30 * cos(targetAngle),
         targetNode.position.dy + 30 * sin(targetAngle),
       );
 
-      // Draw glow effect for selected edge
       if (isSelected) {
         _drawArrow(canvas, sourceIconOffset, targetIconOffset, Paint()
           ..color = Color.alphaBlend(Colors.white.withAlpha(77), Colors.white)
@@ -103,10 +101,6 @@ class GraphPainter extends CustomPainter {
       }
 
       _drawArrow(canvas, sourceIconOffset, targetIconOffset, paint); // Use icon offsets
-    }
-
-    if (edgeStart != null && mousePosition != null) {
-      // _drawArrow(canvas, edgeStart!, mousePosition!, edgePaint);
     }
 
     // Draw nodes with enhanced glow effect
