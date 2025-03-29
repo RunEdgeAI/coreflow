@@ -176,7 +176,7 @@ class GraphEditorState extends State<GraphEditor> {
         if (index >= 0 && index < target.inputs.length) {
           // If an input was tapped, update its linkId to be source.id.
           // target.inputs[index] = source.outputs.firstWhere((output) => output.id == srcId);
-          target.inputs[index].linkId = source.id;
+          target.inputs[index].linkId = srcId;
           // Create a new edge
           final newEdge = Edge(source: source, target: target, srcId: srcId, tgtId: tgtId);
           graph.edges.add(newEdge);
@@ -223,6 +223,85 @@ class GraphEditorState extends State<GraphEditor> {
     return dot.toString();
   } // End of _exportDOT
 
+  void _addReferenceElement(xml.XmlBuilder builder, Reference reference) {
+    if (reference.linkId != -1) {
+      // Reuse the reference by pointing to the linked reference ID
+      return;
+    }
+
+    // Handle specific reference types
+    if (reference is Img) {
+      builder.element('image', attributes: {
+        'reference': reference.id.toString(),
+        'width': reference.width.toString(),
+        'height': reference.height.toString(),
+        'format': reference.format,
+      });
+    } else if (reference is Scalar) {
+      builder.element('scalar', attributes: {
+        'reference': reference.id.toString(),
+        'elemType': reference.elemType,
+      }, nest: () {
+        builder.element(reference.elemType.toLowerCase(), nest: reference.value.toString());
+      });
+    } else if (reference is Array) {
+      builder.element('array', attributes: {
+        'reference': reference.id.toString(),
+        'capacity': reference.capacity.toString(),
+        'elemType': reference.elemType,
+      });
+    } else if (reference is Convolution) {
+      builder.element('convolution', attributes: {
+        'reference': reference.id.toString(),
+        'rows': reference.rows.toString(),
+        'columns': reference.cols.toString(),
+        'scale': reference.scale.toString(),
+      });
+    } else if (reference is Matrix) {
+      builder.element('matrix', attributes: {
+        'reference': reference.id.toString(),
+        'rows': reference.rows.toString(),
+        'columns': reference.cols.toString(),
+        'elemType': reference.elemType,
+      });
+    } else if (reference is Pyramid) {
+      builder.element('pyramid', attributes: {
+        'reference': reference.id.toString(),
+        'width': reference.width.toString(),
+        'height': reference.height.toString(),
+        'format': reference.format,
+        'levels': reference.numLevels.toString(),
+      });
+    } else if (reference is Thrshld) {
+      builder.element('threshold', attributes: {
+        'reference': reference.id.toString(),
+      }, nest: () {
+        if (reference.thresType == 'TYPE_BINARY') {
+          builder.element('binary', nest: reference.binary.toString());
+        } else if (reference.thresType == 'TYPE_RANGE') {
+          builder.element('range', attributes: {
+            'lower': reference.lower.toString(),
+            'upper': reference.upper.toString(),
+          });
+        }
+      });
+    } else if (reference is Remap) {
+      builder.element('remap', attributes: {
+        'reference': reference.id.toString(),
+        'src_width': reference.srcWidth.toString(),
+        'src_height': reference.srcHeight.toString(),
+        'dst_width': reference.dstWidth.toString(),
+        'dst_height': reference.dstHeight.toString(),
+      });
+    } else {
+      // Default case for unknown reference types
+      builder.element('reference', attributes: {
+        'reference': reference.id.toString(),
+        'type': reference.type,
+      });
+    }
+  }
+
   String _exportXML(Graph graph) {
     final builder = xml.XmlBuilder();
     final Set<String> targets = _getTargets(graph);
@@ -242,14 +321,56 @@ class GraphEditorState extends State<GraphEditor> {
       }
 
       // Add input and output references
+      for (var node in graph.nodes) {
+        for (var input in node.inputs) {
+          _addReferenceElement(builder, input);
+        }
+        for (var output in node.outputs) {
+          _addReferenceElement(builder, output);
+        }
+      }
 
       // Describe graph
-        // Add node and kernel
+      builder.element('graph', attributes: {
+        'reference': graph.id.toString(),
+        'name': 'GRAPH${graph.id}',
+      }, nest: () {
+        // Add nodes and kernels
+        for (var node in graph.nodes) {
+          builder.element('node', attributes: {
+            'reference': node.id.toString(),
+          }, nest: () {
+            builder.element('kernel', nest: node.kernel);
 
-          // Add input parameters
-          // Add output parameters
+            // Add input parameters
+            for (int i = 0; i < node.inputs.length; i++) {
+              builder.element('parameter', attributes: {
+                'index': i.toString(),
+                'reference': node.inputs[i].linkId != -1
+                  ? node.inputs[i].linkId.toString()
+                  : node.inputs[i].id.toString(),
+              });
+            }
 
-      // Add graph input and output parameters
+            // Add output parameters
+            for (int i = 0; i < node.outputs.length; i++) {
+              builder.element('parameter', attributes: {
+                'index': (node.inputs.length + i).toString(),
+                'reference': node.outputs[i].id.toString(),
+              });
+            }
+          });
+        }
+
+        // Add graph input and output parameters
+        for (var edge in graph.edges) {
+          builder.element('parameter', attributes: {
+            'node': edge.source.id.toString(),
+            'parameter': edge.srcId.toString(),
+            'index': edge.tgtId.toString(),
+          });
+        }
+      });
     });
 
     final document = builder.buildDocument();
@@ -1144,7 +1265,11 @@ class GraphEditorState extends State<GraphEditor> {
                     controller: TextEditingController(text: reference.shape.toString()),
                     decoration: InputDecoration(labelText: 'Shape'),
                     onChanged: (value) {
-                      reference.shape = value.split(',').map((e) => int.tryParse(e.trim()) ?? 0).toList();
+                      reference.shape = value
+                        .replaceAll(RegExp(r'[\[\]]'), '')
+                        .split(',')
+                        .map((e) => int.tryParse(e.trim()) ?? 0)
+                        .toList();
                     },
                   ),
                   DropdownButtonFormField<String>(
