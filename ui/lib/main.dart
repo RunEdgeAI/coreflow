@@ -210,15 +210,83 @@ class GraphEditorState extends State<GraphEditor> {
     });
   } // End of _deleteSelected
 
+  String _formatReferenceLabel(Reference reference) {
+    if (reference is Img) {
+      return 'Image\\n${reference.width}x${reference.height}\\n${reference.format}';
+    } else if (reference is Array) {
+      return 'Array\\n${reference.elemType}\\nItems: ${reference.capacity}';
+    } else if (reference is Scalar) {
+      return 'Scalar\\n${reference.elemType}\\nValue: ${reference.value}';
+    } else if (reference is Convolution) {
+      return 'Convolution\\n${reference.rows}x${reference.cols}\\nScale: ${reference.scale}';
+    } else if (reference is Matrix) {
+      return 'Matrix\\n${reference.rows}x${reference.cols}\\n${reference.elemType}';
+    } else if (reference is Pyramid) {
+      return 'Pyramid\\n${reference.numLevels} Levels\\n${reference.width}x${reference.height}\\n${reference.format}';
+    } else if (reference is Thrshld) {
+      return 'Threshold\\n${reference.thresType}\\n${reference.dataType}';
+    } else if (reference is Remap) {
+      return 'Remap\\nSrc: ${reference.srcWidth}x${reference.srcHeight}\\nDst: ${reference.dstWidth}x${reference.dstHeight}';
+    } else if (reference is Lut) {
+      return 'LUT\\n${reference.elemType}\\nCapacity: ${reference.capacity}';
+    } else if (reference is Tensor) {
+      return 'Tensor\\nDims: ${reference.numDims}\\nShape: ${reference.shape.join(", ")}\\n${reference.elemType}';
+    } else if (reference is UserDataObject) {
+      return 'UserDataObject\\nSize: ${reference.sizeInBytes} bytes';
+    } else {
+      return '${reference.type}\\nID: ${reference.id}';
+    }
+  }
   String _exportDOT(Graph graph) {
     StringBuffer dot = StringBuffer();
+
+    // Add the Graph header
     dot.writeln('digraph G {');
+    dot.writeln('  size=4;');
+    dot.writeln('  rank=LR;');
+    dot.writeln('  node [shape=oval style=filled fillcolor=red fontsize=27];');
+
+    // Add the nodes
     for (var node in graph.nodes) {
       dot.writeln('  node${node.id} [label="${node.name}"];');
     }
-    for (var edge in graph.edges) {
-      dot.writeln('  node${edge.source.id} -> node${edge.target.id};');
+
+    // Add data objects
+    final Set<int> addedReferences = {};
+    for (var node in graph.nodes) {
+      for (var input in node.inputs) {
+        final referenceId = input.linkId != -1 ? input.linkId : input.id;
+        if (!addedReferences.contains(referenceId)) {
+          dot.writeln('  D$referenceId [shape=box label="${_formatReferenceLabel(input)}"];');
+          addedReferences.add(referenceId);
+        }
+      }
+      for (var output in node.outputs) {
+        final referenceId = output.id;
+        if (!addedReferences.contains(referenceId)) {
+          dot.writeln('  D$referenceId [shape=box label="${_formatReferenceLabel(output)}"];');
+          addedReferences.add(referenceId);
+        }
+      }
     }
+
+    // Add the edges
+    for (var edge in graph.edges) {
+      // Use linkId for the source reference if it exists
+      final sourceReferenceId = edge.srcId;
+      final targetReferenceId = graph.nodes
+          .expand((node) => node.inputs)
+          .firstWhere((input) => input.id == edge.tgtId)
+          .linkId;
+
+      // Edge from source node's output to the data object
+      dot.writeln('  N${edge.source.id} -> D$sourceReferenceId;');
+
+      // Edge from the data object to the target node's input
+      dot.writeln('  D${targetReferenceId != -1 ? targetReferenceId : edge.tgtId} -> N${edge.target.id};');
+    }
+
+    // End the Graph
     dot.writeln('}');
     return dot.toString();
   } // End of _exportDOT
