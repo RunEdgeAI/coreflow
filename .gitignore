@@ -57,3 +57,5 @@
 # ui build files
 **/ui/build
 **/ui/.dart_tool
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
