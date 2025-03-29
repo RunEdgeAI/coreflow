@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'dart:math';
 import 'objects.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:xml/xml.dart' as xml;
@@ -585,6 +587,31 @@ class GraphEditorState extends State<GraphEditor> {
                     content: SingleChildScrollView(child: Text(dot)),
                     actions: [
                       TextButton(
+                        onPressed: () async {
+                          final result = await FilePicker.platform.saveFile(
+                            dialogTitle: 'Save DOT File',
+                            fileName: 'graph.dot',
+                          );
+
+                          if (result != null) {
+                            final file = File(result);
+                            await file.writeAsString(dot);
+
+                            // Show a confirmation message
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('DOT file saved to $result')),
+                              );
+                            }
+                          }
+
+                          if (context.mounted) {
+                            Navigator.of(context).pop(); // Close the dialog
+                          }
+                        },
+                        child: Text("Save"),
+                      ),
+                      TextButton(
                         onPressed: () => Navigator.of(context).pop(),
                         child: Text("Close"),
                       ),
@@ -607,6 +634,33 @@ class GraphEditorState extends State<GraphEditor> {
                     title: Text("Export XML"),
                     content: SingleChildScrollView(child: Text(xml)),
                     actions: [
+                      TextButton(
+                        onPressed: () async {
+                          // Use FilePicker to save the XML file
+                          final result = await FilePicker.platform.saveFile(
+                            dialogTitle: 'Save XML File',
+                            fileName: 'graph.xml',
+                          );
+
+                          if (result != null) {
+                            final file = File(result);
+                            await file.writeAsString(xml);
+
+                            // Show a confirmation message
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('XML file saved to $result')),
+                              );
+                            }
+                          }
+
+                          // Close the dialog
+                          if (context.mounted) {
+                            Navigator.of(context).pop();
+                          }
+                        },
+                        child: Text("Save"),
+                      ),
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(),
                         child: Text("Close"),
