@@ -195,43 +195,11 @@ class GraphEditorState extends State<GraphEditor> {
     final kernel = target.kernels.firstWhere((k) => k.name == kernelName);
 
     setState(() {
-      node.inputs = kernel.inputs.map((input) => _createReference(input)).toList();
-      node.outputs = kernel.outputs.map((output) => _createReference(output)).toList();
+      node.inputs = kernel.inputs.map((input) => Reference.createReference(input, _refCount++)).toList();
+      node.outputs = kernel.outputs.map((output) => Reference.createReference(output, _refCount++)).toList();
       _buildTooltips();
     });
   } // End of _updateNodeIO
-
-  Reference _createReference(String name) {
-    // Logic to determine the type of Reference to create
-    if (name == ('VX_TYPE_ARRAY')) {
-      return Array(id: _refCount++, name: name, capacity: 0, elemType: arrayTypes.first);
-    } else if (name.contains('CONVOLUTION')) {
-      return Convolution(id: _refCount++, name: name, rows: 0, cols: 0, scale: 1);
-    } else if (name.contains('IMAGE')) {
-      return Img(id: _refCount++, name: name, width: 0, height: 0, format: imageTypes.first);
-    } else if (name.contains('LUT')) {
-      return Lut(id: _refCount++, name: name, capacity: 0);
-    } else if (name.contains('MATRIX')) {
-      return Matrix(id: _refCount++, name: name, rows: 0, cols: 0, elemType: numTypes.first);
-    } else if (name.contains('OBJECT_ARRAY')) {
-      return ObjectArray(id: _refCount++, name: name, numObjects: 0, elemType: objectArrayTypes.first);
-    } else if (name.contains('PYRAMID')) {
-      return Pyramid(id: _refCount++, name: name, numLevels: 0, width: 0, height: 0, format: imageTypes.first);
-    } else if (name.contains('REMAP')) {
-      return Remap(id: _refCount++, name: name, srcWidth: 0, srcHeight: 0, dstWidth: 0, dstHeight: 0);
-    } else if (name.contains('SCALAR')) {
-      return Scalar(id: _refCount++, name: name, elemType: scalarTypes.first, value: 0.0);
-    } else if (name.contains('TENSOR')) {
-      return Tensor(id: _refCount++, name: name, shape: [], numDims: 0, elemType: numTypes.first);
-    } else if (name.contains('THRESHOLD')) {
-      return Thrshld(id: _refCount++, name: name, thresType: thresholdTypes.first, dataType: thresholdDataTypes.first);
-    } else if (name.contains('USER_DATA_OBJECT')) {
-      return UserDataObject(id: _refCount++, name: name, sizeInBytes: 0);
-    }
-
-    // Add more conditions for other Reference types as needed
-    return Reference(id: _refCount++, name: name);
-  } // End of _createReference
 
   @override
   Widget build(BuildContext context) {
@@ -248,6 +216,7 @@ class GraphEditorState extends State<GraphEditor> {
       ),
       body: Column(
         children: [
+          // Panel for graph list and 'add graph' button
           GraphListPanel(
             graphs: graphs,
             selectedGraphRow:
@@ -262,6 +231,7 @@ class GraphEditorState extends State<GraphEditor> {
               });
             }
           ),
+          // Main area for graph visualization and interaction
           Expanded(
             child: MouseRegion(
               onHover: (event) {
@@ -892,7 +862,6 @@ class GraphListPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // panel for graph list and add graph button
       height: 80,
       color: Colors.grey[900],
       child: Row(
