@@ -233,15 +233,6 @@ class GraphEditorState extends State<GraphEditor> {
     return Reference(id: _refCount++, name: name);
   } // End of _createReference
 
-  void _onSelectGraph(int index) {
-    setState(() {
-      selectedGraphIndex = index;
-      selectedGraphRow = index;
-      // Reset selected node when switching graphs
-      selectedNode = null;
-    });
-  } // End of _onSelectGraph
-
   @override
   Widget build(BuildContext context) {
     _updateNameController();
@@ -257,7 +248,20 @@ class GraphEditorState extends State<GraphEditor> {
       ),
       body: Column(
         children: [
-          GraphListPanel(graphs: graphs, selectedGraphRow: selectedGraphRow, onAddGraph: _addGraph, onSelectGraph: _onSelectGraph),
+          GraphListPanel(
+            graphs: graphs,
+            selectedGraphRow:
+            selectedGraphRow,
+            onAddGraph: _addGraph,
+            onSelectGraph: (int index) {
+              setState(() {
+                selectedGraphIndex = index;
+                selectedGraphRow = index;
+                // Reset selected node when switching graphs
+                selectedNode = null;
+              });
+            }
+          ),
           Expanded(
             child: MouseRegion(
               onHover: (event) {
@@ -396,174 +400,33 @@ class GraphEditorState extends State<GraphEditor> {
                       ),
                     ),
                     // Right panel for node attributes
-                    AnimatedContainer(
-                      duration: Duration(milliseconds: 300),
-                      width: selectedNode != null ? 200 : 0,
-                      color: Colors.grey[800],
-                      child: selectedNode != null
-                        ? ListView(
-                            padding: EdgeInsets.all(8.0),
-                            children: [
-                              Text(
-                                'Node Attributes',
-                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                              ),
-                              SizedBox(height: 8.0),
-                              TextField(
-                                controller: TextEditingController(text: selectedNode!.id.toString()),
-                                decoration: InputDecoration(
-                                  labelText: 'ID',
-                                ),
-                                // Make ID field read-only
-                                enabled: false,
-                              ),
-                              SizedBox(height: 8.0),
-                              TextField(
-                                controller: _nameController,
-                                focusNode: _nameFocusNode,
-                                decoration: InputDecoration(
-                                  labelText: 'Name',
-                                ),
-                                onChanged: (value) {
-                                  setState(() {
-                                    selectedNode!.name = value;
-                                  });
-                                },
-                                onEditingComplete: () {
-                                  _focusNode.requestFocus();
-                                },
-                              ),
-                              SizedBox(height: 8.0),
-                              DropdownButtonFormField<String>(
-                                isExpanded: true,
-                                value: selectedNode!.target,
-                                decoration: InputDecoration(
-                                  labelText: Text(
-                                              'Target',
-                                              overflow: TextOverflow.ellipsis).data,
-                                  isDense: true,
-                                ),
-                                items: _supported
-                                    .map((target) => DropdownMenuItem<String>(
-                                          alignment: Alignment.centerLeft,
-                                          value: target.name,
-                                          child: Text(
-                                            target.name,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ))
-                                    .toList(),
-                                onChanged: (newValue) {
-                                  setState(() {
-                                    selectedNode!.target = newValue!;
-                                    // Set kernel to the first available value if target changes.
-                                    final target = _supported.firstWhere((t) => t.name == newValue);
-                                    if (target.kernels.isNotEmpty) {
-                                      selectedNode!.kernel = target.kernels.first.name;
-                                      _updateNodeIO(selectedNode!, selectedNode!.kernel);
-                                    }
-                                  });
-                                },
-                              ),
-                              SizedBox(height: 8.0),
-                              DropdownButtonFormField<String>(
-                                isExpanded: true,
-                                value: selectedNode!.kernel,
-                                decoration: InputDecoration(
-                                  labelText: Text(
-                                              'Kernel',
-                                              overflow: TextOverflow.ellipsis).data,
-                                  isDense: true,
-                                ),
-                                items: _supported
-                                    .firstWhere((target) => target.name == selectedNode!.target,
-                                    orElse: () => _supported.first,
-                                    )
-                                    .kernels
-                                    .map((kernel) => DropdownMenuItem<String>(
-                                          value: kernel.name,
-                                          child: FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            alignment: Alignment.centerLeft,
-                                            child: Text(
-                                              kernel.name,
-                                              style: TextStyle(fontSize: 12),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ))
-                                    .toList(),
-                                onChanged: (newValue) {
-                                  setState(() {
-                                    selectedNode!.kernel = newValue!;
-                                    _updateNodeIO(selectedNode!, newValue);
-                                  });
-                                },
-                              ),
-                              SizedBox(height: 8.0),
-                              Text(
-                                'Upstream Dependencies',
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: graphs[selectedGraphIndex].getUpstreamDependencies(selectedNode!).map((dep) => TextField(
-                                  controller: TextEditingController(text: dep),
-                                  // Make Upstream dependencies read-only
-                                  enabled: false,
-                                )).toList(),
-                              ),
-                              SizedBox(height: 8.0),
-                              Text(
-                                'Downstream Dependencies',
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: graphs[selectedGraphIndex].getDownstreamDependencies(selectedNode!).map((dep) => TextField(
-                                  controller: TextEditingController(text: dep),
-                                  // Make Downstream dependencies read-only
-                                  enabled: false,
-                                )).toList(),
-                              ),
-                              SizedBox(height: 8.0),
-                              Text(
-                                'Inputs',
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: _supported
-                                    .firstWhere((target) => target.name == selectedNode!.target,
-                                    orElse: () => _supported.first,
-                                    )
-                                    .kernels
-                                    .firstWhere((kernel) => kernel.name == selectedNode!.kernel,
-                                    orElse: () => _supported.first.kernels.first,
-                                    )
-                                    .inputs
-                                    .map((input) => Text(input))
-                                    .toList(),
-                              ),
-                              SizedBox(height: 8.0),
-                              Text(
-                                'Outputs',
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: _supported
-                                    .firstWhere((target) => target.name == selectedNode!.target,
-                                    orElse: () => _supported.first,
-                                    )
-                                    .kernels
-                                    .firstWhere((kernel) => kernel.name == selectedNode!.kernel,
-                                    orElse: () => _supported.first.kernels.first,
-                                    )
-                                    .outputs
-                                    .map((output) => Text(output))
-                                    .toList(),
-                              ),
-                              // Add more attributes as needed
-                            ],
-                          )
-                        : Container(),
+                    NodeAttributesPanel(
+                      graph: graphs.isNotEmpty ? graphs[selectedGraphIndex] : null, // Pass null if graphs is empty
+                      selectedNode: selectedNode,
+                      supportedTargets: _supported,
+                      nameController: _nameController,
+                      nameFocusNode: _nameFocusNode,
+                      onNameChanged: (value) {
+                        setState(() {
+                          selectedNode!.name = value;
+                        });
+                      },
+                      onTargetChanged: (newValue) {
+                        setState(() {
+                          selectedNode!.target = newValue;
+                          final target = _supported.firstWhere((t) => t.name == newValue);
+                          if (target.kernels.isNotEmpty) {
+                            selectedNode!.kernel = target.kernels.first.name;
+                            _updateNodeIO(selectedNode!, selectedNode!.kernel);
+                          }
+                        });
+                      },
+                      onKernelChanged: (newValue) {
+                        setState(() {
+                          selectedNode!.kernel = newValue;
+                          _updateNodeIO(selectedNode!, newValue);
+                        });
+                      },
                     ),
                   ],
                 )
@@ -1064,3 +927,190 @@ class GraphListPanel extends StatelessWidget {
     );
   }
 } // End of GraphListPanel
+
+class NodeAttributesPanel extends StatelessWidget {
+  final Graph? graph;
+  final Node? selectedNode;
+  final List<Target> supportedTargets;
+  final TextEditingController nameController;
+  final FocusNode nameFocusNode;
+  final Function(String) onNameChanged;
+  final Function(String) onTargetChanged;
+  final Function(String) onKernelChanged;
+
+  const NodeAttributesPanel({
+    super.key,
+    required this.graph,
+    required this.selectedNode,
+    required this.supportedTargets,
+    required this.nameController,
+    required this.nameFocusNode,
+    required this.onNameChanged,
+    required this.onTargetChanged,
+    required this.onKernelChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: Duration(milliseconds: 300),
+      width: selectedNode != null ? 200 : 0,
+      color: Colors.grey[800],
+      child: selectedNode != null
+        ? ListView(
+            padding: EdgeInsets.all(8.0),
+            children: [
+              Text(
+                'Node Attributes',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8.0),
+              TextField(
+                controller: TextEditingController(text: selectedNode!.id.toString()),
+                decoration: InputDecoration(
+                  labelText: 'ID',
+                ),
+                // Make ID field read-only
+                enabled: false,
+              ),
+              SizedBox(height: 8.0),
+              TextField(
+                controller: nameController,
+                focusNode: nameFocusNode,
+                decoration: InputDecoration(
+                  labelText: 'Name',
+                ),
+                onChanged: onNameChanged,
+                onEditingComplete: () {
+                  FocusScope.of(context).unfocus(); // Dismiss the keyboard
+                  // _focusNode.requestFocus();
+                },
+              ),
+              SizedBox(height: 8.0),
+              DropdownButtonFormField<String>(
+                isExpanded: true,
+                value: selectedNode!.target,
+                decoration: InputDecoration(
+                  labelText: Text(
+                              'Target',
+                              overflow: TextOverflow.ellipsis).data,
+                  isDense: true,
+                ),
+                items: supportedTargets
+                    .map((target) => DropdownMenuItem<String>(
+                          alignment: Alignment.centerLeft,
+                          value: target.name,
+                          child: Text(
+                            target.name,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ))
+                    .toList(),
+                onChanged: (newValue) {
+                  onTargetChanged(newValue!);
+                },
+              ),
+              SizedBox(height: 8.0),
+              DropdownButtonFormField<String>(
+                isExpanded: true,
+                value: selectedNode!.kernel,
+                decoration: InputDecoration(
+                  labelText: Text(
+                              'Kernel',
+                              overflow: TextOverflow.ellipsis).data,
+                  isDense: true,
+                ),
+                items: supportedTargets
+                    .firstWhere((target) => target.name == selectedNode!.target,
+                    orElse: () => supportedTargets.first,
+                    )
+                    .kernels
+                    .map((kernel) => DropdownMenuItem<String>(
+                          value: kernel.name,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              kernel.name,
+                              style: TextStyle(fontSize: 12),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ))
+                    .toList(),
+                onChanged: (newValue) {
+                  onKernelChanged(newValue!);
+                },
+              ),
+              SizedBox(height: 8.0),
+              _buildDependenciesSection(
+                title: 'Upstream Dependencies',
+                dependencies: graph!.getUpstreamDependencies(selectedNode!),
+              ),
+              SizedBox(height: 8.0),
+              _buildDependenciesSection(
+                title: 'Downstream Dependencies',
+                dependencies: graph!.getDownstreamDependencies(selectedNode!),
+              ),
+              SizedBox(height: 8.0),
+              Text(
+                'Inputs',
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: supportedTargets
+                    .firstWhere((target) => target.name == selectedNode!.target,
+                    orElse: () => supportedTargets.first,
+                    )
+                    .kernels
+                    .firstWhere((kernel) => kernel.name == selectedNode!.kernel,
+                    orElse: () => supportedTargets.first.kernels.first,
+                    )
+                    .inputs
+                    .map((input) => Text(input))
+                    .toList(),
+              ),
+              SizedBox(height: 8.0),
+              Text(
+                'Outputs',
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: supportedTargets
+                    .firstWhere((target) => target.name == selectedNode!.target,
+                    orElse: () => supportedTargets.first,
+                    )
+                    .kernels
+                    .firstWhere((kernel) => kernel.name == selectedNode!.kernel,
+                    orElse: () => supportedTargets.first.kernels.first,
+                    )
+                    .outputs
+                    .map((output) => Text(output))
+                    .toList(),
+              ),
+              // Add more attributes as needed
+            ],
+          )
+        : Container(),
+    );
+  }
+
+  Widget _buildDependenciesSection({
+    required String title,
+    required List<String> dependencies,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          // style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        ...dependencies.map((dep) => TextField(
+              controller: TextEditingController(text: dep),
+              enabled: false, // Make dependencies read-only
+            )),
+      ],
+    );
+  }
+}
