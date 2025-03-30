@@ -233,6 +233,15 @@ class GraphEditorState extends State<GraphEditor> {
     return Reference(id: _refCount++, name: name);
   } // End of _createReference
 
+  void _onSelectGraph(int index) {
+    setState(() {
+      selectedGraphIndex = index;
+      selectedGraphRow = index;
+      // Reset selected node when switching graphs
+      selectedNode = null;
+    });
+  } // End of _onSelectGraph
+
   @override
   Widget build(BuildContext context) {
     _updateNameController();
@@ -248,47 +257,7 @@ class GraphEditorState extends State<GraphEditor> {
       ),
       body: Column(
         children: [
-          Container(
-            // panel for graph list and add graph button
-            height: 80,
-            color: Colors.grey[900],
-            child: Row(
-              children: [
-                IconButton(
-                  icon: Icon(Icons.add),
-                  tooltip: 'Add Graph',
-                  onPressed: _addGraph,
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: graphs.length,
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              selectedGraphIndex = index;
-                              selectedGraphRow = index;
-                              // Reset selected node when switching graphs
-                              selectedNode = null;
-                            });
-                          },
-                          child: Chip(
-                            label: Text('Graph ${index + 1}'),
-                            backgroundColor: selectedGraphRow == index
-                                ? Colors.blue
-                                : Colors.grey[700],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
+          GraphListPanel(graphs: graphs, selectedGraphRow: selectedGraphRow, onAddGraph: _addGraph, onSelectGraph: _onSelectGraph),
           Expanded(
             child: MouseRegion(
               onHover: (event) {
@@ -1042,3 +1011,56 @@ class GraphEditorState extends State<GraphEditor> {
     );
   } // End of _showAttributeDialog
 } // End of GraphEditorState
+
+class GraphListPanel extends StatelessWidget {
+  const GraphListPanel({
+    super.key,
+    required this.graphs,
+    required this.selectedGraphRow,
+    required this.onAddGraph,
+    required this.onSelectGraph,
+  });
+
+  final List<Graph> graphs;
+  final int? selectedGraphRow;
+  final VoidCallback onAddGraph;
+  final Function(int) onSelectGraph;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      // panel for graph list and add graph button
+      height: 80,
+      color: Colors.grey[900],
+      child: Row(
+        children: [
+          IconButton(
+            icon: Icon(Icons.add),
+            tooltip: 'Add Graph',
+            onPressed: onAddGraph,
+          ),
+          Expanded(
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: graphs.length,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: GestureDetector(
+                    onTap: () => onSelectGraph(index),
+                    child: Chip(
+                      label: Text('Graph ${index + 1}'),
+                      backgroundColor: selectedGraphRow == index
+                          ? Colors.blue
+                          : Colors.grey[700],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+} // End of GraphListPanel
