@@ -268,102 +268,96 @@ class GraphEditorState extends State<GraphEditor> {
                     Expanded(
                       child: LayoutBuilder(
                         builder: (context, constraints) {
-                          return Column(
+                          return Stack(
                             children: [
-                              Expanded(
-                                child: Stack(
-                                  children: [
-                                    graphs.isNotEmpty
-                                      ? GestureDetector(
-                                        onTapDown: (details) {
-                                        final graph = graphs[selectedGraphIndex];
-                                        final tappedNode = graph.findNodeAt(details.localPosition);
-                                        final tappedEdge = graph.findEdgeAt(details.localPosition);
-                                        setState(() {
-                                          if (tappedNode != null) {
-                                            // Deselect the selected edge
-                                            selectedEdge = null;
-                                            if (selectedNode == null) {
-                                              selectedNode = tappedNode;
-                                            } else {
-                                              // _addEdge(graph, selectedNode!, tappedNode);
-                                              // Deselect the selected node
-                                              selectedNode = null;
-                                            }
-                                          } else if (tappedEdge != null) {
-                                            if (selectedEdge == tappedEdge) {
-                                              // Deselect the tapped edge if it is already selected
-                                              selectedEdge = null;
-                                            } else {
-                                              // Deselect the selected node
-                                              selectedNode = null;
-                                              // Select the tapped edge
-                                              selectedEdge = tappedEdge;
-                                            }
-                                          } else {
-                                            _addNode(graph, details.localPosition, constraints.biggest);
-                                            // Deselect the selected node
-                                            selectedNode = null;
-                                            // Deselect the selected edge
-                                            selectedEdge = null;
-                                            // Deselect the selected graph row
-                                            selectedGraphRow = null;
-                                            edgeStartNode = null;
-                                            edgeStartOutput = null;
-                                          }
-                                        });
-                                      },
-                                      onPanUpdate: (details) {
-                                        setState(() {
-                                          mousePosition = details.localPosition;
-                                          if (draggingNode != null) {
-                                            final newPosition = draggingNode!.position + details.delta;
-                                            // Assuming the radius of the node is 25
-                                            final nodeRadius = 25.0;
-                                            // Ensure the node stays within the bounds of the center panel
-                                            if (newPosition.dx - nodeRadius >= 0 &&
-                                                newPosition.dx + nodeRadius <= constraints.maxWidth &&
-                                                newPosition.dy - nodeRadius >= 0 &&
-                                                newPosition.dy + nodeRadius <= constraints.maxHeight) {
-                                              draggingNode!.position = newPosition;
-                                            }
-                                          }
-                                        });
-                                      },
-                                      onPanStart: (details) {
-                                        setState(() {
-                                          final graph = graphs[selectedGraphIndex];
-                                          draggingNode = graph.findNodeAt(details.localPosition);
-                                          dragOffset = details.localPosition;
-                                        });
-                                      },
-                                      onPanEnd: (details) {
-                                        setState(() {
-                                          draggingNode = null;
-                                          dragOffset = null;
-                                          edgeStartNode = null;
-                                          edgeStartOutput = null;
-                                          mousePosition = null;
-                                        });
-                                      },
-                                      child: CustomPaint(
-                                        painter: graphs.isNotEmpty
-                                            ? GraphPainter(
-                                                graphs[selectedGraphIndex].nodes,
-                                                graphs[selectedGraphIndex].edges,
-                                                selectedNode,
-                                                selectedEdge,
-                                                mousePosition,
-                                              )
-                                            : null,
-                                        child: Container(),
-                                        ),
-                                    )
-                                      : Center(child: Text('No graphs available')),
-                                    ..._buildTooltips(),
-                                  ],
-                                ),
-                              ),
+                              graphs.isNotEmpty
+                                ? GestureDetector(
+                                  onTapDown: (details) {
+                                  final graph = graphs[selectedGraphIndex];
+                                  final tappedNode = graph.findNodeAt(details.localPosition);
+                                  final tappedEdge = graph.findEdgeAt(details.localPosition);
+                                  setState(() {
+                                    if (tappedNode != null) {
+                                      // Deselect the selected edge
+                                      selectedEdge = null;
+                                      if (selectedNode == null) {
+                                        selectedNode = tappedNode;
+                                      } else {
+                                        // _addEdge(graph, selectedNode!, tappedNode);
+                                        // Deselect the selected node
+                                        selectedNode = null;
+                                      }
+                                    } else if (tappedEdge != null) {
+                                      if (selectedEdge == tappedEdge) {
+                                        // Deselect the tapped edge if it is already selected
+                                        selectedEdge = null;
+                                      } else {
+                                        // Deselect the selected node
+                                        selectedNode = null;
+                                        // Select the tapped edge
+                                        selectedEdge = tappedEdge;
+                                      }
+                                    } else {
+                                      _addNode(graph, details.localPosition, constraints.biggest);
+                                      // Deselect the selected node
+                                      selectedNode = null;
+                                      // Deselect the selected edge
+                                      selectedEdge = null;
+                                      // Deselect the selected graph row
+                                      selectedGraphRow = null;
+                                      edgeStartNode = null;
+                                      edgeStartOutput = null;
+                                    }
+                                  });
+                                },
+                                onPanUpdate: (details) {
+                                  setState(() {
+                                    mousePosition = details.localPosition;
+                                    if (draggingNode != null) {
+                                      final newPosition = draggingNode!.position + details.delta;
+                                      // Assuming the radius of the node is 25
+                                      final nodeRadius = 25.0;
+                                      // Ensure the node stays within the bounds of the center panel
+                                      if (newPosition.dx - nodeRadius >= 0 &&
+                                          newPosition.dx + nodeRadius <= constraints.maxWidth &&
+                                          newPosition.dy - nodeRadius >= 0 &&
+                                          newPosition.dy + nodeRadius <= constraints.maxHeight) {
+                                        draggingNode!.position = newPosition;
+                                      }
+                                    }
+                                  });
+                                },
+                                onPanStart: (details) {
+                                  setState(() {
+                                    final graph = graphs[selectedGraphIndex];
+                                    draggingNode = graph.findNodeAt(details.localPosition);
+                                    dragOffset = details.localPosition;
+                                  });
+                                },
+                                onPanEnd: (details) {
+                                  setState(() {
+                                    draggingNode = null;
+                                    dragOffset = null;
+                                    edgeStartNode = null;
+                                    edgeStartOutput = null;
+                                    mousePosition = null;
+                                  });
+                                },
+                                child: CustomPaint(
+                                  painter: graphs.isNotEmpty
+                                      ? GraphPainter(
+                                          graphs[selectedGraphIndex].nodes,
+                                          graphs[selectedGraphIndex].edges,
+                                          selectedNode,
+                                          selectedEdge,
+                                          mousePosition,
+                                        )
+                                      : null,
+                                  child: Container(),
+                                  ),
+                              )
+                                : Center(child: Text('No graphs available')),
+                              ..._buildTooltips(),
                             ],
                           );
                         },
