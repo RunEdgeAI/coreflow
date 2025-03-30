@@ -247,348 +247,362 @@ class GraphEditorState extends State<GraphEditor> {
             XmlExport(graphs: graphs, graphIndex:selectedGraphIndex, refCount: _refCount),
         ],
       ),
-      body: MouseRegion(
-        onHover: (event) {
-          setState(() {
-            mousePosition = event.localPosition;
-          });
-        },
-        onExit: (event) {
-          setState(() {
-            mousePosition = null;
-          });
-        },
-        child: KeyboardListener(
-          focusNode: _focusNode,
-          onKeyEvent: (event) {
-            if (_nameFocusNode.hasFocus) return;
+      body: Column(
+        children: [
+          Container(
+            // panel for graph list and add graph button
+            height: 80,
+            color: Colors.grey[900],
+            child: Row(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.add),
+                  tooltip: 'Add Graph',
+                  onPressed: _addGraph,
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: graphs.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedGraphIndex = index;
+                              selectedGraphRow = index;
+                              // Reset selected node when switching graphs
+                              selectedNode = null;
+                            });
+                          },
+                          child: Chip(
+                            label: Text('Graph ${index + 1}'),
+                            backgroundColor: selectedGraphRow == index
+                                ? Colors.blue
+                                : Colors.grey[700],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: MouseRegion(
+              onHover: (event) {
+                setState(() {
+                  mousePosition = event.localPosition;
+                });
+              },
+              onExit: (event) {
+                setState(() {
+                  mousePosition = null;
+                });
+              },
+              child: KeyboardListener(
+                focusNode: _focusNode,
+                onKeyEvent: (event) {
+                  if (_nameFocusNode.hasFocus) return;
 
-            if (event is KeyDownEvent) {
-              if (event.logicalKey == LogicalKeyboardKey.backspace ||
-                  event.logicalKey == LogicalKeyboardKey.delete) {
-                if (selectedGraphRow != null) {
-                  _deleteGraph(selectedGraphRow!);
-                } else if (graphs.isNotEmpty) {
-                  _deleteSelected(graphs[selectedGraphIndex]);
-                }
-              } else if (event.logicalKey == LogicalKeyboardKey.escape) {
-                _deselectAll();
-              }
-            }
-          },
-          child: Row(
-            children: [
-              // Left panel for graph list and add graph button
-              Container(
-                width: 200,
-                color: Colors.grey[900],
-                child: Column(
+                  if (event is KeyDownEvent) {
+                    if (event.logicalKey == LogicalKeyboardKey.backspace ||
+                        event.logicalKey == LogicalKeyboardKey.delete) {
+                      if (selectedGraphRow != null) {
+                        _deleteGraph(selectedGraphRow!);
+                      } else if (graphs.isNotEmpty) {
+                        _deleteSelected(graphs[selectedGraphIndex]);
+                      }
+                    } else if (event.logicalKey == LogicalKeyboardKey.escape) {
+                      _deselectAll();
+                    }
+                  }
+                },
+                child: Row(
                   children: [
-                    IconButton(
-                      icon: Icon(Icons.add),
-                      tooltip: 'Add Graph',
-                      onPressed: _addGraph,
-                    ),
+                    // Center panel for graph visualization and node/edge creation
                     Expanded(
-                      child: ListView.builder(
-                        itemCount: graphs.length,
-                        itemBuilder: (context, index) {
-                          return ListTile(
-                            title: Text('Graph ${index + 1}'),
-                            selected: selectedGraphRow == index,
-                            onTap: () {
-                              setState(() {
-                                selectedGraphIndex = index;
-                                selectedGraphRow = index;
-                                // Reset selected node when switching graphs
-                                selectedNode = null;
-                              });
-                            },
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          return Column(
+                            children: [
+                              Expanded(
+                                child: Stack(
+                                  children: [
+                                    graphs.isNotEmpty
+                                      ? GestureDetector(
+                                        onTapDown: (details) {
+                                        final graph = graphs[selectedGraphIndex];
+                                        final tappedNode = graph.findNodeAt(details.localPosition);
+                                        final tappedEdge = graph.findEdgeAt(details.localPosition);
+                                        setState(() {
+                                          if (tappedNode != null) {
+                                            // Deselect the selected edge
+                                            selectedEdge = null;
+                                            if (selectedNode == null) {
+                                              selectedNode = tappedNode;
+                                            } else {
+                                              // _addEdge(graph, selectedNode!, tappedNode);
+                                              // Deselect the selected node
+                                              selectedNode = null;
+                                            }
+                                          } else if (tappedEdge != null) {
+                                            if (selectedEdge == tappedEdge) {
+                                              // Deselect the tapped edge if it is already selected
+                                              selectedEdge = null;
+                                            } else {
+                                              // Deselect the selected node
+                                              selectedNode = null;
+                                              // Select the tapped edge
+                                              selectedEdge = tappedEdge;
+                                            }
+                                          } else {
+                                            _addNode(graph, details.localPosition, constraints.biggest);
+                                            // Deselect the selected node
+                                            selectedNode = null;
+                                            // Deselect the selected edge
+                                            selectedEdge = null;
+                                            // Deselect the selected graph row
+                                            selectedGraphRow = null;
+                                            edgeStartNode = null;
+                                            edgeStartOutput = null;
+                                          }
+                                        });
+                                      },
+                                      onPanUpdate: (details) {
+                                        setState(() {
+                                          mousePosition = details.localPosition;
+                                          if (draggingNode != null) {
+                                            final newPosition = draggingNode!.position + details.delta;
+                                            // Assuming the radius of the node is 25
+                                            final nodeRadius = 25.0;
+                                            // Ensure the node stays within the bounds of the center panel
+                                            if (newPosition.dx - nodeRadius >= 0 &&
+                                                newPosition.dx + nodeRadius <= constraints.maxWidth &&
+                                                newPosition.dy - nodeRadius >= 0 &&
+                                                newPosition.dy + nodeRadius <= constraints.maxHeight) {
+                                              draggingNode!.position = newPosition;
+                                            }
+                                          }
+                                        });
+                                      },
+                                      onPanStart: (details) {
+                                        setState(() {
+                                          final graph = graphs[selectedGraphIndex];
+                                          draggingNode = graph.findNodeAt(details.localPosition);
+                                          dragOffset = details.localPosition;
+                                        });
+                                      },
+                                      onPanEnd: (details) {
+                                        setState(() {
+                                          draggingNode = null;
+                                          dragOffset = null;
+                                          edgeStartNode = null;
+                                          edgeStartOutput = null;
+                                          mousePosition = null;
+                                        });
+                                      },
+                                      child: CustomPaint(
+                                        painter: graphs.isNotEmpty
+                                            ? GraphPainter(
+                                                graphs[selectedGraphIndex].nodes,
+                                                graphs[selectedGraphIndex].edges,
+                                                selectedNode,
+                                                selectedEdge,
+                                                mousePosition,
+                                              )
+                                            : null,
+                                        child: Container(),
+                                        ),
+                                    )
+                                      : Center(child: Text('No graphs available')),
+                                    ..._buildTooltips(),
+                                  ],
+                                ),
+                              ),
+                            ],
                           );
                         },
                       ),
                     ),
-                  ],
-                ),
-              ),
-              // Center panel for graph visualization and node/edge creation
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return Column(
-                      children: [
-                        Expanded(
-                          child: Stack(
+                    // Right panel for node attributes
+                    AnimatedContainer(
+                      duration: Duration(milliseconds: 300),
+                      width: selectedNode != null ? 200 : 0,
+                      color: Colors.grey[800],
+                      child: selectedNode != null
+                        ? ListView(
+                            padding: EdgeInsets.all(8.0),
                             children: [
-                              graphs.isNotEmpty
-                                ? GestureDetector(
-                                  onTapDown: (details) {
-                                  final graph = graphs[selectedGraphIndex];
-                                  final tappedNode = graph.findNodeAt(details.localPosition);
-                                  final tappedEdge = graph.findEdgeAt(details.localPosition);
+                              Text(
+                                'Node Attributes',
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(height: 8.0),
+                              TextField(
+                                controller: TextEditingController(text: selectedNode!.id.toString()),
+                                decoration: InputDecoration(
+                                  labelText: 'ID',
+                                ),
+                                // Make ID field read-only
+                                enabled: false,
+                              ),
+                              SizedBox(height: 8.0),
+                              TextField(
+                                controller: _nameController,
+                                focusNode: _nameFocusNode,
+                                decoration: InputDecoration(
+                                  labelText: 'Name',
+                                ),
+                                onChanged: (value) {
                                   setState(() {
-                                    if (tappedNode != null) {
-                                      // Deselect the selected edge
-                                      selectedEdge = null;
-                                      if (selectedNode == null) {
-                                        selectedNode = tappedNode;
-                                      } else {
-                                        // _addEdge(graph, selectedNode!, tappedNode);
-                                        // Deselect the selected node
-                                        selectedNode = null;
-                                      }
-                                    } else if (tappedEdge != null) {
-                                      if (selectedEdge == tappedEdge) {
-                                        // Deselect the tapped edge if it is already selected
-                                        selectedEdge = null;
-                                      } else {
-                                        // Deselect the selected node
-                                        selectedNode = null;
-                                        // Select the tapped edge
-                                        selectedEdge = tappedEdge;
-                                      }
-                                    } else {
-                                      _addNode(graph, details.localPosition, constraints.biggest);
-                                      // Deselect the selected node
-                                      selectedNode = null;
-                                      // Deselect the selected edge
-                                      selectedEdge = null;
-                                      // Deselect the selected graph row
-                                      selectedGraphRow = null;
-                                      edgeStartNode = null;
-                                      edgeStartOutput = null;
+                                    selectedNode!.name = value;
+                                  });
+                                },
+                                onEditingComplete: () {
+                                  _focusNode.requestFocus();
+                                },
+                              ),
+                              SizedBox(height: 8.0),
+                              DropdownButtonFormField<String>(
+                                isExpanded: true,
+                                value: selectedNode!.target,
+                                decoration: InputDecoration(
+                                  labelText: Text(
+                                              'Target',
+                                              overflow: TextOverflow.ellipsis).data,
+                                  isDense: true,
+                                ),
+                                items: _supported
+                                    .map((target) => DropdownMenuItem<String>(
+                                          alignment: Alignment.centerLeft,
+                                          value: target.name,
+                                          child: Text(
+                                            target.name,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ))
+                                    .toList(),
+                                onChanged: (newValue) {
+                                  setState(() {
+                                    selectedNode!.target = newValue!;
+                                    // Set kernel to the first available value if target changes.
+                                    final target = _supported.firstWhere((t) => t.name == newValue);
+                                    if (target.kernels.isNotEmpty) {
+                                      selectedNode!.kernel = target.kernels.first.name;
+                                      _updateNodeIO(selectedNode!, selectedNode!.kernel);
                                     }
                                   });
                                 },
-                                onPanUpdate: (details) {
+                              ),
+                              SizedBox(height: 8.0),
+                              DropdownButtonFormField<String>(
+                                isExpanded: true,
+                                value: selectedNode!.kernel,
+                                decoration: InputDecoration(
+                                  labelText: Text(
+                                              'Kernel',
+                                              overflow: TextOverflow.ellipsis).data,
+                                  isDense: true,
+                                ),
+                                items: _supported
+                                    .firstWhere((target) => target.name == selectedNode!.target,
+                                    orElse: () => _supported.first,
+                                    )
+                                    .kernels
+                                    .map((kernel) => DropdownMenuItem<String>(
+                                          value: kernel.name,
+                                          child: FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            alignment: Alignment.centerLeft,
+                                            child: Text(
+                                              kernel.name,
+                                              style: TextStyle(fontSize: 12),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ))
+                                    .toList(),
+                                onChanged: (newValue) {
                                   setState(() {
-                                    mousePosition = details.localPosition;
-                                    if (draggingNode != null) {
-                                      final newPosition = draggingNode!.position + details.delta;
-                                      // Assuming the radius of the node is 25
-                                      final nodeRadius = 25.0;
-                                      // Ensure the node stays within the bounds of the center panel
-                                      if (newPosition.dx - nodeRadius >= 0 &&
-                                          newPosition.dx + nodeRadius <= constraints.maxWidth &&
-                                          newPosition.dy - nodeRadius >= 0 &&
-                                          newPosition.dy + nodeRadius <= constraints.maxHeight) {
-                                        draggingNode!.position = newPosition;
-                                      }
-                                    }
+                                    selectedNode!.kernel = newValue!;
+                                    _updateNodeIO(selectedNode!, newValue);
                                   });
                                 },
-                                onPanStart: (details) {
-                                  setState(() {
-                                    final graph = graphs[selectedGraphIndex];
-                                    draggingNode = graph.findNodeAt(details.localPosition);
-                                    dragOffset = details.localPosition;
-                                  });
-                                },
-                                onPanEnd: (details) {
-                                  setState(() {
-                                    draggingNode = null;
-                                    dragOffset = null;
-                                    edgeStartNode = null;
-                                    edgeStartOutput = null;
-                                    mousePosition = null;
-                                  });
-                                },
-                                child: CustomPaint(
-                                  painter: graphs.isNotEmpty
-                                      ? GraphPainter(
-                                          graphs[selectedGraphIndex].nodes,
-                                          graphs[selectedGraphIndex].edges,
-                                          selectedNode,
-                                          selectedEdge,
-                                          mousePosition,
-                                        )
-                                      : null,
-                                  child: Container(),
-                                  ),
-                              )
-                                : Center(child: Text('No graphs available')),
-                              ..._buildTooltips(),
+                              ),
+                              SizedBox(height: 8.0),
+                              Text(
+                                'Upstream Dependencies',
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: graphs[selectedGraphIndex].getUpstreamDependencies(selectedNode!).map((dep) => TextField(
+                                  controller: TextEditingController(text: dep),
+                                  // Make Upstream dependencies read-only
+                                  enabled: false,
+                                )).toList(),
+                              ),
+                              SizedBox(height: 8.0),
+                              Text(
+                                'Downstream Dependencies',
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: graphs[selectedGraphIndex].getDownstreamDependencies(selectedNode!).map((dep) => TextField(
+                                  controller: TextEditingController(text: dep),
+                                  // Make Downstream dependencies read-only
+                                  enabled: false,
+                                )).toList(),
+                              ),
+                              SizedBox(height: 8.0),
+                              Text(
+                                'Inputs',
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: _supported
+                                    .firstWhere((target) => target.name == selectedNode!.target,
+                                    orElse: () => _supported.first,
+                                    )
+                                    .kernels
+                                    .firstWhere((kernel) => kernel.name == selectedNode!.kernel,
+                                    orElse: () => _supported.first.kernels.first,
+                                    )
+                                    .inputs
+                                    .map((input) => Text(input))
+                                    .toList(),
+                              ),
+                              SizedBox(height: 8.0),
+                              Text(
+                                'Outputs',
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: _supported
+                                    .firstWhere((target) => target.name == selectedNode!.target,
+                                    orElse: () => _supported.first,
+                                    )
+                                    .kernels
+                                    .firstWhere((kernel) => kernel.name == selectedNode!.kernel,
+                                    orElse: () => _supported.first.kernels.first,
+                                    )
+                                    .outputs
+                                    .map((output) => Text(output))
+                                    .toList(),
+                              ),
+                              // Add more attributes as needed
                             ],
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                          )
+                        : Container(),
+                    ),
+                  ],
+                )
               ),
-              // Right panel for node attributes
-              AnimatedContainer(
-                duration: Duration(milliseconds: 300),
-                width: selectedNode != null ? 200 : 0,
-                color: Colors.grey[800],
-                child: selectedNode != null
-                    ? ListView(
-                        padding: EdgeInsets.all(8.0),
-                        children: [
-                          Text(
-                            'Node Attributes',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(height: 8.0),
-                          TextField(
-                            controller: TextEditingController(text: selectedNode!.id.toString()),
-                            decoration: InputDecoration(
-                              labelText: 'ID',
-                            ),
-                            // Make ID field read-only
-                            enabled: false,
-                          ),
-                          SizedBox(height: 8.0),
-                          TextField(
-                            controller: _nameController,
-                            focusNode: _nameFocusNode,
-                            decoration: InputDecoration(
-                              labelText: 'Name',
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                selectedNode!.name = value;
-                              });
-                            },
-                            onEditingComplete: () {
-                              _focusNode.requestFocus();
-                            },
-                          ),
-                          SizedBox(height: 8.0),
-                          DropdownButtonFormField<String>(
-                            isExpanded: true,
-                            value: selectedNode!.target,
-                            decoration: InputDecoration(
-                              labelText: Text(
-                                          'Target',
-                                          overflow: TextOverflow.ellipsis).data,
-                              isDense: true,
-                            ),
-                            items: _supported
-                                .map((target) => DropdownMenuItem<String>(
-                                      alignment: Alignment.centerLeft,
-                                      value: target.name,
-                                      child: Text(
-                                        target.name,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ))
-                                .toList(),
-                            onChanged: (newValue) {
-                              setState(() {
-                                selectedNode!.target = newValue!;
-                                // Set kernel to the first available value if target changes.
-                                final target = _supported.firstWhere((t) => t.name == newValue);
-                                if (target.kernels.isNotEmpty) {
-                                  selectedNode!.kernel = target.kernels.first.name;
-                                  _updateNodeIO(selectedNode!, selectedNode!.kernel);
-                                }
-                              });
-                            },
-                          ),
-                          SizedBox(height: 8.0),
-                          DropdownButtonFormField<String>(
-                            isExpanded: true,
-                            value: selectedNode!.kernel,
-                            decoration: InputDecoration(
-                              labelText: Text(
-                                          'Kernel',
-                                          overflow: TextOverflow.ellipsis).data,
-                              isDense: true,
-                            ),
-                            items: _supported
-                                .firstWhere((target) => target.name == selectedNode!.target,
-                                orElse: () => _supported.first,
-                                )
-                                .kernels
-                                .map((kernel) => DropdownMenuItem<String>(
-                                      value: kernel.name,
-                                      child: FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        alignment: Alignment.centerLeft,
-                                        child: Text(
-                                          kernel.name,
-                                          style: TextStyle(fontSize: 12),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ))
-                                .toList(),
-                            onChanged: (newValue) {
-                              setState(() {
-                                selectedNode!.kernel = newValue!;
-                                _updateNodeIO(selectedNode!, newValue);
-                              });
-                            },
-                          ),
-                          SizedBox(height: 8.0),
-                          Text(
-                            'Upstream Dependencies',
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: graphs[selectedGraphIndex].getUpstreamDependencies(selectedNode!).map((dep) => TextField(
-                              controller: TextEditingController(text: dep),
-                              // Make Upstream dependencies read-only
-                              enabled: false,
-                            )).toList(),
-                          ),
-                          SizedBox(height: 8.0),
-                          Text(
-                            'Downstream Dependencies',
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: graphs[selectedGraphIndex].getDownstreamDependencies(selectedNode!).map((dep) => TextField(
-                              controller: TextEditingController(text: dep),
-                              // Make Downstream dependencies read-only
-                              enabled: false,
-                            )).toList(),
-                          ),
-                          SizedBox(height: 8.0),
-                          Text(
-                            'Inputs',
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: _supported
-                                .firstWhere((target) => target.name == selectedNode!.target,
-                                orElse: () => _supported.first,
-                                )
-                                .kernels
-                                .firstWhere((kernel) => kernel.name == selectedNode!.kernel,
-                                orElse: () => _supported.first.kernels.first,
-                                )
-                                .inputs
-                                .map((input) => Text(input))
-                                .toList(),
-                          ),
-                          SizedBox(height: 8.0),
-                          Text(
-                            'Outputs',
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: _supported
-                                .firstWhere((target) => target.name == selectedNode!.target,
-                                orElse: () => _supported.first,
-                                )
-                                .kernels
-                                .firstWhere((kernel) => kernel.name == selectedNode!.kernel,
-                                orElse: () => _supported.first.kernels.first,
-                                )
-                                .outputs
-                                .map((output) => Text(output))
-                                .toList(),
-                          ),
-                          // Add more attributes as needed
-                        ],
-                      )
-                    : Container(),
               ),
-            ],
           ),
-        ),
+        ],
       ),
     );
   } // End of build method
