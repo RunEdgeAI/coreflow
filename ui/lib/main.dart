@@ -213,66 +213,6 @@ class GraphEditorState extends State<GraphEditor> {
     });
   } // End of _deleteSelected
 
-  List<String> _getUpstreamDependencies(Node node) {
-    final graph = graphs[selectedGraphIndex];
-    return graph.edges
-        .where((edge) => edge.target == node)
-        .map((edge) => edge.source.name)
-        .toList();
-  } // End of _getUpstreamDependencies
-
-  List<String> _getDownstreamDependencies(Node node) {
-    final graph = graphs[selectedGraphIndex];
-    return graph.edges
-        .where((edge) => edge.source == node)
-        .map((edge) => edge.target.name)
-        .toList();
-  } // End of _getDownstreamDependencies
-
-  Node? _findNodeAt(Graph graph, Offset position) {
-    for (var node in graph.nodes.reversed) {
-      if ((node.position - position).distance < 25) {
-        return node;
-      }
-    }
-    return null;
-  } // End of _findNodeAt
-
-  Edge? _findEdgeAt(Graph graph, Offset position) {
-    for (var edge in graph.edges.reversed) {
-      if (_isPointNearEdge(position, edge.source.position, edge.target.position)) {
-        return edge;
-      }
-    }
-    return null;
-  } // End of _findEdgeAt
-
-  bool _isPointNearEdge(Offset point, Offset start, Offset end) {
-    final double threshold = 20.0;
-
-    // Vector from start to end
-    final vec = end - start;
-    final length = vec.distance;
-
-    // Vector from start to point
-    final pointVec = point - start;
-
-    // Calculate projection
-    final t = (pointVec.dx * vec.dx + pointVec.dy * vec.dy) / (length * length);
-
-    // Check if projection is within line segment
-    if (t < 0 || t > 1) return false;
-
-    // Calculate closest point on line
-    final projection = Offset(
-      start.dx + t * vec.dx,
-      start.dy + t * vec.dy,
-    );
-
-    // Check distance to line
-    return (point - projection).distance < threshold;
-  } // End of _isPointNearEdge
-
   void _updateNameController() {
     if (selectedNode != null && _nameController.text != selectedNode!.name) {
       _nameController.text = selectedNode!.name;
@@ -329,10 +269,10 @@ class GraphEditorState extends State<GraphEditor> {
     return Scaffold(
       appBar: AppBar(
         actions: [
-          // IconButton to export the currently selected graph in DOT format.
-          DotExport(graph: graphs[selectedGraphIndex]),
-          // IconButton to export the currently selected graph in XML format.
-          XmlExport(graph: graphs[selectedGraphIndex], refCount: _refCount),
+            // IconButton to export the currently selected graph in DOT format.
+            DotExport(graphs: graphs, graphIndex: selectedGraphIndex),
+            // IconButton to export the currently selected graph in XML format.
+            XmlExport(graphs: graphs, graphIndex:selectedGraphIndex, refCount: _refCount),
         ],
       ),
       body: MouseRegion(
@@ -412,8 +352,8 @@ class GraphEditorState extends State<GraphEditor> {
                                 ? GestureDetector(
                                   onTapDown: (details) {
                                   final graph = graphs[selectedGraphIndex];
-                                  final tappedNode = _findNodeAt(graph, details.localPosition);
-                                  final tappedEdge = _findEdgeAt(graph, details.localPosition);
+                                  final tappedNode = graph.findNodeAt(details.localPosition);
+                                  final tappedEdge = graph.findEdgeAt(details.localPosition);
                                   setState(() {
                                     if (tappedNode != null) {
                                       // Deselect the selected edge
@@ -468,7 +408,7 @@ class GraphEditorState extends State<GraphEditor> {
                                 onPanStart: (details) {
                                   setState(() {
                                     final graph = graphs[selectedGraphIndex];
-                                    draggingNode = _findNodeAt(graph, details.localPosition);
+                                    draggingNode = graph.findNodeAt(details.localPosition);
                                     dragOffset = details.localPosition;
                                   });
                                 },
@@ -615,7 +555,7 @@ class GraphEditorState extends State<GraphEditor> {
                           ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: _getUpstreamDependencies(selectedNode!).map((dep) => TextField(
+                            children: graphs[selectedGraphIndex].getUpstreamDependencies(selectedNode!).map((dep) => TextField(
                               controller: TextEditingController(text: dep),
                               // Make Upstream dependencies read-only
                               enabled: false,
@@ -627,7 +567,7 @@ class GraphEditorState extends State<GraphEditor> {
                           ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: _getDownstreamDependencies(selectedNode!).map((dep) => TextField(
+                            children: graphs[selectedGraphIndex].getDownstreamDependencies(selectedNode!).map((dep) => TextField(
                               controller: TextEditingController(text: dep),
                               // Make Downstream dependencies read-only
                               enabled: false,
@@ -1121,11 +1061,13 @@ class GraphEditorState extends State<GraphEditor> {
 class XmlExport extends StatelessWidget {
   const XmlExport({
     super.key,
-    required this.graph,
+    required this.graphs,
+    required this.graphIndex,
     required this.refCount
   });
 
-  final Graph graph;
+  final List<Graph> graphs;
+  final int graphIndex;
   final int refCount;
 
   @override
@@ -1134,48 +1076,51 @@ class XmlExport extends StatelessWidget {
       icon: Icon(Icons.code_off),
       tooltip: 'Export XML',
       onPressed: () {
-        // Export the selected graph
-        final xml = _exportXML(graph, refCount);
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text("Export XML"),
-            content: SingleChildScrollView(child: Text(xml)),
-            actions: [
-              TextButton(
-                onPressed: () async {
-                  // Use FilePicker to save the XML file
-                  final result = await FilePicker.platform.saveFile(
-                    dialogTitle: 'Save XML File',
-                    fileName: 'graph.xml',
-                  );
+        if (graphs.isNotEmpty) {
+          final graph = graphs[graphIndex];
+          // Export the selected graph
+          final xml = _exportXML(graph, refCount);
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text("Export XML"),
+              content: SingleChildScrollView(child: Text(xml)),
+              actions: [
+                TextButton(
+                  onPressed: () async {
+                    // Use FilePicker to save the XML file
+                    final result = await FilePicker.platform.saveFile(
+                      dialogTitle: 'Save XML File',
+                      fileName: 'graph.xml',
+                    );
 
-                  if (result != null) {
-                    final file = File(result);
-                    await file.writeAsString(xml);
+                    if (result != null) {
+                      final file = File(result);
+                      await file.writeAsString(xml);
 
-                    // Show a confirmation message
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('XML file saved to $result')),
-                      );
+                      // Show a confirmation message
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('XML file saved to $result')),
+                        );
+                      }
                     }
-                  }
 
-                  // Close the dialog
-                  if (context.mounted) {
-                    Navigator.of(context).pop();
-                  }
-                },
-                child: Text("Save"),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text("Close"),
-              ),
-            ],
-          ),
-        );
+                    // Close the dialog
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                    }
+                  },
+                  child: Text("Save"),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text("Close"),
+                ),
+              ],
+            ),
+          );
+        }
       },
     );
   }
@@ -1348,10 +1293,12 @@ class XmlExport extends StatelessWidget {
 class DotExport extends StatelessWidget {
   const DotExport({
     super.key,
-    required this.graph,
+    required this.graphs,
+    required this.graphIndex,
   });
 
-  final Graph graph;
+  final List<Graph> graphs;
+  final int graphIndex;
 
   @override
   Widget build(BuildContext context) {
@@ -1359,46 +1306,50 @@ class DotExport extends StatelessWidget {
       icon: Icon(Icons.code),
       tooltip: 'Export DOT',
       onPressed: () {
-        // Export the selected graph
-        final dot = _exportDOT(graph);
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text("Export DOT"),
-            content: SingleChildScrollView(child: Text(dot)),
-            actions: [
-              TextButton(
-                onPressed: () async {
-                  final result = await FilePicker.platform.saveFile(
-                    dialogTitle: 'Save DOT File',
-                    fileName: 'graph.dot',
-                  );
+        // Check if there are any graphs available
+        if (graphs.isNotEmpty) {
+          final graph = graphs[graphIndex];
+          // Export the selected graph
+          final dot = _exportDOT(graph);
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text("Export DOT"),
+              content: SingleChildScrollView(child: Text(dot)),
+              actions: [
+                TextButton(
+                  onPressed: () async {
+                    final result = await FilePicker.platform.saveFile(
+                      dialogTitle: 'Save DOT File',
+                      fileName: 'graph.dot',
+                    );
 
-                  if (result != null) {
-                    final file = File(result);
-                    await file.writeAsString(dot);
+                    if (result != null) {
+                      final file = File(result);
+                      await file.writeAsString(dot);
 
-                    // Show a confirmation message
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('DOT file saved to $result')),
-                      );
+                      // Show a confirmation message
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('DOT file saved to $result')),
+                        );
+                      }
                     }
-                  }
 
-                  if (context.mounted) {
-                    Navigator.of(context).pop(); // Close the dialog
-                  }
-                },
-                child: Text("Save"),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text("Close"),
-              ),
-            ],
-          ),
-        );
+                    if (context.mounted) {
+                      Navigator.of(context).pop(); // Close the dialog
+                    }
+                  },
+                  child: Text("Save"),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text("Close"),
+                ),
+              ],
+            ),
+          );
+        }
       },
     );
   }

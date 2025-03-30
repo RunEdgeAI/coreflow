@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ui/utils.dart';
 
 List<String> refTypes = [
   "ARRAY",
@@ -121,6 +122,38 @@ class Graph extends Reference {
     required this.nodes,
     required this.edges
   });
+
+  Node? findNodeAt(Offset position) {
+    for (var node in nodes.reversed) {
+      if ((node.position - position).distance < 25) {
+        return node;
+      }
+    }
+    return null;
+  } // End of _findNodeAt
+
+  Edge? findEdgeAt(Offset position) {
+    for (var edge in edges.reversed) {
+      if (Utils.isPointNearEdge(position, edge.source.position, edge.target.position)) {
+        return edge;
+      }
+    }
+    return null;
+  } // End of _findEdgeAt
+
+  List<String> getUpstreamDependencies(Node node) {
+    return edges
+        .where((edge) => edge.target == node)
+        .map((edge) => edge.source.name)
+        .toList();
+  } // End of _getUpstreamDependencies
+
+  List<String> getDownstreamDependencies(Node node) {
+    return edges
+        .where((edge) => edge.source == node)
+        .map((edge) => edge.target.name)
+        .toList();
+  } // End of _getDownstreamDependencies
 }
 
 class Array extends Reference {
