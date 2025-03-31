@@ -9,7 +9,8 @@ class GraphPainter extends CustomPainter {
   final Edge? selectedEdge;
   final Offset? mousePosition;
 
-  GraphPainter(this.nodes, this.edges, this.selectedNode, this.selectedEdge, this.mousePosition);
+  GraphPainter(this.nodes, this.edges, this.selectedNode, this.selectedEdge,
+      this.mousePosition);
 
   void _drawArrow(Canvas canvas, Offset start, Offset end, Paint paint) {
     final double arrowSize = 5.0;
@@ -24,14 +25,17 @@ class GraphPainter extends CustomPainter {
     var basePoint = end - direction * arrowSize;
 
     // Calculate arrow points
-    var leftPoint = basePoint + Offset(
-      arrowSize * (direction.dy * cos(angle) - direction.dx * sin(angle)),
-      arrowSize * (-direction.dx * cos(angle) - direction.dy * sin(angle))
-    );
-    var rightPoint = basePoint + Offset(
-      arrowSize * (-direction.dy * cos(angle) - direction.dx * sin(angle)),
-      arrowSize * (direction.dx * cos(angle) - direction.dy * sin(angle))
-    );
+    var leftPoint = basePoint +
+        Offset(
+            arrowSize * (direction.dy * cos(angle) - direction.dx * sin(angle)),
+            arrowSize *
+                (-direction.dx * cos(angle) - direction.dy * sin(angle)));
+    var rightPoint = basePoint +
+        Offset(
+            arrowSize *
+                (-direction.dy * cos(angle) - direction.dx * sin(angle)),
+            arrowSize *
+                (direction.dx * cos(angle) - direction.dy * sin(angle)));
 
     // Draw arrow line
     canvas.drawLine(start, end, paint);
@@ -78,7 +82,11 @@ class GraphPainter extends CustomPainter {
 
       final sourceAngle = (sourceNode.outputs.length == 1)
           ? 0
-          : (pi / 4) + (sourceNode.outputs.indexWhere((output) => output.id == edge.srcId) * (3 * pi / 2) / (sourceNode.outputs.length - 1));
+          : (pi / 4) +
+              (sourceNode.outputs
+                      .indexWhere((output) => output.id == edge.srcId) *
+                  (3 * pi / 2) /
+                  (sourceNode.outputs.length - 1));
       final sourceIconOffset = Offset(
         sourceNode.position.dx + 30 * cos(sourceAngle),
         sourceNode.position.dy + 30 * sin(sourceAngle),
@@ -86,21 +94,30 @@ class GraphPainter extends CustomPainter {
 
       final targetAngle = (targetNode.inputs.length == 1)
           ? pi
-          : (3 * pi / 4) + (targetNode.inputs.indexWhere((input) => input.id == edge.tgtId) * (pi / 2) / (targetNode.inputs.length - 1));
+          : (3 * pi / 4) +
+              (targetNode.inputs.indexWhere((input) => input.id == edge.tgtId) *
+                  (pi / 2) /
+                  (targetNode.inputs.length - 1));
       final targetIconOffset = Offset(
         targetNode.position.dx + 30 * cos(targetAngle),
         targetNode.position.dy + 30 * sin(targetAngle),
       );
 
       if (isSelected) {
-        _drawArrow(canvas, sourceIconOffset, targetIconOffset, Paint()
-          ..color = Color.alphaBlend(Colors.white.withAlpha(77), Colors.white)
-          ..strokeWidth = 6
-          ..style = PaintingStyle.stroke
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 3));
+        _drawArrow(
+            canvas,
+            sourceIconOffset,
+            targetIconOffset,
+            Paint()
+              ..color =
+                  Color.alphaBlend(Colors.white.withAlpha(77), Colors.white)
+              ..strokeWidth = 6
+              ..style = PaintingStyle.stroke
+              ..maskFilter = MaskFilter.blur(BlurStyle.normal, 3));
       }
 
-      _drawArrow(canvas, sourceIconOffset, targetIconOffset, paint); // Use icon offsets
+      _drawArrow(canvas, sourceIconOffset, targetIconOffset,
+          paint); // Use icon offsets
     }
 
     // Draw nodes with enhanced glow effect
@@ -109,40 +126,59 @@ class GraphPainter extends CustomPainter {
 
       if (node == selectedNode) {
         // Enhanced glow effect for selected node
-        canvas.drawCircle(node.position, 32, Paint()
-          ..color = Color.alphaBlend(Colors.blue.shade300.withAlpha(102), Colors.blue.shade300)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 12));
+        canvas.drawCircle(
+            node.position,
+            32,
+            Paint()
+              ..color = Color.alphaBlend(
+                  Colors.blue.shade300.withAlpha(102), Colors.blue.shade300)
+              ..maskFilter = MaskFilter.blur(BlurStyle.normal, 12));
 
-        canvas.drawCircle(node.position, 30, Paint()
-          ..color = Color.alphaBlend(Colors.blue.shade200.withAlpha(77), Colors.blue.shade200)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8));
+        canvas.drawCircle(
+            node.position,
+            30,
+            Paint()
+              ..color = Color.alphaBlend(
+                  Colors.blue.shade200.withAlpha(77), Colors.blue.shade200)
+              ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8));
       } else {
         // Normal glow for unselected nodes
-        canvas.drawCircle(node.position, 28, Paint()
-          ..color = Color.alphaBlend(Colors.blue.withAlpha(51), Colors.blue)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8));
+        canvas.drawCircle(
+            node.position,
+            28,
+            Paint()
+              ..color = Color.alphaBlend(Colors.blue.withAlpha(51), Colors.blue)
+              ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8));
       }
 
       // Draw main circle
       canvas.drawCircle(node.position, 25, paint);
       // Draw stroke with enhanced highlight
-      canvas.drawCircle(node.position, 25, Paint()
-        ..color = node == selectedNode ? // Colors.white.withOpacity(0.8)
-          Color.alphaBlend(Colors.white.withAlpha(204), Colors.white) : Colors.blue.shade300
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = node == selectedNode ? 3 : 2);
+      canvas.drawCircle(
+          node.position,
+          25,
+          Paint()
+            ..color = node == selectedNode
+                ? // Colors.white.withOpacity(0.8)
+                Color.alphaBlend(Colors.white.withAlpha(204), Colors.white)
+                : Colors.blue.shade300
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = node == selectedNode ? 3 : 2);
 
       // Draw text with enhanced contrast for selected node
       final textSpan = TextSpan(
         text: node.name,
         style: TextStyle(
-          color: node == selectedNode ? Colors.white : Color.alphaBlend(Colors.white.withAlpha(229), Colors.white),
+          color: node == selectedNode
+              ? Colors.white
+              : Color.alphaBlend(Colors.white.withAlpha(229), Colors.white),
           //  Colors.white.withOpacity(0.9),
           fontSize: node == selectedNode ? 14 : 12,
           fontWeight: node == selectedNode ? FontWeight.bold : FontWeight.w500,
           shadows: [
             Shadow(
-              color: Color.alphaBlend(Colors.black.withAlpha(127), Colors.black),
+              color:
+                  Color.alphaBlend(Colors.black.withAlpha(127), Colors.black),
               offset: Offset(0, 1),
               blurRadius: 3,
             ),
@@ -157,7 +193,8 @@ class GraphPainter extends CustomPainter {
       );
 
       textPainter.layout(minWidth: 0, maxWidth: 50);
-      final offset = node.position - Offset(textPainter.width / 2, textPainter.height / 2);
+      final offset =
+          node.position - Offset(textPainter.width / 2, textPainter.height / 2);
       textPainter.paint(canvas, offset);
     }
   }

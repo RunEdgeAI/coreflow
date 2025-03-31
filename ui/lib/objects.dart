@@ -16,8 +16,9 @@ List<String> refTypes = [
   "USER_DATA_OBJECT",
 ];
 
-List<String> objectArrayTypes =
-  refTypes.where((type) => type != 'ARRAY' && type != 'OBJECT_ARRAY').toList();
+List<String> objectArrayTypes = refTypes
+    .where((type) => type != 'ARRAY' && type != 'OBJECT_ARRAY')
+    .toList();
 
 List<String> imageTypes = [
   "VIRT",
@@ -51,36 +52,39 @@ List<String> numTypes = [
   "FLOAT64",
 ];
 
-List<String> scalarTypes = numTypes + [
-  "CHAR",
-  "DF_IMAGE",
-  "ENUM",
-  "SIZE",
-  "BOOL",
-];
+List<String> scalarTypes = numTypes +
+    [
+      "CHAR",
+      "DF_IMAGE",
+      "ENUM",
+      "SIZE",
+      "BOOL",
+    ];
 
-List<String> arrayTypes = scalarTypes + [
-  "RECTANGLE",
-  "KEYPOINT",
-  "COORDINATES2D",
-  "COORDINATES3D",
-  "COORDINATES2DF",
-];
+List<String> arrayTypes = scalarTypes +
+    [
+      "RECTANGLE",
+      "KEYPOINT",
+      "COORDINATES2D",
+      "COORDINATES3D",
+      "COORDINATES2DF",
+    ];
 
 List<String> thresholdTypes = [
   "TYPE_BINARY",
   "TYPE_RANGE",
 ];
 
-List<String> thresholdDataTypes =
-  scalarTypes.where((type) =>
-    type != 'CHAR' &&
-    type != 'DF_IMAGE' &&
-    type != 'ENUM' &&
-    type != 'SIZE' &&
-    type != 'FLOAT16' &&
-    type != 'FLOAT32' &&
-    type != 'FLOAT64').toList();
+List<String> thresholdDataTypes = scalarTypes
+    .where((type) =>
+        type != 'CHAR' &&
+        type != 'DF_IMAGE' &&
+        type != 'ENUM' &&
+        type != 'SIZE' &&
+        type != 'FLOAT16' &&
+        type != 'FLOAT32' &&
+        type != 'FLOAT64')
+    .toList();
 
 class Reference {
   final int id;
@@ -97,27 +101,60 @@ class Reference {
   static Reference createReference(String name, int refCount) {
     // Logic to determine the type of Reference to create
     if (name == ('VX_TYPE_ARRAY')) {
-      return Array(id: refCount, name: name, capacity: 0, elemType: arrayTypes.first);
+      return Array(
+          id: refCount, name: name, capacity: 0, elemType: arrayTypes.first);
     } else if (name.contains('CONVOLUTION')) {
       return Convolution(id: refCount, name: name, rows: 0, cols: 0, scale: 1);
     } else if (name.contains('IMAGE')) {
-      return Img(id: refCount, name: name, width: 0, height: 0, format: imageTypes.first);
+      return Img(
+          id: refCount,
+          name: name,
+          width: 0,
+          height: 0,
+          format: imageTypes.first);
     } else if (name.contains('LUT')) {
       return Lut(id: refCount, name: name, capacity: 0);
     } else if (name.contains('MATRIX')) {
-      return Matrix(id: refCount, name: name, rows: 0, cols: 0, elemType: numTypes.first);
+      return Matrix(
+          id: refCount, name: name, rows: 0, cols: 0, elemType: numTypes.first);
     } else if (name.contains('OBJECT_ARRAY')) {
-      return ObjectArray(id: refCount, name: name, numObjects: 0, elemType: objectArrayTypes.first);
+      return ObjectArray(
+          id: refCount,
+          name: name,
+          numObjects: 0,
+          elemType: objectArrayTypes.first);
     } else if (name.contains('PYRAMID')) {
-      return Pyramid(id: refCount, name: name, numLevels: 0, width: 0, height: 0, format: imageTypes.first);
+      return Pyramid(
+          id: refCount,
+          name: name,
+          numLevels: 0,
+          width: 0,
+          height: 0,
+          format: imageTypes.first);
     } else if (name.contains('REMAP')) {
-      return Remap(id: refCount, name: name, srcWidth: 0, srcHeight: 0, dstWidth: 0, dstHeight: 0);
+      return Remap(
+          id: refCount,
+          name: name,
+          srcWidth: 0,
+          srcHeight: 0,
+          dstWidth: 0,
+          dstHeight: 0);
     } else if (name.contains('SCALAR')) {
-      return Scalar(id: refCount, name: name, elemType: scalarTypes.first, value: 0.0);
+      return Scalar(
+          id: refCount, name: name, elemType: scalarTypes.first, value: 0.0);
     } else if (name.contains('TENSOR')) {
-      return Tensor(id: refCount, name: name, shape: [], numDims: 0, elemType: numTypes.first);
+      return Tensor(
+          id: refCount,
+          name: name,
+          shape: [],
+          numDims: 0,
+          elemType: numTypes.first);
     } else if (name.contains('THRESHOLD')) {
-      return Thrshld(id: refCount, name: name, thresType: thresholdTypes.first, dataType: thresholdDataTypes.first);
+      return Thrshld(
+          id: refCount,
+          name: name,
+          thresType: thresholdTypes.first,
+          dataType: thresholdDataTypes.first);
     } else if (name.contains('USER_DATA_OBJECT')) {
       return UserDataObject(id: refCount, name: name, sizeInBytes: 0);
     }
@@ -148,12 +185,11 @@ class Node extends Reference {
 class Graph extends Reference {
   List<Node> nodes;
   List<Edge> edges;
-  Graph({
-    required super.id,
-    super.type = 'Graph',
-    required this.nodes,
-    required this.edges
-  });
+  Graph(
+      {required super.id,
+      super.type = 'Graph',
+      required this.nodes,
+      required this.edges});
 
   Node? findNodeAt(Offset position) {
     for (var node in nodes.reversed) {
@@ -166,7 +202,8 @@ class Graph extends Reference {
 
   Edge? findEdgeAt(Offset position) {
     for (var edge in edges.reversed) {
-      if (Utils.isPointNearEdge(position, edge.source.position, edge.target.position)) {
+      if (Utils.isPointNearEdge(
+          position, edge.source.position, edge.target.position)) {
         return edge;
       }
     }

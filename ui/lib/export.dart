@@ -5,12 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:xml/xml.dart' as xml;
 
 class XmlExport extends StatelessWidget {
-  const XmlExport({
-    super.key,
-    required this.graphs,
-    required this.graphIndex,
-    required this.refCount
-  });
+  const XmlExport(
+      {super.key,
+      required this.graphs,
+      required this.graphIndex,
+      required this.refCount});
 
   final List<Graph> graphs;
   final int graphIndex;
@@ -90,7 +89,8 @@ class XmlExport extends StatelessWidget {
         'reference': reference.id.toString(),
         'elemType': reference.elemType,
       }, nest: () {
-        builder.element(reference.elemType.toLowerCase(), nest: reference.value.toString());
+        builder.element(reference.elemType.toLowerCase(),
+            nest: reference.value.toString());
       });
     } else if (reference is Array) {
       builder.element('array', attributes: {
@@ -160,7 +160,8 @@ class XmlExport extends StatelessWidget {
       '': 'https://www.khronos.org/registry/vx/schema',
       'xsi': 'https://www.w3.org/TR/xmlschema-1'
     }, attributes: {
-      'xsi:schemaLocation': 'https://registry.khronos.org/OpenVX/schema/openvx-1-1.xsd',
+      'xsi:schemaLocation':
+          'https://registry.khronos.org/OpenVX/schema/openvx-1-1.xsd',
       'references': refCount.toString()
     }, nest: () {
       // Add library entries for each target
@@ -195,8 +196,8 @@ class XmlExport extends StatelessWidget {
               builder.element('parameter', attributes: {
                 'index': i.toString(),
                 'reference': node.inputs[i].linkId != -1
-                  ? node.inputs[i].linkId.toString()
-                  : node.inputs[i].id.toString(),
+                    ? node.inputs[i].linkId.toString()
+                    : node.inputs[i].id.toString(),
               });
             }
 
@@ -300,7 +301,6 @@ class DotExport extends StatelessWidget {
     );
   }
 
-
   String _formatReferenceLabel(Reference reference) {
     if (reference is Img) {
       return 'Image\\n${reference.width}x${reference.height}\\n${reference.format}';
@@ -349,14 +349,16 @@ class DotExport extends StatelessWidget {
       for (var input in node.inputs) {
         final referenceId = input.linkId != -1 ? input.linkId : input.id;
         if (!addedReferences.contains(referenceId)) {
-          dot.writeln('  D$referenceId [shape=box label="${_formatReferenceLabel(input)}"];');
+          dot.writeln(
+              '  D$referenceId [shape=box label="${_formatReferenceLabel(input)}"];');
           addedReferences.add(referenceId);
         }
       }
       for (var output in node.outputs) {
         final referenceId = output.id;
         if (!addedReferences.contains(referenceId)) {
-          dot.writeln('  D$referenceId [shape=box label="${_formatReferenceLabel(output)}"];');
+          dot.writeln(
+              '  D$referenceId [shape=box label="${_formatReferenceLabel(output)}"];');
           addedReferences.add(referenceId);
         }
       }
@@ -375,7 +377,8 @@ class DotExport extends StatelessWidget {
       dot.writeln('  N${edge.source.id} -> D$sourceReferenceId;');
 
       // Edge from the data object to the target node's input
-      dot.writeln('  D${targetReferenceId != -1 ? targetReferenceId : edge.tgtId} -> N${edge.target.id};');
+      dot.writeln(
+          '  D${targetReferenceId != -1 ? targetReferenceId : edge.tgtId} -> N${edge.target.id};');
     }
 
     // End the Graph
