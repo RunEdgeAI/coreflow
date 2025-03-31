@@ -283,6 +283,14 @@ class GraphEditorState extends State<GraphEditor> {
                           builder: (context, constraints) {
                             return Stack(
                               children: [
+                                // Draw the grid background.
+                                Positioned.fill(
+                                  child: CustomPaint(
+                                    painter: GridPainter(
+                                        gridSize: 60,
+                                        lineColor: Colors.grey.withAlpha(76)),
+                                  ),
+                                ),
                                 graphs.isNotEmpty
                                     ? GestureDetector(
                                         onTapDown: (details) {
@@ -1035,27 +1043,30 @@ class NodeAttributesPanel extends StatelessWidget {
                   },
                 ),
                 SizedBox(height: 8.0),
-                DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  value: selectedNode!.target,
-                  decoration: InputDecoration(
-                    labelText:
-                        Text('Target', overflow: TextOverflow.ellipsis).data,
-                    isDense: true,
+                SizedBox(
+                  width: double.infinity,
+                  child: DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    value: selectedNode!.target,
+                    decoration: InputDecoration(
+                      labelText:
+                          Text('Target', overflow: TextOverflow.ellipsis).data,
+                      isDense: true,
+                    ),
+                    items: supportedTargets
+                        .map((target) => DropdownMenuItem<String>(
+                              alignment: Alignment.centerLeft,
+                              value: target.name,
+                              child: Text(
+                                target.name,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ))
+                        .toList(),
+                    onChanged: (newValue) {
+                      onTargetChanged(newValue!);
+                    },
                   ),
-                  items: supportedTargets
-                      .map((target) => DropdownMenuItem<String>(
-                            alignment: Alignment.centerLeft,
-                            value: target.name,
-                            child: Text(
-                              target.name,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ))
-                      .toList(),
-                  onChanged: (newValue) {
-                    onTargetChanged(newValue!);
-                  },
                 ),
                 SizedBox(height: 8.0),
                 DropdownButtonFormField<String>(
