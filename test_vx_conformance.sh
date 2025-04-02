@@ -23,6 +23,7 @@ fi
 # Build the conformance test suite
 cd $TARGET_DIR/cts/build
 cmake \
+-DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
 -DCMAKE_BUILD_TYPE=Debug \
 -DOPENVX_INCLUDES=$OPENVX_DIR/include \
 -DOPENVX_LIBRARIES="$OPENVX_DIR/bazel-bin/libopenvx$EXT"\;"$OPENVX_DIR/bazel-bin/vxu/libvxu$EXT"\;pthread\;dl\;m \
