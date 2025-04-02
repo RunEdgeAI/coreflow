@@ -53,3 +53,9 @@
 **/nnef_tools.egg-info
 **/_models
 **/out
+
+# ui build files
+**/ui/build
+**/ui/.dart_tool
+**/.flutter-plugins
+**/.flutter-plugins-dependencies

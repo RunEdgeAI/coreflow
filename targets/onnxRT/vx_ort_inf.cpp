@@ -24,7 +24,7 @@ static const std::shared_ptr<OnnxRuntimeRunner> kernel = std::make_shared<OnnxRu
 class VxOrtRunner
 {
 public:
-    static constexpr vx_param_description_t kernelParams[3] = {
+    static constexpr vx_param_description_t kernelParams[] = {
         {VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED},         // Parameter 0: Model path
         {VX_INPUT, VX_TYPE_OBJECT_ARRAY, VX_PARAMETER_STATE_REQUIRED},  // Parameter 1: Input tensors
         {VX_OUTPUT, VX_TYPE_OBJECT_ARRAY, VX_PARAMETER_STATE_REQUIRED}  // Parameter 2: Output tensors
