@@ -71,6 +71,16 @@ VX_API_ENTRY vx_object_array VX_API_CALL vxCreateObjectArrayWithType(vx_context 
  */
 VX_API_ENTRY vx_status VX_API_CALL vxSetObjectArrayItem(vx_object_array arr, vx_uint32 index, vx_reference ref);
 
+/**
+ * @brief Import graph from DOT file.
+ *
+ * @param graph      The graph to import into.
+ * @param dotfile    The DOT file to import from.
+ * @param acceptData Accept data nodes in the graph.
+ * @return vx_status VX_SUCCESS on success.
+ */
+VX_API_ENTRY vx_status VX_API_CALL vxImportGraphFromDot(vx_graph graph, vx_char dotfile[], vx_bool acceptData);
+
 /* ENABLED FEATURES IN COREVX ONLY */
 #define OPENVX_USE_USER_DATA_OBJECT
 #define OPENVX_USE_IX

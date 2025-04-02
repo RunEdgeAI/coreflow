@@ -12,6 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <filesystem>
+#include <fstream>
+#include <regex>
+#include <sstream>
+#include <string>
+#include <string_view>
 
 #include "vx_internal.h"
 #include "vx_type_pairs.h"
@@ -97,7 +103,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
                             vx_enum scalar_type;
                             vxQueryScalar(scalar, VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type));
                             char value_str[64];
-                            switch (scalar_type) {
+                            switch (scalar_type)
+                            {
                                 case VX_TYPE_CHAR:
                                 {
                                     vx_char value;
@@ -261,6 +268,218 @@ VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char do
     {
         VX_PRINT(VX_ZONE_ERROR, "Not a graph!\n");
     }
+    return status;
+}
+
+// Helper function to trim whitespace from both ends
+std::string_view trim(std::string_view sv)
+{
+    const char* whitespace = " \t\n\r\f\v";
+    sv.remove_prefix(sv.find_first_not_of(whitespace));
+    sv.remove_suffix(sv.size() - sv.find_last_not_of(whitespace) - 1);
+    return sv;
+}
+
+VX_API_ENTRY vx_status VX_API_CALL vxImportGraphFromDot(vx_graph graph, vx_char dotfile[], vx_bool acceptData)
+{
+    vx_status status = VX_SUCCESS;
+    constexpr vx_uint32 MAX_REF = VX_INT_MAX_REF;
+    vx_node nodes[MAX_REF] = { nullptr };
+    vx_uint32 numNodes = 0u;
+    vx_reference data[MAX_REF] = { nullptr };
+    vx_uint32 numData = 0u;
+    std::string line;
+    // Regex to capture node lines with format: N<num> [label="N<num>\n<kernelName>"];
+    std::regex node_regex{ R"regex(^\s*N(\d+)\s+\[label="N\d+\\n([^"]+)")regex" };
+    // Regex to capture data definitions if acceptData is enabled.
+    std::regex data_regex{ R"regex(^\s*D(\d+)\s+\[)regex" };
+    std::filesystem::path dotPath(dotfile);
+    std::ifstream file(dotPath);
+
+    // Verify that the input graph is valid.
+    if (Reference::isValidReference(graph, VX_TYPE_GRAPH) != vx_true_e)
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid graph passed in!\n");
+        status = VX_ERROR_INVALID_PARAMETERS;
+    }
+
+    if (VX_SUCCESS == status)
+    {
+        if (!file.is_open())
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Failed to open file for reading: %s\n", dotfile);
+            status = VX_ERROR_INVALID_VALUE;
+        }
+    }
+
+    if (VX_SUCCESS == status)
+    {
+        while (std::getline(file, line))
+        {
+            std::string_view sv = trim(line);
+            if (sv.empty() || sv == "{" || sv == "}")
+                continue;
+
+            std::smatch match;
+            // Process node definitions.
+            if (sv.starts_with("N") && std::regex_search(line, match, node_regex))
+            {
+                unsigned int index = std::stoi(match[1].str());
+                std::string kernelName = match[2].str();
+
+                // Retrieve kernel by name.
+                vx_context context = vxGetContext(reinterpret_cast<vx_reference>(graph));
+                vx_kernel kernel = vxGetKernelByName(context, kernelName.c_str());
+                if (kernel == nullptr || vxGetStatus(reinterpret_cast<vx_reference>(kernel)) != VX_SUCCESS)
+                {
+                    VX_PRINT(VX_ZONE_ERROR, "Unknown or invalid kernel: %s\n", kernelName.c_str());
+                    status = VX_FAILURE;
+                    break;
+                }
+
+                // Create the node using the retrieved kernel.
+                vx_node node = vxCreateGenericNode(graph, kernel);
+                // Release external reference to kernel.
+                vxReleaseKernel(&kernel);
+                if (node == nullptr || vxGetStatus(reinterpret_cast<vx_reference>(node)) != VX_SUCCESS)
+                {
+                    VX_PRINT(VX_ZONE_ERROR, "Failed to create node for kernel %s\n", kernelName.c_str());
+                    status = VX_FAILURE;
+                    break;
+                }
+                if (index < MAX_REF)
+                {
+                    nodes[index] = node;
+                    if (index + 1 > numNodes)
+                        numNodes = index + 1;
+                }
+                continue;
+            }
+
+            // Process data definitions if acceptData is true.
+            if (acceptData && sv.starts_with("D") && std::regex_search(line, match, data_regex))
+            {
+                unsigned int dindex = std::stoi(match[1].str());
+                // Here we use a dummy pointer as a placeholder.
+                // data[dindex] = reinterpret_cast<vx_reference>(0x1);
+                if (dindex + 1 > numData)
+                    numData = dindex + 1;
+                continue;
+            }
+
+            // Edge definitions (lines containing "->") are detected.
+            if (line.find("->") != std::string::npos)
+            {
+                std::smatch edge_match;
+                // Regex for an edge with data between nodes: N<number> -> D<number> -> N<number>
+                std::regex edge_regex_ndn{ R"regex(^\s*N(\d+)\s*->\s*D(\d+)\s*->\s*N(\d+)\s*;?)regex" };
+                // Regex for a direct node-to-node edge: N<number> -> N<number>
+                std::regex edge_regex_nn{ R"regex(^\s*N(\d+)\s*->\s*N(\d+)\s*;?)regex" };
+
+                if (std::regex_search(line, edge_match, edge_regex_ndn))
+                {
+                    // unsigned int src_idx = std::stoi(edge_match[1].str());
+                    unsigned int d_idx   = std::stoi(edge_match[2].str());
+                    unsigned int dst_idx = std::stoi(edge_match[3].str());
+                    if (nodes[dst_idx]) // && data[d_idx] != nullptr)
+                    {
+                        // Find an available input slot in the destination node.
+                        vx_kernel dstKernel = nodes[dst_idx]->kernel;
+                        vx_uint32 slot = 0;
+                        for (; slot < dstKernel->signature.num_parameters; ++slot)
+                        {
+                            if (dstKernel->signature.directions[slot] == VX_INPUT &&
+                                nodes[dst_idx]->parameters[slot] == nullptr)
+                            {
+                                vx_status setStatus = vxSetParameterByIndex(nodes[dst_idx], slot, data[d_idx]);
+                                if (setStatus != VX_SUCCESS)
+                                {
+                                    VX_PRINT(VX_ZONE_ERROR, "Failed to set parameter at index %u for node N%u\n", slot, dst_idx);
+                                }
+                                break;
+                            }
+                        }
+                        if (slot == dstKernel->signature.num_parameters)
+                        {
+                            VX_PRINT(VX_ZONE_ERROR, "No available input slot in node N%u for data edge: %s\n", dst_idx, line.c_str());
+                        }
+                    }
+                    else
+                    {
+                        VX_PRINT(VX_ZONE_ERROR, "Invalid indices in edge: %s\n", line.c_str());
+                    }
+                }
+                else if (std::regex_search(line, edge_match, edge_regex_nn))
+                {
+                    unsigned int src_idx = std::stoi(edge_match[1].str());
+                    unsigned int dst_idx = std::stoi(edge_match[2].str());
+                    if (nodes[dst_idx] && nodes[src_idx])
+                    {
+                        // Identify the source node's output by searching for the first non-null VX_OUTPUT.
+                        vx_kernel srcKernel = nodes[src_idx]->kernel;
+                        vx_reference outRef = nullptr;
+                        for (vx_uint32 k = 0; k < srcKernel->signature.num_parameters; ++k)
+                        {
+                            vx_status setStatus = vxSetParameterByIndex(nodes[src_idx], k, nullptr);
+                            if (setStatus != VX_SUCCESS)
+                            {
+                                VX_PRINT(VX_ZONE_ERROR, "Failed to set parameter at index %u for node N%u\n", k, src_idx);
+                            }
+                            if (srcKernel->signature.directions[k] == VX_OUTPUT &&
+                                nodes[src_idx]->parameters[k] != nullptr)
+                            {
+                                outRef = nodes[src_idx]->parameters[k];
+                                break;
+                            }
+                        }
+                        if (outRef == nullptr)
+                        {
+                            VX_PRINT(VX_ZONE_ERROR, "No output parameter found for source node N%u\n", src_idx);
+                        }
+                        else
+                        {
+                            // Find an available input slot in the destination node.
+                            vx_kernel dstKernel = nodes[dst_idx]->kernel;
+                            vx_uint32 slot = 0;
+                            for (; slot < dstKernel->signature.num_parameters; ++slot)
+                            {
+                                if (dstKernel->signature.directions[slot] == VX_INPUT &&
+                                    nodes[dst_idx]->parameters[slot] == nullptr)
+                                {
+                                    vx_status setStatus = vxSetParameterByIndex(nodes[dst_idx], slot, outRef);
+                                    if (setStatus != VX_SUCCESS)
+                                    {
+                                        VX_PRINT(VX_ZONE_ERROR, "Failed to connect node N%u to N%u at input slot %u\n",
+                                                    src_idx, dst_idx, slot);
+                                    }
+                                    break;
+                                }
+                            }
+                            if (slot == dstKernel->signature.num_parameters)
+                            {
+                                VX_PRINT(VX_ZONE_ERROR, "No available input slot in node N%u for node edge: %s\n", dst_idx, line.c_str());
+                            }
+                        }
+                    }
+                    else
+                    {
+                        VX_PRINT(VX_ZONE_ERROR, "Invalid node indices in edge: %s\n", line.c_str());
+                    }
+                }
+                else
+                {
+                    VX_PRINT(VX_ZONE_WARNING, "Unrecognized edge format: %s\n", line.c_str());
+                }
+                continue;
+            }
+        }
+    }
+    file.close();
+
+    VX_PRINT(VX_ZONE_INFO,
+        "%s: Imported %u nodes and %u data items.\n",
+        __func__, numNodes, numData);
+
     return status;
 }
 
