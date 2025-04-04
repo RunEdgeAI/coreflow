@@ -1,0 +1,36 @@
+name: Cppcheck Static Analysis
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  cppcheck:
+    name: Run Cppcheck and Upload SARIF
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          lfs: true
+
+      - name: Install cppcheck
+        run: sudo apt-get update && sudo apt-get install -y cppcheck
+
+      - name: Run cppcheck (SARIF output)
+        run: |
+          mkdir -p cppcheck-output
+          cppcheck --enable=all --inconclusive --quiet \
+                   --output-file=cppcheck-output/cppcheck.sarif \
+                   --output-format=sarif \
+                   $GITHUB_WORKSPACE/framework/src/
+                   -I $GITHUB_WORKSPACE/include/
+                   -I $GITHUB_WORKSPACE/framework/include/
+
+      - name: Upload SARIF to GitHub
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: cppcheck-output/cppcheck.sarif
