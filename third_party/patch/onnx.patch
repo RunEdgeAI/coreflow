@@ -23,3 +23,23 @@ index 9219f16be0..e1559bd3da 100644
  googletest;https://github.com/google/googletest/archive/refs/tags/v1.15.0.zip;9d2d0af8d77ac726ea55d44a8fa727ec98311349
  #xnnpack 2024.09.04
  googlexnnpack;https://github.com/google/XNNPACK/archive/309b75c9e56e0a674bf78d59872ce131f814dfb6.zip;39FA5259EAEACE0547284B63D5CEDC4F05553F5A
+diff --git a/onnxruntime/core/mlas/lib/sqnbitgemm_kernel_avx2_int8_blklen32.h b/onnxruntime/core/mlas/lib/sqnbitgemm_kernel_avx2_int8_blklen32.h
+index af6f52090a..37ae94f1ae 100644
+--- onnxruntime/core/mlas/lib/sqnbitgemm_kernel_avx2_int8_blklen32.h
++++ onnxruntime/core/mlas/lib/sqnbitgemm_kernel_avx2_int8_blklen32.h
+@@ -6,10 +6,11 @@
+ #include "sqnbitgemm.h"
+ #include "sqnbitgemm_kernel_avx_common.h"
+
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Warray-bounds"
+
+ MLAS_FORCEINLINE void
+@@ -1044,6 +1050,7 @@ MlasQ4Int8TileGemmKernelBlkLen32Avx2(
+             BiasPtr += BiasPtr != nullptr ? 1 : 0;
+             SumPtr += 1;
+         }
+     } // m
+     return CountM;
+ }
++#pragma GCC diagnostic pop
