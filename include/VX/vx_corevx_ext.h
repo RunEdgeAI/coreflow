@@ -1,6 +1,6 @@
 /**
  * @file vx_corevx_ext.h
- * @brief Extensions enabled for corevs
+ * @brief Extensions enabled for corevx
  * @version 0.1
  * @date 2024-12-15
  *
@@ -10,8 +10,24 @@
 #ifndef VX_COREVX_EXT_H
 #define VX_COREVX_EXT_H
 
+#include <string>
+
 #include <VX/vx_kernels.h>
 #include <VX/vx_types.h>
+
+/*! \brief A character array (string) type.
+ * \note This is a C++ string type. It is not a C string.
+ * \ingroup group_basic_features
+ */
+using vx_string = std::string;
+
+/*! \brief The type enumeration lists additional types to extend the known types in OpenVX.
+ * \ingroup group_basic_features
+ */
+enum vx_type_ext_e
+{
+    VX_TYPE_STRING = 0x818, /*!< \brief A <tt>\ref vx_string</tt>. */
+};
 
 /*! \brief Define Edge AI Vendor ID
  * \ingroup group_basic_features
