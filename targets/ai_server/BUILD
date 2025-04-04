@@ -8,11 +8,11 @@ cc_library(
     includes = [
         ".",
         "//framework/include",
-        # "//kernels/ai-server",
+        "//kernels/ai-server",
     ],
     deps = [
         "//:corevx",
-        # "//kernels/ai-server:ai-server-kernels",
+        "//kernels/ai_server:llm_kernels"
     ],
     visibility = ["//visibility:public"]
 )
