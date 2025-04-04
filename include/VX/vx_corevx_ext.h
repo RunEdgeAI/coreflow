@@ -10,16 +10,18 @@
 #ifndef VX_COREVX_EXT_H
 #define VX_COREVX_EXT_H
 
-#include <string>
-
 #include <VX/vx_kernels.h>
 #include <VX/vx_types.h>
+
+#ifdef __cplusplus
+#include <string>
 
 /*! \brief A character array (string) type.
  * \note This is a C++ string type. It is not a C string.
  * \ingroup group_basic_features
  */
 using vx_string = std::string;
+#endif /* __cplusplus */
 
 /*! \brief The type enumeration lists additional types to extend the known types in OpenVX.
  * \ingroup group_basic_features
