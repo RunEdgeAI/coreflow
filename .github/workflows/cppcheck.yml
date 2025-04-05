@@ -1,4 +1,4 @@
-name: Cppcheck Static Analysis
+name: Static Analysis
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   cppcheck:
-    name: Run Cppcheck and Upload SARIF
+    name: Run Cppcheck
     runs-on: ubuntu-latest
 
     steps:

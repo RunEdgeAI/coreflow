@@ -1,5 +1,15 @@
 <?xml version="1.0" ?>
 <Workspace>
+  <Target name="ai_server">
+    <Kernel name="remote.model.chat">
+      <Inputs>
+        <Input>VX_TYPE_ARRAY</Input>
+      </Inputs>
+      <Outputs>
+        <Output>VX_TYPE_ARRAY</Output>
+      </Outputs>
+    </Kernel>
+  </Target>
   <Target name="c_model">
     <Kernel name="org.khronos.nn_extension.activation_layer">
       <Inputs>
