@@ -172,6 +172,8 @@ class GraphEditorState extends State<GraphEditor> {
       selectedNode = null;
       selectedEdge = null;
       selectedGraphRow = null;
+      edgeStartNode = null;
+      edgeStartOutput = null;
     });
   } // End of _deselectAll
 
@@ -218,14 +220,40 @@ class GraphEditorState extends State<GraphEditor> {
 
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
+        title: Text(
+          'Edge Studio',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
         actions: [
-          // IconButton to export the currently selected graph in DOT format.
-          DotExport(graphs: graphs, graphIndex: selectedGraphIndex),
-          // IconButton to export the currently selected graph in XML format.
-          XmlExport(
-              graphs: graphs,
-              graphIndex: selectedGraphIndex,
-              refCount: _refCount),
+          PopupMenuButton<String>(
+            icon: Icon(Icons.code_rounded), // Single export icon
+            tooltip: 'Export',
+            onSelected: (value) {
+              if (value == 'Export DOT') {
+                // Export the currently selected graph in DOT format.
+                DotExport(graphs: graphs, graphIndex: selectedGraphIndex)
+                    .export(context);
+              } else if (value == 'Export XML') {
+                // Export the currently selected graph in XML format.
+                XmlExport(
+                  graphs: graphs,
+                  graphIndex: selectedGraphIndex,
+                  refCount: _refCount,
+                ).export(context);
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'Export DOT',
+                child: Text('Export DOT'),
+              ),
+              PopupMenuItem(
+                value: 'Export XML',
+                child: Text('Export XML'),
+              ),
+            ],
+          ),
         ],
       ),
       body: Column(
@@ -1043,30 +1071,27 @@ class NodeAttributesPanel extends StatelessWidget {
                   },
                 ),
                 SizedBox(height: 8.0),
-                SizedBox(
-                  width: double.infinity,
-                  child: DropdownButtonFormField<String>(
-                    isExpanded: true,
-                    value: selectedNode!.target,
-                    decoration: InputDecoration(
-                      labelText:
-                          Text('Target', overflow: TextOverflow.ellipsis).data,
-                      isDense: true,
-                    ),
-                    items: supportedTargets
-                        .map((target) => DropdownMenuItem<String>(
-                              alignment: Alignment.centerLeft,
-                              value: target.name,
-                              child: Text(
-                                target.name,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ))
-                        .toList(),
-                    onChanged: (newValue) {
-                      onTargetChanged(newValue!);
-                    },
+                DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  value: selectedNode!.target,
+                  decoration: InputDecoration(
+                    labelText:
+                        Text('Target', overflow: TextOverflow.ellipsis).data,
+                    isDense: true,
                   ),
+                  items: supportedTargets
+                      .map((target) => DropdownMenuItem<String>(
+                            alignment: Alignment.centerLeft,
+                            value: target.name,
+                            child: Text(
+                              target.name,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ))
+                      .toList(),
+                  onChanged: (newValue) {
+                    onTargetChanged(newValue!);
+                  },
                 ),
                 SizedBox(height: 8.0),
                 DropdownButtonFormField<String>(

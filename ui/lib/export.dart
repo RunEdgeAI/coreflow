@@ -4,70 +4,75 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart' as xml;
 
-class XmlExport extends StatelessWidget {
+class XmlExport {
   const XmlExport(
-      {super.key,
-      required this.graphs,
-      required this.graphIndex,
-      required this.refCount});
+      {required this.graphs, required this.graphIndex, required this.refCount});
 
   final List<Graph> graphs;
   final int graphIndex;
   final int refCount;
 
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      icon: Icon(Icons.code_off),
-      tooltip: 'Export XML',
-      onPressed: () {
-        if (graphs.isNotEmpty) {
-          final graph = graphs[graphIndex];
-          // Export the selected graph
-          final xml = _exportXML(graph, refCount);
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text("Export XML"),
-              content: SingleChildScrollView(child: Text(xml)),
-              actions: [
-                TextButton(
-                  onPressed: () async {
-                    // Use FilePicker to save the XML file
-                    final result = await FilePicker.platform.saveFile(
-                      dialogTitle: 'Save XML File',
-                      fileName: 'graph.xml',
+  void export(BuildContext context) {
+    if (graphs.isNotEmpty) {
+      final graph = graphs[graphIndex];
+      // Export the selected graph
+      final xml = _exportXML(graph, refCount);
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("Export XML"),
+          content: SingleChildScrollView(child: Text(xml)),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                // Use FilePicker to save the XML file
+                final result = await FilePicker.platform.saveFile(
+                  dialogTitle: 'Save XML File',
+                  fileName: 'graph.xml',
+                );
+
+                if (result != null) {
+                  final file = File(result);
+                  await file.writeAsString(xml);
+
+                  // Show a confirmation message
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('XML file saved to $result')),
                     );
+                  }
+                }
 
-                    if (result != null) {
-                      final file = File(result);
-                      await file.writeAsString(xml);
-
-                      // Show a confirmation message
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('XML file saved to $result')),
-                        );
-                      }
-                    }
-
-                    // Close the dialog
-                    if (context.mounted) {
-                      Navigator.of(context).pop();
-                    }
-                  },
-                  child: Text("Save"),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text("Close"),
-                ),
-              ],
+                // Close the dialog
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text("Save"),
             ),
-          );
-        }
-      },
-    );
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("Close"),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Show a message if there are no graphs to export
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("No Graphs Defined!"),
+          content: Text("There are no graphs to export."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("Close"),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   void _addReferenceElement(xml.XmlBuilder builder, Reference reference) {
@@ -237,9 +242,8 @@ class XmlExport extends StatelessWidget {
   } // End of _getTargets
 } // End of XmlExport
 
-class DotExport extends StatelessWidget {
+class DotExport {
   const DotExport({
-    super.key,
     required this.graphs,
     required this.graphIndex,
   });
@@ -247,58 +251,65 @@ class DotExport extends StatelessWidget {
   final List<Graph> graphs;
   final int graphIndex;
 
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      icon: Icon(Icons.code),
-      tooltip: 'Export DOT',
-      onPressed: () {
-        // Check if there are any graphs available
-        if (graphs.isNotEmpty) {
-          final graph = graphs[graphIndex];
-          // Export the selected graph
-          final dot = _exportDOT(graph);
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text("Export DOT"),
-              content: SingleChildScrollView(child: Text(dot)),
-              actions: [
-                TextButton(
-                  onPressed: () async {
-                    final result = await FilePicker.platform.saveFile(
-                      dialogTitle: 'Save DOT File',
-                      fileName: 'graph.dot',
+  void export(BuildContext context) {
+    if (graphs.isNotEmpty) {
+      final graph = graphs[graphIndex];
+      // Export the selected graph
+      final dot = _exportDOT(graph);
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("Export DOT"),
+          content: SingleChildScrollView(child: Text(dot)),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                final result = await FilePicker.platform.saveFile(
+                  dialogTitle: 'Save DOT File',
+                  fileName: 'graph.dot',
+                );
+
+                if (result != null) {
+                  final file = File(result);
+                  await file.writeAsString(dot);
+
+                  // Show a confirmation message
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('DOT file saved to $result')),
                     );
+                  }
+                }
 
-                    if (result != null) {
-                      final file = File(result);
-                      await file.writeAsString(dot);
-
-                      // Show a confirmation message
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('DOT file saved to $result')),
-                        );
-                      }
-                    }
-
-                    if (context.mounted) {
-                      Navigator.of(context).pop(); // Close the dialog
-                    }
-                  },
-                  child: Text("Save"),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text("Close"),
-                ),
-              ],
+                if (context.mounted) {
+                  Navigator.of(context).pop(); // Close the dialog
+                }
+              },
+              child: Text("Save"),
             ),
-          );
-        }
-      },
-    );
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("Close"),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Show a message if there are no graphs to export
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("No Graphs Defined!"),
+          content: Text("There are no graphs to export."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("Close"),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   String _formatReferenceLabel(Reference reference) {
