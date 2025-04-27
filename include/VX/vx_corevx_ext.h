@@ -52,6 +52,10 @@ enum vx_kernel_ext_e
      * \brief The AI Model Server Chatbot kernel.
      */
     VX_KERNEL_AIS_CHATBOT = VX_KERNEL_BASE(VX_ID_EDGE_AI, VX_LIBRARY_KHR_BASE) + 0x2,
+    /*!
+     * \brief The LiteRT CPU Inference kernel.
+     */
+    VX_KERNEL_LITERT_CPU_INF = VX_KERNEL_BASE(VX_ID_EDGE_AI, VX_LIBRARY_KHR_BASE) + 0x3,
 };
 
 /*! \brief addtitional tensor attributes.
