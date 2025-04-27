@@ -17,6 +17,7 @@ bazel_dep(name = "apple_support", version = "1.17.1", repo_name = "build_bazel_a
 bazel_dep(name = "curl", version = "8.8.0")
 bazel_dep(name = "nlohmann_json", version = "3.11.3")
 bazel_dep(name = "hedron_compile_commands", dev_dependency = True)
+bazel_dep(name = "flatbuffers", version = "24.3.25")
 
 # Hedron's Compile Commands Extractor for Bazel
 git_override(
