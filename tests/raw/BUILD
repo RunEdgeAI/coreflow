@@ -15,6 +15,7 @@ filegroup(
     name = "models",
     srcs = glob([
         "*.onnx",
+        "*.tflite",
     ]),
     visibility = ["//visibility:public"],
 )
