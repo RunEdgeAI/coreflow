@@ -4,7 +4,10 @@ BUILD file for build defs for third party deps
 
 cc_import(
     name = "tflite",
-    shared_library = "libtensorflowlite.dylib",
+    shared_library = select({
+        "@platforms//os:linux": "tflite-hdrs/libtensorflowlite.so",
+        "@platforms//os:macos": "tflite-hdrs/libtensorflowlite.dylib",
+    }),
     visibility = ["//visibility:public"],
 )
 
