@@ -16,6 +16,7 @@ filegroup(
     srcs = glob([
         "*.onnx",
         "*.tflite",
+        "*.pte"
     ]),
     visibility = ["//visibility:public"],
 )
