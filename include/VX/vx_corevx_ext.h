@@ -56,6 +56,10 @@ enum vx_kernel_ext_e
      * \brief The LiteRT CPU Inference kernel.
      */
     VX_KERNEL_LITERT_CPU_INF = VX_KERNEL_BASE(VX_ID_EDGE_AI, VX_LIBRARY_KHR_BASE) + 0x3,
+    /*!
+     * \brief The Torch CPU Inference kernel.
+     */
+    VX_KERNEL_TORCH_CPU_INF = VX_KERNEL_BASE(VX_ID_EDGE_AI, VX_LIBRARY_KHR_BASE) + 0x4,
 };
 
 /*! \brief addtitional tensor attributes.
