@@ -15,6 +15,7 @@ cc_library(
         "//:corevx",
         "//kernels/onnxRT:ort_kernels",
     ],
+    alwayslink = True,
     visibility = ["//visibility:public"]
 )
 
