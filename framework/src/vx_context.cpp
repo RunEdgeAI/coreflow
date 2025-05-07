@@ -36,6 +36,7 @@ vx_char targetModules[][VX_MAX_TARGET_NAME] = {
     "openvx-onnxRT",
     "openvx-ai-server",
     "openvx-liteRT",
+    "openvx-torch",
 };
 
 const vx_char extensions[] =

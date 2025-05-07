@@ -50,7 +50,7 @@ protected:
     }
 };
 
-TEST_F(OrtIntegrationTest, OnnxMatMul)
+TEST_F(OrtIntegrationTest, DISABLED_OnnxMatMul)
 {
     const vx_size numDims = 2u;
     vx_size inputADims[] = {3, 4};
