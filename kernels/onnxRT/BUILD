@@ -16,6 +16,7 @@ cc_library(
         "//:corevx",
         "@onnx_runtime//:onnxruntime_lib",
     ],
+    linkstatic = True,
     alwayslink = True,
     visibility = ["//visibility:public"]
 )

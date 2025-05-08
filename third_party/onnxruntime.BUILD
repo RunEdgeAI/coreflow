@@ -375,6 +375,7 @@ cc_library(
         # "@onnx_runtime_extensions//:operators",
     ],
     includes= ["onnxruntime/include/onnxruntime"],
+    linkstatic = True,
     alwayslink = True,
     visibility = ["//visibility:public"]
 )
