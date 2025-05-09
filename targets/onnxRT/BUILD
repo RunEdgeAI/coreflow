@@ -20,16 +20,16 @@ cc_library(
     visibility = ["//visibility:public"]
 )
 
-cc_shared_library(
-    name = "openvx-onnxRT",
-    deps = [
-        ":onnxRT",
-    ],
-    visibility = ["//visibility:public"]
-)
+# cc_shared_library(
+#     name = "openvx-onnxRT",
+#     deps = [
+#         ":onnxRT",
+#     ],
+#     visibility = ["//visibility:public"]
+# )
 
-cc_import(
-    name = "imported_openvx_onnxRT",
-    shared_library = ":openvx-onnxRT",
-    visibility = ["//visibility:public"]
-)
+# cc_import(
+#     name = "imported_openvx_onnxRT",
+#     shared_library = ":openvx-onnxRT",
+#     visibility = ["//visibility:public"]
+# )
