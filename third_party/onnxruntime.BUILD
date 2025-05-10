@@ -269,8 +269,8 @@ cmake(
         "libonnxruntime_lora.a",
         "libonnxruntime_mlas.a",
         "libonnxruntime_optimizer.a",
-        "libonnxruntime_session.a",
         "libonnxruntime_providers.a",
+        "libonnxruntime_session.a",
         "libonnxruntime_util.a",
         # "libortcustomops.a",
         # "libocos_operators.a",
@@ -366,7 +366,7 @@ cmake(
 cc_library(
     name = "onnxruntime_lib",
     linkopts = select({
-        "@platforms//os:linux": ["-static-libstdc++", "-static-libgcc"],
+        # "@platforms//os:linux": ["-static-libstdc++", "-static-libgcc"],
         "//conditions:default": [],
     }),
     deps = [
