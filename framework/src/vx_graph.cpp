@@ -2509,8 +2509,66 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
                         }
                     }
 
+                    if (action == VX_ACTION_CONTINUE)
+                    {
+                        if (graph->context->event_queue.isEnabled())
+                        {
+                            // Raise a node completed event.
+                            vx_event_info_t event_info;
+                            event_info.node_completed.graph = graph;
+                            event_info.node_completed.node = node;
+                            if (VX_SUCCESS !=
+                                graph->context->event_queue.push(VX_EVENT_NODE_COMPLETED, 0,
+                                                                 &event_info, (vx_reference)node))
+                            {
+                                VX_PRINT(VX_ZONE_ERROR,
+                                         "Failed to push node completed event for node %s\n",
+                                         node->kernel->name);
+                            }
+
+                            for (vx_uint32 gp = 0; gp < graph->numParams; gp++)
+                            {
+                                vx_node param_node = graph->parameters[gp].node;
+                                vx_uint32 param_index = graph->parameters[gp].index;
+
+                                // If this node just executed and consumed a graph parameter
+                                if (param_node == node)
+                                {
+                                    vx_event_info_t event_info = {};
+                                    event_info.graph_parameter_consumed.graph = graph;
+                                    event_info.graph_parameter_consumed.graph_parameter_index =
+                                        param_index;
+
+                                    if (VX_SUCCESS != graph->context->event_queue.push(
+                                                          VX_EVENT_GRAPH_PARAMETER_CONSUMED, 0,
+                                                          &event_info, (vx_reference)graph))
+                                    {
+                                        VX_PRINT(
+                                            VX_ZONE_ERROR,
+                                            "Failed to push graph parameter consumed event for "
+                                            "graph %p, param %u\n",
+                                            graph, gp);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     if (action == VX_ACTION_ABANDON)
                     {
+                        // Raise a node error event.
+                        vx_event_info_t event_info;
+                        event_info.node_error.graph = graph;
+                        event_info.node_error.node = node;
+                        event_info.node_error.status = node->status;
+                        if (graph->context->event_queue.isEnabled() &&
+                            VX_SUCCESS != graph->context->event_queue.push(VX_EVENT_NODE_ERROR, 0,
+                                                                           &event_info,
+                                                                           (vx_reference)node))
+                        {
+                            VX_PRINT(VX_ZONE_ERROR, "Failed to push node error event for node %s\n",
+                                     node->kernel->name);
+                        }
                         break;
                     }
                 }
@@ -2581,6 +2639,7 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
     }
 
     VX_PRINT(VX_ZONE_GRAPH,"Process returned status %d\n", status);
+    // Report the performance of the graph execution.
     if (context->perf_enabled)
     {
         for (n = 0; n < graph->numNodes; n++)
@@ -2598,9 +2657,22 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
     }
 
     if (status == VX_SUCCESS)
+    {
         graph->state = VX_GRAPH_STATE_COMPLETED;
+        // Raise a graph completed event.
+        vx_event_info_t event_info;
+        event_info.graph_completed.graph = graph;
+        if (graph->context->event_queue.isEnabled() &&
+            VX_SUCCESS != graph->context->event_queue.push(VX_EVENT_GRAPH_COMPLETED, 0, &event_info,
+                                                           (vx_reference)graph))
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Failed to push graph completed event for graph %p\n", graph);
+        }
+    }
     else
+    {
         graph->state = VX_GRAPH_STATE_ABANDONED;
+    }
 
     return status;
 }

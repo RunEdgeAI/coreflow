@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "vx_event_queue.hpp"
 #include "vx_internal.h"
 #include "vx_reference.h"
 
@@ -207,7 +208,7 @@ public:
     /*! \brief The number of available targets in the implementation */
     vx_uint32           num_targets;
     /*! \brief The list of implemented targets */
-    vx_target         targets[VX_INT_MAX_NUM_TARGETS];
+    vx_target           targets[VX_INT_MAX_NUM_TARGETS];
     /*! \brief The list of priority sorted target indexes */
     vx_uint32           priority_targets[VX_INT_MAX_NUM_TARGETS];
     /*! \brief The log callback for errors */
@@ -265,6 +266,9 @@ public:
 #ifdef OPENVX_USE_OPENCL_INTEROP
     cl_context opencl_context;
     cl_command_queue opencl_command_queue;
+#endif
+#ifdef OPENVX_USE_PIPELINING || OPENVX_USE_STREAMING
+    EventQueue event_queue;
 #endif
 };
 
