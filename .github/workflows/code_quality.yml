@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang-tools clang-format
+          sudo apt-get install -y clang-tools clang-format cppcheck
 
   cppcheck:
     name: Run Cppcheck
@@ -50,6 +50,7 @@ jobs:
     steps:
       - name: Run clang-tidy
         run: |
+          cd $GITHUB_WORKSPACE
           mkdir -p clang-tidy-report
           bazel run @hedron_compile_commands//:refresh_all
           clang-tidy -p $GITHUB_WORKSPACE/compile_commands.json \
