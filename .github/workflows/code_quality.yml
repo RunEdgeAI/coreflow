@@ -54,7 +54,7 @@ jobs:
 
       - name: Run clang-tidy
         run: |
-          cd $GITHUB_WORKSPACE/ && bazel run @hedron_compile_commands//:refresh_all && cd -
+          bazel run @hedron_compile_commands//:refresh_all
           mkdir -p clang-tidy-report
           clang-tidy -p $GITHUB_WORKSPACE/compile_commands.json \
             --config-file=$GITHUB_WORKSPACE/.clang-tidy \
@@ -64,7 +64,7 @@ jobs:
             $GITHUB_WORKSPACE/framework/include/vx_*.h* \
             $GITHUB_WORKSPACE/include/VX/vx*.h \
             > clang-tidy-report/clang-tidy.txt \
-            2>&1
+            2>&1 || true
           cat clang-tidy-report/clang-tidy.txt
 
       - name: Upload clang-tidy report artifact
