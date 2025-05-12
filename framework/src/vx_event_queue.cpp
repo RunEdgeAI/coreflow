@@ -19,7 +19,7 @@
 
 #include "vx_internal.h"
 
-#ifdef OPENVX_USE_PIPELINING
+#ifdef OPENVX_USE_EVENTS
 
 VX_API_ENTRY vx_status VX_API_CALL vxEnableEvents(vx_context context)
 {
@@ -170,4 +170,4 @@ VX_API_ENTRY vx_status VX_API_CALL vxRegisterEvent(
     return status;
 }
 
-#endif /* OPENVX_USE PIPELINING */
+#endif /* OPENVX_USE EVENTS */

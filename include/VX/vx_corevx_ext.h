@@ -119,7 +119,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxImportGraphFromDot(vx_graph graph, vx_char 
 #define OPENVX_USE_OPENCL_INTEROP
 #define OPENVX_USE_NN
 #define OPENVX_USE_NN_16
-#define OPENVX_USE_PIPELINING
+#define OPENVX_USE_EVENTS
 
 #if defined(__arm__) || defined(__arm64__)
 #define OPENVX_USE_TILING

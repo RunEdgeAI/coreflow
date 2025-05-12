@@ -267,7 +267,8 @@ public:
     cl_context opencl_context;
     cl_command_queue opencl_command_queue;
 #endif
-#ifdef OPENVX_USE_PIPELINING || OPENVX_USE_STREAMING
+#ifdef OPENVX_USE_EVENTS
+    /*! \brief The event queue for the context */
     EventQueue event_queue;
 #endif
 };
