@@ -1,0 +1,72 @@
+name: Static Analysis
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          lfs: true
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-tools clang-format
+
+  cppcheck:
+    name: Run Cppcheck
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Run cppcheck
+        run: |
+          mkdir -p cppcheck-report
+          cppcheck --enable=all --inconclusive --quiet \
+                   --output-file=cppcheck-report/cppcheck.txt \
+                   $GITHUB_WORKSPACE/framework/src/ \
+                   -I $GITHUB_WORKSPACE/include/ \
+                   -I $GITHUB_WORKSPACE/framework/include/
+          cat cppcheck-report/cppcheck.txt
+
+      - name: Upload cppcheck report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cppcheck-report
+          path: cppcheck-report/cppcheck.txt
+
+  clang-tidy:
+    name: Run Clang-Tidy
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Run clang-tidy
+        run: |
+          mkdir -p clang-tidy-report
+          bazel run @hedron_compile_commands//:refresh_all
+          clang-tidy -p $GITHUB_WORKSPACE/compile_commands.json \
+            --config-file=$GITHUB_WORKSPACE/.clang-tidy \
+            --export-fixes=clang-tidy-report/clang-tidy-fixes.yaml \
+            --quiet \
+            $GITHUB_WORKSPACE/framework/src/vx_*.cpp \
+            $GITHUB_WORKSPACE/framework/include/vx_*.h* \
+            $GITHUB_WORKSPACE/include/VX/vx*.h \
+            > clang-tidy-report/clang-tidy.txt \
+            2>&1
+          cat clang-tidy-report/clang-tidy.txt
+
+      - name: Upload clang-tidy report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: clang-tidy-report
+          path: |
+            clang-tidy-report/clang-tidy.txt
+            clang-tidy-report/clang-tidy-fixes.yaml
