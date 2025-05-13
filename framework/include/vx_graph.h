@@ -16,6 +16,7 @@
 #ifndef VX_GRAPH_H
 #define VX_GRAPH_H
 
+#include "vx_internal.h"
 #include "vx_reference.h"
 
 /*!
@@ -188,15 +189,29 @@ public:
         vx_node node;
         /*! \brief The index to the parameter on the node. */
         vx_uint32  index;
+#ifdef OPENVX_USE_PIPELINING
+        /*! \brief Set to an enum value in \ref vx_type_e. */
+        vx_enum type;
+        /*! \brief the max buffers that can be enqueued */
+        vx_uint32 numBufs;
+        /*! \brief The internal data ref queue */
+        CircularQueue<vx_reference, VX_OBJ_DESC_QUEUE_MAX_DEPTH> queue;
+        /*! \brief references that can be queued into data ref queue */
+        vx_reference refs_list[VX_OBJ_DESC_QUEUE_MAX_DEPTH];
+#endif
     } parameters[VX_INT_MAX_PARAMS];
     /*! \brief The number of graph parameters. */
     vx_uint32      numParams;
     /*! \brief A switch to turn off SMP mode */
-    vx_bool        should_serialize;
+    vx_bool        shouldSerialize;
     /*! \brief [hidden] If non-NULL, the parent graph, for scope handling. */
     vx_graph       parentGraph;
     /*! \brief The array of all delays in this graph */
     vx_delay       delays[VX_INT_MAX_REF];
+#ifdef OPENVX_USE_PIPELINING
+    /*! \brief The graph scheduling mode */
+    vx_graph_schedule_mode_type_e scheduleMode;
+#endif
 };
 
 #endif /* VX_GRAPH_H */

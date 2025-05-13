@@ -19,7 +19,7 @@
 
 #include "vx_internal.h"
 
-#ifdef OPENVX_USE_EVENTS
+#ifdef OPENVX_USE_PIPELINING
 
 VX_API_ENTRY vx_status VX_API_CALL vxEnableEvents(vx_context context)
 {

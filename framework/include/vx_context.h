@@ -267,7 +267,7 @@ public:
     cl_context opencl_context;
     cl_command_queue opencl_command_queue;
 #endif
-#ifdef OPENVX_USE_EVENTS
+#ifdef OPENVX_USE_PIPELINING
     /*! \brief The event queue for the context */
     EventQueue event_queue;
 #endif

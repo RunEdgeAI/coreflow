@@ -93,6 +93,8 @@
 #include <VX/vx_khr_user_data_object.h>
 #endif
 
+#include <COREVX/circular_queue.hpp>
+
 #define VX_MAX_TENSOR_DIMENSIONS 6
 #define Q78_FIXED_POINT_POSITION 8
 
@@ -264,6 +266,9 @@
  * \ingroup group_int_macros
  */
 #define VX_BOOL_TO_STATUS(b) ((b == vx_true_e) ? (VX_SUCCESS) : (VX_FAILURE))
+
+/* COREVX: Pipeleining and streaming defines */
+#define VX_OBJ_DESC_QUEUE_MAX_DEPTH (32U)
 
 /*! \brief A convenience typedef for void pointers.
  * \ingroup group_int_types

@@ -242,7 +242,7 @@ reverify(vx_false_e),
 lock(),
 parameters(),
 numParams(0),
-should_serialize(vx_false_e),
+shouldSerialize(vx_false_e),
 parentGraph(nullptr),
 delays()
 {
@@ -2459,7 +2459,7 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
             {
                 vx_uint32 t = graph->nodes[next_nodes[n]]->affinity;
 #if defined(OPENVX_USE_SMP)
-                if (depth == 1 && graph->should_serialize == vx_false_e)
+                if (depth == 1 && graph->shouldSerialize == vx_false_e)
                 {
                     vx_value_set_t *work = &workitems[n];
                     vx_target target = &graph->context->targets[t];
@@ -2511,6 +2511,7 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
 
                     if (action == VX_ACTION_CONTINUE)
                     {
+#ifdef OPENVX_USE_PIPELINING
                         if (graph->context->event_queue.isEnabled())
                         {
                             // Raise a node completed event.
@@ -2552,10 +2553,12 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
                                 }
                             }
                         }
+#endif
                     }
 
                     if (action == VX_ACTION_ABANDON)
                     {
+#ifdef OPENVX_USE_PIPELINING
                         // Raise a node error event.
                         vx_event_info_t event_info;
                         event_info.node_error.graph = graph;
@@ -2569,6 +2572,7 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
                             VX_PRINT(VX_ZONE_ERROR, "Failed to push node error event for node %s\n",
                                      node->kernel->name);
                         }
+#endif
                         break;
                     }
                 }
@@ -2581,7 +2585,7 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
         }
 
 #if defined(OPENVX_USE_SMP)
-        if (depth == 1 && graph->should_serialize == vx_false_e)
+        if (depth == 1 && graph->shouldSerialize == vx_false_e)
         {
             if (Osal::issueThreadpool(graph->context->workers, workitems, numNext) == vx_true_e)
             {
@@ -2659,6 +2663,7 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
     if (status == VX_SUCCESS)
     {
         graph->state = VX_GRAPH_STATE_COMPLETED;
+#ifdef OPENVX_USE_PIPELINING
         // Raise a graph completed event.
         vx_event_info_t event_info;
         event_info.graph_completed.graph = graph;
@@ -2668,6 +2673,7 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
         {
             VX_PRINT(VX_ZONE_ERROR, "Failed to push graph completed event for graph %p\n", graph);
         }
+#endif
     }
     else
     {
