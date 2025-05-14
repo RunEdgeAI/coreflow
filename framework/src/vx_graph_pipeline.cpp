@@ -129,70 +129,70 @@ VX_API_ENTRY vx_status vxSetGraphScheduleConfig(
 
     if (VX_SUCCESS == status)
     {
-        if (graph_schedule_mode == VX_GRAPH_SCHEDULE_MODE_NORMAL)
+        if ((graph_schedule_mode < VX_GRAPH_SCHEDULE_MODE_NORMAL) ||
+            (graph_schedule_mode > VX_GRAPH_SCHEDULE_MODE_QUEUE_MANUAL))
         {
-            graph->scheduleMode = (vx_graph_schedule_mode_type_e)graph_schedule_mode;
+            VX_PRINT(VX_ZONE_ERROR, "Invalid graph schedule mode\n");
+            status = VX_ERROR_INVALID_PARAMETERS;
         }
-        else if (((graph_schedule_mode == VX_GRAPH_SCHEDULE_MODE_QUEUE_AUTO) ||
-                    (graph_schedule_mode == VX_GRAPH_SCHEDULE_MODE_QUEUE_MANUAL)) &&
-                    (graph_parameters_list_size <= graph->numParams))
-        {
-            graph->scheduleMode = (vx_graph_schedule_mode_type_e)graph_schedule_mode;
+    }
 
-            /* Pipelining is enabled */
-            // graph->isPipeliningEnabled = vx_true_e;
-
-            for (vx_uint32 i = 0; (i < graph_parameters_list_size) && (status == VX_SUCCESS); i++)
-            {
-                if (graph_parameters_queue_params_list[i].refs_list != nullptr)
-                {
-                    if ((graph_parameters_queue_params_list[i].graph_parameter_index >= graph->numParams) ||
-                        (graph_parameters_queue_params_list[i].refs_list_size >= VX_OBJ_DESC_QUEUE_MAX_DEPTH))
-                    {
-                        VX_PRINT(VX_ZONE_ERROR, "Invalid parameters\n");
-                        status = VX_ERROR_INVALID_PARAMETERS;
-                    }
-                    else
-                    {
-                        graph->parameters[i].numBufs = graph_parameters_queue_params_list[i].refs_list_size;
-                        graph->parameters[i].type = graph_parameters_queue_params_list[i].refs_list[0]->type;
-
-                        status = ownGraphPipelineValidateRefsList(graph_parameters_queue_params_list[i]);
-
-                        if (VX_SUCCESS == status)
-                        {
-                            for (vx_uint32 buf_id = 0; buf_id < graph->parameters[i].numBufs; buf_id++)
-                            {
-                                graph->parameters[i].refs_list[buf_id] = graph_parameters_queue_params_list[i].refs_list[buf_id];
-                            }
-                        }
-                        else
-                        {
-                            VX_PRINT(VX_ZONE_ERROR,
-                                        "Graph parameter refs list at index %d contains "
-                                        "inconsistent meta data. Please ensure that all buffers "
-                                        "in list contain the same meta data\n",
-                                        i);
-                        }
-                    }
-                }
-                else
-                {
-                    status = VX_ERROR_INVALID_PARAMETERS;
-                    VX_PRINT(VX_ZONE_ERROR,
-                                "Invalid parameters: graph_parameters_queue_params_list at index "
-                                "%d is NULL\n",
-                                i);
-                    break;
-                }
-            }
-        }
-        else
+    if (VX_SUCCESS == status)
+    {
+        if (graph_parameters_list_size > graph->numParams)
         {
             VX_PRINT(VX_ZONE_ERROR,
                         "user parameter list (%d) > number of graph parameters (%d)\n",
                         graph_parameters_list_size, graph->numParams);
             status = VX_ERROR_INVALID_PARAMETERS;
+        }
+    }
+
+    if (VX_SUCCESS == status)
+    {
+        graph->scheduleMode = (vx_graph_schedule_mode_type_e)graph_schedule_mode;
+
+        if (((graph_schedule_mode == VX_GRAPH_SCHEDULE_MODE_QUEUE_AUTO) ||
+             (graph_schedule_mode == VX_GRAPH_SCHEDULE_MODE_QUEUE_MANUAL)))
+        {
+            /* Pipelining is enabled */
+            // graph->isPipeliningEnabled = vx_true_e;
+
+            for (vx_uint32 i = 0; (i < graph_parameters_list_size) && (status == VX_SUCCESS); i++)
+            {
+                if ((graph_parameters_queue_params_list[i].refs_list == nullptr) ||
+                    (graph_parameters_queue_params_list[i].graph_parameter_index >= graph->numParams) ||
+                    (graph_parameters_queue_params_list[i].refs_list_size >= VX_OBJ_DESC_QUEUE_MAX_DEPTH))
+                {
+                    VX_PRINT(VX_ZONE_ERROR,
+                        "Invalid parameters: graph_parameters_queue_params_list at index "
+                        "%d is NULL\n",
+                        i);
+                    status = VX_ERROR_INVALID_PARAMETERS;
+                    break;
+                }
+
+                // Validate the refs list types
+                if (VX_SUCCESS != ownGraphPipelineValidateRefsList(graph_parameters_queue_params_list[i]))
+                {
+                    VX_PRINT(VX_ZONE_ERROR,
+                                "Graph parameter refs list at index %d contains "
+                                "inconsistent meta data. Please ensure that all buffers "
+                                "in list contain the same meta data\n",
+                                i);
+                    status = VX_ERROR_INVALID_PARAMETERS;
+                    break;
+                }
+
+                // Associate refs with the graph parameter
+                graph->parameters[i].numBufs = graph_parameters_queue_params_list[i].refs_list_size;
+                graph->parameters[i].type = graph_parameters_queue_params_list[i].refs_list[0]->type;
+
+                for (vx_uint32 buf_id = 0; buf_id < graph->parameters[i].numBufs; buf_id++)
+                {
+                    graph->parameters[i].refs_list[buf_id] = graph_parameters_queue_params_list[i].refs_list[buf_id];
+                }
+            }
         }
     }
 
@@ -220,7 +220,14 @@ VX_API_ENTRY vx_status VX_API_CALL vxGraphParameterEnqueueReadyRef(vx_graph grap
 
         for (vx_uint32 i = 0; i < num_refs; ++i)
         {
-            if (!paramQueue.enqueue(refs[i]))
+            // Sanity check to validate the reference metadata
+            if (!Reference::isValidReference(refs[i], graph->parameters[graph_parameter_index].type))
+            {
+                VX_PRINT(VX_ZONE_ERROR, "Invalid reference metadata for graph parameter %u\n", graph_parameter_index);
+                status = VX_ERROR_INVALID_PARAMETERS;
+            }
+
+            if (VX_SUCCESS == status && !paramQueue.enqueue(refs[i]))
             {
                 status = VX_ERROR_NO_RESOURCES; // queue full
             }
@@ -270,7 +277,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxGraphParameterCheckDoneRef(vx_graph graph,
             vx_uint32 *num_refs)
 {
     vx_status status = VX_SUCCESS;
-    
+
     if (vx_false_e == Reference::isValidReference(graph) ||
         graph_parameter_index >= graph->numParams ||
         !num_refs)
