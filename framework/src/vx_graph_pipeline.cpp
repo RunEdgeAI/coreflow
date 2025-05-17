@@ -22,87 +22,6 @@
 
 #ifdef OPENVX_USE_PIPELINING
 
-static vx_status ownGraphPipelineValidateRefsList(
-    const vx_graph_parameter_queue_params_t graph_parameters_queue_param)
-{
-    vx_status status = (vx_status)VX_SUCCESS;
-    vx_status status1 = (vx_status)VX_SUCCESS;
-    vx_meta_format meta_base = nullptr, meta = nullptr;
-    vx_uint32 i;
-
-    if (nullptr != graph_parameters_queue_param.refs_list[0])
-    {
-        meta_base = vxCreateMetaFormat(graph_parameters_queue_param.refs_list[0]->context);
-        status = vxSetMetaFormatFromReference(meta_base, graph_parameters_queue_param.refs_list[0]);
-    }
-
-    if ( (VX_SUCCESS == status)
-         && (nullptr != meta_base) )
-    {
-        for (i = 1; i < graph_parameters_queue_param.refs_list_size; i++)
-        {
-            if (nullptr != graph_parameters_queue_param.refs_list[i])
-            {
-                meta = vxCreateMetaFormat(graph_parameters_queue_param.refs_list[i]->context);
-
-                if (nullptr != meta)
-                {
-                    status = vxSetMetaFormatFromReference(meta, graph_parameters_queue_param.refs_list[i]);
-                }
-                else
-                {
-                    status = VX_FAILURE;
-                    VX_PRINT(VX_ZONE_ERROR, "Meta Format is NULL\n");
-                }
-
-                if (VX_SUCCESS == status)
-                {
-                    if (graph_parameters_queue_param.refs_list[0]->type ==
-                        graph_parameters_queue_param.refs_list[i]->type)
-                    {
-                        if (vx_true_e != MetaFormat::isMetaFormatEqual(meta_base, meta, graph_parameters_queue_param.refs_list[0]->type))
-                        {
-                            status = VX_ERROR_INVALID_PARAMETERS;
-                            VX_PRINT(VX_ZONE_ERROR, "Invalid meta data of reference list!\n");
-                        }
-                    }
-                }
-                else
-                {
-                    break;
-                }
-
-                if (Reference::isValidReference(meta, VX_TYPE_META_FORMAT) == vx_true_e)
-                {
-                    status1 = vxReleaseMetaFormat(&meta);
-                    if (VX_SUCCESS != status1)
-                    {
-                        VX_PRINT(VX_ZONE_ERROR, "Failed to release meta format object \n");
-                        status = status1;
-                    }
-                }
-            }
-            else
-            {
-                status = VX_ERROR_INVALID_PARAMETERS;
-                VX_PRINT(VX_ZONE_ERROR, "Invalid graph parameter ref list!\n");
-            }
-        }
-    }
-
-    if (Reference::isValidReference(meta_base, VX_TYPE_META_FORMAT) == vx_true_e)
-    {
-        status1 = vxReleaseMetaFormat(&meta_base);
-        if (VX_SUCCESS != status1)
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Failed to release meta format object \n");
-            status = status1;
-        }
-    }
-
-    return status;
-}
-
 VX_API_ENTRY vx_status vxSetGraphScheduleConfig(
     vx_graph graph,
     vx_enum graph_schedule_mode,
@@ -173,7 +92,7 @@ VX_API_ENTRY vx_status vxSetGraphScheduleConfig(
                 }
 
                 // Validate the refs list types
-                if (VX_SUCCESS != ownGraphPipelineValidateRefsList(graph_parameters_queue_params_list[i]))
+                if (VX_SUCCESS != graph->pipelineValidateRefsList(graph_parameters_queue_params_list[i]))
                 {
                     VX_PRINT(VX_ZONE_ERROR,
                                 "Graph parameter refs list at index %d contains "
@@ -227,9 +146,31 @@ VX_API_ENTRY vx_status VX_API_CALL vxGraphParameterEnqueueReadyRef(vx_graph grap
                 status = VX_ERROR_INVALID_PARAMETERS;
             }
 
-            if (VX_SUCCESS == status && !paramQueue.enqueue(refs[i]))
+            if (VX_SUCCESS == status && !paramQueue.enqueueReady(refs[i]))
             {
                 status = VX_ERROR_NO_RESOURCES; // queue full
+            }
+        }
+    }
+
+    if (VX_SUCCESS == status)
+    {
+        if (graph->scheduleMode == VX_GRAPH_SCHEDULE_MODE_QUEUE_AUTO)
+        {
+            vx_bool readyToSchedule = vx_true_e;
+            for (vx_uint32 i = 0; i < graph->numParams; ++i)
+            {
+                if (graph->parameters[i].queue.readyQueueSize() == 0)
+                {
+                    readyToSchedule = vx_false_e;
+                    break;
+                }
+            }
+
+            if (readyToSchedule)
+            {
+                // Schedule the graph
+                status = vxScheduleGraph(graph);
             }
         }
     }
@@ -259,7 +200,12 @@ VX_API_ENTRY vx_status VX_API_CALL vxGraphParameterDequeueDoneRef(vx_graph graph
     {
         auto& paramQueue = graph->parameters[graph_parameter_index].queue;
 
-        while (count < max_refs && paramQueue.dequeue(ref))
+        // Block until at least one "done" reference is available
+        paramQueue.waitForDoneRef();
+
+        while (count <= max_refs &&
+            paramQueue.doneQueueSize() > 0 &&
+            paramQueue.dequeueDone(ref))
         {
             refs[count++] = ref;
         }
@@ -288,7 +234,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxGraphParameterCheckDoneRef(vx_graph graph,
     if (VX_SUCCESS == status)
     {
         auto& paramQueue = graph->parameters[graph_parameter_index].queue;
-        *num_refs = static_cast<vx_uint32>(paramQueue.size());
+        *num_refs = static_cast<vx_uint32>(paramQueue.doneQueueSize());
     }
 
     return status;

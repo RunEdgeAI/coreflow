@@ -93,7 +93,7 @@
 #include <VX/vx_khr_user_data_object.h>
 #endif
 
-#include <COREVX/circular_queue.hpp>
+#include <COREVX/execution_queue.hpp>
 
 #define VX_MAX_TENSOR_DIMENSIONS 6
 #define Q78_FIXED_POINT_POSITION 8

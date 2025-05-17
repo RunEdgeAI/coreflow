@@ -160,6 +160,16 @@ public:
                             vx_uint32 childIndex);
 
     /**
+     * @brief Validate the graph parameters queue references list
+     *
+     * @param graph_parameters_queue_param
+     * @return vx_status
+     * @ingroup group_int_graph
+     */
+    vx_status pipelineValidateRefsList(
+        const vx_graph_parameter_queue_params_t graph_parameters_queue_param);
+        
+    /**
      * @brief Destruct function for the Graph object
      * @ingroup group_int_graph
      */
@@ -195,7 +205,7 @@ public:
         /*! \brief the max buffers that can be enqueued */
         vx_uint32 numBufs;
         /*! \brief The internal data ref queue */
-        CircularQueue<vx_reference, VX_OBJ_DESC_QUEUE_MAX_DEPTH> queue;
+        ExecutionQueue<vx_reference, VX_OBJ_DESC_QUEUE_MAX_DEPTH> queue;
         /*! \brief references that can be queued into data ref queue */
         vx_reference refs_list[VX_OBJ_DESC_QUEUE_MAX_DEPTH];
 #endif

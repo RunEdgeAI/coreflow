@@ -1644,6 +1644,84 @@ vx_bool Graph::postprocessOutput(vx_uint32 n, vx_uint32 p, vx_reference* vref, v
     return vx_true_e;
 } /* postprocessOutput() */
 
+vx_status Graph::pipelineValidateRefsList(
+    const vx_graph_parameter_queue_params_t graph_parameters_queue_param)
+{
+    vx_status status = VX_SUCCESS;
+    vx_meta_format meta_base = nullptr, meta = nullptr;
+    vx_uint32 i;
+
+    if (nullptr != graph_parameters_queue_param.refs_list[0])
+    {
+        meta_base = vxCreateMetaFormat(graph_parameters_queue_param.refs_list[0]->context);
+        status = vxSetMetaFormatFromReference(meta_base, graph_parameters_queue_param.refs_list[0]);
+    }
+
+    if ( (VX_SUCCESS == status)
+         && (nullptr != meta_base) )
+    {
+        for (i = 1; i < graph_parameters_queue_param.refs_list_size; i++)
+        {
+            if (nullptr != graph_parameters_queue_param.refs_list[i])
+            {
+                meta = vxCreateMetaFormat(graph_parameters_queue_param.refs_list[i]->context);
+
+                if (nullptr != meta)
+                {
+                    status = vxSetMetaFormatFromReference(meta, graph_parameters_queue_param.refs_list[i]);
+                }
+                else
+                {
+                    status = VX_FAILURE;
+                    VX_PRINT(VX_ZONE_ERROR, "Meta Format is NULL\n");
+                }
+
+                if (VX_SUCCESS == status)
+                {
+                    if (graph_parameters_queue_param.refs_list[0]->type ==
+                        graph_parameters_queue_param.refs_list[i]->type)
+                    {
+                        if (vx_true_e != MetaFormat::isMetaFormatEqual(meta_base, meta, graph_parameters_queue_param.refs_list[0]->type))
+                        {
+                            status = VX_ERROR_INVALID_PARAMETERS;
+                            VX_PRINT(VX_ZONE_ERROR, "Invalid meta data of reference list!\n");
+                        }
+                    }
+                }
+                else
+                {
+                    break;
+                }
+
+                if (Reference::isValidReference(meta, VX_TYPE_META_FORMAT) == vx_true_e)
+                {
+                    status = vxReleaseMetaFormat(&meta);
+                    if (VX_SUCCESS != status)
+                    {
+                        VX_PRINT(VX_ZONE_ERROR, "Failed to release meta format object \n");
+                    }
+                }
+            }
+            else
+            {
+                status = VX_ERROR_INVALID_PARAMETERS;
+                VX_PRINT(VX_ZONE_ERROR, "Invalid graph parameter ref list!\n");
+            }
+        }
+    }
+
+    if (Reference::isValidReference(meta_base, VX_TYPE_META_FORMAT) == vx_true_e)
+    {
+        status = vxReleaseMetaFormat(&meta_base);
+        if (VX_SUCCESS != status)
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Failed to release meta format object \n");
+        }
+    }
+
+    return status;
+}
+
 void Graph::destruct()
 {
     while (numNodes)
