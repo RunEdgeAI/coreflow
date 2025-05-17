@@ -92,9 +92,11 @@ vx_bool MetaFormat::isMetaFormatEqual(
             case VX_TYPE_TENSOR:
                 isEqual = MetaFormat::isMetaFormatTensorEqual(meta1, meta2);
                 break;
+#if defined(OPENVX_USE_USER_DATA_OBJECT)
             case VX_TYPE_USER_DATA_OBJECT:
                 isEqual = MetaFormat::isMetaFormatUserDataObjectEqual(meta1, meta2);
                 break;
+#endif
             default:
                 VX_PRINT(VX_ZONE_ERROR, "invalid ref_type attribute\n");
                 break;

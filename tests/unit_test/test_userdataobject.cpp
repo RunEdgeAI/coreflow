@@ -12,6 +12,8 @@
 
 #include "vx_internal.h"
 
+#ifdef OPENVX_USE_USER_DATA_OBJECT
+
 class UserDataObjectTest : public ::testing::Test
 {
 protected:
@@ -71,3 +73,5 @@ TEST_F(UserDataObjectTest, UserDataObjectDestructor)
     for (vx_uint32 p = 0; p < udata->memory.nptrs; p++)
         EXPECT_EQ(udata->memory.ptrs[p], nullptr);
 }
+
+#endif /* OPENVX_USE_USER_DATA_OBJECT */
