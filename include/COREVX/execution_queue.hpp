@@ -7,7 +7,8 @@
  * @copyright Copyright (c) 2025
  *
  */
-#include <iostream>
+#include <condition_variable>
+#include <mutex>
 
 #include "circular_queue.hpp"
 
