@@ -99,8 +99,7 @@ void Node::destruct()
                     VX_PRINT(VX_ZONE_ERROR, "Internal error removing delay association\n");
                 }
             }
-            Reference::releaseReference(&ref, ref->type, VX_INTERNAL, nullptr);
-            parameters[p] = nullptr;
+            Reference::releaseReference(&parameters[p], parameters[p]->type, VX_INTERNAL, nullptr);
         }
     }
 

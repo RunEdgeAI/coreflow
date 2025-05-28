@@ -64,6 +64,7 @@ public:
     {
         std::lock_guard lock(mutex_);
         enabled_ = status;
+        cv_.notify_all();
         return VX_SUCCESS;
     }
 
@@ -148,7 +149,6 @@ public:
     {
         vx_status status = VX_SUCCESS;
         std::optional<vx_event_t> evt;
-        std::unique_lock lock(mutex_);
 
         if (!enabled_)
         {
@@ -201,6 +201,7 @@ private : bool enabled_;
     std::condition_variable cv_;
     std::deque<vx_event_t> queue_;
     size_t max_size_;
+    static constexpr int timeout_ms_ = 10000;
     std::vector<RegistrationEntry> registrations_;
 
     /**
@@ -230,10 +231,11 @@ private : bool enabled_;
      * @return std::optional<vx_event_t> Event if available, otherwise std::nullopt
      */
     std::optional<vx_event_t> wait_and_pop(
-        std::chrono::milliseconds timeout = std::chrono::milliseconds::max())
+        std::chrono::milliseconds timeout = std::chrono::milliseconds(timeout_ms_))
     {
         std::unique_lock lock(mutex_);
-        if (!cv_.wait_for(lock, timeout, [this] { return !queue_.empty(); }))
+        cv_.wait_for(lock, timeout, [this] { return !queue_.empty(); });
+        if (queue_.empty())
         {
             return std::nullopt;  // Timeout
         }

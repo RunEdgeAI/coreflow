@@ -66,6 +66,23 @@ public:
     }
 
     /**
+     * @brief Peek at the element at the front of the queue without removing it
+     *
+     * @param out Reference to store the peeked element
+     * @return true if successful, false if the queue is empty
+     */
+    bool peek(T& out) const
+    {
+        size_t head = head_.load(std::memory_order_relaxed);
+        if (head == tail_.load(std::memory_order_acquire))
+        {
+            return false;  // empty
+        }
+        out = buffer_[head];
+        return true;
+    }
+
+    /**
      * @brief Get the size of the queue
      *
      * @return std::size_t Size of the queue

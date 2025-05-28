@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include <VX/vx.h>
 #include <VX/vx_compatibility.h>
 #include <VX/vx_khr_pipelining.h>
+
+#include <algorithm>
 
 #include "vx_internal.h"
 
@@ -65,6 +66,8 @@ VX_API_ENTRY vx_status vxSetGraphScheduleConfig(
                         graph_parameters_list_size, graph->numParams);
             status = VX_ERROR_INVALID_PARAMETERS;
         }
+        /* Set the number of params that can possibly be enqueued */
+        graph->numEnqueableParams = graph_parameters_list_size;
     }
 
     if (VX_SUCCESS == status)
@@ -80,8 +83,10 @@ VX_API_ENTRY vx_status vxSetGraphScheduleConfig(
             for (vx_uint32 i = 0; (i < graph_parameters_list_size) && (status == VX_SUCCESS); i++)
             {
                 if ((graph_parameters_queue_params_list[i].refs_list == nullptr) ||
-                    (graph_parameters_queue_params_list[i].graph_parameter_index >= graph->numParams) ||
-                    (graph_parameters_queue_params_list[i].refs_list_size >= VX_OBJ_DESC_QUEUE_MAX_DEPTH))
+                    (graph_parameters_queue_params_list[i].graph_parameter_index >=
+                     graph->numParams) ||
+                    (graph_parameters_queue_params_list[i].refs_list_size >=
+                     VX_INT_MAX_QUEUE_DEPTH))
                 {
                     VX_PRINT(VX_ZONE_ERROR,
                         "Invalid parameters: graph_parameters_queue_params_list at index "
@@ -146,21 +151,23 @@ VX_API_ENTRY vx_status VX_API_CALL vxGraphParameterEnqueueReadyRef(vx_graph grap
                 status = VX_ERROR_INVALID_PARAMETERS;
             }
 
-            if (VX_SUCCESS == status && !paramQueue.enqueueReady(refs[i]))
+            if (VX_SUCCESS == status && !paramQueue.enqueuePending(refs[i]))
             {
-                status = VX_ERROR_NO_RESOURCES; // queue full
+                status = VX_ERROR_NO_RESOURCES;
             }
         }
     }
 
     if (VX_SUCCESS == status)
     {
-        if (graph->scheduleMode == VX_GRAPH_SCHEDULE_MODE_QUEUE_AUTO)
+        vx_bool readyToSchedule = vx_true_e;
+        vx_uint32 numParams = std::min(graph->numParams, graph->numEnqueableParams);
+
+        while (readyToSchedule)
         {
-            vx_bool readyToSchedule = vx_true_e;
-            for (vx_uint32 i = 0; i < graph->numParams; ++i)
+            for (vx_uint32 i = 0; i < numParams; ++i)
             {
-                if (graph->parameters[i].queue.readyQueueSize() == 0)
+                if (graph->parameters[i].queue.pendingQueueSize() == 0)
                 {
                     readyToSchedule = vx_false_e;
                     break;
@@ -169,8 +176,16 @@ VX_API_ENTRY vx_status VX_API_CALL vxGraphParameterEnqueueReadyRef(vx_graph grap
 
             if (readyToSchedule)
             {
-                // Schedule the graph
-                status = vxScheduleGraph(graph);
+                for (vx_uint32 i = 0; i < numParams; ++i)
+                {
+                    graph->parameters[i].queue.movePendingToReady();
+                }
+
+                if (graph->scheduleMode == VX_GRAPH_SCHEDULE_MODE_QUEUE_AUTO)
+                {
+                    /* Schedule the graph */
+                    status = vxScheduleGraph(graph);
+                }
             }
         }
     }
@@ -189,9 +204,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxGraphParameterDequeueDoneRef(vx_graph graph
     vx_reference ref;
 
     if (vx_false_e == Reference::isValidReference(graph) ||
-        graph_parameter_index >= graph->numParams ||
-        !refs ||
-        !num_refs)
+        graph_parameter_index >= graph->numEnqueableParams || !refs || !num_refs)
     {
         status = VX_ERROR_INVALID_PARAMETERS;
     }
@@ -203,9 +216,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxGraphParameterDequeueDoneRef(vx_graph graph
         // Block until at least one "done" reference is available
         paramQueue.waitForDoneRef();
 
-        while (count <= max_refs &&
-            paramQueue.doneQueueSize() > 0 &&
-            paramQueue.dequeueDone(ref))
+        while (count < max_refs && paramQueue.doneQueueSize() > 0 && paramQueue.dequeueDone(ref))
         {
             refs[count++] = ref;
         }
@@ -225,8 +236,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxGraphParameterCheckDoneRef(vx_graph graph,
     vx_status status = VX_SUCCESS;
 
     if (vx_false_e == Reference::isValidReference(graph) ||
-        graph_parameter_index >= graph->numParams ||
-        !num_refs)
+        graph_parameter_index >= graph->numEnqueableParams || !num_refs)
     {
         status = VX_ERROR_INVALID_PARAMETERS;
     }

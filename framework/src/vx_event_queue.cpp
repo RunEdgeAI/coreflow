@@ -83,6 +83,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSendUserEvent(vx_context context, vx_uint32
         event_info.user_event.user_event_parameter = parameter;
         status = context->event_queue.push(VX_EVENT_USER, id, &event_info);
     }
+
     return status;
 }
 

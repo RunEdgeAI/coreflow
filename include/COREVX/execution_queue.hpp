@@ -7,12 +7,59 @@
  * @copyright Copyright (c) 2025
  *
  */
+#include <iostream>
+
 #include "circular_queue.hpp"
 
 template<typename T, std::size_t MaxDepth>
 class ExecutionQueue
 {
 public:
+    /**
+     * @brief Enqueue an item into the "pending" queue
+     *
+     * @param item The item to enqueue
+     * @return true if successful, false if the queue is full
+     */
+    bool enqueuePending(const T& item)
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        return pending_queue_.enqueue(item);
+    }
+
+    /**
+     * @brief Dequeue an item from the "pending" queue
+     *
+     * @param item Reference to store the dequeued item
+     * @return true if successful, false if the queue is empty
+     */
+    bool dequeuePending(T& item)
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        return pending_queue_.dequeue(item);
+    }
+
+    /**
+     * @brief Move an item from the "pending" queue to the "ready" queue
+     *
+     * @return true if successful, false if the "pending" queue is empty or the "ready" queue is
+     * full
+     */
+    bool movePendingToReady()
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        T item;
+        if (!pending_queue_.dequeue(item))
+        {
+            return false;  // "Pending" queue is empty
+        }
+        if (!ready_queue_.enqueue(item))
+        {
+            return false;  // "Ready" queue is full
+        }
+        return true;
+    }
+
     /**
      * @brief Enqueue an item into the "ready" queue
      *
@@ -21,6 +68,7 @@ public:
      */
     bool enqueueReady(const T& item)
     {
+        std::unique_lock<std::mutex> lock(mutex_);
         return ready_queue_.enqueue(item);
     }
 
@@ -32,7 +80,20 @@ public:
      */
     bool dequeueReady(T& item)
     {
+        std::unique_lock<std::mutex> lock(mutex_);
         return ready_queue_.dequeue(item);
+    }
+
+    /**
+     * @brief Peek at the item at the front of the "ready" queue without removing it
+     *
+     * @param item Reference to store the peeked item
+     * @return true if successful, false if the queue is empty
+     */
+    bool peekReady(T& item) const
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        return ready_queue_.peek(item);
     }
 
     /**
@@ -43,6 +104,7 @@ public:
      */
     bool enqueueDone(const T& item)
     {
+        std::unique_lock<std::mutex> lock(mutex_);
         bool ans = done_queue_.enqueue(item);
         cond_var_.notify_one();
         return ans;
@@ -56,6 +118,7 @@ public:
      */
     bool dequeueDone(T& item)
     {
+        std::unique_lock<std::mutex> lock(mutex_);
         return done_queue_.dequeue(item);
     }
 
@@ -65,7 +128,40 @@ public:
     void waitForDoneRef()
     {
         std::unique_lock<std::mutex> lock(mutex_);
-        cond_var_.wait(lock, [this]() { return !done_queue_.empty(); });
+        cond_var_.wait_for(lock, std::chrono::milliseconds(timeout_ms_),
+                           [this]() { return !done_queue_.empty(); });
+    }
+
+    /**
+     * @brief Move an item from the "ready" queue to the "done" queue
+     *
+     * @return true if successful, false if the "ready" queue is empty or the "done" queue is full
+     */
+    bool moveReadyToDone()
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        T item;
+        if (!ready_queue_.dequeue(item))
+        {
+            return false;  // "Ready" queue is empty
+        }
+        if (!done_queue_.enqueue(item))
+        {
+            return false;  // "Done" queue is full
+        }
+        cond_var_.notify_one();  // Notify that an item is available in the "done" queue
+        return true;
+    }
+
+    /**
+     * @brief Check if the "pending" queue is empty
+     *
+     * @return true if empty, false otherwise
+     */
+    bool isPendingEmpty() const
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        return pending_queue_.empty();
     }
 
     /**
@@ -75,6 +171,7 @@ public:
      */
     bool isReadyEmpty() const
     {
+        std::unique_lock<std::mutex> lock(mutex_);
         return ready_queue_.empty();
     }
 
@@ -85,7 +182,19 @@ public:
      */
     bool isDoneEmpty() const
     {
+        std::unique_lock<std::mutex> lock(mutex_);
         return done_queue_.empty();
+    }
+
+    /**
+     * @brief Get the size of the "pending" queue
+     *
+     * @return std::size_t Size of the "pending" queue
+     */
+    std::size_t pendingQueueSize() const
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        return pending_queue_.size();
     }
 
     /**
@@ -95,6 +204,7 @@ public:
      */
     std::size_t readyQueueSize() const
     {
+        std::unique_lock<std::mutex> lock(mutex_);
         return ready_queue_.size();
     }
 
@@ -105,9 +215,12 @@ public:
      */
     std::size_t doneQueueSize() const
     {
+        std::unique_lock<std::mutex> lock(mutex_);
         return done_queue_.size();
     }
 private:
+    static constexpr int timeout_ms_ = 10000;
+    CircularQueue<T, MaxDepth> pending_queue_;
     CircularQueue<T, MaxDepth> ready_queue_;
     CircularQueue<T, MaxDepth> done_queue_;
     mutable std::mutex mutex_;

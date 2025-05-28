@@ -168,7 +168,7 @@ public:
      */
     vx_status pipelineValidateRefsList(
         const vx_graph_parameter_queue_params_t graph_parameters_queue_param);
-        
+
     /**
      * @brief Destruct function for the Graph object
      * @ingroup group_int_graph
@@ -205,9 +205,9 @@ public:
         /*! \brief the max buffers that can be enqueued */
         vx_uint32 numBufs;
         /*! \brief The internal data ref queue */
-        ExecutionQueue<vx_reference, VX_OBJ_DESC_QUEUE_MAX_DEPTH> queue;
+        ExecutionQueue<vx_reference, VX_INT_MAX_QUEUE_DEPTH> queue;
         /*! \brief references that can be queued into data ref queue */
-        vx_reference refs_list[VX_OBJ_DESC_QUEUE_MAX_DEPTH];
+        vx_reference refs_list[VX_INT_MAX_QUEUE_DEPTH];
 #endif
     } parameters[VX_INT_MAX_PARAMS];
     /*! \brief The number of graph parameters. */
@@ -218,9 +218,13 @@ public:
     vx_graph       parentGraph;
     /*! \brief The array of all delays in this graph */
     vx_delay       delays[VX_INT_MAX_REF];
-#ifdef OPENVX_USE_PIPELINING
     /*! \brief The graph scheduling mode */
     vx_graph_schedule_mode_type_e scheduleMode;
+#ifdef OPENVX_USE_PIPELINING
+    /*! \brief The number of enqueable parameters */
+    vx_uint32 numEnqueableParams;
+    /*! \brief The number of times to schedule a graph  */
+    vx_size scheduleCount;
 #endif
 };
 

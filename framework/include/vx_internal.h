@@ -178,7 +178,7 @@
 /*! \brief Maximum queue depth.
  * \ingroup group_int_defines
  */
-#define VX_INT_MAX_QUEUE_DEPTH (32)
+#define VX_INT_MAX_QUEUE_DEPTH (100002)
 
 /*! \brief The value to use in event waiting which never returns.
  * \ingroup group_int_defines
@@ -266,9 +266,6 @@
  * \ingroup group_int_macros
  */
 #define VX_BOOL_TO_STATUS(b) ((b == vx_true_e) ? (VX_SUCCESS) : (VX_FAILURE))
-
-/* COREVX: Pipeleining and streaming defines */
-#define VX_OBJ_DESC_QUEUE_MAX_DEPTH (32U)
 
 /*! \brief A convenience typedef for void pointers.
  * \ingroup group_int_types
