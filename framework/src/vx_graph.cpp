@@ -2915,7 +2915,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxScheduleGraph(vx_graph graph)
             else
             {
                 Osal::semPost(&graph->lock);
-                VX_PRINT(VX_ZONE_ERROR, "Failed to write graph to queue" << std::endl;
+                VX_PRINT(VX_ZONE_ERROR, "Failed to write graph to queue");
                 status = VX_ERROR_NO_RESOURCES;
             }
         }
