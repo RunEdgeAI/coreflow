@@ -20,7 +20,7 @@
 
 #include "vx_internal.h"
 
-static vx_value_set_t graph_queue[500000];
+static vx_value_set_t graph_queue[5000000];
 static vx_size numGraphsQueued = 0ul;
 
 /******************************************************************************/
