@@ -2553,9 +2553,6 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
                             // Assign the dequeued reference to the corresponding node parameter
                             if (graph->nodes[n]->parameters[p] == old_ref)
                             {
-                                std::cout << "Replacing node parameter ref "
-                                          << node->parameters[param_index]
-                                          << " with dequeued reference " << ref << std::endl;
                                 graph->context->removeReference(graph->nodes[n]->parameters[p]);
                                 ref->incrementReference(VX_INTERNAL);
                                 graph->nodes[n]->parameters[p] = ref;
@@ -2694,9 +2691,6 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
                             event_info.graph_parameter_consumed.graph_parameter_index = param_index;
 
                             (void)graph->parameters[gp].queue.moveReadyToDone();
-                            std::cout << "Graph parameter " << gp << " consumed by node "
-                                      << node->kernel->name << " at index " << param_index
-                                      << std::endl;
 
                             if (graph->context->event_queue.isEnabled() &&
                                 param_node->kernel->signature.directions[param_index] == VX_INPUT &&
@@ -2903,9 +2897,10 @@ VX_API_ENTRY vx_status VX_API_CALL vxScheduleGraph(vx_graph graph)
             memset(pq, 0, sizeof(vx_value_set_t));
             pq->v1 = (vx_value_t)graph;
 
+#ifdef OPENVX_USE_PIPELINING
             /* Increment the schedule count */
             graph->scheduleCount++;
-
+#endif
             /* now add the graph to the queue */
             VX_PRINT(VX_ZONE_GRAPH,"Writing graph=" VX_FMT_REF ", status=%d\n",graph, status);
             if (Osal::writeQueue(&graph->context->proc.input, pq) == vx_true_e)
@@ -2980,15 +2975,18 @@ VX_API_ENTRY vx_status VX_API_CALL vxWaitGraph(vx_graph graph)
                     }
                     Osal::semPost(p_graph_queue_lock);
 
+#ifdef OPENVX_USE_PIPELINING
                     /* Decrement the schedule count */
                     graph->scheduleCount--;
-
                     /* Unlock the graph only if all scheduled executions are completed */
                     if (graph->scheduleCount == 0)
                     {
                         Osal::semPost(&graph->lock);
                         break;
                     }
+#else
+                    break;
+#endif
                 }
                 else
                 {
