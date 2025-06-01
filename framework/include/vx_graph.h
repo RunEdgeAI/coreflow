@@ -16,6 +16,8 @@
 #ifndef VX_GRAPH_H
 #define VX_GRAPH_H
 
+#include <COREVX/execution_queue.hpp>
+
 #include "vx_internal.h"
 #include "vx_reference.h"
 
