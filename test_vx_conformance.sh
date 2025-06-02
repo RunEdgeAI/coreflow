@@ -48,7 +48,12 @@ cmake \
 cmake --build .
 
 # Run the conformance test suite
-./bin/vx_test_conformance
+if [[ "$DEBUG" == "1" ]]; then
+  echo "Running under GDB since CI is set"
+  gdb -batch -ex "run" -ex "bt" --args ./bin/vx_test_conformance
+else
+  ./bin/vx_test_conformance
+fi
 
 # Clean up
 cd $TARGET_DIR

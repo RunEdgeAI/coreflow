@@ -31,7 +31,7 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libxml2-dev ocl-icd-opencl-dev
+          sudo apt-get install -y libxml2-dev ocl-icd-opencl-dev gdb
 
       # Checks-out your repository under $GITHUB_WORKSPACE, which is the CWD for
       # the rest of the steps
@@ -59,7 +59,7 @@ jobs:
 
       # Run OpenVX Conformance tests
       - name: OpenVX Conformance Tests
-        run: ./test_vx_conformance.sh
+        run: DEBUG=1 ./test_vx_conformance.sh
 
       # (Optional) Linting or Formatting
       # - name: Run Linter
