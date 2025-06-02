@@ -59,7 +59,7 @@ jobs:
 
       # Run OpenVX Conformance tests
       - name: OpenVX Conformance Tests
-        run: DEBUG=1 ./test_vx_conformance.sh
+        run: ./test_vx_conformance.sh
 
       # (Optional) Linting or Formatting
       # - name: Run Linter
