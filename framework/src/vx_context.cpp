@@ -103,8 +103,10 @@ Context::Context()
       opencl_command_queue(nullptr),
 #endif
 #ifdef OPENVX_USE_PIPELINING
-      event_queue()
+      event_queue(),
 #endif
+      graph_queue(),
+      numGraphsQueued(0ul)
 {
 }
 

@@ -20,9 +20,6 @@
 
 #include "vx_internal.h"
 
-static vx_value_set_t graph_queue[5000000];
-static vx_size numGraphsQueued = 0ul;
-
 /******************************************************************************/
 /* STATIC FUNCTIONS */
 /******************************************************************************/
@@ -2882,12 +2879,12 @@ VX_API_ENTRY vx_status VX_API_CALL vxScheduleGraph(vx_graph graph)
 
         Osal::semWait(p_graph_queue_lock);
         /* acquire a position in the graph queue */
-        for (q = 0; q < dimof(graph_queue); q++)
+        for (q = 0; q < dimof(graph->context->graph_queue); q++)
         {
-            if (graph_queue[q].v1 == 0)
+            if (graph->context->graph_queue[q].v1 == 0)
             {
-                pq = &graph_queue[q];
-                numGraphsQueued++;
+                pq = &graph->context->graph_queue[q];
+                graph->context->numGraphsQueued++;
                 break;
             }
         }
@@ -2964,12 +2961,12 @@ VX_API_ENTRY vx_status VX_API_CALL vxWaitGraph(vx_graph graph)
                     vx_uint32 q = 0u;
                     Osal::semWait(p_graph_queue_lock);
                     /* find graph in the graph queue */
-                    for (q = 0; q < dimof(graph_queue); q++)
+                    for (q = 0; q < dimof(graph->context->graph_queue); q++)
                     {
-                        if (graph_queue[q].v1 == (vx_value_t)graph)
+                        if (graph->context->graph_queue[q].v1 == (vx_value_t)graph)
                         {
-                            graph_queue[q].v1 = 0;
-                            numGraphsQueued--;
+                            graph->context->graph_queue[q].v1 = 0;
+                            graph->context->numGraphsQueued--;
                             break;
                         }
                     }

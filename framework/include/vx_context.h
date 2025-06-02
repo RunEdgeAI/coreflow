@@ -271,6 +271,10 @@ public:
     /*! \brief The event queue for the context */
     EventQueue event_queue;
 #endif
+    /*! \brief The graph queue for the context */
+    vx_value_set_t graph_queue[VX_INT_MAX_QUEUE_DEPTH];
+    /*! \brief The number of graphs in the queue */
+    vx_size numGraphsQueued;
 };
 
 #endif /* VX_CONTEXT_H */
