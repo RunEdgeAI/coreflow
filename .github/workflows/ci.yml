@@ -23,9 +23,9 @@ jobs:
           path: |
             ~/.cache/bazelisk
             ~/.cache/bazel
-          key: ${{ runner.os }}-${{ env.cache-name }}-${{ github.ref }}
+          key: ${{ runner.os }}-bazel-cache-${{ hashFiles('WORKSPACE', '**/BUILD', '**/*.bzl', '.bazelrc') }}
           restore-keys: |
-            ${{ runner.os }}-${{ env.cache-name }}-development
+            ${{ runner.os }}-bazel-cache-
 
       # Install dependencies (project has additional setup requirements)
       - name: Install Dependencies
