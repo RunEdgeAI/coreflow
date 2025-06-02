@@ -77,9 +77,6 @@ VX_API_ENTRY vx_status vxSetGraphScheduleConfig(
         if (((graph_schedule_mode == VX_GRAPH_SCHEDULE_MODE_QUEUE_AUTO) ||
              (graph_schedule_mode == VX_GRAPH_SCHEDULE_MODE_QUEUE_MANUAL)))
         {
-            /* Pipelining is enabled */
-            // graph->isPipeliningEnabled = vx_true_e;
-
             for (vx_uint32 i = 0; (i < graph_parameters_list_size) && (status == VX_SUCCESS); i++)
             {
                 if ((graph_parameters_queue_params_list[i].refs_list == nullptr) ||
