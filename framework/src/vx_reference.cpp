@@ -149,7 +149,7 @@ vx_uint32 Reference::decrementReference(vx_reftype_e refType)
     Osal::semWait(&lock);
     if (refType == VX_INTERNAL || refType == VX_BOTH) {
         if (internal_count == 0) {
-            VX_PRINT(VX_ZONE_WARNING, "#### INTERNAL REF COUNT IS ALREADY ZERO!!! " VX_FMT_REF " type:%08x #####\n", this, type);
+            VX_PRINT(VX_ZONE_ERROR, "#### INTERNAL REF COUNT IS ALREADY ZERO!!! " VX_FMT_REF " type:%08x #####\n", this, type);
             DEBUG_BREAK();
         } else {
             internal_count--;
@@ -158,7 +158,7 @@ vx_uint32 Reference::decrementReference(vx_reftype_e refType)
     if (refType == VX_EXTERNAL || refType == VX_BOTH) {
         if (external_count == 0)
         {
-            VX_PRINT(VX_ZONE_WARNING, "#### EXTERNAL REF COUNT IS ALREADY ZERO!!! " VX_FMT_REF " type:%08x #####\n", this, type);
+            VX_PRINT(VX_ZONE_ERROR, "#### EXTERNAL REF COUNT IS ALREADY ZERO!!! " VX_FMT_REF " type:%08x #####\n", this, type);
             DEBUG_BREAK();
         }
         else
@@ -361,9 +361,14 @@ vx_status Reference::releaseReference(vx_reference* r,
 {
     vx_status status = VX_SUCCESS;
 
-    if (nullptr != r &&
-        Reference::isValidReference(*r, type) == vx_true_e &&
-        type == (*r)->type)
+    if (nullptr == r ||
+        Reference::isValidReference(*r, type) == vx_false_e ||
+        type != (*r)->type)
+    {
+        status = VX_ERROR_INVALID_REFERENCE;
+    }
+
+    if (VX_SUCCESS == status)
     {
         vx_reference ref = *r;
         if (ref->decrementReference(reftype) == 0)
@@ -380,15 +385,15 @@ vx_status Reference::releaseReference(vx_reference* r,
 
             if (ref->context->removeReference(ref) == vx_false_e)
             {
+                VX_PRINT(VX_ZONE_ERROR, "Failed to remove reference %p from context\n", ref);
                 status = VX_FAILURE;
-                return status;
             }
         }
-        *r = nullptr;
     }
-    else
+
+    if (VX_SUCCESS == status)
     {
-        status = VX_ERROR_INVALID_REFERENCE;
+        *r = nullptr;
     }
 
     return status;

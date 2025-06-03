@@ -54,6 +54,120 @@ public:
      */
     ~MetaFormat() = default;
 
+    /**
+     * @brief Check if two meta formats are valid
+     *
+     * @param meta1     The first meta format
+     * @param meta2     The second meta format
+     * @return vx_bool  True if valid, false otherwise
+     * @ingroup group_int_meta_format
+     */
+    static vx_bool isValidMetaFormat(vx_meta_format meta1, vx_meta_format meta2);
+
+    /**
+     * @brief Check if two meta formats are equal
+     *
+     * @param meta1     The first meta format
+     * @param meta2     The second meta format
+     * @param ref_type  The reference type
+     * @return vx_bool  True if equal, false otherwise
+     * @ingroup group_int_meta_format
+     *
+     */
+    static vx_bool isMetaFormatEqual(
+        vx_meta_format meta1, vx_meta_format meta2, vx_enum ref_type);
+
+    /*! \brief Check if two image meta formats are equal
+     * \param [in] meta1 The first meta format
+     * \param [in] meta2 The second meta format
+     * \ingroup group_int_meta_format
+     */
+    static vx_bool isMetaFormatImageEqual(vx_meta_format meta1, vx_meta_format meta2);
+
+    /*! \brief Check if two array meta formats are equal
+     * \param [in] meta1 The first meta format
+     * \param [in] meta2 The second meta format
+     * \ingroup group_int_meta_format
+     */
+    static vx_bool isMetaFormatArrayEqual(vx_meta_format meta1, vx_meta_format meta2);
+
+    /*! \brief Check if two scalar meta formats are equal
+     * \param [in] meta1 The first meta format
+     * \param [in] meta2 The second meta format
+     * \ingroup group_int_meta_format
+     */
+    static vx_bool isMetaFormatScalarEqual(vx_meta_format meta1, vx_meta_format meta2);
+
+    /*! \brief Check if two pyramid meta formats are equal
+     * \param [in] meta1 The first meta format
+     * \param [in] meta2 The second meta format
+     * \ingroup group_int_meta_format
+     */
+    static vx_bool isMetaFormatPyramidEqual(vx_meta_format meta1, vx_meta_format meta2);
+
+    /*! \brief Check if two matrix meta formats are equal
+     * \param [in] meta1 The first meta format
+     * \param [in] meta2 The second meta format
+     * \ingroup group_int_meta_format
+     */
+    static vx_bool isMetaFormatMatrixEqual(vx_meta_format meta1, vx_meta_format meta2);
+
+    /*! \brief Check if two distribution meta formats are equal
+     * \param [in] meta1 The first meta format
+     * \param [in] meta2 The second meta format
+     * \ingroup group_int_meta_format
+     */
+    static vx_bool isMetaFormatDistributionEqual(vx_meta_format meta1, vx_meta_format meta2);
+
+    /*! \brief Check if two convolution meta formats are equal
+     * \param [in] meta1 The first meta format
+     * \param [in] meta2 The second meta format
+     * \ingroup group_int_meta_format
+     */
+    static vx_bool isMetaFormatConvolutionEqual(vx_meta_format meta1, vx_meta_format meta2);
+
+    /*! \brief Check if two threshold meta formats are equal
+     * \param [in] meta1 The first meta format
+     * \param [in] meta2 The second meta format
+     * \ingroup group_int_meta_format
+     */
+    static vx_bool isMetaFormatThresholdEqual(vx_meta_format meta1, vx_meta_format meta2);
+
+    /*! \brief Check if two remap meta formats are equal
+     * \param [in] meta1 The first meta format
+     * \param [in] meta2 The second meta format
+     * \ingroup group_int_meta_format
+     */
+    static vx_bool isMetaFormatRemapEqual(vx_meta_format meta1, vx_meta_format meta2);
+
+    /*! \brief Check if two LUT meta formats are equal
+     * \param [in] meta1 The first meta format
+     * \param [in] meta2 The second meta format
+     * \ingroup group_int_meta_format
+     */
+    static vx_bool isMetaFormatLutEqual(vx_meta_format meta1, vx_meta_format meta2);
+
+    /*! \brief Check if two object array meta formats are equal
+     * \param [in] meta1 The first meta format
+     * \param [in] meta2 The second meta format
+     * \ingroup group_int_meta_format
+     */
+    static vx_bool isMetaFormatObjectArrayEqual(vx_meta_format meta1, vx_meta_format meta2);
+
+    /*! \brief Check if two tensor meta formats are equal
+     * \param [in] meta1 The first meta format
+     * \param [in] meta2 The second meta format
+     * \ingroup group_int_meta_format
+     */
+    static vx_bool isMetaFormatTensorEqual(vx_meta_format meta1, vx_meta_format meta2);
+
+    /*! \brief Check if two user data object meta formats are equal
+     * \param [in] meta1 The first meta format
+     * \param [in] meta2 The second meta format
+     * \ingroup group_int_meta_format
+     */
+    static vx_bool isMetaFormatUserDataObjectEqual(vx_meta_format meta1, vx_meta_format meta2);
+
     /*!< \brief The size of struct. */
     vx_size size;
     /*!< \brief The <tt>\ref vx_type_e</tt> or <tt>\ref vx_df_image_e</tt> code */

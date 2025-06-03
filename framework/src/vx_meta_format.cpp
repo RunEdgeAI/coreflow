@@ -29,6 +29,392 @@ set_valid_rectangle_callback(nullptr)
 
 }
 
+vx_bool MetaFormat::isValidMetaFormat(vx_meta_format meta1, vx_meta_format meta2)
+{
+    vx_bool isValid = vx_false_e;
+
+    if ((Reference::isValidReference(meta1, VX_TYPE_META_FORMAT) == vx_true_e) &&
+        (Reference::isValidReference(meta2, VX_TYPE_META_FORMAT) == vx_true_e))
+    {
+        isValid = vx_true_e;
+    }
+
+    if (isValid == vx_false_e)
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Meta format is invalid!\n");
+    }
+
+    return isValid;
+}
+
+vx_bool MetaFormat::isMetaFormatEqual(
+    vx_meta_format meta1, vx_meta_format meta2, vx_enum ref_type)
+{
+    vx_bool isEqual = vx_false_e;
+
+    if (vx_true_e == MetaFormat::isValidMetaFormat(meta1, meta2))
+    {
+        switch (ref_type)
+        {
+            case VX_TYPE_IMAGE:
+                isEqual = MetaFormat::isMetaFormatImageEqual(meta1, meta2);
+                break;
+            case VX_TYPE_ARRAY:
+                isEqual = MetaFormat::isMetaFormatArrayEqual(meta1, meta2);
+                break;
+            case VX_TYPE_SCALAR:
+                isEqual = MetaFormat::isMetaFormatScalarEqual(meta1, meta2);
+                break;
+            case VX_TYPE_PYRAMID:
+                isEqual = MetaFormat::isMetaFormatPyramidEqual(meta1, meta2);
+                break;
+            case VX_TYPE_MATRIX:
+                isEqual = MetaFormat::isMetaFormatMatrixEqual(meta1, meta2);
+                break;
+            case VX_TYPE_DISTRIBUTION:
+                isEqual = MetaFormat::isMetaFormatDistributionEqual(meta1, meta2);
+                break;
+            case VX_TYPE_CONVOLUTION:
+                isEqual = MetaFormat::isMetaFormatConvolutionEqual(meta1, meta2);
+                break;
+            case VX_TYPE_THRESHOLD:
+                isEqual = MetaFormat::isMetaFormatThresholdEqual(meta1, meta2);
+                break;
+            case VX_TYPE_REMAP:
+                isEqual = MetaFormat::isMetaFormatRemapEqual(meta1, meta2);
+                break;
+            case VX_TYPE_LUT:
+                isEqual = MetaFormat::isMetaFormatLutEqual(meta1, meta2);
+                break;
+            case VX_TYPE_OBJECT_ARRAY:
+                isEqual = MetaFormat::isMetaFormatObjectArrayEqual(meta1, meta2);
+                break;
+            case VX_TYPE_TENSOR:
+                isEqual = MetaFormat::isMetaFormatTensorEqual(meta1, meta2);
+                break;
+#if defined(OPENVX_USE_USER_DATA_OBJECT)
+            case VX_TYPE_USER_DATA_OBJECT:
+                isEqual = MetaFormat::isMetaFormatUserDataObjectEqual(meta1, meta2);
+                break;
+#endif
+            default:
+                VX_PRINT(VX_ZONE_ERROR, "invalid ref_type attribute\n");
+                break;
+        }
+    }
+    else
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Meta format is invalid!\n");
+    }
+
+    return isEqual;
+}
+
+vx_bool MetaFormat::isMetaFormatImageEqual(
+    vx_meta_format meta1, vx_meta_format meta2)
+{
+    vx_bool is_equal = vx_false_e;
+
+    if (MetaFormat::isValidMetaFormat(meta1, meta2) == vx_true_e )
+    {
+        if ( (meta1->dim.image.width  == meta2->dim.image.width) &&
+             (meta1->dim.image.height == meta2->dim.image.height) &&
+             (meta1->dim.image.format == meta2->dim.image.format) )
+        {
+            is_equal = vx_true_e;
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_INFO, "Image object meta data are not equivalent!\n");
+        }
+    }
+
+    return is_equal;
+}
+
+vx_bool MetaFormat::isMetaFormatArrayEqual(
+    vx_meta_format meta1, vx_meta_format meta2)
+{
+    vx_bool is_equal = vx_false_e;
+
+    if (MetaFormat::isValidMetaFormat(meta1, meta2) == vx_true_e )
+    {
+        if ( (meta1->dim.array.item_type == meta2->dim.array.item_type) &&
+             (meta1->dim.array.capacity  == meta2->dim.array.capacity)  // &&
+            //  (meta1->dim.array.item_size == meta2->dim.array.item_size)
+            )
+        {
+            is_equal = vx_true_e;
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_INFO, "Array object meta data are not equivalent!\n");
+        }
+    }
+
+    return is_equal;
+}
+
+vx_bool MetaFormat::isMetaFormatScalarEqual(
+    vx_meta_format meta1, vx_meta_format meta2)
+{
+    vx_bool is_equal = vx_false_e;
+
+    if (MetaFormat::isValidMetaFormat(meta1, meta2) == vx_true_e )
+    {
+        if ( meta1->dim.scalar.type == meta2->dim.scalar.type )
+        {
+            is_equal = vx_true_e;
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_INFO, "Scalar object meta data are not equivalent!\n");
+        }
+    }
+
+    return is_equal;
+}
+
+vx_bool MetaFormat::isMetaFormatPyramidEqual(
+    vx_meta_format meta1, vx_meta_format meta2)
+{
+    vx_bool is_equal = vx_false_e;
+
+    if (MetaFormat::isValidMetaFormat(meta1, meta2) == vx_true_e )
+    {
+        if ( (meta1->dim.pyramid.width  == meta2->dim.pyramid.width) &&
+             (meta1->dim.pyramid.height == meta2->dim.pyramid.height) &&
+             (meta1->dim.pyramid.format == meta2->dim.pyramid.format) &&
+             (meta1->dim.pyramid.levels == meta2->dim.pyramid.levels) &&
+             (meta1->dim.pyramid.scale  == meta2->dim.pyramid.scale) )
+        {
+            is_equal = vx_true_e;
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_INFO, "Pyramid object meta data are not equivalent!\n");
+        }
+    }
+
+    return is_equal;
+}
+
+vx_bool MetaFormat::isMetaFormatMatrixEqual(
+    vx_meta_format meta1, vx_meta_format meta2)
+{
+    vx_bool is_equal = vx_false_e;
+
+    if (MetaFormat::isValidMetaFormat(meta1, meta2) == vx_true_e )
+    {
+        if ( (meta1->dim.matrix.type     == meta2->dim.matrix.type) &&
+             (meta1->dim.matrix.rows     == meta2->dim.matrix.rows) &&
+             (meta1->dim.matrix.cols     == meta2->dim.matrix.cols) // &&
+            //  (meta1->dim.matrix.size     == meta2->dim.matrix.size) &&
+            //  (meta1->dim.matrix.pattern  == meta2->dim.matrix.pattern) &&
+            //  (meta1->dim.matrix.origin.x == meta2->dim.matrix.origin.x) &&
+            //  (meta1->dim.matrix.origin.y == meta2->dim.matrix.origin.y)
+            )
+        {
+            is_equal = vx_true_e;
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_INFO, "Matrix object meta data are not equivalent!\n");
+        }
+    }
+
+    return is_equal;
+}
+
+vx_bool MetaFormat::isMetaFormatDistributionEqual(
+    vx_meta_format meta1, vx_meta_format meta2)
+{
+    vx_bool is_equal = vx_false_e;
+
+    if (MetaFormat::isValidMetaFormat(meta1, meta2) == vx_true_e )
+    {
+        if ( (meta1->dim.distribution.bins   == meta2->dim.distribution.bins) &&
+             (meta1->dim.distribution.offset == meta2->dim.distribution.offset) &&
+             (meta1->dim.distribution.range  == meta2->dim.distribution.range) )
+        {
+            is_equal = vx_true_e;
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_INFO, "Distribution object meta data are not equivalent!\n");
+        }
+    }
+
+    return is_equal;
+}
+
+vx_bool MetaFormat::isMetaFormatConvolutionEqual(
+    vx_meta_format meta1, vx_meta_format meta2)
+{
+    vx_bool is_equal = vx_false_e;
+
+    if (MetaFormat::isValidMetaFormat(meta1, meta2) == vx_true_e )
+    {
+    //     if ( (meta1->dim.convolution.rows  == meta2->dim.convolution.rows) &&
+    //          (meta1->dim.convolution.cols  == meta2->dim.convolution.cols) &&
+    //          (meta1->dim.convolution.scale == meta2->dim.convolution.scale) &&
+    //          (meta1->dim.convolution.size  == meta2->dim.convolution.size) )
+    //     {
+    //         is_equal = vx_true_e;
+    //     }
+    //     else
+    //     {
+    //         VX_PRINT(VX_ZONE_INFO, "Convolution object meta data are not equivalent!\n");
+    //     }
+    }
+
+    return is_equal;
+}
+
+vx_bool MetaFormat::isMetaFormatRemapEqual(
+    vx_meta_format meta1, vx_meta_format meta2)
+{
+    vx_bool is_equal = vx_false_e;
+
+    if (MetaFormat::isValidMetaFormat(meta1, meta2) == vx_true_e )
+    {
+        if ( (meta1->dim.remap.src_width  == meta2->dim.remap.src_width) &&
+             (meta1->dim.remap.src_height == meta2->dim.remap.src_height) &&
+             (meta1->dim.remap.dst_width  == meta2->dim.remap.dst_width) &&
+             (meta1->dim.remap.dst_height == meta2->dim.remap.dst_height) )
+        {
+            is_equal = vx_true_e;
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_INFO, "Remap object meta data are not equivalent!\n");
+        }
+    }
+
+    return is_equal;
+}
+
+vx_bool MetaFormat::isMetaFormatThresholdEqual(
+    vx_meta_format meta1, vx_meta_format meta2)
+{
+    vx_bool is_equal = vx_false_e;
+
+    if (MetaFormat::isValidMetaFormat(meta1, meta2) == vx_true_e )
+    {
+        if ( meta1->dim.threshold.type  == meta2->dim.threshold.type )
+        {
+            is_equal = vx_true_e;
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_INFO, "Threshold object meta data are not equivalent!\n");
+        }
+    }
+
+    return is_equal;
+}
+
+vx_bool MetaFormat::isMetaFormatObjectArrayEqual(
+    vx_meta_format meta1, vx_meta_format meta2)
+{
+    vx_bool is_equal = vx_false_e;
+
+    if (MetaFormat::isValidMetaFormat(meta1, meta2) == vx_true_e )
+    {
+        if ( (meta1->dim.object_array.item_type == meta2->dim.object_array.item_type) &&
+             (meta1->dim.object_array.num_items == meta2->dim.object_array.num_items) )
+        {
+            is_equal = vx_true_e;
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_INFO, "Object Array object meta data are not equivalent!\n");
+        }
+    }
+
+    return is_equal;
+}
+
+vx_bool MetaFormat::isMetaFormatLutEqual(
+    vx_meta_format meta1, vx_meta_format meta2)
+{
+    vx_bool is_equal = vx_false_e;
+
+    if (MetaFormat::isValidMetaFormat(meta1, meta2) == vx_true_e )
+    {
+        if ( (meta1->dim.lut.type  == meta2->dim.lut.type) &&
+             (meta1->dim.lut.count == meta2->dim.lut.count) )
+        {
+            is_equal = vx_true_e;
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_INFO, "LUT object meta data are not equivalent!\n");
+        }
+    }
+
+    return is_equal;
+}
+
+vx_bool MetaFormat::isMetaFormatTensorEqual(
+    vx_meta_format meta1, vx_meta_format meta2)
+{
+    vx_bool is_equal = vx_false_e;
+    vx_uint32 i;
+
+    if (MetaFormat::isValidMetaFormat(meta1, meta2) == vx_true_e )
+    {
+        if ( (meta1->dim.tensor.number_of_dimensions                 == meta2->dim.tensor.number_of_dimensions) &&
+             (meta1->dim.tensor.data_type                            == meta2->dim.tensor.data_type) &&
+             (meta1->dim.tensor.fixed_point_position                 == meta2->dim.tensor.fixed_point_position) // &&
+            //  (meta1->dim.tensor.scaling_divisor                      == meta2->dim.tensor.scaling_divisor) &&
+            //  (meta1->dim.tensor.scaling_divisor_fixed_point_position == meta2->dim.tensor.scaling_divisor_fixed_point_position)
+            )
+        {
+            for (i = 0; i < meta1->dim.tensor.number_of_dimensions; i++)
+            {
+                if ((meta1->dim.tensor.dimensions[i] != meta2->dim.tensor.dimensions[i]) // ||
+                    // (meta1->dim.tensor.strides[i]    != meta2->dim.tensor.strides[i])
+                    )
+                {
+                    break;
+                }
+            }
+            if (i == meta1->dim.tensor.number_of_dimensions)
+            {
+                is_equal = vx_true_e;
+            }
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_INFO, "Tensor object meta data are not equivalent!\n");
+        }
+    }
+
+    return is_equal;
+}
+
+vx_bool MetaFormat::isMetaFormatUserDataObjectEqual(
+    vx_meta_format meta1, vx_meta_format meta2)
+{
+    vx_bool is_equal = vx_false_e;
+
+    if (MetaFormat::isValidMetaFormat(meta1, meta2) == vx_true_e )
+    {
+        if ( (meta1->dim.user_data_object.size == meta2->dim.user_data_object.size) &&
+             ( 0 == strncmp(meta1->dim.user_data_object.type_name, meta2->dim.user_data_object.type_name, VX_MAX_REFERENCE_NAME) ) )
+        {
+            is_equal = vx_true_e;
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_INFO, "User data object meta data are not equivalent!\n");
+        }
+    }
+
+    return is_equal;
+}
+
 /******************************************************************************/
 /* PUBLIC INTERFACE                                                           */
 /******************************************************************************/

@@ -112,23 +112,23 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetObjectArrayItem(vx_object_array arr, vx_
 VX_API_ENTRY vx_status VX_API_CALL vxImportGraphFromDot(vx_graph graph, vx_char dotfile[], vx_bool acceptData);
 
 /* ENABLED FEATURES IN COREVX ONLY */
-#define OPENVX_USE_USER_DATA_OBJECT
-#define OPENVX_USE_IX
-#define OPENVX_USE_XML
-#define OPENVX_USE_S16
-#define OPENVX_USE_OPENCL_INTEROP
-#define OPENVX_USE_NN
-#define OPENVX_USE_NN_16
-#define OPENVX_USE_EVENTS
+#define OPENVX_USE_USER_DATA_OBJECT 1
+#define OPENVX_USE_IX 1
+#define OPENVX_USE_XML 1
+#define OPENVX_USE_S16 1
+#define OPENVX_USE_OPENCL_INTEROP 1
+#define OPENVX_USE_NN 1
+#define OPENVX_USE_NN_16 1
+// #define OPENVX_USE_PIPELINING 1
 
 #if defined(__arm__) || defined(__arm64__)
-#define OPENVX_USE_TILING
-#define OPENVX_KHR_TILING
+#define OPENVX_USE_TILING 1
+#define OPENVX_KHR_TILING 1
 #define EXPERIMENTAL_USE_VENUM
 #endif /* defined(__arm__) || defined(__arm64__) */
 
-#define OPENVX_CONFORMANCE_NNEF_IMPORT
-#define OPENVX_CONFORMANCE_NEURAL_NETWORKS
+#define OPENVX_CONFORMANCE_NNEF_IMPORT 1
+#define OPENVX_CONFORMANCE_NEURAL_NETWORKS 1
 #define EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT
 #define EXPERIMENTAL_USE_DOT
 #define EXPERIMENTAL_USE_OPENCL

@@ -61,34 +61,52 @@ static vx_sem_t global_lock;
 /*****************************************************************************/
 // INTERNAL CONTEXT APIS
 /*****************************************************************************/
-Context::Context() : Reference(nullptr, VX_TYPE_CONTEXT, nullptr),
-p_global_lock(nullptr),
-reftable(),
-num_references(0),
-modules(),
-num_modules(0),
-proc(),
-num_kernels(0),
-num_unique_kernels(0),
-num_targets(0),
-targets(),
-priority_targets(),
-log_callback(nullptr),
-log_lock(),
-log_enabled(vx_false_e),
-log_reentrant(vx_false_e),
-perf_enabled(vx_true_e),
-accessors(),
-memory_maps_lock(),
-memory_maps(),
-user_structs(),
-workers(nullptr),
-imm_border(),
-imm_border_policy(),
-next_dynamic_user_kernel_id(0),
-next_dynamic_user_library_id(0),
-imm_target_enum(),
-imm_target_string()
+Context::Context()
+    : Reference(nullptr, VX_TYPE_CONTEXT, nullptr),
+      p_global_lock(nullptr),
+      reftable(),
+      num_references(0),
+      modules(),
+      num_modules(0),
+      proc(),
+      num_kernels(0),
+      num_unique_kernels(0),
+      num_targets(0),
+      targets(),
+      priority_targets(),
+      log_callback(nullptr),
+      log_lock(),
+      log_enabled(vx_false_e),
+      log_reentrant(vx_false_e),
+      perf_enabled(vx_true_e),
+      accessors(),
+      memory_maps_lock(),
+      memory_maps(),
+      user_structs(),
+      workers(nullptr),
+#if defined(EXPERIMENTAL_USE_OPENCL)
+      platforms(),
+      num_platforms(0),
+      devices(),
+      num_devices(),
+      global(),
+      queues(),
+#endif
+      imm_border(),
+      imm_border_policy(),
+      next_dynamic_user_kernel_id(0),
+      next_dynamic_user_library_id(0),
+      imm_target_enum(),
+      imm_target_string(),
+#ifdef OPENVX_USE_OPENCL_INTEROP
+      opencl_context(nullptr),
+      opencl_command_queue(nullptr),
+#endif
+#ifdef OPENVX_USE_PIPELINING
+      event_queue(),
+#endif
+      graph_queue(),
+      numGraphsQueued(0ul)
 {
 }
 

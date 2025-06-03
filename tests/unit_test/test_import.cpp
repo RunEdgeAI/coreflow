@@ -12,6 +12,8 @@
 
 #include "vx_internal.h"
 
+#if defined(OPENVX_USE_XML) || defined(OPENVX_USE_IX)
+
 class ImportTest : public ::testing::Test
 {
 protected:
@@ -51,3 +53,5 @@ TEST_F(ImportTest, DestructImport)
     import->destruct();
     EXPECT_EQ(import->refs, nullptr);
 }
+
+#endif /* defined(OPENVX_USE_XML) || defined(OPENVX_USE_IX) */

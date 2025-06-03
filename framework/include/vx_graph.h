@@ -16,6 +16,9 @@
 #ifndef VX_GRAPH_H
 #define VX_GRAPH_H
 
+#include <COREVX/execution_queue.hpp>
+
+#include "vx_internal.h"
 #include "vx_reference.h"
 
 /*!
@@ -159,6 +162,16 @@ public:
                             vx_uint32 childIndex);
 
     /**
+     * @brief Validate the graph parameters queue references list
+     *
+     * @param graph_parameters_queue_param
+     * @return vx_status
+     * @ingroup group_int_graph
+     */
+    vx_status pipelineValidateRefsList(
+        const vx_graph_parameter_queue_params_t graph_parameters_queue_param);
+
+    /**
      * @brief Destruct function for the Graph object
      * @ingroup group_int_graph
      */
@@ -188,15 +201,33 @@ public:
         vx_node node;
         /*! \brief The index to the parameter on the node. */
         vx_uint32  index;
+#ifdef OPENVX_USE_PIPELINING
+        /*! \brief Set to an enum value in \ref vx_type_e. */
+        vx_enum type;
+        /*! \brief the max buffers that can be enqueued */
+        vx_uint32 numBufs;
+        /*! \brief The internal data ref queue */
+        ExecutionQueue<vx_reference, VX_INT_MAX_QUEUE_DEPTH> queue;
+        /*! \brief references that can be queued into data ref queue */
+        vx_reference refs_list[VX_INT_MAX_QUEUE_DEPTH];
+#endif
     } parameters[VX_INT_MAX_PARAMS];
     /*! \brief The number of graph parameters. */
     vx_uint32      numParams;
     /*! \brief A switch to turn off SMP mode */
-    vx_bool        should_serialize;
+    vx_bool        shouldSerialize;
     /*! \brief [hidden] If non-NULL, the parent graph, for scope handling. */
     vx_graph       parentGraph;
     /*! \brief The array of all delays in this graph */
     vx_delay       delays[VX_INT_MAX_REF];
+    /*! \brief The graph scheduling mode */
+    vx_graph_schedule_mode_type_e scheduleMode;
+#ifdef OPENVX_USE_PIPELINING
+    /*! \brief The number of enqueable parameters */
+    vx_uint32 numEnqueableParams;
+    /*! \brief The number of times to schedule a graph  */
+    vx_size scheduleCount;
+#endif
 };
 
 #endif /* VX_GRAPH_H */

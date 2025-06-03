@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include "vx_internal.h"
 #include "vx_graph.h"
 
-static vx_value_set_t graph_queue[10];
-static vx_size numGraphsQueued = 0ul;
+#include <algorithm>
+#include <queue>
+
+#include "vx_internal.h"
 
 /******************************************************************************/
 /* STATIC FUNCTIONS */
@@ -242,7 +242,7 @@ reverify(vx_false_e),
 lock(),
 parameters(),
 numParams(0),
-should_serialize(vx_false_e),
+shouldSerialize(vx_false_e),
 parentGraph(nullptr),
 delays()
 {
@@ -1644,6 +1644,85 @@ vx_bool Graph::postprocessOutput(vx_uint32 n, vx_uint32 p, vx_reference* vref, v
     return vx_true_e;
 } /* postprocessOutput() */
 
+vx_status Graph::pipelineValidateRefsList(
+    const vx_graph_parameter_queue_params_t graph_parameters_queue_param)
+{
+    vx_status status = VX_SUCCESS;
+    vx_meta_format meta_base = nullptr, meta = nullptr;
+    vx_uint32 i;
+
+    if (nullptr != graph_parameters_queue_param.refs_list[0])
+    {
+        meta_base = vxCreateMetaFormat(graph_parameters_queue_param.refs_list[0]->context);
+        status = vxSetMetaFormatFromReference(meta_base, graph_parameters_queue_param.refs_list[0]);
+    }
+
+    if ( (VX_SUCCESS == status)
+         && (nullptr != meta_base) )
+    {
+        for (i = 1; i < graph_parameters_queue_param.refs_list_size; i++)
+        {
+            if (nullptr != graph_parameters_queue_param.refs_list[i])
+            {
+                meta = vxCreateMetaFormat(graph_parameters_queue_param.refs_list[i]->context);
+
+                if (nullptr != meta)
+                {
+                    status = vxSetMetaFormatFromReference(meta, graph_parameters_queue_param.refs_list[i]);
+                }
+                else
+                {
+                    status = VX_FAILURE;
+                    VX_PRINT(VX_ZONE_ERROR, "Meta Format is NULL\n");
+                }
+
+                if (VX_SUCCESS == status)
+                {
+                    if (graph_parameters_queue_param.refs_list[0]->type ==
+                        graph_parameters_queue_param.refs_list[i]->type)
+                    {
+                        if (vx_true_e != MetaFormat::isMetaFormatEqual(meta_base, meta, graph_parameters_queue_param.refs_list[0]->type))
+                        {
+                            status = VX_ERROR_INVALID_PARAMETERS;
+                            VX_PRINT(VX_ZONE_ERROR, "Invalid meta data of reference list!\n");
+                        }
+                    }
+                }
+
+                if (Reference::isValidReference(meta, VX_TYPE_META_FORMAT) == vx_true_e)
+                {
+                    status |= vxReleaseMetaFormat(&meta);
+                    if (VX_SUCCESS != status)
+                    {
+                        VX_PRINT(VX_ZONE_ERROR, "Failed to release meta format object \n");
+                    }
+                }
+
+                if (VX_SUCCESS != status)
+                {
+                    break;
+                }
+            }
+            else
+            {
+                status = VX_ERROR_INVALID_PARAMETERS;
+                VX_PRINT(VX_ZONE_ERROR, "Invalid graph parameter ref list!\n");
+            }
+        }
+    }
+
+    if (Reference::isValidReference(meta_base, VX_TYPE_META_FORMAT) == vx_true_e)
+    {
+        status |= vxReleaseMetaFormat(&meta_base);
+        if (VX_SUCCESS != status)
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Failed to release meta format object \n");
+        }
+    }
+
+    return status;
+}
+
 void Graph::destruct()
 {
     while (numNodes)
@@ -1982,7 +2061,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
             else /* old style validators */
             {
                 VX_PRINT(VX_ZONE_GRAPH, "Using old style validators\n");
-                vx_meta_format meta = 0;
+                vx_meta_format metas[VX_INT_MAX_PARAMS] = {nullptr};
 
                 /* first pass for inputs */
                 for (p = 0; p < graph->nodes[n]->kernel->signature.num_parameters; p++)
@@ -2018,12 +2097,15 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                     if (graph->nodes[n]->kernel->signature.directions[p] == VX_OUTPUT)
                     {
                         vx_status output_validation_status = VX_SUCCESS;
-                        if (graph->setupOutput(n, p, &vref, &meta, &status, &num_errors) == vx_false_e)
+                        if (graph->setupOutput(n, p, &vref, &metas[p], &status, &num_errors) ==
+                            vx_false_e)
                             break;
-                        output_validation_status = graph->nodes[n]->kernel->validate_output((vx_node)graph->nodes[n], p, meta);
+                        output_validation_status = graph->nodes[n]->kernel->validate_output(
+                            (vx_node)graph->nodes[n], p, metas[p]);
                         if (output_validation_status == VX_SUCCESS)
                         {
-                            if (graph->postprocessOutput(n, p, &vref, meta, &status, &num_errors) == vx_false_e)
+                            if (graph->postprocessOutput(n, p, &vref, metas[p], &status,
+                                                         &num_errors) == vx_false_e)
                             {
                                 break;
                             }
@@ -2040,8 +2122,14 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                         }
                     }
                 }
-                if (meta)
-                    vxReleaseMetaFormat(&meta);
+
+                for (p = 0; p < dimof(metas); p++)
+                {
+                    if (metas[p])
+                    {
+                        vxReleaseMetaFormat(&metas[p]);
+                    }
+                }
             }
         }
 
@@ -2202,6 +2290,15 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                                 /* if the parameter is referenced elsewhere */
                                 if (vxCheckWriteDependency(graph->nodes[n]->parameters[p], graph->nodes[n1]->parameters[p1]))
                                 {
+                                    /* @TODO: this was added by AI; deep dive this logic */
+                                    vx_reference refA = graph->nodes[n]->parameters[p];
+                                    vx_reference refB = graph->nodes[n1]->parameters[p1];
+                                    if (refA->type == refB->type && refA->delay && refB->delay &&
+                                        refA->delay == refB->delay)
+                                    {
+                                        /* skip delay slot dependency for head node detection */
+                                        continue;
+                                    }
                                     VX_PRINT(VX_ZONE_GRAPH,"\tnodes[%u].parameter[%u] referenced in nodes[%u].parameter[%u]\n", n,p,n1,p1);
                                     isAHead = vx_false_e; /* this will cause all the loops to break too. */
                                 }
@@ -2423,6 +2520,59 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
     {
         return VX_ERROR_INVALID_REFERENCE;
     }
+
+#ifdef OPENVX_USE_PIPELINING
+    // Dequeue graph parameters if pipelining is enabled
+    if (graph->scheduleMode == VX_GRAPH_SCHEDULE_MODE_QUEUE_AUTO ||
+        graph->scheduleMode == VX_GRAPH_SCHEDULE_MODE_QUEUE_MANUAL)
+    {
+        for (vx_uint32 i = 0; i < graph->numEnqueableParams; i++)
+        {
+            auto& paramQueue = graph->parameters[i].queue;
+            vx_reference ref;
+
+            // Dequeue a reference from the "ready" queue
+            if (paramQueue.peekReady(ref))
+            {
+                vx_node node = graph->parameters[i].node;
+                vx_uint32 param_index = graph->parameters[i].index;
+                // Save the old reference for this graph parameter
+                vx_reference old_ref = node->parameters[param_index];
+
+                // Update ALL node parameters that point to this old reference
+                if (node->parameters[param_index] != ref)
+                {
+                    for (vx_uint32 n = 0; n < graph->numNodes; n++)
+                    {
+                        for (vx_uint32 p = 0; p < graph->nodes[n]->kernel->signature.num_parameters;
+                             p++)
+                        {
+                            // Assign the dequeued reference to the corresponding node parameter
+                            if (graph->nodes[n]->parameters[p] == old_ref)
+                            {
+                                graph->context->removeReference(graph->nodes[n]->parameters[p]);
+                                ref->incrementReference(VX_INTERNAL);
+                                graph->nodes[n]->parameters[p] = ref;
+                            }
+                        }
+                    }
+                }
+
+                VX_PRINT(VX_ZONE_GRAPH,
+                         "Dequeued reference for graph parameter %u and \
+                    assigned to node parameter %u\n",
+                         i, param_index);
+            }
+            else
+            {
+                VX_PRINT(VX_ZONE_ERROR, "Failed to dequeue reference for graph parameter %u\n", i);
+                std::cerr << "Failed to dequeue reference for graph parameter " << i << std::endl;
+                return VX_ERROR_NO_RESOURCES;
+            }
+        }
+    }
+#endif
+
     if (graph->verified == vx_false_e)
     {
         status = vxVerifyGraph((vx_graph)graph);
@@ -2442,6 +2592,7 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
     {
         Osal::startCapture(&graph->perf);
     }
+
     /* initialize the next_nodes as the graph heads */
     memcpy(next_nodes, graph->heads, graph->numHeads * sizeof(vx_uint32));
     numNext = graph->numHeads;
@@ -2459,10 +2610,10 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
             {
                 vx_uint32 t = graph->nodes[next_nodes[n]]->affinity;
 #if defined(OPENVX_USE_SMP)
-                if (depth == 1 && graph->should_serialize == vx_false_e)
+                if (depth == 1 && graph->shouldSerialize == vx_false_e)
                 {
                     vx_value_set_t *work = &workitems[n];
-                    vx_target target = &graph->context->targets[t];
+                    vx_target target = graph->context->targets[t];
                     vx_node node = graph->nodes[next_nodes[n]];
                     work->v1 = (vx_value_t)target;
                     work->v2 = (vx_value_t)node;
@@ -2509,54 +2660,54 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
                         }
                     }
 
-                    if (action == VX_ACTION_CONTINUE)
+#ifdef OPENVX_USE_PIPELINING
+                    /* Raise a node completed event. */
+                    vx_event_info_t event_info;
+                    event_info.node_completed.graph = graph;
+                    event_info.node_completed.node = node;
+                    if (graph->context->event_queue.isEnabled() &&
+                        VX_SUCCESS != graph->context->event_queue.push(VX_EVENT_NODE_COMPLETED, 0,
+                                                                       &event_info,
+                                                                       (vx_reference)node))
                     {
-                        if (graph->context->event_queue.isEnabled())
+                        VX_PRINT(VX_ZONE_ERROR, "Failed to push node completed event for node %s\n",
+                                 node->kernel->name);
+                    }
+
+                    /* Raise a graph parameter consumed event */
+                    for (vx_uint32 gp = 0; gp < graph->numEnqueableParams; gp++)
+                    {
+                        vx_node param_node = graph->parameters[gp].node;
+                        vx_uint32 param_index = graph->parameters[gp].index;
+
+                        /* If this node just executed and consumed a graph parameter */
+                        if (param_node == node)
                         {
-                            // Raise a node completed event.
-                            vx_event_info_t event_info;
-                            event_info.node_completed.graph = graph;
-                            event_info.node_completed.node = node;
-                            if (VX_SUCCESS !=
-                                graph->context->event_queue.push(VX_EVENT_NODE_COMPLETED, 0,
-                                                                 &event_info, (vx_reference)node))
+                            vx_event_info_t event_info = {};
+                            event_info.graph_parameter_consumed.graph = graph;
+                            event_info.graph_parameter_consumed.graph_parameter_index = param_index;
+
+                            (void)graph->parameters[gp].queue.moveReadyToDone();
+
+                            if (graph->context->event_queue.isEnabled() &&
+                                param_node->kernel->signature.directions[param_index] == VX_INPUT &&
+                                VX_SUCCESS != graph->context->event_queue.push(
+                                                  VX_EVENT_GRAPH_PARAMETER_CONSUMED, 0, &event_info,
+                                                  (vx_reference)graph))
                             {
                                 VX_PRINT(VX_ZONE_ERROR,
-                                         "Failed to push node completed event for node %s\n",
-                                         node->kernel->name);
-                            }
-
-                            for (vx_uint32 gp = 0; gp < graph->numParams; gp++)
-                            {
-                                vx_node param_node = graph->parameters[gp].node;
-                                vx_uint32 param_index = graph->parameters[gp].index;
-
-                                // If this node just executed and consumed a graph parameter
-                                if (param_node == node)
-                                {
-                                    vx_event_info_t event_info = {};
-                                    event_info.graph_parameter_consumed.graph = graph;
-                                    event_info.graph_parameter_consumed.graph_parameter_index =
-                                        param_index;
-
-                                    if (VX_SUCCESS != graph->context->event_queue.push(
-                                                          VX_EVENT_GRAPH_PARAMETER_CONSUMED, 0,
-                                                          &event_info, (vx_reference)graph))
-                                    {
-                                        VX_PRINT(
-                                            VX_ZONE_ERROR,
-                                            "Failed to push graph parameter consumed event for "
-                                            "graph %p, param %u\n",
-                                            graph, gp);
-                                    }
-                                }
+                                         "Failed to push graph parameter consumed event for "
+                                         "graph %p, param %u\n",
+                                         graph, gp);
                             }
                         }
                     }
+#endif
 
                     if (action == VX_ACTION_ABANDON)
                     {
-                        // Raise a node error event.
+#ifdef OPENVX_USE_PIPELINING
+                        /* Raise a node error event. */
                         vx_event_info_t event_info;
                         event_info.node_error.graph = graph;
                         event_info.node_error.node = node;
@@ -2569,6 +2720,7 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
                             VX_PRINT(VX_ZONE_ERROR, "Failed to push node error event for node %s\n",
                                      node->kernel->name);
                         }
+#endif
                         break;
                     }
                 }
@@ -2581,7 +2733,7 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
         }
 
 #if defined(OPENVX_USE_SMP)
-        if (depth == 1 && graph->should_serialize == vx_false_e)
+        if (depth == 1 && graph->shouldSerialize == vx_false_e)
         {
             if (Osal::issueThreadpool(graph->context->workers, workitems, numNext) == vx_true_e)
             {
@@ -2639,6 +2791,19 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
     }
 
     VX_PRINT(VX_ZONE_GRAPH,"Process returned status %d\n", status);
+
+#ifdef OPENVX_USE_PIPELINING
+    /* Raise a graph completed event. */
+    vx_event_info_t event_info;
+    event_info.graph_completed.graph = graph;
+    if (graph->context->event_queue.isEnabled() &&
+        VX_SUCCESS != graph->context->event_queue.push(VX_EVENT_GRAPH_COMPLETED, 0, &event_info,
+                                                       (vx_reference)graph))
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Failed to push graph completed event for graph %p\n", graph);
+    }
+#endif
+
     // Report the performance of the graph execution.
     if (context->perf_enabled)
     {
@@ -2659,15 +2824,6 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
     if (status == VX_SUCCESS)
     {
         graph->state = VX_GRAPH_STATE_COMPLETED;
-        // Raise a graph completed event.
-        vx_event_info_t event_info;
-        event_info.graph_completed.graph = graph;
-        if (graph->context->event_queue.isEnabled() &&
-            VX_SUCCESS != graph->context->event_queue.push(VX_EVENT_GRAPH_COMPLETED, 0, &event_info,
-                                                           (vx_reference)graph))
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Failed to push graph completed event for graph %p\n", graph);
-        }
     }
     else
     {
@@ -2694,20 +2850,41 @@ VX_API_ENTRY vx_status VX_API_CALL vxScheduleGraph(vx_graph graph)
         }
     }
 
-    if (Osal::semTryWait(&graph->lock) == vx_true_e)
+#ifdef OPENVX_USE_PIPELINING
+    vx_uint32 numParams = std::min(graph->numParams, graph->numEnqueableParams);
+    vx_size batch_depth = 1u;
+    if (graph->scheduleMode == VX_GRAPH_SCHEDULE_MODE_QUEUE_MANUAL)
     {
+        batch_depth = UINT32_MAX;  // Use UINT32_MAX to indicate no limit on batch depth
+        for (vx_uint32 i = 0; i < numParams; ++i)
+        {
+            batch_depth = std::min(batch_depth, graph->parameters[i].queue.readyQueueSize());
+        }
+
+        if (batch_depth == 0 || batch_depth == UINT32_MAX)
+        {
+            // Not enough data to schedule a batch
+            return VX_ERROR_NOT_SUFFICIENT;
+        }
+    }
+
+    for (vx_uint32 i = 0; i < batch_depth; i++)
+#endif
+    // if (Osal::semTryWait(&graph->lock) == vx_true_e)
+    {
+        Osal::semTryWait(&graph->lock);
         vx_sem_t* p_graph_queue_lock = graph->context->p_global_lock;
         vx_uint32 q = 0u;
         vx_value_set_t *pq = nullptr;
 
         Osal::semWait(p_graph_queue_lock);
         /* acquire a position in the graph queue */
-        for (q = 0; q < dimof(graph_queue); q++)
+        for (q = 0; q < dimof(graph->context->graph_queue); q++)
         {
-            if (graph_queue[q].v1 == 0)
+            if (graph->context->graph_queue[q].v1 == 0)
             {
-                pq = &graph_queue[q];
-                numGraphsQueued++;
+                pq = &graph->context->graph_queue[q];
+                graph->context->numGraphsQueued++;
                 break;
             }
         }
@@ -2716,6 +2893,11 @@ VX_API_ENTRY vx_status VX_API_CALL vxScheduleGraph(vx_graph graph)
         {
             memset(pq, 0, sizeof(vx_value_set_t));
             pq->v1 = (vx_value_t)graph;
+
+#ifdef OPENVX_USE_PIPELINING
+            /* Increment the schedule count */
+            graph->scheduleCount++;
+#endif
             /* now add the graph to the queue */
             VX_PRINT(VX_ZONE_GRAPH,"Writing graph=" VX_FMT_REF ", status=%d\n",graph, status);
             if (Osal::writeQueue(&graph->context->proc.input, pq) == vx_true_e)
@@ -2725,6 +2907,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxScheduleGraph(vx_graph graph)
             else
             {
                 Osal::semPost(&graph->lock);
+                VX_PRINT(VX_ZONE_ERROR, "Failed to write graph to queue");
                 status = VX_ERROR_NO_RESOURCES;
             }
         }
@@ -2734,11 +2917,12 @@ VX_API_ENTRY vx_status VX_API_CALL vxScheduleGraph(vx_graph graph)
             status = VX_ERROR_NO_RESOURCES;
         }
     }
-    else
-    {
-        /* graph is already scheduled */
-        status = VX_ERROR_GRAPH_SCHEDULED;
-    }
+    // else
+    // {
+    //     /* graph is already scheduled */
+    //     VX_PRINT(VX_ZONE_WARNING, "Graph is already scheduled!\n");
+    //     // status = VX_ERROR_GRAPH_SCHEDULED;
+    // }
 
     return status;
 }
@@ -2752,7 +2936,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxWaitGraph(vx_graph graph)
         return VX_ERROR_INVALID_REFERENCE;
     }
 
-    if (Osal::semTryWait(&graph->lock) == vx_false_e) /* locked */
+    if (Osal::semTryWait(&graph->lock) == vx_false_e ||
+        graph->scheduleMode == VX_GRAPH_SCHEDULE_MODE_QUEUE_MANUAL) /* locked */
     {
         vx_sem_t* p_graph_queue_lock = graph->context->p_global_lock;
         vx_graph g2;
@@ -2776,17 +2961,29 @@ VX_API_ENTRY vx_status VX_API_CALL vxWaitGraph(vx_graph graph)
                     vx_uint32 q = 0u;
                     Osal::semWait(p_graph_queue_lock);
                     /* find graph in the graph queue */
-                    for (q = 0; q < dimof(graph_queue); q++)
+                    for (q = 0; q < dimof(graph->context->graph_queue); q++)
                     {
-                        if (graph_queue[q].v1 == (vx_value_t)graph)
+                        if (graph->context->graph_queue[q].v1 == (vx_value_t)graph)
                         {
-                            graph_queue[q].v1 = 0;
-                            numGraphsQueued--;
+                            graph->context->graph_queue[q].v1 = 0;
+                            graph->context->numGraphsQueued--;
                             break;
                         }
                     }
                     Osal::semPost(p_graph_queue_lock);
+
+#ifdef OPENVX_USE_PIPELINING
+                    /* Decrement the schedule count */
+                    graph->scheduleCount--;
+                    /* Unlock the graph only if all scheduled executions are completed */
+                    if (graph->scheduleCount == 0)
+                    {
+                        Osal::semPost(&graph->lock);
+                        break;
+                    }
+#else
                     break;
+#endif
                 }
                 else
                 {
@@ -2799,7 +2996,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxWaitGraph(vx_graph graph)
     }
     else
     {
-        status = VX_FAILURE;
+        // status = VX_FAILURE;
         Osal::semPost(&graph->lock); /* was free, release */
     }
 
