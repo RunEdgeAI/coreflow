@@ -123,10 +123,11 @@ extern "C" vx_status vxTargetInit(vx_target target)
 
     for (p = 0; p < context->num_platforms; p++)
     {
-        err = clGetDeviceIDs(context->platforms[p], CL_DEVICE_TYPE_GPU,
-            0, nullptr, &context->num_devices[p]);
+        err = clGetDeviceIDs(context->platforms[p], CL_DEVICE_TYPE_DEFAULT, 0, nullptr,
+                             &context->num_devices[p]);
 
-        err |= clGetDeviceIDs(context->platforms[p], CL_DEVICE_TYPE_GPU,
+        err |= clGetDeviceIDs(
+            context->platforms[p], CL_DEVICE_TYPE_DEFAULT,
             context->num_devices[p] > CL_MAX_DEVICES ? CL_MAX_DEVICES : context->num_devices[p],
             context->devices[p], nullptr);
         if (err == CL_SUCCESS)
@@ -398,16 +399,20 @@ extern "C" vx_status vxTargetDeinit(vx_target target)
                 if (target->kernels[k])
                 {
                     target->kernels[k]->decrementReference(VX_INTERNAL);
-                    clReleaseKernel(cl_kernels[k]->kernels[p]);
-                    clReleaseProgram(cl_kernels[k]->program[p]);
+                    if (cl_kernels[k]->kernels[p]) clReleaseKernel(cl_kernels[k]->kernels[p]);
+                    if (cl_kernels[k]->program[p]) clReleaseProgram(cl_kernels[k]->program[p]);
                 }
 
             }
             for (d = 0; d < context->num_devices[p]; d++)
             {
-                clReleaseCommandQueue(context->queues[p][d]);
+                if (context->queues[p][d])
+                {
+                    clFinish(context->queues[p][d]);
+                    clReleaseCommandQueue(context->queues[p][d]);
+                }
             }
-            clReleaseContext(context->global[p]);
+            if (context->global[p]) clReleaseContext(context->global[p]);
         }
     }
     return VX_SUCCESS;

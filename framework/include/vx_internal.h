@@ -176,7 +176,7 @@
 /*! \brief Maximum queue depth.
  * \ingroup group_int_defines
  */
-#define VX_INT_MAX_QUEUE_DEPTH (32)
+#define VX_INT_MAX_QUEUE_DEPTH (100002)
 
 /*! \brief The value to use in event waiting which never returns.
  * \ingroup group_int_defines
@@ -467,7 +467,7 @@ typedef struct vx_threadpool_t {
     /*! \brief Unit size of a work item */
     uint32_t sizeWorkItem;
     /*! \brief The number of corrent items in the queue */
-     int32_t numCurrentItems;
+    int32_t numCurrentItems;
     /*! \brief The array of workers */
     vx_threadpool_worker_t *workers;
     /*! \brief The next index to submit work to */

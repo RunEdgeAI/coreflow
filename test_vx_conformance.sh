@@ -4,12 +4,16 @@ set -e
 TARGET_DIR="${GITHUB_WORKSPACE:-$PWD}"
 echo "Running from TARGET_DIR=$TARGET_DIR"
 
+if [ -d "$TARGET_DIR/cts/build" ]; then
+  rm -rf $TARGET_DIR/cts/build
+fi
+
 mkdir -p $TARGET_DIR/cts/build
 
 # Set the environment variables
 export OPENVX_DIR=$TARGET_DIR
-export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$OPENVX_DIR/bazel-bin:$OPENVX_DIR/bazel-bin/vxu:$OPENVX_DIR/bazel-bin/targets/c_model:$OPENVX_DIR/bazel-bin/targets/extras:$OPENVX_DIR/bazel-bin/targets/debug:$OPENVX_DIR/bazel-bin/targets/opencl:$OPENVX_DIR/cts/build/lib/
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OPENVX_DIR/bazel-bin:$OPENVX_DIR/bazel-bin/vxu:$OPENVX_DIR/bazel-bin/targets/c_model:$OPENVX_DIR/bazel-bin/targets/extras:$OPENVX_DIR/bazel-bin/targets/debug:$OPENVX_DIR/bazel-bin/targets/opencl:$OPENVX_DIR/cts/build/lib/
+export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$OPENVX_DIR/bazel-bin:$OPENVX_DIR/bazel-bin/vxu:$OPENVX_DIR/bazel-bin/targets/ai_server:$OPENVX_DIR/bazel-bin/targets/c_model:$OPENVX_DIR/bazel-bin/targets/extras:$OPENVX_DIR/bazel-bin/targets/debug:$OPENVX_DIR/bazel-bin/targets/executorch:$OPENVX_DIR/bazel-bin/targets/liteRT:$OPENVX_DIR/bazel-bin/targets/opencl:$OPENVX_DIR/bazel-bin/targets/onnxRT:$OPENVX_DIR/cts/build/lib/
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OPENVX_DIR/bazel-bin:$OPENVX_DIR/bazel-bin/vxu:$OPENVX_DIR/bazel-bin/targets/ai_server:$OPENVX_DIR/bazel-bin/targets/c_model:$OPENVX_DIR/bazel-bin/targets/extras:$OPENVX_DIR/bazel-bin/targets/debug:$OPENVX_DIR/bazel-bin/targets/executorch:$OPENVX_DIR/bazel-bin/targets/liteRT:$OPENVX_DIR/bazel-bin/targets/opencl:$OPENVX_DIR/bazel-bin/targets/onnxRT:$OPENVX_DIR/cts/build/lib/
 export VX_TEST_DATA_PATH=$OPENVX_DIR/cts/test_data/
 export VX_CL_SOURCE_DIR=$OPENVX_DIR/kernels/opencl/
 
@@ -36,15 +40,20 @@ cmake \
 -DOPENVX_CONFORMANCE_NEURAL_NETWORKS=ON \
 ..
 
+# -DOPENVX_USE_PIPELINING=ON \
 # -DOPENVX_CONFORMANCE_VISION=ON \
 # -DOPENVX_USE_ENHANCED_VISION=ON \
-# -DOPENVX_USE_PIPELINING=ON \
 # -DOPENVX_USE_STREAMING=ON \
 
 cmake --build .
 
 # Run the conformance test suite
-./bin/vx_test_conformance
+if [[ "$DEBUG" == "1" ]]; then
+  echo "Running under GDB since CI is set"
+  gdb -batch -ex "run" -ex "bt" --args ./bin/vx_test_conformance
+else
+  ./bin/vx_test_conformance
+fi
 
 # Clean up
 cd $TARGET_DIR

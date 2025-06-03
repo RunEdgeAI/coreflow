@@ -3,10 +3,6 @@ cc_test(
     srcs = [
         "test_array.cpp"
     ],
-    includes = [
-        "include",
-        "framework/include"
-    ],
     deps = [
         "//:corevx",
         "@googletest//:gtest_main",
@@ -19,13 +15,21 @@ cc_test(
 )
 
 cc_test(
+    name = "test_circular_queue",
+    srcs = [
+        "test_circular_queue.cpp",
+    ],
+    deps = [
+        "//:corevx",
+        "@googletest//:gtest_main",
+    ],
+    size = "small"
+)
+
+cc_test(
     name = "test_context",
     srcs = [
         "test_context.cpp"
-    ],
-    includes = [
-        "include",
-        "framework/include"
     ],
     deps = [
         "//:corevx",
@@ -43,10 +47,6 @@ cc_test(
     srcs = [
         "test_delay.cpp"
     ],
-    includes = [
-        "include",
-        "framework/include"
-    ],
     deps = [
         "//:corevx",
         "@googletest//:gtest_main",
@@ -62,10 +62,6 @@ cc_test(
     name = "test_distribution",
     srcs = [
         "test_distribution.cpp"
-    ],
-    includes = [
-        "include",
-        "framework/include"
     ],
     deps = [
         "//:corevx",
@@ -83,10 +79,6 @@ cc_test(
     srcs = [
         "test_dot.cpp"
     ],
-    includes = [
-        "include",
-        "framework/include"
-    ],
     deps = [
         "//:corevx",
         "@googletest//:gtest_main",
@@ -102,10 +94,6 @@ cc_test(
     name = "test_error",
     srcs = [
         "test_error.cpp"
-    ],
-    includes = [
-        "include",
-        "framework/include"
     ],
     deps = [
         "//:corevx",
@@ -123,10 +111,6 @@ cc_test(
     srcs = [
         "test_image.cpp"
     ],
-    includes = [
-        "include",
-        "framework/include"
-    ],
     deps = [
         "//:corevx",
         "@googletest//:gtest_main",
@@ -142,10 +126,6 @@ cc_test(
     name = "test_import",
     srcs = [
         "test_import.cpp"
-    ],
-    includes = [
-        "include",
-        "framework/include"
     ],
     deps = [
         "//:corevx",
@@ -163,10 +143,6 @@ cc_test(
     srcs = [
         "test_parameter.cpp"
     ],
-    includes = [
-        "include",
-        "framework/include"
-    ],
     deps = [
         "//:corevx",
         "@googletest//:gtest_main",
@@ -182,10 +158,6 @@ cc_test(
     name = "test_remap",
     srcs = [
         "test_remap.cpp"
-    ],
-    includes = [
-        "include",
-        "framework/include"
     ],
     deps = [
         "//:corevx",
@@ -203,10 +175,6 @@ cc_test(
     srcs = [
         "test_scalar.cpp"
     ],
-    includes = [
-        "include",
-        "framework/include"
-    ],
     deps = [
         "//:corevx",
         "@googletest//:gtest_main",
@@ -222,10 +190,6 @@ cc_test(
     name = "test_target",
     srcs = [
         "test_target.cpp"
-    ],
-    includes = [
-        "include",
-        "framework/include"
     ],
     deps = [
         "//:corevx",
@@ -243,10 +207,6 @@ cc_test(
     srcs = [
         "test_threshold.cpp"
     ],
-    includes = [
-        "include",
-        "framework/include"
-    ],
     deps = [
         "//:corevx",
         "@googletest//:gtest_main",
@@ -262,10 +222,6 @@ cc_test(
     name = "test_userdataobject",
     srcs = [
         "test_userdataobject.cpp"
-    ],
-    includes = [
-        "include",
-        "framework/include"
     ],
     deps = [
         "//:corevx",

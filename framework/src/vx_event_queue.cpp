@@ -19,7 +19,7 @@
 
 #include "vx_internal.h"
 
-#ifdef OPENVX_USE_EVENTS
+#ifdef OPENVX_USE_PIPELINING
 
 VX_API_ENTRY vx_status VX_API_CALL vxEnableEvents(vx_context context)
 {
@@ -65,7 +65,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSendUserEvent(vx_context context, vx_uint32
     if (Context::isValidContext(context) == vx_false_e)
     {
         VX_PRINT(VX_ZONE_ERROR, "context is invalid\n");
-        status = (vx_status)VX_ERROR_INVALID_REFERENCE;
+        status = VX_ERROR_INVALID_REFERENCE;
     }
 
     if (VX_SUCCESS == status)
@@ -83,6 +83,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSendUserEvent(vx_context context, vx_uint32
         event_info.user_event.user_event_parameter = parameter;
         status = context->event_queue.push(VX_EVENT_USER, id, &event_info);
     }
+
     return status;
 }
 
@@ -95,7 +96,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxWaitEvent(
     if (Context::isValidContext(context) == vx_false_e)
     {
         VX_PRINT(VX_ZONE_ERROR,"context is invalid\n");
-        status = (vx_status)VX_ERROR_INVALID_REFERENCE;
+        status = VX_ERROR_INVALID_REFERENCE;
     }
 
     if (VX_SUCCESS == status)
@@ -124,7 +125,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxRegisterEvent(
     if (vx_false_e == Reference::isValidReference(ref))
     {
         VX_PRINT(VX_ZONE_ERROR, "ref is invalid\n");
-        status = (vx_status)VX_ERROR_INVALID_REFERENCE;
+        status = VX_ERROR_INVALID_REFERENCE;
     }
 
     if (VX_SUCCESS == status)
@@ -152,6 +153,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxRegisterEvent(
         // Only some event types are allowed per spec
         switch (type)
         {
+            case VX_EVENT_GRAPH_PARAMETER_CONSUMED:
             case VX_EVENT_GRAPH_COMPLETED:
             case VX_EVENT_NODE_COMPLETED:
             case VX_EVENT_NODE_ERROR:
