@@ -142,27 +142,27 @@ public:
      */
     static void printKernel(vx_kernel kernel);
 
-    /*! \brief */
+    /*! \brief The name of the kernel */
     vx_char        name[VX_MAX_KERNEL_NAME];
-    /*! \brief */
+    /*! \brief The kernel enum ID */
     vx_enum        enumeration;
-    /*! \brief */
+    /*! \brief The kernel function pointer */
     vx_kernel_f    function;
-    /*! \brief */
+    /*! \brief The kernel signature */
     vx_signature_t signature;
-    /*! Indicates that the kernel is not yet enabled. */
+    /*! \brief Indicates that the kernel is not yet enabled. */
     vx_bool        enabled;
-    /*! Indicates that this kernel is added by user. */
+    /*! \brief Indicates that this kernel is added by user. */
     vx_bool        user_kernel;
-    /*! \brief */
+    /*! \brief The kernel validate function pointer */
     vx_kernel_validate_f validate;
-    /*! \brief */
+    /*! \brief The kernel input validate function pointer */
     vx_kernel_input_validate_f validate_input;
-    /*! \brief */
+    /*! \brief The kernel output validate function pointer */
     vx_kernel_output_validate_f validate_output;
-    /*! \brief */
+    /*! \brief The kernel init function pointer */
     vx_kernel_initialize_f initialize;
-    /*! \brief */
+    /*! \brief The kernel deinit function pointer */
     vx_kernel_deinitialize_f deinitialize;
     /*! \brief The collection of attributes of a kernel */
     vx_kernel_attr_t attributes;
@@ -172,7 +172,7 @@ public:
     /*! \brief The tiling function pointer interface */
     vx_tiling_kernel_f tilingfast_function;
     vx_tiling_kernel_f tilingflexible_function;
-#endif
+#endif /* OPENVX_KHR_TILING */
     /*! \brief The pointer to the kernel object deinitializer. */
     vx_kernel_object_deinitialize_f kernel_object_deinitialize;
     /*! \brief The kernel's input depth required to start */

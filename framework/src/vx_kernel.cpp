@@ -38,10 +38,10 @@ Kernel::Kernel(vx_context context, vx_reference scope)
 #ifdef OPENVX_KHR_TILING
       tilingfast_function(nullptr),
       tilingflexible_function(nullptr),
-#endif
+#endif /* OPENVX_KHR_TILING */
       kernel_object_deinitialize(nullptr),
-      input_depth(),
-      output_depth()
+      input_depth(1u),
+      output_depth(1u)
 {
 }
 
@@ -209,13 +209,12 @@ vx_kernel Kernel::addkernel(vx_context context,
     }
 
     if (func_ptr == nullptr ||
-        ((validate == nullptr) &&
-         (input == nullptr ||
-          output == nullptr)) ||
-        numParams > VX_INT_MAX_PARAMS || numParams == 0 ||
-        name == nullptr ||
-        strncmp(name, "",  VX_MAX_KERNEL_NAME) == 0)
-        /* initialize and de-initialize can be nullptr */
+#ifndef OPENVX_USE_STREAMING
+        ((validate == nullptr) && (input == nullptr || output == nullptr)) ||
+#endif
+        numParams > VX_INT_MAX_PARAMS || numParams == 0 || name == nullptr ||
+        strncmp(name, "", VX_MAX_KERNEL_NAME) == 0)
+    /* initialize and de-initialize can be nullptr */
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid Parameters!\n");
         vxAddLogEntry((vx_reference)context, VX_ERROR_INVALID_PARAMETERS, "Invalid Parameters supplied to vxAddKernel or vxAddUserKernel\n");
@@ -728,7 +727,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxFinalizeKernel(vx_kernel kernel)
 VX_API_ENTRY vx_status VX_API_CALL vxQueryKernel(vx_kernel kernel, vx_enum attribute, void *ptr, vx_size size)
 {
     vx_status status = VX_SUCCESS;
-    if (kernel && Reference::isValidReference(reinterpret_cast<vx_reference>(kernel), VX_TYPE_KERNEL) == vx_true_e)
+    if (ptr && Reference::isValidReference(reinterpret_cast<vx_reference>(kernel),
+                                           VX_TYPE_KERNEL) == vx_true_e)
     {
         switch (attribute)
         {
@@ -814,9 +814,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryKernel(vx_kernel kernel, vx_enum attri
                 break;
 #endif /* OPENVX_USE_OPENCL_INTEROP */
             case VX_KERNEL_PIPEUP_INPUT_DEPTH:
-                if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
+                if (VX_CHECK_PARAM(ptr, size, vx_uint32, 0x3) && *(vx_uint32 *)ptr > 0)
                 {
-                    *(vx_enum *)ptr = kernel->input_depth;
+                    *(vx_uint32 *)ptr = kernel->input_depth;
                 }
                 else
                 {
@@ -824,9 +824,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryKernel(vx_kernel kernel, vx_enum attri
                 }
                 break;
             case VX_KERNEL_PIPEUP_OUTPUT_DEPTH:
-                if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
+                if (VX_CHECK_PARAM(ptr, size, vx_uint32, 0x3) && *(vx_uint32 *)ptr > 0)
                 {
-                    *(vx_enum *)ptr = kernel->output_depth;
+                    *(vx_uint32 *)ptr = kernel->output_depth;
                 }
                 else
                 {
