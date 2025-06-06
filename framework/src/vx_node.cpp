@@ -384,7 +384,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryNode(vx_node node, vx_enum attribute, 
                     status = VX_ERROR_INVALID_PARAMETERS;
                 }
                 break;
-#endif
+#endif /* OPENVX_KHR_NODE_MEMORY */
             case VX_NODE_BORDER:
                 if (VX_CHECK_PARAM(ptr, size, vx_border_t, 0x3))
                 {
