@@ -17,6 +17,7 @@
 #define VX_GRAPH_H
 
 #include <COREVX/execution_queue.hpp>
+#include <atomic>
 
 #include "vx_internal.h"
 #include "vx_reference.h"
@@ -172,6 +173,12 @@ public:
         const vx_graph_parameter_queue_params_t graph_parameters_queue_param);
 
     /**
+     * @brief Streaming loop function
+     *
+     */
+    void streamingLoop();
+
+    /**
      * @brief Destruct function for the Graph object
      * @ingroup group_int_graph
      */
@@ -227,6 +234,16 @@ public:
     vx_uint32 numEnqueableParams;
     /*! \brief The number of times to schedule a graph  */
     vx_size scheduleCount;
+#endif
+#ifdef OPENVX_USE_STREAMING
+    /*! \brief This indicates that the graph is streaming enabled */
+    std::atomic<vx_bool> isStreamingEnabled;
+    /*! \brief This indicates that the graph is currently streaming */
+    std::atomic<vx_bool> isStreaming;
+    /*! \brief The index of the trigger node */
+    vx_uint32 triggerNodeIndex;
+    /*! \brief The thread used for streaming */
+    vx_thread streamingThread;
 #endif
 };
 

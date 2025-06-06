@@ -13,29 +13,118 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#ifdef OPENVX_USE_STREAMING
-
 #include <VX/vx.h>
-#include <VX/vx_khr_pipelining.h>
 #include <VX/vx_compatibility.h>
+#include <VX/vx_khr_pipelining.h>
 
 #include "vx_internal.h"
+
+#ifdef OPENVX_USE_STREAMING
 
 VX_API_ENTRY vx_status VX_API_CALL vxEnableGraphStreaming(vx_graph graph,
                 vx_node trigger_node)
 {
-    return VX_ERROR_NOT_IMPLEMENTED;
+    vx_status status = VX_SUCCESS;
+    vx_bool triggerNodeSet = vx_false_e;
+
+    if (vx_false_e == Reference::isValidReference(graph, VX_TYPE_GRAPH))
+    {
+        VX_PRINT(VX_ZONE_ERROR, "invalid graph reference\n");
+        status = VX_ERROR_INVALID_REFERENCE;
+    }
+
+    if (VX_SUCCESS == status)
+    {
+        graph->isStreamingEnabled = vx_true_e;
+
+        if (vx_true_e == Reference::isValidReference(trigger_node, VX_TYPE_NODE))
+        {
+            for (vx_uint32 i = 0; i < graph->numNodes; i++)
+            {
+                if (graph->nodes[i] == trigger_node)
+                {
+                    graph->triggerNodeIndex = i;
+                    triggerNodeSet = vx_true_e;
+                    break;
+                }
+            }
+
+            if (vx_false_e == triggerNodeSet)
+            {
+                VX_PRINT(VX_ZONE_ERROR, "trigger_node does not belong to graph\n");
+                status = VX_ERROR_INVALID_PARAMETERS;
+            }
+        }
+    }
+
+    return status;
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxStartGraphStreaming(vx_graph graph)
 {
-    return VX_ERROR_NOT_IMPLEMENTED;
+    vx_status status = VX_SUCCESS;
+
+    if (vx_false_e == Reference::isValidReference(graph, VX_TYPE_GRAPH))
+    {
+        VX_PRINT(VX_ZONE_ERROR, "invalid graph reference\n");
+        status = VX_ERROR_INVALID_REFERENCE;
+    }
+
+    if (VX_SUCCESS == status)
+    {
+        if (vx_true_e != graph->isStreamingEnabled)
+        {
+            VX_PRINT(VX_ZONE_ERROR,
+                     "streaming has not been enabled. Please enable streaming prior to verifying "
+                     "graph\n");
+            status = VX_ERROR_INVALID_PARAMETERS;
+        }
+    }
+
+    if (VX_SUCCESS == status)
+    {
+        if (vx_false_e == graph->isStreaming)
+        {
+            graph->isStreaming = vx_true_e;
+            graph->streamingThread = std::thread([graph]() { graph->streamingLoop(); });
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_WARNING, "this graph is currently already streaming\n");
+        }
+    }
+
+    return status;
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxStopGraphStreaming(vx_graph graph)
 {
-    return VX_ERROR_NOT_IMPLEMENTED;
+    vx_status status = VX_SUCCESS;
+
+    if (vx_false_e == Reference::isValidReference(graph, VX_TYPE_GRAPH))
+    {
+        VX_PRINT(VX_ZONE_ERROR, "invalid graph reference\n");
+        status = VX_ERROR_INVALID_REFERENCE;
+    }
+
+    if (VX_SUCCESS == status)
+    {
+        if (vx_true_e != graph->isStreaming)
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Streaming has not been started\n");
+            status = VX_ERROR_INVALID_PARAMETERS;
+        }
+    }
+
+    if (VX_SUCCESS == status)
+    {
+        graph->isStreaming = vx_false_e;
+        /* Wait and join streaming thread */
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+        if (graph->streamingThread.joinable()) graph->streamingThread.join();
+    }
+
+    return status;
 }
 
 #endif /* OPENVX_USE_STREAMING */

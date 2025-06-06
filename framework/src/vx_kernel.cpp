@@ -20,21 +20,28 @@
 /******************************************************************************/
 /* INTERNAL INTERFACE                                                         */
 /******************************************************************************/
-Kernel::Kernel(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_KERNEL, scope),
-name(""),
-enumeration(VX_ERROR_NOT_SUPPORTED),
-function(nullptr),
-signature(),
-enabled(vx_false_e),
-user_kernel(vx_false_e),
-validate(nullptr),
-validate_input(nullptr),
-validate_output(nullptr),
-initialize(nullptr),
-deinitialize(nullptr),
-attributes(),
-affinity(0),
-kernel_object_deinitialize(nullptr)
+Kernel::Kernel(vx_context context, vx_reference scope)
+    : Reference(context, VX_TYPE_KERNEL, scope),
+      name(""),
+      enumeration(VX_ERROR_NOT_SUPPORTED),
+      function(nullptr),
+      signature(),
+      enabled(vx_false_e),
+      user_kernel(vx_false_e),
+      validate(nullptr),
+      validate_input(nullptr),
+      validate_output(nullptr),
+      initialize(nullptr),
+      deinitialize(nullptr),
+      attributes(),
+      affinity(0),
+#ifdef OPENVX_KHR_TILING
+      tilingfast_function(nullptr),
+      tilingflexible_function(nullptr),
+#endif
+      kernel_object_deinitialize(nullptr),
+      input_depth(),
+      output_depth()
 {
 }
 
@@ -806,6 +813,26 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryKernel(vx_kernel kernel, vx_enum attri
                 }
                 break;
 #endif /* OPENVX_USE_OPENCL_INTEROP */
+            case VX_KERNEL_PIPEUP_INPUT_DEPTH:
+                if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
+                {
+                    *(vx_enum *)ptr = kernel->input_depth;
+                }
+                else
+                {
+                    status = VX_ERROR_INVALID_PARAMETERS;
+                }
+                break;
+            case VX_KERNEL_PIPEUP_OUTPUT_DEPTH:
+                if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
+                {
+                    *(vx_enum *)ptr = kernel->output_depth;
+                }
+                else
+                {
+                    status = VX_ERROR_INVALID_PARAMETERS;
+                }
+                break;
             default:
                 status = VX_ERROR_NOT_SUPPORTED;
                 break;

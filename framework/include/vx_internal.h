@@ -329,6 +329,10 @@ typedef struct vx_sem_t
  */
 typedef sem_t vx_sem_t;
 #endif
+/*! \brief A C++ STL thread
+ * \ingroup group_int_osal
+ */
+typedef std::thread vx_thread;
 /*! \brief A POSIX thread
  * \ingroup group_int_osal
  */

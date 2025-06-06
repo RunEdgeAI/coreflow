@@ -1723,6 +1723,34 @@ vx_status Graph::pipelineValidateRefsList(
     return status;
 }
 
+void Graph::streamingLoop()
+{
+#ifdef OPENVX_USE_STREAMING
+    while (isStreaming)
+    {
+        /* Wait for trigger node event if set */
+        if (triggerNodeIndex != UINT32_MAX)
+        {
+            /* Wait for the trigger node to complete */
+            while (!nodes[triggerNodeIndex]->executed)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                /* Allow clean exit */
+                if (!isStreaming) return;
+            }
+            /* Reset the event for the next iteration */
+            nodes[triggerNodeIndex]->executed = vx_false_e;
+        }
+
+        /* Schedule and wait for the graph */
+        vx_status status = vxScheduleGraph(this);
+        if (status != VX_SUCCESS) break;
+        status = vxWaitGraph(this);
+        if (status != VX_SUCCESS) break;
+    }
+#endif /* OPENVX_USE_STREAMING */
+}
+
 void Graph::destruct()
 {
     while (numNodes)

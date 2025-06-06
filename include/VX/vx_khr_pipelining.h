@@ -494,7 +494,7 @@ typedef struct _vx_event {
 VX_API_ENTRY vx_status VX_API_CALL vxWaitEvent(vx_context context, vx_event_t *event, vx_bool do_not_block);
 
 /*! \brief Enable event generation
- * 
+ *
  * Depending on the implementation, events may be either enabled or disabled by default.
  *
  * \param context [in] OpenVX context
@@ -593,46 +593,48 @@ enum vx_node_state_e {
 /*! \brief The node attributes added by this extension.
  * \ingroup group_streaming
  */
-enum vx_node_attribute_streaming_e {
+enum vx_node_attribute_streaming_e
+{
     /*! \brief Queries the state of the node. Read-only. See <tt>\ref vx_graph_state_e</tt> enum. */
-    VX_NODE_STATE = VX_ATTRIBUTE_BASE(VX_ID_KHRONOS, VX_TYPE_NODE) + 0x9,
+    VX_NODE_STATE = VX_ATTRIBUTE_BASE(VX_ID_KHRONOS, VX_TYPE_NODE) + 0xA,
 };
 
 /*! \brief The kernel attributes added by this extension.
  * \ingroup group_streaming
  */
-enum vx_kernel_attribute_streaming_e {
+enum vx_kernel_attribute_streaming_e
+{
     /*! \brief The pipeup output depth required by the kernel.
      * This is called by kernels that need to be primed with multiple output buffers before it can
-     * begin to return them.  A typical use case for this is a source node which needs to provide and
-     * retain multiple empty buffers to a camera driver to fill.  The first time the graph is executed
-     * after vxVerifyGraph is called, the framework calls the node associated with this kernel
-     * (pipeup_output_depth - 1) times before 'expecting' a valid output and calling downstream nodes.
-     * During this PIPEUP state, the framework provides the same set of input parameters for each
-     * call, but provides different set of output parameters for each call.  During the STEADY state,
-     * the kernel may return a different set of output parameters than was given during the execution callback.
-     * Read-write. Can be written only before user-kernel finalization.
-     * Use a <tt>\ref vx_uint32</tt> parameter.
+     * begin to return them.  A typical use case for this is a source node which needs to provide
+     * and retain multiple empty buffers to a camera driver to fill.  The first time the graph is
+     * executed after vxVerifyGraph is called, the framework calls the node associated with this
+     * kernel (pipeup_output_depth - 1) times before 'expecting' a valid output and calling
+     * downstream nodes. During this PIPEUP state, the framework provides the same set of input
+     * parameters for each call, but provides different set of output parameters for each call.
+     * During the STEADY state, the kernel may return a different set of output parameters than was
+     * given during the execution callback. Read-write. Can be written only before user-kernel
+     * finalization. Use a <tt>\ref vx_uint32</tt> parameter.
      * \note If not set, it will default to 1.
      * \note Setting a value less than 1 shall return VX_ERROR_INVALID_PARAMETERS
      */
-    VX_KERNEL_PIPEUP_OUTPUT_DEPTH = VX_ATTRIBUTE_BASE(VX_ID_KHRONOS, VX_TYPE_KERNEL) + 0x4,
+    VX_KERNEL_PIPEUP_OUTPUT_DEPTH = VX_ATTRIBUTE_BASE(VX_ID_KHRONOS, VX_TYPE_KERNEL) + 0x5,
 
     /*! \brief The pipeup input depth required by the kernel.
      * This is called by kernels that need to retain one or more input buffers before it can
      * begin to return them.  A typical use case for this is a sink node which needs to provide and
-     * retain one or more filled buffers to a display driver to display.  The first (pipeup_input_depth - 1)
-     * times the graph is executed after vxVerifyGraph is called, the framework calls the node associated with this kernel
-     * without 'expecting' an input to have been consumed and returned by the node.
-     * During this PIPEUP state, the framework does not reuse any of the input bufers it had given to this node.
-     * During the STEADY state, the kernel may return a different set of input parameters than was given during
-     * the execution callback.
+     * retain one or more filled buffers to a display driver to display.  The first
+     * (pipeup_input_depth - 1) times the graph is executed after vxVerifyGraph is called, the
+     * framework calls the node associated with this kernel without 'expecting' an input to have
+     * been consumed and returned by the node. During this PIPEUP state, the framework does not
+     * reuse any of the input bufers it had given to this node. During the STEADY state, the kernel
+     * may return a different set of input parameters than was given during the execution callback.
      * Read-write. Can be written only before user-kernel finalization.
      * Use a <tt>\ref vx_uint32</tt> parameter.
      * \note If not set, it will default to 1.
      * \note Setting a value less than 1 shall return VX_ERROR_INVALID_PARAMETERS
      */
-    VX_KERNEL_PIPEUP_INPUT_DEPTH = VX_ATTRIBUTE_BASE(VX_ID_KHRONOS, VX_TYPE_KERNEL) + 0x5,
+    VX_KERNEL_PIPEUP_INPUT_DEPTH = VX_ATTRIBUTE_BASE(VX_ID_KHRONOS, VX_TYPE_KERNEL) + 0x6,
 };
 
 /*! \brief Enable streaming mode of graph execution
