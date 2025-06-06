@@ -176,9 +176,9 @@ public:
     /*! \brief The pointer to the kernel object deinitializer. */
     vx_kernel_object_deinitialize_f kernel_object_deinitialize;
     /*! \brief The kernel's input depth required to start */
-    vx_kernel_attribute_streaming_e input_depth;
+    vx_uint32 input_depth;
     /*! \brief The kernel's output depth required to start */
-    vx_kernel_attribute_streaming_e output_depth;
+    vx_uint32 output_depth;
 };
 
 #endif /* VX_KERNEL_H */

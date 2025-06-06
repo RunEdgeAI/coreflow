@@ -1079,6 +1079,26 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetKernelAttribute(vx_kernel kernel, vx_enu
             }
             break;
 #endif /* OPENVX_USE_OPENCL_INTEROP */
+        case VX_KERNEL_PIPEUP_INPUT_DEPTH:
+            if (VX_CHECK_PARAM(ptr, size, vx_uint32, 0x3))
+            {
+                kernel->input_depth = *(vx_uint32 *)ptr;
+            }
+            else
+            {
+                status = VX_ERROR_INVALID_VALUE;
+            }
+            break;
+        case VX_KERNEL_PIPEUP_OUTPUT_DEPTH:
+            if (VX_CHECK_PARAM(ptr, size, vx_uint32, 0x3))
+            {
+                kernel->output_depth = *(vx_uint32 *)ptr;
+            }
+            else
+            {
+                status = VX_ERROR_INVALID_VALUE;
+            }
+            break;
         default:
             status = VX_ERROR_NOT_SUPPORTED;
             break;
