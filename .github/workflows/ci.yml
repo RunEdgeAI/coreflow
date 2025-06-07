@@ -36,9 +36,9 @@ jobs:
       - name: Setup model server
         run: |
           curl -fsSL https://ollama.com/install.sh | sh
-          ollama pull llama3:8b
           ollama serve &
           sleep 5
+          ollama pull llama3:8b
           curl -s http://localhost:11434/api/tags || exit 1
 
       # Checks-out your repository under $GITHUB_WORKSPACE, which is the CWD for
