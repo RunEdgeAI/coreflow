@@ -10,7 +10,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui/main.dart';
 import 'package:ui/graph_editor.dart';
-import 'package:ui/objects.dart';
 
 void main() {
   late ByteData mockXmlData;
