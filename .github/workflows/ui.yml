@@ -1,4 +1,4 @@
-name: UI CI
+name: Flutter CI
 
 on:
   push:
@@ -21,6 +21,7 @@ jobs:
     - name: Install dependencies
       run: |
         cd ui
+        sudo apt-get install lcov
         flutter pub get
 
     - name: Verify formatting
@@ -33,13 +34,26 @@ jobs:
         cd ui
         flutter analyze
 
-    - name: Run tests
+    - name: Build linux
+      run: |
+        cd ui
+        flutter build linux
+
+    - name: Build web
+      run: |
+        cd ui
+        flutter build web
+
+    - name: Run tests with coverage
       run: |
         cd ui
         flutter test --coverage
+        genhtml coverage/lcov.info -o coverage/html
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
-        directory: ui/coverage/lcov.info
+        files: ui/coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
         fail_ci_if_error: true
