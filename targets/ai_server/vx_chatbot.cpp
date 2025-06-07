@@ -7,7 +7,6 @@
  * @copyright Copyright (c) 2025
  *
  */
-#include <iostream>
 #include <string>
 #include <unordered_map>
 
@@ -33,7 +32,10 @@ private:
     {
         vx_status status = vxTruncateArray(arr, 0); // clear existing contents
         if (status != VX_SUCCESS)
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Failed to clear existing contents out of string\n");
             return status;
+        }
 
         return vxAddArrayItems(arr, in.size(), in.data(), sizeof(char));
     }
@@ -66,11 +68,44 @@ public:
 
     static vx_status VX_CALLBACK validate(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[])
     {
-        (void)node;
-        (void)parameters;
-        (void)num;
-        (void)metas;
-        return VX_SUCCESS;
+        vx_status status = VX_SUCCESS;
+
+        if (nullptr == node || nullptr == parameters || num != dimof(kernelParams) ||
+            nullptr == metas)
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Error: Invalid parameters during validation!\n");
+            status = VX_FAILURE;
+        }
+
+        if (VX_SUCCESS == status)
+        {
+            // Retrieve the kernel instance from the node's local data
+            if (!kernel)
+            {
+                VX_PRINT(VX_ZONE_ERROR, "Error: Kernel instance is null during validation!\n");
+                status = VX_FAILURE;
+            }
+        }
+
+        if (VX_SUCCESS == status)
+        {
+            vx_array outputArr = reinterpret_cast<vx_array>(parameters[1]);
+            vx_size capacity;
+            vx_enum itemType;
+
+            status = vxQueryArray(outputArr, VX_ARRAY_CAPACITY, &capacity, sizeof(capacity));
+            status |= vxQueryArray(outputArr, VX_ARRAY_ITEMTYPE, &itemType, sizeof(itemType));
+            status |=
+                vxSetMetaFormatAttribute(metas[1], VX_ARRAY_CAPACITY, &capacity, sizeof(capacity));
+            status |=
+                vxSetMetaFormatAttribute(metas[1], VX_ARRAY_ITEMTYPE, &itemType, sizeof(itemType));
+        }
+
+        if (VX_SUCCESS != status)
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Failed to validate kernel\n");
+        }
+        return status;
     }
 
     static vx_status VX_CALLBACK run(vx_node node, const vx_reference *parameters, vx_uint32 num)
@@ -82,10 +117,9 @@ public:
         vx_string input_text, output_text;
 
         status = load_vx_string_from_array((vx_array)parameters[0], input_text);
-        status |= kernel->AiServerQuery(
-            input_text,       // Input text
-            output_text,      // Output text
-            api_map["chat"]); // API path
+        status |= kernel->AiServerQuery(input_text,        // Input text
+                                        output_text,       // Output text
+                                        api_map["chat"]);  // API path
         status |= store_vx_string_to_array((vx_array)parameters[1], output_text);
 
         return status;

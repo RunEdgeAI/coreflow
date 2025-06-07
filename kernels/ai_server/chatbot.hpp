@@ -7,14 +7,16 @@
  * @copyright Copyright (c) 2025
  *
  */
-#include <curl/curl.h>
-#include <nlohmann/json.hpp>
+#include <iostream>
 #include <string>
 #include <vector>
-#include <VX/vx.h>
 
-#define DEFAULT_MODEL "gpt-4o-mini"
-#define SERVER_URL "http://localhost:8000"
+#include <VX/vx.h>
+#include <curl/curl.h>
+#include <nlohmann/json.hpp>
+
+#define DEFAULT_MODEL "llama3:8b"
+#define SERVER_URL "http://localhost:11434"
 #define API_KEY "hardcoded-api-key"
 
 class RemoteModelClient
@@ -34,7 +36,10 @@ public:
     {
         CURL *curl = curl_easy_init();
         if (!curl)
+        {
+            std::cerr << "failed to init libcurl" << std::endl;
             return VX_FAILURE;
+        }
 
         nlohmann::json request_json = {
             {"model", DEFAULT_MODEL},
@@ -61,7 +66,10 @@ public:
         curl_easy_cleanup(curl);
 
         if (res != CURLE_OK)
+        {
+            std::cerr << "Failed to post message to " << api_url << std::endl;
             return VX_FAILURE;
+        }
 
         auto json_response = nlohmann::json::parse(response_string);
         output_text = json_response["choices"][0]["message"]["content"];
@@ -74,7 +82,10 @@ public:
     {
         CURL *curl = curl_easy_init();
         if (!curl)
+        {
+            std::cerr << "failed to init libcurl for streaming" << std::endl;
             return VX_FAILURE;
+        }
 
         nlohmann::json request_json = {
             {"model", DEFAULT_MODEL},
@@ -101,7 +112,10 @@ public:
         curl_easy_cleanup(curl);
 
         if (res != CURLE_OK)
+        {
+            std::cerr << "Failed to post stream to " << api_url << std::endl;
             return VX_FAILURE;
+        }
 
         // Just return raw streamed response (newline-delimited JSON chunks)
         output_text = response_chunk;
