@@ -2096,7 +2096,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                 {
                     if (((graph->nodes[n]->kernel->signature.directions[p] == VX_BIDIRECTIONAL) ||
                          (graph->nodes[n]->kernel->signature.directions[p] == VX_INPUT)) &&
-                        (graph->nodes[n]->parameters[p] != nullptr))
+                        (graph->nodes[n]->parameters[p] != nullptr) &&
+                        (graph->nodes[n]->kernel->validate_input != nullptr))
                     {
                         vx_status input_validation_status = graph->nodes[n]->kernel->validate_input((vx_node)graph->nodes[n], p);
                         if (input_validation_status != VX_SUCCESS)
@@ -2128,25 +2129,30 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                         if (graph->setupOutput(n, p, &vref, &metas[p], &status, &num_errors) ==
                             vx_false_e)
                             break;
-                        output_validation_status = graph->nodes[n]->kernel->validate_output(
-                            (vx_node)graph->nodes[n], p, metas[p]);
-                        if (output_validation_status == VX_SUCCESS)
+                        if (graph->nodes[n]->kernel->validate_output != nullptr)
                         {
-                            if (graph->postprocessOutput(n, p, &vref, metas[p], &status,
-                                                         &num_errors) == vx_false_e)
+                            output_validation_status = graph->nodes[n]->kernel->validate_output(
+                                (vx_node)graph->nodes[n], p, metas[p]);
+                            if (output_validation_status == VX_SUCCESS)
                             {
-                                break;
+                                if (graph->postprocessOutput(n, p, &vref, metas[p], &status,
+                                                             &num_errors) == vx_false_e)
+                                {
+                                    break;
+                                }
                             }
-                        }
-                        else
-                        {
-                            status = output_validation_status;
-                            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), status, "Node %s: parameter[%u] failed output validation! (status = %d)\n",
-                                          graph->nodes[n]->kernel->name, p, status);
-                            VX_PRINT(VX_ZONE_ERROR,"Failed on validation of output parameter[%u] on kernel %s, status=%d\n",
-                                     p,
-                                     graph->nodes[n]->kernel->name,
-                                     status);
+                            else
+                            {
+                                status = output_validation_status;
+                                vxAddLogEntry(reinterpret_cast<vx_reference>(graph), status,
+                                              "Node %s: parameter[%u] failed output validation! "
+                                              "(status = %d)\n",
+                                              graph->nodes[n]->kernel->name, p, status);
+                                VX_PRINT(VX_ZONE_ERROR,
+                                         "Failed on validation of output parameter[%u] on kernel "
+                                         "%s, status=%d\n",
+                                         p, graph->nodes[n]->kernel->name, status);
+                            }
                         }
                     }
                 }
@@ -2539,6 +2545,7 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
     vx_uint32 next_nodes[VX_INT_MAX_REF];
     vx_uint32 left_nodes[VX_INT_MAX_REF];
     vx_context context = vxGetContext((vx_reference)graph);
+    vx_uint32 max_pipeup_depth = 1;
     (void)depth;
 
 #if defined(OPENVX_USE_SMP)
@@ -2667,6 +2674,28 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
                     VX_PRINT(VX_ZONE_GRAPH, "Calling Node[%u] %s:%s\n",
                              next_nodes[n],
                              target->name, node->kernel->name);
+
+                    /* Pipeup phase:
+                     * If this is the first time we are executing the graph, we need to pipeup
+                     * all nodes with kernels in the graph that need pipeup of refs.
+                     */
+                    max_pipeup_depth = std::max(
+                        {max_pipeup_depth, node->kernel->input_depth, node->kernel->output_depth});
+                    if (node->kernel->pipeUpCounter < max_pipeup_depth - 1)
+                    {
+                        node->state = VX_NODE_STATE_PIPEUP;
+                        std::cout << "max_pipeup_depth: " << max_pipeup_depth << std::endl;
+                        node->kernel->pipeUpCounter++;
+                        // Retain input buffers during PIPEUP
+
+                        // For source nodes, provide new output buffers during PIPEUP
+                    }
+                    else
+                    {
+                        /* This node was in pipeup, so update its state */
+                        node->state = VX_NODE_STATE_STEADY;
+                        // Release all retained buffers
+                    }
 
                     action = target->funcs.process(target, &node, 0, 1);
 

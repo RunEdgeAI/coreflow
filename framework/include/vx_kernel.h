@@ -179,6 +179,8 @@ public:
     vx_uint32 input_depth;
     /*! \brief The kernel's output depth required to start */
     vx_uint32 output_depth;
+    /*! \brief Indicates whether kernel has piped up */
+    vx_uint32 pipeUpCounter;
 };
 
 #endif /* VX_KERNEL_H */

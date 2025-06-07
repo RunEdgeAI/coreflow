@@ -39,7 +39,7 @@ Node::Node(vx_context context, vx_reference scope)
       costs(),
       is_replicated(vx_false_e),
       replicated_flags(),
-      state()
+      state(VX_NODE_STATE_STEADY)
 {
 }
 

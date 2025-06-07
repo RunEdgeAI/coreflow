@@ -41,7 +41,8 @@ Kernel::Kernel(vx_context context, vx_reference scope)
 #endif /* OPENVX_KHR_TILING */
       kernel_object_deinitialize(nullptr),
       input_depth(1u),
-      output_depth(1u)
+      output_depth(1u),
+      pipeUpCounter(0)
 {
 }
 
