@@ -50,11 +50,3 @@ jobs:
         cd ui
         flutter test --coverage
         genhtml coverage/lcov.info -o coverage/html
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        files: ui/coverage/lcov.info
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: true
