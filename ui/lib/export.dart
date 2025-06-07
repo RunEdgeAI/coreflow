@@ -102,6 +102,47 @@ class XmlExport {
         'reference': reference.id.toString(),
         'capacity': reference.capacity.toString(),
         'elemType': reference.elemType,
+      }, nest: () {
+        final type = reference.elemType.toUpperCase();
+
+        if (type == 'CHAR') {
+          // Export as a single <char>...</char> element
+          builder.element('char', nest: reference.values.join());
+        } else if (type == 'RECTANGLE' && reference.values.length == 4) {
+          // Export as <rectangle><start_x>...</start_x>...</rectangle>
+          builder.element('rectangle', nest: () {
+            builder.element('start_x', nest: reference.values[0]);
+            builder.element('start_y', nest: reference.values[1]);
+            builder.element('end_x', nest: reference.values[2]);
+            builder.element('end_y', nest: reference.values[3]);
+          });
+        } else if (type == 'COORDINATES2D' && reference.values.length == 2) {
+          builder.element('coordinates2d', nest: () {
+            builder.element('x', nest: reference.values[0]);
+            builder.element('y', nest: reference.values[1]);
+          });
+        } else if (type == 'COORDINATES3D' && reference.values.length == 3) {
+          builder.element('coordinates3d', nest: () {
+            builder.element('x', nest: reference.values[0]);
+            builder.element('y', nest: reference.values[1]);
+            builder.element('z', nest: reference.values[2]);
+          });
+        } else if (type.startsWith('FLOAT') ||
+            type.startsWith('INT') ||
+            type.startsWith('UINT')) {
+          // Export each value as <float32>...</float32> or <int16>...</int16> etc.
+          final tag = type.toLowerCase();
+          for (final v in reference.values) {
+            // Validate/parse as number
+            final parsed = num.tryParse(v);
+            builder.element(tag, nest: parsed?.toString() ?? v);
+          }
+        } else {
+          // Default: export each value as <value>...</value>
+          for (final v in reference.values) {
+            builder.element('value', nest: v);
+          }
+        }
       });
     } else if (reference is Convolution) {
       builder.element('convolution', attributes: {

@@ -228,12 +228,14 @@ class Graph extends Reference {
 class Array extends Reference {
   int capacity;
   String elemType;
+  List<dynamic> values;
   Array({
     required super.id,
     required super.name,
     super.type = 'Array',
     required this.capacity,
     required this.elemType,
+    this.values = const [],
   });
 }
 

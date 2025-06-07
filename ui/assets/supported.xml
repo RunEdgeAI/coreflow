@@ -822,6 +822,17 @@
       </Inputs>
     </Kernel>
   </Target>
+  <Target name="executorch">
+    <Kernel name="torch.cpu.runner">
+      <Inputs>
+        <Input>VX_TYPE_ARRAY</Input>
+        <Input>VX_TYPE_OBJECT_ARRAY</Input>
+      </Inputs>
+      <Outputs>
+        <Output>VX_TYPE_OBJECT_ARRAY</Output>
+      </Outputs>
+    </Kernel>
+  </Target>
   <Target name="extras">
     <Kernel name="org.khronos.extra.edge_trace">
       <Inputs>
@@ -907,6 +918,17 @@
       <Outputs>
         <Output>VX_TYPE_IMAGE</Output>
         <Output>VX_TYPE_IMAGE</Output>
+      </Outputs>
+    </Kernel>
+  </Target>
+  <Target name="liteRT">
+    <Kernel name="tflite.cpu.runner">
+      <Inputs>
+        <Input>VX_TYPE_ARRAY</Input>
+        <Input>VX_TYPE_OBJECT_ARRAY</Input>
+      </Inputs>
+      <Outputs>
+        <Output>VX_TYPE_OBJECT_ARRAY</Output>
       </Outputs>
     </Kernel>
   </Target>

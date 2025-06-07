@@ -32,11 +32,17 @@ class GraphEditorState extends State<GraphEditor> {
   int? edgeStartOutput;
   int _refCount = 0;
 
+  // Public getter to check if XML is loaded
+  bool get isXmlLoaded => _supported.isNotEmpty;
+
+  // Future that completes when XML is loaded
+  late final Future<void> xmlLoaded;
+
   @override
   void initState() {
     super.initState();
     _focusNode.requestFocus();
-    _loadSupportedXml();
+    xmlLoaded = _loadSupportedXml();
   } // End of initState
 
   @override
@@ -603,6 +609,21 @@ class GraphEditorState extends State<GraphEditor> {
                     }).toList(),
                     onChanged: (value) {
                       reference.elemType = value!;
+                    },
+                  ),
+                  TextField(
+                    controller: TextEditingController(
+                        text: reference.values.join(', ')),
+                    decoration:
+                        InputDecoration(labelText: 'Values (comma separated)'),
+                    keyboardType: TextInputType.text,
+                    onChanged: (value) {
+                      // Remove trailing commas and split
+                      reference.values = value
+                          .split(',')
+                          .map((e) => e.trim())
+                          .where((e) => e.isNotEmpty)
+                          .toList();
                     },
                   ),
                 ],

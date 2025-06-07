@@ -1,0 +1,55 @@
+name: UI CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ui/**'
+      - '.github/workflows/ui.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'ui/**'
+      - '.github/workflows/ui.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: ui
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.2'
+          channel: 'stable'
+          working-directory: ui
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: ui
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed .
+        working-directory: ui
+
+      - name: Analyze project source
+        run: flutter analyze
+        working-directory: ui
+
+      - name: Run tests
+        run: flutter test
+        working-directory: ui
+
+      - name: Build macos
+        run: flutter build macos --debug
+        working-directory: ui
+
+      - name: Build Web
+        run: flutter build web --release
+        working-directory: ui
