@@ -76,7 +76,7 @@ class GraphEditorState extends State<GraphEditor> {
         if (inputsElement != null) {
           inputs = inputsElement
               .findElements('Input')
-              .map((element) => element.innerText.trim())
+              .map((element) => element.innerText.trim().replaceAll('VX_', ''))
               .toList();
         }
 
@@ -85,7 +85,7 @@ class GraphEditorState extends State<GraphEditor> {
         if (outputsElement != null) {
           outputs = outputsElement
               .findElements('Output')
-              .map((element) => element.innerText.trim())
+              .map((element) => element.innerText.trim().replaceAll('VX_', ''))
               .toList();
         }
 
@@ -614,8 +614,7 @@ class GraphEditorState extends State<GraphEditor> {
                   TextField(
                     controller: TextEditingController(
                         text: reference.values.join(', ')),
-                    decoration:
-                        InputDecoration(labelText: 'Values (comma separated)'),
+                    decoration: InputDecoration(labelText: 'Values'),
                     keyboardType: TextInputType.text,
                     onChanged: (value) {
                       // Remove trailing commas and split
@@ -625,6 +624,10 @@ class GraphEditorState extends State<GraphEditor> {
                           .where((e) => e.isNotEmpty)
                           .toList();
                     },
+                    onEditingComplete: () =>
+                        _updateArrayCapacity(context, reference),
+                    onTapOutside: (event) =>
+                        _updateArrayCapacity(context, reference),
                   ),
                 ],
                 if (reference is Convolution) ...[
@@ -978,7 +981,22 @@ class GraphEditorState extends State<GraphEditor> {
       },
     );
   } // End of _showAttributeDialog
-} // End of GraphEditorState
+
+  void _updateArrayCapacity(BuildContext context, Array reference) {
+    // For strings, capacity is based on total character count
+    // For other types, capacity is based on number of elements
+    final newCapacity = reference.elemType == 'CHAR'
+        ? reference.values.join(', ').length
+        : reference.values.length;
+
+    if (newCapacity != reference.capacity) {
+      reference.capacity = newCapacity;
+      // Force rebuild of the dialog to update the capacity field
+      Navigator.of(context).pop();
+      _showAttributeDialog(context, reference);
+    }
+  }
+} // End of _updateArrayCapacity
 
 class GraphListPanel extends StatelessWidget {
   const GraphListPanel({

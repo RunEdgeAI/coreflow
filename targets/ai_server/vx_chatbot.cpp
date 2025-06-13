@@ -37,7 +37,27 @@ private:
             return status;
         }
 
-        return vxAddArrayItems(arr, in.size(), in.data(), sizeof(char));
+        // Get array capacity
+        vx_size capacity;
+        status = vxQueryArray(arr, VX_ARRAY_CAPACITY, &capacity, sizeof(capacity));
+        if (status != VX_SUCCESS)
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Failed to query array capacity\n");
+            return status;
+        }
+
+        // Truncate input string to array capacity
+        vx_string truncated = in.substr(0, capacity);
+
+        // Add the truncated string to array
+        status = vxAddArrayItems(arr, truncated.length(), truncated.c_str(), sizeof(char));
+        if (status != VX_SUCCESS)
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Failed to add string to array\n");
+            return status;
+        }
+
+        return VX_SUCCESS;
     }
 
     static vx_status load_vx_string_from_array(vx_array arr, vx_string &out)
@@ -117,9 +137,11 @@ public:
         vx_string input_text, output_text;
 
         status = load_vx_string_from_array((vx_array)parameters[0], input_text);
+        std::cout << "[input]: " << input_text << std::endl;
         status |= kernel->AiServerQuery(input_text,        // Input text
                                         output_text,       // Output text
                                         api_map["chat"]);  // API path
+        std::cout << "[output]: " << output_text << std::endl;
         status |= store_vx_string_to_array((vx_array)parameters[1], output_text);
 
         return status;

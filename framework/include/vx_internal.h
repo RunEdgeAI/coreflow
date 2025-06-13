@@ -675,7 +675,8 @@ enum vx_ext_target_type_e {
 /*! \brief The priority list of targets.
  * \ingroup group_int_target
  */
-enum vx_target_priority_e {
+enum vx_target_priority_e
+{
 #if defined(EXPERIMENTAL_USE_OPENCL)
     /*! \brief Defines the priority of the OpenCL Target */
     VX_TARGET_PRIORITY_OPENCL,
@@ -693,7 +694,7 @@ enum vx_target_priority_e {
     /*! \brief Defines the priority of the ORT target */
     VX_TARGET_PRIORITY_ORT,
     /*! \brief Defines the maximum priority */
-    VX_TARGET_PRIORITY_MAX,
+    VX_TARGET_PRIORITY_MAX = 10,
 };
 
 /*! \brief Defines the number of targets in the sample implementation.

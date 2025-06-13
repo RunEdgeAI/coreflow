@@ -92,58 +92,65 @@ class XmlExport {
     } else if (reference is Scalar) {
       builder.element('scalar', attributes: {
         'reference': reference.id.toString(),
-        'elemType': reference.elemType,
+        'elemType': "VX_TYPE_${reference.elemType}",
       }, nest: () {
         builder.element(reference.elemType.toLowerCase(),
             nest: reference.value.toString());
       });
     } else if (reference is Array) {
-      builder.element('array', attributes: {
-        'reference': reference.id.toString(),
-        'capacity': reference.capacity.toString(),
-        'elemType': reference.elemType,
-      }, nest: () {
-        final type = reference.elemType.toUpperCase();
+      builder.element('array',
+          attributes: {
+            'reference': reference.id.toString(),
+            'capacity': reference.capacity.toString(),
+            'elemType': "VX_TYPE_${reference.elemType}",
+          },
+          nest: reference.values.isEmpty
+              ? null
+              : () {
+                  final type = reference.elemType.toUpperCase();
 
-        if (type == 'CHAR') {
-          // Export as a single <char>...</char> element
-          builder.element('char', nest: reference.values.join());
-        } else if (type == 'RECTANGLE' && reference.values.length == 4) {
-          // Export as <rectangle><start_x>...</start_x>...</rectangle>
-          builder.element('rectangle', nest: () {
-            builder.element('start_x', nest: reference.values[0]);
-            builder.element('start_y', nest: reference.values[1]);
-            builder.element('end_x', nest: reference.values[2]);
-            builder.element('end_y', nest: reference.values[3]);
-          });
-        } else if (type == 'COORDINATES2D' && reference.values.length == 2) {
-          builder.element('coordinates2d', nest: () {
-            builder.element('x', nest: reference.values[0]);
-            builder.element('y', nest: reference.values[1]);
-          });
-        } else if (type == 'COORDINATES3D' && reference.values.length == 3) {
-          builder.element('coordinates3d', nest: () {
-            builder.element('x', nest: reference.values[0]);
-            builder.element('y', nest: reference.values[1]);
-            builder.element('z', nest: reference.values[2]);
-          });
-        } else if (type.startsWith('FLOAT') ||
-            type.startsWith('INT') ||
-            type.startsWith('UINT')) {
-          // Export each value as <float32>...</float32> or <int16>...</int16> etc.
-          final tag = type.toLowerCase();
-          for (final v in reference.values) {
-            // Validate/parse as number
-            final parsed = num.tryParse(v);
-            builder.element(tag, nest: parsed?.toString() ?? v);
-          }
-        } else {
-          // Default: export each value as <value>...</value>
-          for (final v in reference.values) {
-            builder.element('value', nest: v);
-          }
-        }
-      });
+                  if (type == 'CHAR') {
+                    // Export as a single <char>...</char> element
+                    builder.element('char', nest: reference.values.join());
+                  } else if (type == 'RECTANGLE' &&
+                      reference.values.length == 4) {
+                    // Export as <rectangle><start_x>...</start_x>...</rectangle>
+                    builder.element('rectangle', nest: () {
+                      builder.element('start_x', nest: reference.values[0]);
+                      builder.element('start_y', nest: reference.values[1]);
+                      builder.element('end_x', nest: reference.values[2]);
+                      builder.element('end_y', nest: reference.values[3]);
+                    });
+                  } else if (type == 'COORDINATES2D' &&
+                      reference.values.length == 2) {
+                    builder.element('coordinates2d', nest: () {
+                      builder.element('x', nest: reference.values[0]);
+                      builder.element('y', nest: reference.values[1]);
+                    });
+                  } else if (type == 'COORDINATES3D' &&
+                      reference.values.length == 3) {
+                    builder.element('coordinates3d', nest: () {
+                      builder.element('x', nest: reference.values[0]);
+                      builder.element('y', nest: reference.values[1]);
+                      builder.element('z', nest: reference.values[2]);
+                    });
+                  } else if (type.startsWith('FLOAT') ||
+                      type.startsWith('INT') ||
+                      type.startsWith('UINT')) {
+                    // Export each value as <float32>...</float32> or <int16>...</int16> etc.
+                    final tag = type.toLowerCase();
+                    for (final v in reference.values) {
+                      // Validate/parse as number
+                      final parsed = num.tryParse(v);
+                      builder.element(tag, nest: parsed?.toString() ?? v);
+                    }
+                  } else {
+                    // Default: export each value as <value>...</value>
+                    for (final v in reference.values) {
+                      builder.element('value', nest: v);
+                    }
+                  }
+                });
     } else if (reference is Convolution) {
       builder.element('convolution', attributes: {
         'reference': reference.id.toString(),
@@ -156,7 +163,7 @@ class XmlExport {
         'reference': reference.id.toString(),
         'rows': reference.rows.toString(),
         'columns': reference.cols.toString(),
-        'elemType': reference.elemType,
+        'elemType': "VX_TYPE_${reference.elemType}",
       });
     } else if (reference is Pyramid) {
       builder.element('pyramid', attributes: {
@@ -202,10 +209,9 @@ class XmlExport {
 
     builder.processing('xml', 'version="1.0" encoding="utf-8"');
 
-    builder.element('openvx', namespaces: {
-      '': 'https://www.khronos.org/registry/vx/schema',
-      'xsi': 'https://www.w3.org/TR/xmlschema-1'
-    }, attributes: {
+    builder.element('openvx', attributes: {
+      'xmlns:xsi': 'https://www.w3.org/TR/xmlschema-1',
+      'xmlns': 'https://www.khronos.org/registry/vx/schema',
       'xsi:schemaLocation':
           'https://registry.khronos.org/OpenVX/schema/openvx-1-1.xsd',
       'references': refCount.toString()
@@ -276,7 +282,7 @@ class XmlExport {
     final Set<String> targets = {};
 
     for (var node in graph.nodes) {
-      targets.add('openvx_${node.target}');
+      targets.add('openvx-${node.target}');
     }
 
     return targets;

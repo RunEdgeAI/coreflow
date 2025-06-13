@@ -100,7 +100,7 @@ class Reference {
 
   static Reference createReference(String name, int refCount) {
     // Logic to determine the type of Reference to create
-    if (name == ('VX_TYPE_ARRAY')) {
+    if (name == ('TYPE_ARRAY')) {
       return Array(
           id: refCount, name: name, capacity: 0, elemType: arrayTypes.first);
     } else if (name.contains('CONVOLUTION')) {
@@ -247,7 +247,7 @@ class Convolution extends Matrix {
     required super.rows,
     required super.cols,
     this.scale = 1,
-    super.elemType = 'VX_TYPE_INT16',
+    super.elemType = 'TYPE_INT16',
     super.type = 'Convolution',
   });
 }
@@ -271,7 +271,7 @@ class Lut extends Array {
     required super.id,
     required super.name,
     required super.capacity,
-    super.elemType = 'VX_TYPE_UINT8',
+    super.elemType = 'TYPE_UINT8',
     super.type = 'Lut',
   });
 }

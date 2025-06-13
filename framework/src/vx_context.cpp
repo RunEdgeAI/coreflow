@@ -32,11 +32,7 @@ vx_char targetModules[][VX_MAX_TARGET_NAME] = {
 #if defined(EXPERIMENTAL_USE_VENUM)
     "openvx-venum",
 #endif
-    "openvx-c_model",
-    "openvx-onnxRT",
-    "openvx-ai-server",
-    "openvx-liteRT",
-    "openvx-torch",
+    "openvx-c_model", "openvx-onnxRT", "openvx-ai_server", "openvx-liteRT", "openvx-torch",
 };
 
 const vx_char extensions[] =
@@ -767,7 +763,6 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContext(void)
             context->imm_border_policy = VX_BORDER_POLICY_DEFAULT_TO_UNDEFINED;
             context->next_dynamic_user_kernel_id = 0;
             context->next_dynamic_user_library_id = 1;
-            context->perf_enabled = vx_false_e;
 
 #if !DISABLE_ICD_COMPATIBILITY
             context->platform = platform;
