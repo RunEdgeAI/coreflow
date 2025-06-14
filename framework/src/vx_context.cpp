@@ -59,7 +59,7 @@ static vx_sem_t global_lock;
 /*****************************************************************************/
 Context::Context()
     : Reference(nullptr, VX_TYPE_CONTEXT, nullptr),
-      p_global_lock(nullptr),
+      p_global_lock(&global_lock),
       reftable(),
       num_references(0),
       modules(),
@@ -89,9 +89,9 @@ Context::Context()
       queues(),
 #endif
       imm_border(),
-      imm_border_policy(),
+      imm_border_policy(VX_BORDER_POLICY_DEFAULT_TO_UNDEFINED),
       next_dynamic_user_kernel_id(0),
-      next_dynamic_user_library_id(0),
+      next_dynamic_user_library_id(1),
       imm_target_enum(),
       imm_target_string(),
 #ifdef OPENVX_USE_OPENCL_INTEROP
@@ -104,6 +104,7 @@ Context::Context()
       graph_queue(),
       numGraphsQueued(0ul)
 {
+    imm_border.mode = VX_BORDER_UNDEFINED;
 }
 
 Context::~Context()
@@ -754,16 +755,6 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContext(void)
         if (context)
         {
             vx_uint32 p = 0u, p2 = 0u, t = 0u, m = 0u;
-#ifdef OPENVX_USE_OPENCL_INTEROP
-            context->opencl_context = nullptr;
-            context->opencl_command_queue = nullptr;
-#endif
-            context->p_global_lock = &global_lock;
-            context->imm_border.mode = VX_BORDER_UNDEFINED;
-            context->imm_border_policy = VX_BORDER_POLICY_DEFAULT_TO_UNDEFINED;
-            context->next_dynamic_user_kernel_id = 0;
-            context->next_dynamic_user_library_id = 1;
-
 #if !DISABLE_ICD_COMPATIBILITY
             context->platform = platform;
 #endif
