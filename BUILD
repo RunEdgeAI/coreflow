@@ -2,6 +2,7 @@
 cc_shared_library(
     name = "openvx",
     deps = [":corevx"],
+    visibility = ["//visibility:public"],
 )
 
 # Build library for the main project
