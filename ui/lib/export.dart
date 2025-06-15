@@ -217,8 +217,7 @@ class XmlExport {
                   if (type == 'CHAR') {
                     // Export as a single <char>...</char> element
                     builder.element('char', nest: ref.values.join());
-                  } else if (type == 'RECTANGLE' &&
-                      ref.values.length == 4) {
+                  } else if (type == 'RECTANGLE' && ref.values.length == 4) {
                     // Export as <rectangle><start_x>...</start_x>...</rectangle>
                     builder.element('rectangle', nest: () {
                       builder.element('start_x', nest: ref.values[0]);
