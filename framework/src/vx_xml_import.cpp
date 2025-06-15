@@ -403,6 +403,22 @@ static void vxSetName(vx_reference ref, xmlNodePtr cur)
 
 static xml_struct_t *user_struct_table = nullptr;
 
+static vx_bool areObjectArrayChildrenIdentical(xmlNodePtr node, vx_xml_tag_e tag, vx_size count)
+{
+    // If count is 1, children are trivially identical
+    if (count <= 1) return vx_true_e;
+
+    // Count number of unique child elements
+    vx_size numChildren = 0;
+    XML_FOREACH_CHILD_TAG(node, tag, tags)
+    {
+        numChildren++;
+    }
+
+    // If there's only one child element and count > 1, children are identical
+    return (numChildren == 1);
+}
+
 static vx_status vxImportFromXMLRoi(vx_image parent, xmlNodePtr cur, vx_reference refs[], vx_size total)
 {
     vx_status status = VX_SUCCESS;
@@ -1208,6 +1224,131 @@ static vx_status vxImportFromXMLPyramid(vx_reference ref, xmlNodePtr cur, vx_ref
     return status;
 }
 
+static vx_status vxImportFromXMLObjectArray(vx_context context, xmlNodePtr cur, vx_xml_tag_e tag,
+                                            vx_reference refs[], vx_size total)
+{
+    vx_status status = VX_SUCCESS;
+    typedef vx_object_array (*objArrCreateFunction)(vx_context context, vx_reference exemplar,
+                                                    vx_size count);
+    vx_reference parentReference = nullptr;
+    vx_uint32 refIdx = xml_prop_ulong(cur, "reference");
+    vx_uint32 count = xml_prop_ulong(cur, "count");
+    vx_uint32 childNum = 0;
+    vx_bool identicalObjects = vx_false_e;
+
+    identicalObjects = areObjectArrayChildrenIdentical(cur, tag, count);
+    VX_PRINT(VX_ZONE_LOG, "ref %p contains identical objects: %d\n", parentReference,
+             identicalObjects);
+
+    if (refIdx < total)
+    {
+        XML_FOREACH_CHILD_TAG(cur, tag, tags)
+        {
+            switch (tag)
+            {
+                case TENSOR_TAG:
+                {
+                    // Parse shape from XML
+                    vx_size dims[VX_MAX_TENSOR_DIMENSIONS] = {0};
+                    vx_size numDims = 0;
+                    vx_enum elemType = VX_TYPE_UINT8;
+                    vx_char typeName[32];
+
+                    // Parse elemType attribute
+                    xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
+                    if (TypePairs::typeFromString(typeName, &elemType) != VX_SUCCESS)
+                    {
+                        status = VX_ERROR_INVALID_TYPE;
+                        goto exit;
+                    }
+
+                    XML_FOREACH_CHILD_TAG(cur, tag, tags)
+                    {
+                        if (tag == SHAPE_TAG)
+                        {
+                            vx_char shapeStr[VX_MAX_REFERENCE_NAME];
+                            xml_string(cur, shapeStr, sizeof(shapeStr));
+                            VX_PRINT(VX_ZONE_LOG, "Found shape string: %s\n", shapeStr);
+
+                            // Parse comma-separated values
+                            char *token = strtok(shapeStr, ",");
+                            while (token && numDims < VX_MAX_TENSOR_DIMENSIONS)
+                            {
+                                dims[numDims++] = atoi(token);
+                                token = strtok(nullptr, ",");
+                            }
+                            VX_PRINT(VX_ZONE_LOG,
+                                     "Parsed %d dimensions: [%d, %d, %d, %d, %d, %d]\n", numDims,
+                                     dims[0], dims[1], dims[2], dims[3], dims[4], dims[5]);
+                        }
+                    }
+
+                    // Create tensor with parsed dimensions and element type
+                    vx_tensor exemplar = vxCreateTensor(context, numDims, dims, elemType, 0);
+                    status = vxGetStatus((vx_reference)exemplar);
+                    if (status != VX_SUCCESS)
+                    {
+                        goto exit;
+                    }
+
+                    if (!identicalObjects)
+                    {
+                        if (childNum == 0)
+                        {
+                            // First tensor - create object array
+                            parentReference = vxCreateObjectArrayWithType(context, VX_TYPE_TENSOR);
+                            status = vxGetStatus(parentReference);
+                            if (status != VX_SUCCESS)
+                            {
+                                vxReleaseTensor(&exemplar);
+                                goto exit;
+                            }
+                            refs[refIdx] = parentReference;
+                            vxSetName(refs[refIdx], cur);
+                            vxInternalizeReference(refs[refIdx]);
+                        }
+
+                        // Add tensor to object array
+                        status = vxSetObjectArrayItem((vx_object_array)parentReference, childNum,
+                                                      (vx_reference)exemplar);
+                        if (status != VX_SUCCESS)
+                        {
+                            vxReleaseTensor(&exemplar);
+                            goto exit;
+                        }
+                        VX_PRINT(VX_ZONE_LOG, "Added tensor %d to object array at reference %d\n",
+                                 childNum, refIdx);
+                    }
+                    else
+                    {
+                        // Use exemplar approach for identical objects
+                        parentReference = ((objArrCreateFunction)(&vxCreateObjectArray))(
+                            context, (vx_reference)exemplar, count);
+                        status = vxGetStatus(parentReference);
+                        if (status != VX_SUCCESS)
+                        {
+                            vxReleaseTensor(&exemplar);
+                            goto exit;
+                        }
+                        refs[refIdx] = parentReference;
+                        vxSetName(refs[refIdx], cur);
+                        vxInternalizeReference(refs[refIdx]);
+                    }
+
+                    vxReleaseTensor(&exemplar);
+                    childNum++;
+                    break;
+                }
+                // Add other object types here (IMAGE_TAG, ARRAY_TAG, etc.)
+                default:
+                    status = VX_ERROR_INVALID_TYPE;
+            }
+        }
+    }
+exit:
+    return status;
+}
+
 VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                                  vx_char xmlfile[])
 {
@@ -1484,44 +1625,41 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                 status = VX_ERROR_INVALID_VALUE;
                 goto exit_error;
             }
-        } else if (tag == DELAY_TAG ||
-                    tag == OBJECT_ARRAY_TAG) {
-
-            typedef vx_reference (*createFunction)(vx_context context, vx_reference exemplar, vx_size count);
-            typedef vx_object_array (*objArrCreateFunction)(vx_context context, vx_reference exemplar, vx_size count);
-            createFunction createFn;
+        }
+        else if (tag == OBJECT_ARRAY_TAG)
+        {
+            status = vxImportFromXMLObjectArray(context, cur, tag, refs, total);
+            if (status != VX_SUCCESS)
+            {
+                goto exit_error;
+            }
+        }
+        else if (tag == DELAY_TAG)
+        {
+            typedef vx_reference (*createFunction)(vx_context context, vx_reference exemplar,
+                                                   vx_size count);
+            createFunction createFn = (createFunction)(&vxCreateDelay);
             char objectName[16];
-            vx_int32 parentType;
-            vx_reference parentReference;
+            vx_int32 parentType = VX_TYPE_DELAY;
+            vx_reference parentReference = nullptr;
             vx_reference *internalRefs = nullptr;
             vx_uint32 refIdx = xml_prop_ulong(cur, "reference");
             vx_uint32 count = xml_prop_ulong(cur, "count");
             vx_uint32 childNum = 0;
-            vx_char objType[32] = "VX_TYPE_IMAGE";  // default value
+            vx_char objType[32];
             xml_prop_string(cur, "objType", objType, sizeof(objType));
             TypePairs::typeFromString(objType, &type);
+            snprintf(objectName, sizeof(objectName), "delay");
 
-            if(tag == DELAY_TAG)
+            if (refIdx < total)
             {
-                parentType = VX_TYPE_DELAY;
-                createFn = (createFunction)(&vxCreateDelay);
-                snprintf(objectName, sizeof(objectName), "delay");
-            }
-            else
-            {
-                parentType = VX_TYPE_OBJECT_ARRAY;
-                createFn = (createFunction)((objArrCreateFunction)(&vxCreateObjectArray));
-                snprintf(objectName, sizeof(objectName), "object_array");
-            }
-
-            if (refIdx < total) {
-                XML_FOREACH_CHILD_TAG (cur, tag, tags) {
-                    switch(tag) {
+                XML_FOREACH_CHILD_TAG(cur, tag, tags)
+                {
+                    switch (tag)
+                    {
                         case TENSOR_TAG:
                         {
-                            vx_uint32 tensorRefIdx = xml_prop_ulong(cur, "reference");
-                            VX_PRINT(VX_ZONE_LOG, "Processing tensor child %d, reference=%d\n",
-                                     childNum, tensorRefIdx);
+                            VX_PRINT(VX_ZONE_LOG, "Processing tensor child %d\n", childNum);
 
                             if (childNum == 0)
                             {
@@ -1574,28 +1712,28 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
 
                                 // Create exemplar tensor with parsed dimensions and element type
                                 exemplar = vxCreateTensor(context, numDims, dims, elemType, 0);
-                                status |= vxGetStatus((vx_reference)exemplar);
-
-                                if (status == VX_SUCCESS)
+                                status = vxGetStatus((vx_reference)exemplar);
+                                if (status != VX_SUCCESS)
                                 {
-                                    VX_PRINT(VX_ZONE_LOG,
-                                             "Created exemplar tensor with %d dimensions\n",
-                                             numDims);
-                                    parentReference =
-                                        createFn(context, (vx_reference)exemplar, count);
-                                    internalRefs = getRefsFromParent(parentReference, parentType);
-                                    status = vxGetStatus(parentReference);
-                                    refs[refIdx] = parentReference;
-                                    vxSetName(refs[refIdx], cur);
-                                    vxInternalizeReference(refs[refIdx]);
-                                    VX_PRINT(VX_ZONE_LOG,
-                                             "Successfully created object array at reference %d\n",
-                                             refIdx);
+                                    goto exit_error;
                                 }
+
+                                // Use exemplar approach for identical objects
+                                parentReference = createFn(context, (vx_reference)exemplar, count);
+                                internalRefs = getRefsFromParent(parentReference, parentType);
+                                status = vxGetStatus(parentReference);
+                                if (status != VX_SUCCESS)
+                                {
+                                    vxReleaseTensor(&exemplar);
+                                    goto exit_error;
+                                }
+                                refs[refIdx] = parentReference;
+                                vxSetName(refs[refIdx], cur);
+                                vxInternalizeReference(refs[refIdx]);
                                 vxReleaseTensor(&exemplar);
+                                childNum++;
+                                break;
                             }
-                            childNum++;
-                            break;
                         }
                         case IMAGE_TAG:
                         {
@@ -2152,11 +2290,15 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                             break;
                     }
                 }
-            } else {
+            }
+            else
+            {
                 REFNUM_ERROR;
                 goto exit_error;
             }
-        } else {
+        }
+        else
+        {
             VX_PRINT(VX_ZONE_ERROR, "Tag %d unhandled!\n", tag);
             status = VX_ERROR_NOT_IMPLEMENTED;
         }
