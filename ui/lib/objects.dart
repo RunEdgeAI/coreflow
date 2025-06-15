@@ -91,6 +91,7 @@ class Reference {
   String name;
   String type;
   int linkId;
+
   Reference({
     required this.id,
     this.name = '',
@@ -293,13 +294,41 @@ class Matrix extends Reference {
 class ObjectArray extends Reference {
   int numObjects;
   String elemType;
+  Map<String, dynamic> elementAttributes;
+  bool applyToAll;
+
   ObjectArray({
     required super.id,
     required super.name,
     super.type = 'ObjectArray',
     required this.numObjects,
     required this.elemType,
-  });
+    Map<String, dynamic>? elementAttributes,
+    this.applyToAll = true,
+  }) : elementAttributes = elementAttributes ?? {};
+
+  // Helper method to get element attribute with type safety
+  T? getElementAttribute<T>(String key) {
+    return elementAttributes[key] as T?;
+  }
+
+  // Helper method to set element attribute
+  void setElementAttribute(String key, dynamic value) {
+    elementAttributes[key] = value;
+  }
+
+  void setNumObjects(int value) {
+    if (value < 0) {
+      throw ArgumentError('Number of objects cannot be negative');
+    }
+    // Clean up individual object attributes for removed objects
+    if (value < numObjects) {
+      for (int i = value; i < numObjects; i++) {
+        elementAttributes.remove('object_$i');
+      }
+    }
+    numObjects = value;
+  }
 }
 
 class Pyramid extends Reference {

@@ -75,130 +75,235 @@ class XmlExport {
     }
   }
 
-  void _addReferenceElement(xml.XmlBuilder builder, Reference reference) {
-    if (reference.linkId != -1) {
+  void _addReferenceElement(xml.XmlBuilder builder, Reference ref) {
+    if (ref.linkId != -1) {
       // Reuse the reference by pointing to the linked reference ID
       return;
     }
+    if (ref is ObjectArray) {
+      builder.element('object_array', nest: () {
+        builder.attribute('reference', ref.id);
+        builder.attribute('count', ref.numObjects);
+        builder.attribute('objType', ref.elemType);
 
-    // Handle specific reference types
-    if (reference is Img) {
+        // Only export one child object if applyToAll is true
+        final numChildren = ref.applyToAll ? 1 : ref.numObjects;
+
+        for (int i = 0; i < numChildren; i++) {
+          final objectAttrs = ref.applyToAll
+              ? ref.elementAttributes
+              : ref.elementAttributes['object_$i'] as Map<String, dynamic>?;
+
+          if (objectAttrs == null) continue;
+
+          switch (ref.elemType) {
+            // Handle specific reference types
+            case 'TENSOR':
+              builder.element('tensor', nest: () {
+                builder.attribute('numDims', objectAttrs['numDims'] ?? 0);
+                builder.attribute(
+                    'elemType', objectAttrs['elemType'] ?? 'VX_TYPE_UINT8');
+                if (objectAttrs['shape'] != null) {
+                  builder.element('shape', nest: () {
+                    builder.text((objectAttrs['shape'] as List).join(', '));
+                  });
+                }
+              });
+              break;
+            case 'IMAGE':
+              builder.element('image', nest: () {
+                builder.attribute('width', objectAttrs['width'] ?? 0);
+                builder.attribute('height', objectAttrs['height'] ?? 0);
+                builder.attribute(
+                    'format', objectAttrs['format'] ?? 'VX_DF_IMAGE_U8');
+              });
+              break;
+            case 'ARRAY':
+              builder.element('array', attributes: {
+                'capacity': objectAttrs['capacity']?.toString() ?? '0',
+                'elemType': "VX_TYPE_${objectAttrs['elemType'] ?? 'UINT8'}",
+              });
+              break;
+            case 'MATRIX':
+              builder.element('matrix', attributes: {
+                'rows': objectAttrs['rows']?.toString() ?? '0',
+                'columns': objectAttrs['cols']?.toString() ?? '0',
+                'elemType': "VX_TYPE_${objectAttrs['elemType'] ?? 'UINT8'}",
+              });
+              break;
+            case 'SCALAR':
+              builder.element('scalar', attributes: {
+                'elemType': "VX_TYPE_${objectAttrs['elemType'] ?? 'UINT8'}",
+              }, nest: () {
+                builder.element(
+                    objectAttrs['elemType']?.toString().toLowerCase() ??
+                        'uint8',
+                    nest: objectAttrs['value']?.toString() ?? '0');
+              });
+              break;
+            case 'CONVOLUTION':
+              builder.element('convolution', attributes: {
+                'rows': objectAttrs['rows']?.toString() ?? '0',
+                'columns': objectAttrs['cols']?.toString() ?? '0',
+                'scale': objectAttrs['scale']?.toString() ?? '0',
+              });
+              break;
+            case 'PYRAMID':
+              builder.element('pyramid', attributes: {
+                'width': objectAttrs['width']?.toString() ?? '0',
+                'height': objectAttrs['height']?.toString() ?? '0',
+                'format':
+                    objectAttrs['format']?.toString() ?? 'VX_DF_IMAGE_VIRT',
+                'levels': objectAttrs['numLevels']?.toString() ?? '0',
+              });
+              break;
+            case 'REMAP':
+              builder.element('remap', attributes: {
+                'src_width': objectAttrs['srcWidth']?.toString() ?? '0',
+                'src_height': objectAttrs['srcHeight']?.toString() ?? '0',
+                'dst_width': objectAttrs['dstWidth']?.toString() ?? '0',
+                'dst_height': objectAttrs['dstHeight']?.toString() ?? '0',
+              });
+              break;
+            case 'THRESHOLD':
+              builder.element('threshold', attributes: {
+                'reference': '0',
+              }, nest: () {
+                if (objectAttrs['thresType'] == 'TYPE_BINARY') {
+                  builder.element('binary', nest: '0');
+                } else if (objectAttrs['thresType'] == 'TYPE_RANGE') {
+                  builder.element('range', attributes: {
+                    'lower': '0',
+                    'upper': '0',
+                  });
+                }
+              });
+              break;
+            case 'LUT':
+              builder.element('lut', attributes: {
+                'capacity': objectAttrs['capacity']?.toString() ?? '0',
+                'elemType': "VX_TYPE_${objectAttrs['elemType'] ?? 'UINT8'}",
+              });
+              break;
+          }
+        }
+      });
+    } else if (ref is Img) {
       builder.element('image', attributes: {
-        'reference': reference.id.toString(),
-        'width': reference.width.toString(),
-        'height': reference.height.toString(),
-        'format': reference.format,
+        'reference': ref.id.toString(),
+        'width': ref.width.toString(),
+        'height': ref.height.toString(),
+        'format': ref.format,
       });
-    } else if (reference is Scalar) {
+    } else if (ref is Scalar) {
       builder.element('scalar', attributes: {
-        'reference': reference.id.toString(),
-        'elemType': "VX_TYPE_${reference.elemType}",
+        'reference': ref.id.toString(),
+        'elemType': "VX_TYPE_${ref.elemType}",
       }, nest: () {
-        builder.element(reference.elemType.toLowerCase(),
-            nest: reference.value.toString());
+        builder.element(ref.elemType.toLowerCase(), nest: ref.value.toString());
       });
-    } else if (reference is Array) {
+    } else if (ref is Array) {
       builder.element('array',
           attributes: {
-            'reference': reference.id.toString(),
-            'capacity': reference.capacity.toString(),
-            'elemType': "VX_TYPE_${reference.elemType}",
+            'reference': ref.id.toString(),
+            'capacity': ref.capacity.toString(),
+            'elemType': "VX_TYPE_${ref.elemType}",
           },
-          nest: reference.values.isEmpty
+          nest: ref.values.isEmpty
               ? null
               : () {
-                  final type = reference.elemType.toUpperCase();
+                  final type = ref.elemType.toUpperCase();
 
                   if (type == 'CHAR') {
                     // Export as a single <char>...</char> element
-                    builder.element('char', nest: reference.values.join());
+                    builder.element('char', nest: ref.values.join());
                   } else if (type == 'RECTANGLE' &&
-                      reference.values.length == 4) {
+                      ref.values.length == 4) {
                     // Export as <rectangle><start_x>...</start_x>...</rectangle>
                     builder.element('rectangle', nest: () {
-                      builder.element('start_x', nest: reference.values[0]);
-                      builder.element('start_y', nest: reference.values[1]);
-                      builder.element('end_x', nest: reference.values[2]);
-                      builder.element('end_y', nest: reference.values[3]);
+                      builder.element('start_x', nest: ref.values[0]);
+                      builder.element('start_y', nest: ref.values[1]);
+                      builder.element('end_x', nest: ref.values[2]);
+                      builder.element('end_y', nest: ref.values[3]);
                     });
                   } else if (type == 'COORDINATES2D' &&
-                      reference.values.length == 2) {
+                      ref.values.length == 2) {
                     builder.element('coordinates2d', nest: () {
-                      builder.element('x', nest: reference.values[0]);
-                      builder.element('y', nest: reference.values[1]);
+                      builder.element('x', nest: ref.values[0]);
+                      builder.element('y', nest: ref.values[1]);
                     });
                   } else if (type == 'COORDINATES3D' &&
-                      reference.values.length == 3) {
+                      ref.values.length == 3) {
                     builder.element('coordinates3d', nest: () {
-                      builder.element('x', nest: reference.values[0]);
-                      builder.element('y', nest: reference.values[1]);
-                      builder.element('z', nest: reference.values[2]);
+                      builder.element('x', nest: ref.values[0]);
+                      builder.element('y', nest: ref.values[1]);
+                      builder.element('z', nest: ref.values[2]);
                     });
                   } else if (type.startsWith('FLOAT') ||
                       type.startsWith('INT') ||
                       type.startsWith('UINT')) {
                     // Export each value as <float32>...</float32> or <int16>...</int16> etc.
                     final tag = type.toLowerCase();
-                    for (final v in reference.values) {
+                    for (final v in ref.values) {
                       // Validate/parse as number
                       final parsed = num.tryParse(v);
                       builder.element(tag, nest: parsed?.toString() ?? v);
                     }
                   } else {
                     // Default: export each value as <value>...</value>
-                    for (final v in reference.values) {
+                    for (final v in ref.values) {
                       builder.element('value', nest: v);
                     }
                   }
                 });
-    } else if (reference is Convolution) {
+    } else if (ref is Convolution) {
       builder.element('convolution', attributes: {
-        'reference': reference.id.toString(),
-        'rows': reference.rows.toString(),
-        'columns': reference.cols.toString(),
-        'scale': reference.scale.toString(),
+        'reference': ref.id.toString(),
+        'rows': ref.rows.toString(),
+        'columns': ref.cols.toString(),
+        'scale': ref.scale.toString(),
       });
-    } else if (reference is Matrix) {
+    } else if (ref is Matrix) {
       builder.element('matrix', attributes: {
-        'reference': reference.id.toString(),
-        'rows': reference.rows.toString(),
-        'columns': reference.cols.toString(),
-        'elemType': "VX_TYPE_${reference.elemType}",
+        'reference': ref.id.toString(),
+        'rows': ref.rows.toString(),
+        'columns': ref.cols.toString(),
+        'elemType': "VX_TYPE_${ref.elemType}",
       });
-    } else if (reference is Pyramid) {
+    } else if (ref is Pyramid) {
       builder.element('pyramid', attributes: {
-        'reference': reference.id.toString(),
-        'width': reference.width.toString(),
-        'height': reference.height.toString(),
-        'format': reference.format,
-        'levels': reference.numLevels.toString(),
+        'reference': ref.id.toString(),
+        'width': ref.width.toString(),
+        'height': ref.height.toString(),
+        'format': ref.format,
+        'levels': ref.numLevels.toString(),
       });
-    } else if (reference is Thrshld) {
+    } else if (ref is Thrshld) {
       builder.element('threshold', attributes: {
-        'reference': reference.id.toString(),
+        'reference': ref.id.toString(),
       }, nest: () {
-        if (reference.thresType == 'TYPE_BINARY') {
-          builder.element('binary', nest: reference.binary.toString());
-        } else if (reference.thresType == 'TYPE_RANGE') {
+        if (ref.thresType == 'TYPE_BINARY') {
+          builder.element('binary', nest: ref.binary.toString());
+        } else if (ref.thresType == 'TYPE_RANGE') {
           builder.element('range', attributes: {
-            'lower': reference.lower.toString(),
-            'upper': reference.upper.toString(),
+            'lower': ref.lower.toString(),
+            'upper': ref.upper.toString(),
           });
         }
       });
-    } else if (reference is Remap) {
+    } else if (ref is Remap) {
       builder.element('remap', attributes: {
-        'reference': reference.id.toString(),
-        'src_width': reference.srcWidth.toString(),
-        'src_height': reference.srcHeight.toString(),
-        'dst_width': reference.dstWidth.toString(),
-        'dst_height': reference.dstHeight.toString(),
+        'reference': ref.id.toString(),
+        'src_width': ref.srcWidth.toString(),
+        'src_height': ref.srcHeight.toString(),
+        'dst_width': ref.dstWidth.toString(),
+        'dst_height': ref.dstHeight.toString(),
       });
     } else {
       // Default case for unknown reference types
       builder.element('reference', attributes: {
-        'reference': reference.id.toString(),
-        'type': reference.type,
+        'reference': ref.id.toString(),
+        'type': ref.type,
       });
     }
   }
