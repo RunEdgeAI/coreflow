@@ -91,6 +91,7 @@ class Reference {
   String name;
   String type;
   int linkId;
+
   Reference({
     required this.id,
     this.name = '',
@@ -100,7 +101,7 @@ class Reference {
 
   static Reference createReference(String name, int refCount) {
     // Logic to determine the type of Reference to create
-    if (name == ('VX_TYPE_ARRAY')) {
+    if (name == ('TYPE_ARRAY')) {
       return Array(
           id: refCount, name: name, capacity: 0, elemType: arrayTypes.first);
     } else if (name.contains('CONVOLUTION')) {
@@ -228,12 +229,14 @@ class Graph extends Reference {
 class Array extends Reference {
   int capacity;
   String elemType;
+  List<dynamic> values;
   Array({
     required super.id,
     required super.name,
     super.type = 'Array',
     required this.capacity,
     required this.elemType,
+    this.values = const [],
   });
 }
 
@@ -245,7 +248,7 @@ class Convolution extends Matrix {
     required super.rows,
     required super.cols,
     this.scale = 1,
-    super.elemType = 'VX_TYPE_INT16',
+    super.elemType = 'TYPE_INT16',
     super.type = 'Convolution',
   });
 }
@@ -269,7 +272,7 @@ class Lut extends Array {
     required super.id,
     required super.name,
     required super.capacity,
-    super.elemType = 'VX_TYPE_UINT8',
+    super.elemType = 'TYPE_UINT8',
     super.type = 'Lut',
   });
 }
@@ -291,13 +294,41 @@ class Matrix extends Reference {
 class ObjectArray extends Reference {
   int numObjects;
   String elemType;
+  Map<String, dynamic> elementAttributes;
+  bool applyToAll;
+
   ObjectArray({
     required super.id,
     required super.name,
     super.type = 'ObjectArray',
     required this.numObjects,
     required this.elemType,
-  });
+    Map<String, dynamic>? elementAttributes,
+    this.applyToAll = true,
+  }) : elementAttributes = elementAttributes ?? {};
+
+  // Helper method to get element attribute with type safety
+  T? getElementAttribute<T>(String key) {
+    return elementAttributes[key] as T?;
+  }
+
+  // Helper method to set element attribute
+  void setElementAttribute(String key, dynamic value) {
+    elementAttributes[key] = value;
+  }
+
+  void setNumObjects(int value) {
+    if (value < 0) {
+      throw ArgumentError('Number of objects cannot be negative');
+    }
+    // Clean up individual object attributes for removed objects
+    if (value < numObjects) {
+      for (int i = value; i < numObjects; i++) {
+        elementAttributes.remove('object_$i');
+      }
+    }
+    numObjects = value;
+  }
 }
 
 class Pyramid extends Reference {

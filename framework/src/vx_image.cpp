@@ -367,7 +367,7 @@ vx_bool Image::isSupportedFourcc(vx_df_image code)
         case VX_DF_IMAGE_VIRT:
             return vx_true_e;
         default:
-            VX_PRINT(VX_ZONE_ERROR, "Format 0x%08x is not supported\n", code);
+            VX_PRINT(VX_ZONE_ERROR, "Format %d is not supported\n", code);
             if (code != 0) DEBUG_BREAK();
             return vx_false_e;
     }

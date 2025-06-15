@@ -1,4 +1,3 @@
-
 cc_library(
     name = "ai-server",
     srcs = glob([
@@ -18,7 +17,7 @@ cc_library(
 )
 
 cc_shared_library(
-    name = "openvx-ai-server",
+    name = "openvx-ai_server",
     deps = [
         ":ai-server",
     ],
@@ -27,6 +26,6 @@ cc_shared_library(
 
 cc_import(
     name = "imported_openvx_ai_server",
-    shared_library = ":openvx-ai-server",
+    shared_library = ":openvx-ai_server",
     visibility = ["//visibility:public"]
 )

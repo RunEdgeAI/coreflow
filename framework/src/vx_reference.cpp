@@ -78,6 +78,10 @@ vx_bool Reference::isValidReference(vx_reference ref)
         {
             VX_PRINT(VX_ZONE_ERROR, "%p has already been released and garbage collected!\n", ref);
         }
+        else if ((Context::isValidType(ref->type) == vx_false_e))
+        {
+            VX_PRINT(VX_ZONE_ERROR, "%p is not a valid typw!\n", ref);
+        }
         else if (ref->type != VX_TYPE_CONTEXT)
         {
             printReference(ref);
