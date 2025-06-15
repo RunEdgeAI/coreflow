@@ -114,8 +114,7 @@ class XmlExport {
             case 'TENSOR':
               builder.element('tensor', nest: () {
                 builder.attribute('numDims', objectAttrs['numDims'] ?? 0);
-                builder.attribute(
-                    'elemType',
+                builder.attribute('elemType',
                     "VX_TYPE_${objectAttrs['elemType'] ?? 'UINT8'}");
                 if (objectAttrs['shape'] != null) {
                   builder.element('shape', nest: () {
