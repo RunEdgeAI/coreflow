@@ -1732,8 +1732,8 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                                 vxInternalizeReference(refs[refIdx]);
                                 vxReleaseTensor(&exemplar);
                                 childNum++;
-                                break;
                             }
+                            break;
                         }
                         case IMAGE_TAG:
                         {
