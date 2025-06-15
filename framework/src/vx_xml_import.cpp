@@ -1230,12 +1230,20 @@ static vx_status vxImportFromXMLObjectArray(vx_context context, xmlNodePtr cur, 
     vx_status status = VX_SUCCESS;
     typedef vx_object_array (*objArrCreateFunction)(vx_context context, vx_reference exemplar,
                                                     vx_size count);
+    objArrCreateFunction createFn = (objArrCreateFunction)(&vxCreateObjectArray);
     vx_reference parentReference = nullptr;
+    vx_reference *internalRefs = nullptr;
     vx_uint32 refIdx = xml_prop_ulong(cur, "reference");
     vx_uint32 count = xml_prop_ulong(cur, "count");
     vx_uint32 childNum = 0;
     vx_bool identicalObjects = vx_false_e;
-
+    vx_int32 parentType = VX_TYPE_OBJECT_ARRAY;
+    vx_char objType[32];
+    xml_prop_string(cur, "objType", objType, sizeof(objType));
+    vx_char objectName[16];
+    vx_enum type = VX_TYPE_INVALID;
+    snprintf(objectName, sizeof(objectName), "object_array");
+    TypePairs::typeFromString(objType, &type);
     identicalObjects = areObjectArrayChildrenIdentical(cur, tag, count);
     VX_PRINT(VX_ZONE_LOG, "ref %p contains identical objects: %d\n", parentReference,
              identicalObjects);
@@ -1259,6 +1267,7 @@ static vx_status vxImportFromXMLObjectArray(vx_context context, xmlNodePtr cur, 
                     if (TypePairs::typeFromString(typeName, &elemType) != VX_SUCCESS)
                     {
                         status = VX_ERROR_INVALID_TYPE;
+                        VX_PRINT(VX_ZONE_ERROR, "Invalid type %s\n", typeName);
                         goto exit;
                     }
 
@@ -1322,8 +1331,7 @@ static vx_status vxImportFromXMLObjectArray(vx_context context, xmlNodePtr cur, 
                     else
                     {
                         // Use exemplar approach for identical objects
-                        parentReference = ((objArrCreateFunction)(&vxCreateObjectArray))(
-                            context, (vx_reference)exemplar, count);
+                        parentReference = createFn(context, (vx_reference)exemplar, count);
                         status = vxGetStatus(parentReference);
                         if (status != VX_SUCCESS)
                         {
@@ -1339,9 +1347,742 @@ static vx_status vxImportFromXMLObjectArray(vx_context context, xmlNodePtr cur, 
                     childNum++;
                     break;
                 }
-                // Add other object types here (IMAGE_TAG, ARRAY_TAG, etc.)
+                case IMAGE_TAG:
+                {
+                    vx_uint32 width = xml_prop_ulong(cur, "width");
+                    vx_uint32 height = xml_prop_ulong(cur, "height");
+                    if (childNum == 0)
+                    { /* Create parent object based on first child */
+                        vx_image exemplar = nullptr;
+                        vx_df_image format = VX_DF_IMAGE_VIRT;
+                        xml_prop_string(cur, "format", (vx_char *)&format, 4);
+                        status = vxReserveReferences(context, count + 1);
+                        exemplar = vxCreateImage(context, width, height, format);
+                        status |= vxReleaseReferences(context, count + 1);
+                        status |= vxGetStatus((vx_reference)exemplar);
+                        if (status == VX_SUCCESS)
+                        {
+                            parentReference = createFn(context, (vx_reference)exemplar, count);
+                            internalRefs = getRefsFromParent(parentReference, parentType);
+                            status = vxGetStatus(parentReference);
+                            vxReleaseImage(&exemplar);
+                            refs[refIdx] = parentReference;
+                            vxSetName(refs[refIdx], cur);
+                            vxInternalizeReference(refs[refIdx]);
+                        }
+                    }
+                    refIdx = xml_prop_ulong(cur, "reference");
+                    if (refIdx < total)
+                    {
+                        if (childNum < count)
+                        {
+                            if (((vx_image)internalRefs[childNum])->width == width &&
+                                ((vx_image)internalRefs[childNum])->height == height)
+                            {
+                                refs[refIdx] = (vx_reference)internalRefs[childNum];
+                                vxSetName(refs[refIdx], cur);
+                                refs[refIdx]->incrementReference(VX_INTERNAL);
+                            }
+                            else
+                            {
+                                status = VX_ERROR_INVALID_PARAMETERS;
+                                VX_PRINT(VX_ZONE_ERROR,
+                                         "%s image settings doesn't match generated %s image!\n",
+                                         objectName, objectName);
+                                goto exit;
+                            }
+                        }
+                        else
+                        {
+                            status = VX_ERROR_INVALID_PARAMETERS;
+                            VX_PRINT(VX_ZONE_ERROR,
+                                     "%s has more child nodes than indicated in count!\n",
+                                     objectName);
+                            goto exit;
+                        }
+                    }
+                    else
+                    {
+                        REFNUM_ERROR;
+                        goto exit;
+                    }
+                    childNum++;
+                    status |= vxLoadDataForImage((vx_image)refs[refIdx], cur, refs, total);
+                    break;
+                }
+                case ARRAY_TAG:
+                {
+                    vx_size capacity = xml_prop_ulong(cur, "capacity");
+                    vx_char typeName[32];
+                    vx_enum type = VX_TYPE_INVALID;
+                    vx_uint32 userNum;
+                    xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
+
+                    if (TypePairs::typeFromString(typeName, &type) != VX_SUCCESS)
+                    { /* Type was not found, check if it is a user type */
+                        if (sscanf(typeName, "USER_STRUCT_%u", &userNum) == 1)
+                        {
+                            if (vxStructGetEnum(user_struct_table, userNum, &type) != VX_SUCCESS)
+                            {
+                                status = VX_ERROR_INVALID_TYPE; /* INVALID type */
+                                VX_PRINT(VX_ZONE_ERROR, "Invalid type %s\n", typeName);
+                                goto exit;
+                            }
+                        }
+                        else
+                        {
+                            status = VX_ERROR_INVALID_TYPE; /* INVALID type */
+                            VX_PRINT(VX_ZONE_ERROR, "Invalid type %s\n", typeName);
+                            goto exit;
+                        }
+                    }
+
+                    if (childNum == 0)
+                    { /* Create delay object based on first child */
+                        vx_array exemplar = nullptr;
+                        status = vxReserveReferences(context, count + 1);
+                        exemplar = vxCreateArray(context, type, capacity);
+                        status |= vxReleaseReferences(context, count + 1);
+                        status |= vxGetStatus((vx_reference)exemplar);
+                        if (status == VX_SUCCESS)
+                        {
+                            parentReference = createFn(context, (vx_reference)exemplar, count);
+                            internalRefs = getRefsFromParent(parentReference, parentType);
+                            status = vxGetStatus(parentReference);
+                            vxReleaseArray(&exemplar);
+                            refs[refIdx] = parentReference;
+                            vxSetName(refs[refIdx], cur);
+                            vxInternalizeReference(refs[refIdx]);
+                        }
+                    }
+                    refIdx = xml_prop_ulong(cur, "reference");
+                    if (refIdx < total)
+                    {
+                        if (childNum < count)
+                        {
+                            if (((vx_array)internalRefs[childNum])->capacity == capacity &&
+                                ((vx_array)internalRefs[childNum])->item_type == type)
+                            {
+                                refs[refIdx] = internalRefs[childNum];
+                                vxSetName(refs[refIdx], cur);
+                                refs[refIdx]->incrementReference(VX_INTERNAL);
+                            }
+                            else
+                            {
+                                status = VX_ERROR_INVALID_PARAMETERS;
+                                VX_PRINT(VX_ZONE_ERROR,
+                                         "%s array settings doesn't match generated %s array!\n",
+                                         objectName, objectName);
+                                goto exit;
+                            }
+                        }
+                        else
+                        {
+                            status = VX_ERROR_INVALID_PARAMETERS;
+                            VX_PRINT(VX_ZONE_ERROR,
+                                     "%s has more child nodes than indicated in count!\n",
+                                     objectName);
+                            goto exit;
+                        }
+                    }
+                    else
+                    {
+                        REFNUM_ERROR;
+                        goto exit;
+                    }
+                    childNum++;
+                    status |= vxLoadDataForArray((vx_array)refs[refIdx], cur);
+                    break;
+                }
+                case PYRAMID_TAG:
+                {
+                    vx_uint32 width = xml_prop_ulong(cur, "width");
+                    vx_uint32 height = xml_prop_ulong(cur, "height");
+                    vx_float32 scale = xml_prop_float(cur, "scale");
+                    vx_size levels = xml_prop_ulong(cur, "levels");
+                    vx_df_image format = VX_DF_IMAGE_VIRT;
+                    xml_prop_string(cur, "format", (vx_char *)&format, 4);
+                    if (childNum == 0)
+                    { /* Create delay object based on first child */
+                        vx_pyramid exemplar = nullptr;
+                        status = vxReserveReferences(context, count * (levels + 1) + 1);
+                        exemplar = vxCreatePyramid(context, levels, scale, width, height, format);
+                        status |= vxReleaseReferences(context, count * (levels + 1) + 1);
+                        status |= vxGetStatus((vx_reference)exemplar);
+                        if (status == VX_SUCCESS)
+                        {
+                            parentReference = createFn(context, (vx_reference)exemplar, count);
+                            internalRefs = getRefsFromParent(parentReference, parentType);
+                            status = vxGetStatus(parentReference);
+                            vxReleasePyramid(&exemplar);
+                            refs[refIdx] = parentReference;
+                            vxSetName(refs[refIdx], cur);
+                            vxInternalizeReference(refs[refIdx]);
+                        }
+                    }
+                    refIdx = xml_prop_ulong(cur, "reference");
+                    if (refIdx < total)
+                    {
+                        if (childNum < count)
+                        {
+                            if (((vx_pyramid)internalRefs[childNum])->width == width &&
+                                ((vx_pyramid)internalRefs[childNum])->height == height &&
+                                ((vx_pyramid)internalRefs[childNum])->numLevels == levels &&
+                                ((vx_pyramid)internalRefs[childNum])->scale == scale)
+                            {
+                                refs[refIdx] = internalRefs[childNum];
+                                vxSetName(refs[refIdx], cur);
+                                refs[refIdx]->incrementReference(VX_INTERNAL);
+                            }
+                            else
+                            {
+                                status = VX_ERROR_INVALID_PARAMETERS;
+                                VX_PRINT(
+                                    VX_ZONE_ERROR,
+                                    "%s pyramid settings doesn't match generated %s pyramid!\n",
+                                    objectName, objectName);
+                                goto exit;
+                            }
+                        }
+                        else
+                        {
+                            status = VX_ERROR_INVALID_PARAMETERS;
+                            VX_PRINT(VX_ZONE_ERROR,
+                                     "%s has more child nodes than indicated in count!\n",
+                                     objectName);
+                            goto exit;
+                        }
+                    }
+                    else
+                    {
+                        REFNUM_ERROR;
+                        goto exit;
+                    }
+                    childNum++;
+                    status |=
+                        vxLoadDataForPyramid((vx_pyramid)refs[refIdx], cur, refs, total, levels);
+                    break;
+                }
+                case MATRIX_TAG:
+                {
+                    vx_size rows = xml_prop_ulong(cur, "rows");
+                    vx_size cols = xml_prop_ulong(cur, "columns");
+                    vx_char typeName[32];
+                    xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
+                    TypePairs::typeFromString(typeName, &type);
+                    if (childNum == 0)
+                    { /* Create delay object based on first child */
+                        vx_matrix exemplar = nullptr;
+                        status = vxReserveReferences(context, count + 1);
+                        exemplar = vxCreateMatrix(context, type, cols, rows);
+                        status |= vxReleaseReferences(context, count + 1);
+                        status |= vxGetStatus((vx_reference)exemplar);
+                        if (status == VX_SUCCESS)
+                        {
+                            parentReference = createFn(context, (vx_reference)exemplar, count);
+                            internalRefs = getRefsFromParent(parentReference, parentType);
+                            status = vxGetStatus(parentReference);
+                            vxReleaseMatrix(&exemplar);
+                            refs[refIdx] = parentReference;
+                            vxSetName(refs[refIdx], cur);
+                            vxInternalizeReference(refs[refIdx]);
+                        }
+                    }
+                    refIdx = xml_prop_ulong(cur, "reference");
+                    if (refIdx < total)
+                    {
+                        if (childNum < count)
+                        {
+                            if (((vx_matrix)internalRefs[childNum])->rows == rows &&
+                                ((vx_matrix)internalRefs[childNum])->columns == cols)
+                            {
+                                refs[refIdx] = internalRefs[childNum];
+                                vxSetName(refs[refIdx], cur);
+                                refs[refIdx]->incrementReference(VX_INTERNAL);
+                            }
+                            else
+                            {
+                                status = VX_ERROR_INVALID_PARAMETERS;
+                                VX_PRINT(VX_ZONE_ERROR,
+                                         "%s matrix settings doesn't match generated %s matrix!\n",
+                                         objectName, objectName);
+                                goto exit;
+                            }
+                        }
+                        else
+                        {
+                            status = VX_ERROR_INVALID_PARAMETERS;
+                            VX_PRINT(VX_ZONE_ERROR,
+                                     "%s has more child nodes than indicated in count!\n",
+                                     objectName);
+                            goto exit;
+                        }
+                    }
+                    else
+                    {
+                        REFNUM_ERROR;
+                        goto exit;
+                    }
+                    childNum++;
+                    status |= vxLoadDataForMatrix((vx_matrix)refs[refIdx], cur, cols, rows, type);
+                    break;
+                }
+                case LUT_TAG:
+                {
+                    vx_size lut_count = xml_prop_ulong(cur, "count");
+                    vx_char typeName[32] = "VX_TYPE_UINT8";
+                    xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
+                    TypePairs::typeFromString(typeName, &type);
+                    if (lut_count == 0) lut_count = 256;
+                    if (childNum == 0)
+                    { /* Create delay object based on first child */
+                        vx_lut exemplar = nullptr;
+                        status = vxReserveReferences(context, count + 1);
+                        exemplar = vxCreateLUT(context, type, lut_count);
+                        status |= vxReleaseReferences(context, count + 1);
+                        status |= vxGetStatus((vx_reference)exemplar);
+                        if (status == VX_SUCCESS)
+                        {
+                            parentReference = createFn(context, (vx_reference)exemplar, count);
+                            internalRefs = getRefsFromParent(parentReference, parentType);
+                            status = vxGetStatus(parentReference);
+                            vxReleaseLUT(&exemplar);
+                            refs[refIdx] = parentReference;
+                            vxSetName(refs[refIdx], cur);
+                            vxInternalizeReference(refs[refIdx]);
+                        }
+                    }
+                    refIdx = xml_prop_ulong(cur, "reference");
+                    if (refIdx < total)
+                    {
+                        if (childNum < count)
+                        {
+                            if (((vx_lut)internalRefs[childNum])->num_items == lut_count &&
+                                ((vx_lut)internalRefs[childNum])->item_type == type)
+                            {
+                                refs[refIdx] = internalRefs[childNum];
+                                vxSetName(refs[refIdx], cur);
+                                refs[refIdx]->incrementReference(VX_INTERNAL);
+                            }
+                            else
+                            {
+                                status = VX_ERROR_INVALID_PARAMETERS;
+                                VX_PRINT(VX_ZONE_ERROR,
+                                         "%s lut settings doesn't match generated %s lut!\n",
+                                         objectName, objectName);
+                                goto exit;
+                            }
+                        }
+                        else
+                        {
+                            status = VX_ERROR_INVALID_PARAMETERS;
+                            VX_PRINT(VX_ZONE_ERROR,
+                                     "%s has more child nodes than indicated in count!\n",
+                                     objectName);
+                            goto exit;
+                        }
+                    }
+                    else
+                    {
+                        REFNUM_ERROR;
+                        goto exit;
+                    }
+                    childNum++;
+                    status |= vxLoadDataForLut((vx_lut)refs[refIdx], cur, type, lut_count);
+                    break;
+                }
+                case CONVOLUTION_TAG:
+                {
+                    vx_size rows = xml_prop_ulong(cur, "rows");
+                    vx_size cols = xml_prop_ulong(cur, "columns");
+                    vx_uint32 scale = xml_prop_ulong(cur, "scale");
+                    if (childNum == 0)
+                    { /* Create delay object based on first child */
+                        vx_convolution exemplar = nullptr;
+                        status = vxReserveReferences(context, count + 1);
+                        exemplar = vxCreateConvolution(context, cols, rows);
+                        status |= vxReleaseReferences(context, count + 1);
+                        status |= vxGetStatus((vx_reference)exemplar);
+                        if (status == VX_SUCCESS)
+                        {
+                            if (!scale) scale = 1;
+                            status |= vxSetConvolutionAttribute(exemplar, VX_CONVOLUTION_SCALE,
+                                                                &scale, sizeof(scale));
+                            parentReference = createFn(context, (vx_reference)exemplar, count);
+                            internalRefs = getRefsFromParent(parentReference, parentType);
+                            status = vxGetStatus(parentReference);
+                            vxReleaseConvolution(&exemplar);
+                            refs[refIdx] = parentReference;
+                            vxSetName(refs[refIdx], cur);
+                            vxInternalizeReference(refs[refIdx]);
+                        }
+                    }
+                    refIdx = xml_prop_ulong(cur, "reference");
+                    if (refIdx < total)
+                    {
+                        if (childNum < count)
+                        {
+                            if (((vx_convolution)internalRefs[childNum])->rows == rows &&
+                                ((vx_convolution)internalRefs[childNum])->columns == cols)
+                            {
+                                refs[refIdx] = internalRefs[childNum];
+                                vxSetName(refs[refIdx], cur);
+                                refs[refIdx]->incrementReference(VX_INTERNAL);
+                            }
+                            else
+                            {
+                                status = VX_ERROR_INVALID_PARAMETERS;
+                                VX_PRINT(VX_ZONE_ERROR,
+                                         "%s convolution settings doesn't match generated &s "
+                                         "convolution!\n",
+                                         objectName, objectName);
+                                goto exit;
+                            }
+                        }
+                        else
+                        {
+                            status = VX_ERROR_INVALID_PARAMETERS;
+                            VX_PRINT(VX_ZONE_ERROR,
+                                     "%s has more child nodes than indicated in count!\n",
+                                     objectName);
+                            goto exit;
+                        }
+                    }
+                    else
+                    {
+                        REFNUM_ERROR;
+                        goto exit;
+                    }
+                    childNum++;
+                    status |=
+                        vxLoadDataForConvolution((vx_convolution)refs[refIdx], cur, cols, rows);
+                    break;
+                }
+                case REMAP_TAG:
+                {
+                    vx_uint32 src_width = xml_prop_ulong(cur, "src_width");
+                    vx_uint32 src_height = xml_prop_ulong(cur, "src_height");
+                    vx_uint32 dst_width = xml_prop_ulong(cur, "dst_width");
+                    vx_uint32 dst_height = xml_prop_ulong(cur, "dst_height");
+                    if (childNum == 0)
+                    { /* Create delay object based on first child */
+                        vx_remap exemplar = nullptr;
+                        status = vxReserveReferences(context, count + 1);
+                        exemplar =
+                            vxCreateRemap(context, src_width, src_height, dst_width, dst_height);
+                        status |= vxReleaseReferences(context, count + 1);
+                        status |= vxGetStatus((vx_reference)exemplar);
+                        if (status == VX_SUCCESS)
+                        {
+                            parentReference = createFn(context, (vx_reference)exemplar, count);
+                            internalRefs = getRefsFromParent(parentReference, parentType);
+                            status = vxGetStatus(parentReference);
+                            vxReleaseRemap(&exemplar);
+                            refs[refIdx] = parentReference;
+                            vxSetName(refs[refIdx], cur);
+                            vxInternalizeReference(refs[refIdx]);
+                        }
+                    }
+                    refIdx = xml_prop_ulong(cur, "reference");
+                    if (refIdx < total)
+                    {
+                        if (childNum < count)
+                        {
+                            if (((vx_remap)internalRefs[childNum])->src_width == src_width &&
+                                ((vx_remap)internalRefs[childNum])->src_height == src_height &&
+                                ((vx_remap)internalRefs[childNum])->dst_width == dst_width &&
+                                ((vx_remap)internalRefs[childNum])->dst_height == dst_height)
+                            {
+                                refs[refIdx] = internalRefs[childNum];
+                                vxSetName(refs[refIdx], cur);
+                                refs[refIdx]->incrementReference(VX_INTERNAL);
+                            }
+                            else
+                            {
+                                status = VX_ERROR_INVALID_PARAMETERS;
+                                VX_PRINT(VX_ZONE_ERROR,
+                                         "%s remap settings doesn't match generated %s remap!\n",
+                                         objectName, objectName);
+                                goto exit;
+                            }
+                        }
+                        else
+                        {
+                            status = VX_ERROR_INVALID_PARAMETERS;
+                            VX_PRINT(VX_ZONE_ERROR,
+                                     "%s has more child nodes than indicated in count!\n",
+                                     objectName);
+                            goto exit;
+                        }
+                    }
+                    else
+                    {
+                        REFNUM_ERROR;
+                        goto exit;
+                    }
+                    childNum++;
+                    status |= vxLoadDataForRemap((vx_remap)refs[refIdx], cur);
+                    break;
+                }
+                case DISTRIBUTION_TAG:
+                {
+                    vx_size bins = xml_prop_ulong(cur, "bins");
+                    vx_uint32 range = xml_prop_ulong(cur, "range");
+                    vx_int32 offset = xml_prop_ulong(cur, "offset");
+                    if (childNum == 0)
+                    { /* Create delay object based on first child */
+                        vx_distribution exemplar = nullptr;
+                        status = vxReserveReferences(context, count + 1);
+                        exemplar = vxCreateDistribution(context, bins, offset, range);
+                        status |= vxReleaseReferences(context, count + 1);
+                        status |= vxGetStatus((vx_reference)exemplar);
+                        if (status == VX_SUCCESS)
+                        {
+                            parentReference = createFn(context, (vx_reference)exemplar, count);
+                            internalRefs = getRefsFromParent(parentReference, parentType);
+                            status = vxGetStatus(parentReference);
+                            vxReleaseDistribution(&exemplar);
+                            refs[refIdx] = parentReference;
+                            vxSetName(refs[refIdx], cur);
+                            vxInternalizeReference(refs[refIdx]);
+                        }
+                    }
+                    refIdx = xml_prop_ulong(cur, "reference");
+                    if (refIdx < total)
+                    {
+                        if (childNum < count)
+                        {
+                            if (((vx_distribution)internalRefs[childNum])->range_x ==
+                                    (vx_uint32)range &&
+                                ((vx_distribution)internalRefs[childNum])
+                                        ->memory.dims[0][VX_DIM_X] == (vx_uint32)bins &&
+                                ((vx_distribution)internalRefs[childNum])->offset_x == offset)
+                            {
+                                refs[refIdx] = internalRefs[childNum];
+                                vxSetName(refs[refIdx], cur);
+                                refs[refIdx]->incrementReference(VX_INTERNAL);
+                            }
+                            else
+                            {
+                                status = VX_ERROR_INVALID_PARAMETERS;
+                                VX_PRINT(VX_ZONE_ERROR,
+                                         "%s distribution settings doesn't match generated %s "
+                                         "distribution!\n",
+                                         objectName, objectName);
+                                goto exit;
+                            }
+                        }
+                        else
+                        {
+                            status = VX_ERROR_INVALID_PARAMETERS;
+                            VX_PRINT(VX_ZONE_ERROR,
+                                     "%s has more child nodes than indicated in count!\n",
+                                     objectName);
+                            goto exit;
+                        }
+                    }
+                    else
+                    {
+                        REFNUM_ERROR;
+                        goto exit;
+                    }
+                    childNum++;
+                    status |= vxLoadDataForDistribution((vx_distribution)refs[refIdx], cur, bins);
+                    break;
+                }
+                case THRESHOLD_TAG:
+                {
+                    vx_char typeName[32] = "VX_TYPE_UINT8";  // default value
+                    xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
+                    TypePairs::typeFromString(typeName, &type);
+                    vx_int32 true_value = (vx_int32)xml_prop_ulong(cur, "true_value");
+                    vx_int32 false_value = (vx_int32)xml_prop_ulong(cur, "false_value");
+                    if (childNum == 0)
+                    { /* Create delay object based on first child */
+                        vx_threshold exemplar = nullptr;
+                        status = vxReserveReferences(context, count + 1);
+                        XML_FOREACH_CHILD_TAG(cur, tag, tags)
+                        {
+                            if (tag == BINARY_TAG)
+                            {
+                                vx_int32 value = (vx_int32)xml_ulong(cur);
+                                exemplar =
+                                    vxCreateThreshold(context, VX_THRESHOLD_TYPE_BINARY, type);
+                                status |= vxSetThresholdAttribute(
+                                    exemplar, VX_THRESHOLD_THRESHOLD_VALUE, &value, sizeof(value));
+                            }
+                            else if (tag == RANGE_TAG)
+                            {
+                                vx_int32 upper = (vx_int32)xml_prop_ulong(cur, "upper");
+                                vx_int32 lower = (vx_int32)xml_prop_ulong(cur, "lower");
+                                exemplar =
+                                    vxCreateThreshold(context, VX_THRESHOLD_TYPE_RANGE, type);
+                                status |= vxSetThresholdAttribute(
+                                    exemplar, VX_THRESHOLD_THRESHOLD_UPPER, &upper, sizeof(upper));
+                                status |= vxSetThresholdAttribute(
+                                    exemplar, VX_THRESHOLD_THRESHOLD_LOWER, &lower, sizeof(lower));
+                            }
+                            status |= vxSetThresholdAttribute(exemplar, VX_THRESHOLD_TRUE_VALUE,
+                                                              &true_value, sizeof(true_value));
+                            status |= vxSetThresholdAttribute(exemplar, VX_THRESHOLD_FALSE_VALUE,
+                                                              &false_value, sizeof(false_value));
+                        }
+                        status |= vxReleaseReferences(context, count + 1);
+                        status |= vxGetStatus((vx_reference)exemplar);
+                        if (status == VX_SUCCESS)
+                        {
+                            parentReference = createFn(context, (vx_reference)exemplar, count);
+                            internalRefs = getRefsFromParent(parentReference, parentType);
+                            status = vxGetStatus(parentReference);
+                            vxReleaseThreshold(&exemplar);
+                            refs[refIdx] = parentReference;
+                            vxSetName(refs[refIdx], cur);
+                            vxInternalizeReference(refs[refIdx]);
+                        }
+                    }
+                    refIdx = xml_prop_ulong(cur, "reference");
+                    if (refIdx < total)
+                    {
+                        if (childNum < count)
+                        {
+                            vx_enum thresh_type = VX_THRESHOLD_TYPE_BINARY;
+                            XML_FOREACH_CHILD_TAG(cur, tag, tags)
+                            {
+                                if (tag == BINARY_TAG)
+                                {
+                                    thresh_type = VX_THRESHOLD_TYPE_BINARY;
+                                }
+                                else if (tag == RANGE_TAG)
+                                {
+                                    thresh_type = VX_THRESHOLD_TYPE_RANGE;
+                                }
+                            }
+                            if (((vx_threshold)internalRefs[childNum])->thresh_type == thresh_type)
+                            {
+                                refs[refIdx] = internalRefs[childNum];
+                                vxSetName(refs[refIdx], cur);
+                                refs[refIdx]->incrementReference(VX_INTERNAL);
+                            }
+                            else
+                            {
+                                status = VX_ERROR_INVALID_PARAMETERS;
+                                VX_PRINT(
+                                    VX_ZONE_ERROR,
+                                    "%s threshold settings doesn't match generated %s threshold!\n",
+                                    objectName, objectName);
+                                goto exit;
+                            }
+                        }
+                        else
+                        {
+                            status = VX_ERROR_INVALID_PARAMETERS;
+                            VX_PRINT(VX_ZONE_ERROR,
+                                     "%s has more child nodes than indicated in count!\n",
+                                     objectName);
+                            goto exit;
+                        }
+                    }
+                    else
+                    {
+                        REFNUM_ERROR;
+                        goto exit;
+                    }
+                    childNum++;
+                    XML_FOREACH_CHILD_TAG(cur, tag, tags)
+                    {
+                        if (tag == BINARY_TAG)
+                        {
+                            vx_int32 value = (vx_int32)xml_ulong(cur);
+                            status |= vxSetThresholdAttribute((vx_threshold)refs[refIdx],
+                                                              VX_THRESHOLD_THRESHOLD_VALUE, &value,
+                                                              sizeof(value));
+                        }
+                        else if (tag == RANGE_TAG)
+                        {
+                            vx_int32 upper = (vx_int32)xml_prop_ulong(cur, "upper");
+                            vx_int32 lower = (vx_int32)xml_prop_ulong(cur, "lower");
+                            status |= vxSetThresholdAttribute((vx_threshold)refs[refIdx],
+                                                              VX_THRESHOLD_THRESHOLD_UPPER, &upper,
+                                                              sizeof(upper));
+                            status |= vxSetThresholdAttribute((vx_threshold)refs[refIdx],
+                                                              VX_THRESHOLD_THRESHOLD_LOWER, &lower,
+                                                              sizeof(lower));
+                        }
+                        status |= vxSetThresholdAttribute((vx_threshold)refs[refIdx],
+                                                          VX_THRESHOLD_TRUE_VALUE, &true_value,
+                                                          sizeof(true_value));
+                        status |= vxSetThresholdAttribute((vx_threshold)refs[refIdx],
+                                                          VX_THRESHOLD_FALSE_VALUE, &false_value,
+                                                          sizeof(false_value));
+                    }
+                    break;
+                }
+                case SCALAR_TAG:
+                {
+                    vx_char typeName[20];
+                    xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
+                    TypePairs::typeFromString(typeName, &type);
+                    vx_size nullptrReference = 0;
+                    void *ptr = &nullptrReference;
+                    if (childNum == 0)
+                    { /* Create delay object based on first child */
+                        vx_scalar exemplar = nullptr;
+                        status = vxReserveReferences(context, count + 1);
+                        exemplar = vxCreateScalar(context, type, ptr);
+                        status |= vxReleaseReferences(context, count + 1);
+                        status |= vxGetStatus((vx_reference)exemplar);
+                        if (status == VX_SUCCESS)
+                        {
+                            parentReference = createFn(context, (vx_reference)exemplar, count);
+                            internalRefs = getRefsFromParent(parentReference, parentType);
+                            status = vxGetStatus(parentReference);
+                            vxReleaseScalar(&exemplar);
+                            refs[refIdx] = parentReference;
+                            vxSetName(refs[refIdx], cur);
+                            vxInternalizeReference(refs[refIdx]);
+                        }
+                    }
+                    refIdx = xml_prop_ulong(cur, "reference");
+                    if (refIdx < total)
+                    {
+                        if (childNum < count)
+                        {
+                            if (((vx_scalar)internalRefs[childNum])->data_type == type)
+                            {
+                                refs[refIdx] = internalRefs[childNum];
+                                vxSetName(refs[refIdx], cur);
+                                refs[refIdx]->incrementReference(VX_INTERNAL);
+                            }
+                            else
+                            {
+                                status = VX_ERROR_INVALID_PARAMETERS;
+                                VX_PRINT(VX_ZONE_ERROR,
+                                         "%s scalar settings doesn't match generated %s scalar!\n",
+                                         objectName, objectName);
+                                goto exit;
+                            }
+                        }
+                        else
+                        {
+                            status = VX_ERROR_INVALID_PARAMETERS;
+                            VX_PRINT(VX_ZONE_ERROR,
+                                     "%s has more child nodes than indicated in count!\n",
+                                     objectName);
+                            goto exit;
+                        }
+                    }
+                    else
+                    {
+                        REFNUM_ERROR;
+                        goto exit;
+                    }
+                    childNum++;
+                    status |= vxLoadDataForScalar((vx_scalar)refs[refIdx], cur);
+                    break;
+                }
                 default:
                     status = VX_ERROR_INVALID_TYPE;
+                    VX_PRINT(VX_ZONE_ERROR, "Invalid type as child of object array\n");
             }
         }
     }
@@ -1682,6 +2423,7 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                                 if (TypePairs::typeFromString(typeName, &elemType) != VX_SUCCESS)
                                 {
                                     status = VX_ERROR_INVALID_TYPE;
+                                    VX_PRINT(VX_ZONE_ERROR, "Invalid type %s\n", typeName);
                                     goto exit_error;
                                 }
 
@@ -1796,10 +2538,12 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
                                 if(sscanf(typeName, "USER_STRUCT_%u", &userNum) == 1) {
                                     if(vxStructGetEnum(user_struct_table, userNum, &type) != VX_SUCCESS) {
                                         status = VX_ERROR_INVALID_TYPE; /* INVALID type */
+                                        VX_PRINT(VX_ZONE_ERROR, "Invalid type %s\n", typeName);
                                         goto exit_error;
                                     }
                                 } else {
                                     status =  VX_ERROR_INVALID_TYPE; /* INVALID type */
+                                    VX_PRINT(VX_ZONE_ERROR, "Invalid type %s\n", typeName);
                                     goto exit_error;
                                 }
                             }

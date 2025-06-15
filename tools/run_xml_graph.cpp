@@ -99,26 +99,26 @@ class XMLGraphRunner
                 if (name.empty())
                 {
                     std::cout << "Graph " << (vx_size)graph << " performance metrics:" << std::endl
-                              << "  begin time: " << perf.beg << std::endl
-                              << "  end time: " << perf.end << std::endl
-                              << "  temp time: " << perf.tmp << std::endl
-                              << "  sum time: " << perf.sum << std::endl
+                              << "  begin time (ns): " << perf.beg << std::endl
+                              << "  end time (ns): " << perf.end << std::endl
+                              << "  temp time (ns): " << perf.tmp << std::endl
+                              << "  sum time (ns): " << perf.sum << std::endl
                               << "  num runs: " << perf.num << std::endl
-                              << "  avg time: " << perf.avg << std::endl
-                              << "  min time: " << perf.min << std::endl
-                              << "  max time: " << perf.max << std::endl;
+                              << "  avg time (ns): " << perf.avg << std::endl
+                              << "  min time (ns): " << perf.min << std::endl
+                              << "  max time (ns): " << perf.max << std::endl;
                 }
                 else
                 {
                     std::cout << "Graph '" << name << "' performance metrics:" << std::endl
-                              << "  begin time: " << perf.beg << std::endl
-                              << "  end time: " << perf.end << std::endl
-                              << "  temp time: " << perf.tmp << std::endl
-                              << "  sum time: " << perf.sum << std::endl
+                              << "  begin time (ns): " << perf.beg << std::endl
+                              << "  end time (ns): " << perf.end << std::endl
+                              << "  temp time (ns): " << perf.tmp << std::endl
+                              << "  sum time (ns): " << perf.sum << std::endl
                               << "  num runs: " << perf.num << std::endl
-                              << "  avg time: " << perf.avg << std::endl
-                              << "  min time: " << perf.min << std::endl
-                              << "  max time: " << perf.max << std::endl;
+                              << "  avg time (ns): " << perf.avg << std::endl
+                              << "  min time (ns): " << perf.min << std::endl
+                              << "  max time (ns): " << perf.max << std::endl;
                 }
             }
             else
