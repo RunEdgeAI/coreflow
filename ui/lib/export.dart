@@ -12,6 +12,17 @@ class XmlExport {
   final int graphIndex;
   final int refCount;
 
+  // Map of format codes to their standardized form
+  static const Map<String, String> _formatMap = {
+    'U1': 'U001',
+    'U8': 'U008',
+    'U16': 'U016',
+    'S16': 'S016',
+    'U32': 'U032',
+    'S32': 'S032',
+    'RGB': 'RGB2',
+  };
+
   void export(BuildContext context) {
     if (graphs.isNotEmpty) {
       final graph = graphs[graphIndex];
@@ -80,6 +91,7 @@ class XmlExport {
       // Reuse the reference by pointing to the linked reference ID
       return;
     }
+
     if (ref is ObjectArray) {
       builder.element('object_array', nest: () {
         builder.attribute('reference', ref.id);
@@ -87,7 +99,8 @@ class XmlExport {
         builder.attribute('objType', ref.elemType);
 
         // Only export one child object if applyToAll is true
-        final numChildren = ref.applyToAll ? 1 : ref.numObjects;
+        final numChildren =
+            (ref.numObjects > 0 && ref.applyToAll) ? 1 : ref.numObjects;
 
         for (int i = 0; i < numChildren; i++) {
           final objectAttrs = ref.applyToAll
@@ -102,7 +115,8 @@ class XmlExport {
               builder.element('tensor', nest: () {
                 builder.attribute('numDims', objectAttrs['numDims'] ?? 0);
                 builder.attribute(
-                    'elemType', objectAttrs['elemType'] ?? 'VX_TYPE_UINT8');
+                    'elemType',
+                    "VX_TYPE_${objectAttrs['elemType'] ?? 'UINT8'}");
                 if (objectAttrs['shape'] != null) {
                   builder.element('shape', nest: () {
                     builder.text((objectAttrs['shape'] as List).join(', '));
@@ -114,8 +128,10 @@ class XmlExport {
               builder.element('image', nest: () {
                 builder.attribute('width', objectAttrs['width'] ?? 0);
                 builder.attribute('height', objectAttrs['height'] ?? 0);
-                builder.attribute(
-                    'format', objectAttrs['format'] ?? 'VX_DF_IMAGE_U8');
+                final format = objectAttrs['format'] ?? 'U8';
+                // Use the format map or keep the original format
+                final formattedFormat = _formatMap[format] ?? format;
+                builder.attribute('format', formattedFormat);
               });
               break;
             case 'ARRAY':
