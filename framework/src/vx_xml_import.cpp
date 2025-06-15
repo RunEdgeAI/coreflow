@@ -26,7 +26,8 @@ typedef unsigned long ulong;
 
 #include <libxml/tree.h>
 
-typedef enum _vx_xml_tag_e {
+typedef enum _vx_xml_tag_e
+{
     UNKNOWN_TAG = 0,
     OPENVX_TAG,
     LIBRARY_TAG,
@@ -70,6 +71,7 @@ typedef enum _vx_xml_tag_e {
     PYRAMID_TAG,
     REMAP_TAG,
     SCALAR_TAG,
+    TENSOR_TAG,
     THRESHOLD_TAG,
     OBJECT_ARRAY_TAG,
 
@@ -90,6 +92,7 @@ typedef enum _vx_xml_tag_e {
     POINT_TAG,
     BINARY_TAG,
     RANGE_TAG,
+    SHAPE_TAG,
     PIXELS_TAG,
     BORDERCONST_TAG,
 
@@ -113,27 +116,27 @@ typedef struct _xml_struct_t {
 
 static xml_tag_t tags[] = {
     {"OPENVX", OPENVX_TAG},
-    {"LIBRARY",LIBRARY_TAG},
+    {"LIBRARY", LIBRARY_TAG},
     {"STRUCT", STRUCT_TAG},
-    {"GRAPH",  GRAPH_TAG},
-    {"NODE",   NODE_TAG},
+    {"GRAPH", GRAPH_TAG},
+    {"NODE", NODE_TAG},
     {"PARAMETER", PARAMETER_TAG},
     {"KERNEL", KERNEL_TAG},
 
-    {"CHAR",   CHAR_TAG},
-    {"UINT8",  UINT8_TAG},
+    {"CHAR", CHAR_TAG},
+    {"UINT8", UINT8_TAG},
     {"UINT16", UINT16_TAG},
     {"UINT32", UINT32_TAG},
     {"UINT64", UINT64_TAG},
-    {"INT8",   INT8_TAG},
-    {"INT16",  INT16_TAG},
-    {"INT32",  INT32_TAG},
-    {"INT64",  INT64_TAG},
-    {"FLOAT32",FLOAT32_TAG},
-    {"FLOAT64",FLOAT64_TAG},
-    {"BOOL",   BOOL_TAG},
-    {"ENUM",   ENUM_TAG},
-    {"SIZE",   SIZE_TAG},
+    {"INT8", INT8_TAG},
+    {"INT16", INT16_TAG},
+    {"INT32", INT32_TAG},
+    {"INT64", INT64_TAG},
+    {"FLOAT32", FLOAT32_TAG},
+    {"FLOAT64", FLOAT64_TAG},
+    {"BOOL", BOOL_TAG},
+    {"ENUM", ENUM_TAG},
+    {"SIZE", SIZE_TAG},
     {"DF_IMAGE", DF_IMAGE_TAG},
 
     {"KEYPOINT", KEYPOINT_TAG},
@@ -146,39 +149,41 @@ static xml_tag_t tags[] = {
 
     {"SCALAR", SCALAR_TAG},
     {"CONVOLUTION", CONVOLUTION_TAG},
-    {"DELAY",  DELAY_TAG},
-    {"LUT",    LUT_TAG},
+    {"DELAY", DELAY_TAG},
+    {"LUT", LUT_TAG},
     {"DISTRIBUTION", DISTRIBUTION_TAG},
-    {"IMAGE",  IMAGE_TAG},
-    {"ARRAY",  ARRAY_TAG},
+    {"IMAGE", IMAGE_TAG},
+    {"ARRAY", ARRAY_TAG},
     {"MATRIX", MATRIX_TAG},
-    {"PYRAMID",PYRAMID_TAG},
-    {"REMAP",  REMAP_TAG},
+    {"PYRAMID", PYRAMID_TAG},
+    {"REMAP", REMAP_TAG},
+    {"TENSOR", TENSOR_TAG},
     {"THRESHOLD", THRESHOLD_TAG},
     {"OBJECT_ARRAY", OBJECT_ARRAY_TAG},
 
     {"START_X", START_X_TAG},
     {"START_Y", START_Y_TAG},
-    {"END_X",   END_X_TAG},
-    {"END_Y",   END_Y_TAG},
-    {"X",       X_TAG},
-    {"Y",       Y_TAG},
-    {"Z",       Z_TAG},
-    {"STRENGTH",STRENGTH_TAG},
-    {"SCALE",   SCALE_TAG},
+    {"END_X", END_X_TAG},
+    {"END_Y", END_Y_TAG},
+    {"X", X_TAG},
+    {"Y", Y_TAG},
+    {"Z", Z_TAG},
+    {"STRENGTH", STRENGTH_TAG},
+    {"SCALE", SCALE_TAG},
     {"ORIENTATION", ORIENTATION_TAG},
     {"TRACKING_STATUS", TRACKING_STATUS_TAG},
-    {"ERROR",   ERROR_TAG},
-    {"FREQUENCY",FREQUENCY_TAG},
-    {"POINT",   POINT_TAG},
-    {"BINARY",  BINARY_TAG},
-    {"RANGE",   RANGE_TAG},
-    {"PIXELS",  PIXELS_TAG},
-    {"BORDERCONST",  BORDERCONST_TAG},
+    {"ERROR", ERROR_TAG},
+    {"FREQUENCY", FREQUENCY_TAG},
+    {"POINT", POINT_TAG},
+    {"BINARY", BINARY_TAG},
+    {"RANGE", RANGE_TAG},
+    {"SHAPE", SHAPE_TAG},
+    {"PIXELS", PIXELS_TAG},
+    {"BORDERCONST", BORDERCONST_TAG},
 
-    {"RGB",     RGB_TAG},
-    {"RGBA",    RGBA_TAG},
-    {"YUV",     YUV_TAG},
+    {"RGB", RGB_TAG},
+    {"RGBA", RGBA_TAG},
+    {"YUV", YUV_TAG},
 };
 
 #define XML_FOREACH_CHILD_TAG(child, tag, tags) \
@@ -1512,6 +1517,86 @@ VX_API_ENTRY vx_import VX_API_CALL vxImportFromXML(vx_context context,
             if (refIdx < total) {
                 XML_FOREACH_CHILD_TAG (cur, tag, tags) {
                     switch(tag) {
+                        case TENSOR_TAG:
+                        {
+                            vx_uint32 tensorRefIdx = xml_prop_ulong(cur, "reference");
+                            VX_PRINT(VX_ZONE_LOG, "Processing tensor child %d, reference=%d\n",
+                                     childNum, tensorRefIdx);
+
+                            if (childNum == 0)
+                            {
+                                // Create exemplar
+                                vx_tensor exemplar = nullptr;
+                                status = vxReserveReferences(context, count + 1);
+                                VX_PRINT(VX_ZONE_LOG, "Reserved %d references for object array\n",
+                                         count + 1);
+
+                                // Parse shape from XML
+                                vx_size dims[VX_MAX_TENSOR_DIMENSIONS] = {
+                                    0};  // Initialize to 0 for up to 6 dimensions
+                                vx_size numDims = 0;
+                                vx_enum elemType =
+                                    VX_TYPE_UINT8;  // Default to UINT8 if not specified
+                                vx_char typeName[32];
+
+                                // Parse elemType attribute
+                                xml_prop_string(cur, "elemType", typeName, sizeof(typeName));
+                                if (TypePairs::typeFromString(typeName, &elemType) != VX_SUCCESS)
+                                {
+                                    status = VX_ERROR_INVALID_TYPE;
+                                    goto exit_error;
+                                }
+
+                                XML_FOREACH_CHILD_TAG(cur, tag, tags)
+                                {
+                                    if (tag == SHAPE_TAG)
+                                    {
+                                        vx_char shapeStr[VX_MAX_REFERENCE_NAME];
+                                        xml_string(cur, shapeStr, sizeof(shapeStr));
+                                        VX_PRINT(VX_ZONE_LOG, "Found shape string: %s\n", shapeStr);
+
+                                        // Parse comma-separated values
+                                        char *token = strtok(shapeStr, ",");
+                                        while (token &&
+                                               numDims <
+                                                   VX_MAX_TENSOR_DIMENSIONS)  // Support up to max
+                                                                              // dimensions
+                                        {
+                                            dims[numDims++] = atoi(token);
+                                            token = strtok(nullptr, ",");
+                                        }
+                                        VX_PRINT(VX_ZONE_LOG,
+                                                 "Parsed %d dimensions: [%d, %d, %d, %d, %d, %d]\n",
+                                                 numDims, dims[0], dims[1], dims[2], dims[3],
+                                                 dims[4], dims[5]);
+                                    }
+                                }
+
+                                // Create exemplar tensor with parsed dimensions and element type
+                                exemplar = vxCreateTensor(context, numDims, dims, elemType, 0);
+                                status |= vxGetStatus((vx_reference)exemplar);
+
+                                if (status == VX_SUCCESS)
+                                {
+                                    VX_PRINT(VX_ZONE_LOG,
+                                             "Created exemplar tensor with %d dimensions\n",
+                                             numDims);
+                                    parentReference =
+                                        createFn(context, (vx_reference)exemplar, count);
+                                    internalRefs = getRefsFromParent(parentReference, parentType);
+                                    status = vxGetStatus(parentReference);
+                                    refs[refIdx] = parentReference;
+                                    vxSetName(refs[refIdx], cur);
+                                    vxInternalizeReference(refs[refIdx]);
+                                    VX_PRINT(VX_ZONE_LOG,
+                                             "Successfully created object array at reference %d\n",
+                                             refIdx);
+                                }
+                                vxReleaseTensor(&exemplar);
+                            }
+                            childNum++;
+                            break;
+                        }
                         case IMAGE_TAG:
                         {
                             vx_uint32 width = xml_prop_ulong(cur,"width");
