@@ -2,6 +2,35 @@
 BUILD file for build defs for third party deps
 """
 
+# ONNX Runtime
+cc_import(
+    name="onnxruntime-providers",
+    shared_library=select({
+        "@platforms//os:linux": "onnxruntime/lib/libonnxruntime_providers_shared.so",
+        "//conditions:default": None,
+    }),
+    visibility=["//visibility:public"],
+)
+
+cc_import(
+    name="onnxruntime-prebuilt",
+    shared_library=select({
+        "@platforms//os:macos": "onnxruntime/lib/libonnxruntime.1.22.0.dylib",
+        "@platforms//os:linux": "onnxruntime/lib/libonnxruntime.so.1",
+        "//conditions:default": None,
+    }),
+    deps=[":onnxruntime-providers"],
+    visibility=["//visibility:public"],
+)
+
+cc_library(
+    name="onnxruntime",
+    hdrs=glob(["onnxruntime/include/**/*.h"]),
+    includes=["onnxruntime/include"],
+    deps=[":onnxruntime-prebuilt"],
+    visibility=["//visibility:public"],
+)
+
 # TensorFlow Lite
 cc_import(
     name = "tflite",

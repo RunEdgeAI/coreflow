@@ -9,7 +9,7 @@ cc_binary(
         "//targets/extras:imported_openvx_extras",
         "//targets/liteRT:imported_openvx_liteRT",
         "//targets/opencl:imported_openvx_opencl",
-        # "//targets/onnxRT:imported_openvx_onnxRT",
+        "//targets/onnxRT:imported_openvx_onnxRT",
         "//targets/executorch:imported_openvx_torch",
     ],
     linkopts = select({

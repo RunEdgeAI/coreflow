@@ -13,8 +13,8 @@
 #include <string>
 #include <vector>
 
-#include <core/session/onnxruntime_cxx_api.h>
 #include <VX/vx.h>
+#include <onnxruntime_cxx_api.h>
 
 /**
  * @brief Onnx Runtime Model Runner Object

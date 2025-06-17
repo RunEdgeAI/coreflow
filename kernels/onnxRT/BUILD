@@ -14,7 +14,9 @@ cc_library(
     ],
     deps = [
         "//:corevx",
-        "@onnx_runtime//:onnxruntime_lib",
+        "//third_party:onnxruntime",
     ],
+    linkstatic = True,
+    alwayslink = True,
     visibility = ["//visibility:public"]
 )
