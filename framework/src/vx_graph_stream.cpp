@@ -87,6 +87,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxStartGraphStreaming(vx_graph graph)
         {
             graph->isStreaming = vx_true_e;
             graph->streamingThread = std::thread([graph]() { graph->streamingLoop(); });
+            VX_PRINT(VX_ZONE_INFO, "Graph streaming thread started\n");
         }
         else
         {
@@ -118,10 +119,37 @@ VX_API_ENTRY vx_status VX_API_CALL vxStopGraphStreaming(vx_graph graph)
 
     if (VX_SUCCESS == status)
     {
+        // First set streaming to false to stop the loop
         graph->isStreaming = vx_false_e;
-        /* Wait and join streaming thread */
-        std::this_thread::sleep_for(std::chrono::milliseconds(300));
-        if (graph->streamingThread.joinable()) graph->streamingThread.join();
+
+        // Wait up to 5 seconds for the thread to finish
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+
+        // Wait for any pending graph executions to complete
+        vxWaitGraph(graph);
+
+        // Wait and join streaming thread with a timeout
+        if (graph->streamingThread.joinable())
+        {
+            // If thread is still running, force join
+            graph->streamingThread.join();
+
+            VX_PRINT(VX_ZONE_INFO, "Graph streaming joined\n");
+        }
+
+        // Reset streaming state
+        graph->isStreamingEnabled = vx_false_e;
+        graph->triggerNodeIndex = UINT32_MAX;
+
+        // Reset node states
+        for (vx_uint32 i = 0; i < graph->numNodes; i++)
+        {
+            if (graph->nodes[i] != nullptr)
+            {
+                graph->nodes[i]->state = VX_NODE_STATE_STEADY;
+                graph->nodes[i]->executed = vx_false_e;
+            }
+        }
     }
 
     return status;

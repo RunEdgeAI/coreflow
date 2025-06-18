@@ -1729,18 +1729,19 @@ void Graph::streamingLoop()
     while (isStreaming)
     {
         /* Wait for trigger node event if set */
-        if (triggerNodeIndex != UINT32_MAX)
-        {
-            /* Wait for the trigger node to complete */
-            while (!nodes[triggerNodeIndex]->executed)
-            {
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                /* Allow clean exit */
-                if (!isStreaming) return;
-            }
-            /* Reset the event for the next iteration */
-            nodes[triggerNodeIndex]->executed = vx_false_e;
-        }
+        // if (triggerNodeIndex != UINT32_MAX)
+        // {
+        //     /* Wait for the trigger node to complete */
+        //     while (!nodes[triggerNodeIndex]->executed)
+        //     {
+        //         std::cout << "Waiting for trigger node to complete" << std::endl;
+        //         std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        //         /* Allow clean exit */
+        //         if (!isStreaming) return;
+        //     }
+        //     /* Reset the event for the next iteration */
+        //     nodes[triggerNodeIndex]->executed = vx_false_e;
+        // }
 
         /* Schedule and wait for the graph */
         vx_status status = vxScheduleGraph(this);
@@ -2675,7 +2676,7 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
                              next_nodes[n],
                              target->name, node->kernel->name);
 
-                    /* Pipeup phase:
+                    /* Check for pipeup phase:
                      * If this is the first time we are executing the graph, we need to pipeup
                      * all nodes with kernels in the graph that need pipeup of refs.
                      */
@@ -2687,15 +2688,21 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
                         std::cout << "max_pipeup_depth: " << max_pipeup_depth << std::endl;
                         node->kernel->pipeUpCounter++;
                         // Retain input buffers during PIPEUP
-
+                        for (vx_uint32 i = 0; i < node->kernel->output_depth - 1; i++)
+                        {
+                            action = target->funcs.process(target, &node, 0, 1);
+                            node->kernel->pipeUpCounter++;
+                        }
                         // For source nodes, provide new output buffers during PIPEUP
+                        for (vx_uint32 i = 0; i < node->kernel->input_depth - 1; i++)
+                        {
+                            action = target->funcs.process(target, &node, 0, 1);
+                            node->kernel->pipeUpCounter++;
+                        }
                     }
-                    else
-                    {
-                        /* This node was in pipeup, so update its state */
-                        node->state = VX_NODE_STATE_STEADY;
-                        // Release all retained buffers
-                    }
+
+                    /* If this node was in pipeup, update its state */
+                    node->state = VX_NODE_STATE_STEADY;
 
                     action = target->funcs.process(target, &node, 0, 1);
 
