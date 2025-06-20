@@ -111,6 +111,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetObjectArrayItem(vx_object_array arr, vx_
  */
 VX_API_ENTRY vx_status VX_API_CALL vxImportGraphFromDot(vx_graph graph, vx_char dotfile[], vx_bool acceptData);
 
+/* COREVX Internal Macros */
+#define VX_INT_MAX_PARAM_QUEUE_DEPTH 10
+
 /* ENABLED FEATURES IN COREVX ONLY */
 #define OPENVX_USE_USER_DATA_OBJECT 1
 #define OPENVX_USE_IX 1
@@ -119,7 +122,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxImportGraphFromDot(vx_graph graph, vx_char 
 #define OPENVX_USE_OPENCL_INTEROP 1
 #define OPENVX_USE_NN 1
 #define OPENVX_USE_NN_16 1
-// #define OPENVX_USE_PIPELINING 1
+#define OPENVX_USE_PIPELINING 1
 #define OPENVX_USE_STREAMING 1
 
 #if defined(__arm__) || defined(__arm64__)

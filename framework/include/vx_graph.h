@@ -214,9 +214,9 @@ public:
         /*! \brief the max buffers that can be enqueued */
         vx_uint32 numBufs;
         /*! \brief The internal data ref queue */
-        ExecutionQueue<vx_reference, VX_INT_MAX_QUEUE_DEPTH> queue;
+        ExecutionQueue<vx_reference, VX_INT_MAX_PARAM_QUEUE_DEPTH> queue;
         /*! \brief references that can be queued into data ref queue */
-        vx_reference refs_list[VX_INT_MAX_QUEUE_DEPTH];
+        vx_reference refs_list[VX_INT_MAX_PARAM_QUEUE_DEPTH];
 #endif
     } parameters[VX_INT_MAX_PARAMS];
     /*! \brief The number of graph parameters. */
