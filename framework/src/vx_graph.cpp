@@ -230,21 +230,33 @@ void vxContaminateGraphs(vx_reference ref)
 /* INTERNAL FUNCTIONS */
 /******************************************************************************/
 
-Graph::Graph(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_GRAPH, scope),
-nodes(),
-perf(),
-numNodes(0),
-heads(),
-numHeads(0),
-state(VX_FAILURE),
-verified(vx_false_e),
-reverify(vx_false_e),
-lock(),
-parameters(),
-numParams(0),
-shouldSerialize(vx_false_e),
-parentGraph(nullptr),
-delays()
+Graph::Graph(vx_context context, vx_reference scope)
+    : Reference(context, VX_TYPE_GRAPH, scope),
+      nodes(),
+      perf(),
+      numNodes(0),
+      heads(),
+      numHeads(0),
+      state(VX_FAILURE),
+      verified(vx_false_e),
+      reverify(vx_false_e),
+      lock(),
+      parameters(),
+      numParams(0),
+      shouldSerialize(vx_false_e),
+      parentGraph(nullptr),
+      delays(),
+      scheduleMode(VX_GRAPH_SCHEDULE_MODE_NORMAL),
+#ifdef OPENVX_USE_PIPELINING
+      numEnqueableParams(0),
+      scheduleCount(0),
+#endif /* OPENVX_USE_PIPELINING */
+#ifdef OPENVX_USE_STREAMING
+      isStreamingEnabled(vx_false_e),
+      isStreaming(vx_false_e),
+      triggerNodeIndex(0),
+      streamingThread()
+#endif /* OPENVX_USE_STREAMING */
 {
 }
 
