@@ -230,21 +230,33 @@ void vxContaminateGraphs(vx_reference ref)
 /* INTERNAL FUNCTIONS */
 /******************************************************************************/
 
-Graph::Graph(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_GRAPH, scope),
-nodes(),
-perf(),
-numNodes(0),
-heads(),
-numHeads(0),
-state(VX_FAILURE),
-verified(vx_false_e),
-reverify(vx_false_e),
-lock(),
-parameters(),
-numParams(0),
-shouldSerialize(vx_false_e),
-parentGraph(nullptr),
-delays()
+Graph::Graph(vx_context context, vx_reference scope)
+    : Reference(context, VX_TYPE_GRAPH, scope),
+      nodes(),
+      perf(),
+      numNodes(0),
+      heads(),
+      numHeads(0),
+      state(VX_FAILURE),
+      verified(vx_false_e),
+      reverify(vx_false_e),
+      lock(),
+      parameters(),
+      numParams(0),
+      shouldSerialize(vx_false_e),
+      parentGraph(nullptr),
+      delays(),
+      scheduleMode(VX_GRAPH_SCHEDULE_MODE_NORMAL),
+#ifdef OPENVX_USE_PIPELINING
+      numEnqueableParams(0),
+      scheduleCount(0),
+#endif /* OPENVX_USE_PIPELINING */
+#ifdef OPENVX_USE_STREAMING
+      isStreamingEnabled(vx_false_e),
+      isStreaming(vx_false_e),
+      triggerNodeIndex(0),
+      streamingThread()
+#endif /* OPENVX_USE_STREAMING */
 {
 }
 
@@ -1723,6 +1735,35 @@ vx_status Graph::pipelineValidateRefsList(
     return status;
 }
 
+void Graph::streamingLoop()
+{
+#ifdef OPENVX_USE_STREAMING
+    while (isStreaming)
+    {
+        /* Wait for trigger node event if set */
+        // if (triggerNodeIndex != UINT32_MAX)
+        // {
+        //     /* Wait for the trigger node to complete */
+        //     while (!nodes[triggerNodeIndex]->executed)
+        //     {
+        //         std::cout << "Waiting for trigger node to complete" << std::endl;
+        //         std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        //         /* Allow clean exit */
+        //         if (!isStreaming) return;
+        //     }
+        //     /* Reset the event for the next iteration */
+        //     nodes[triggerNodeIndex]->executed = vx_false_e;
+        // }
+
+        /* Schedule and wait for the graph */
+        vx_status status = vxScheduleGraph(this);
+        if (status != VX_SUCCESS) break;
+        status = vxWaitGraph(this);
+        if (status != VX_SUCCESS) break;
+    }
+#endif /* OPENVX_USE_STREAMING */
+}
+
 void Graph::destruct()
 {
     while (numNodes)
@@ -2068,7 +2109,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                 {
                     if (((graph->nodes[n]->kernel->signature.directions[p] == VX_BIDIRECTIONAL) ||
                          (graph->nodes[n]->kernel->signature.directions[p] == VX_INPUT)) &&
-                        (graph->nodes[n]->parameters[p] != nullptr))
+                        (graph->nodes[n]->parameters[p] != nullptr) &&
+                        (graph->nodes[n]->kernel->validate_input != nullptr))
                     {
                         vx_status input_validation_status = graph->nodes[n]->kernel->validate_input((vx_node)graph->nodes[n], p);
                         if (input_validation_status != VX_SUCCESS)
@@ -2100,25 +2142,30 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                         if (graph->setupOutput(n, p, &vref, &metas[p], &status, &num_errors) ==
                             vx_false_e)
                             break;
-                        output_validation_status = graph->nodes[n]->kernel->validate_output(
-                            (vx_node)graph->nodes[n], p, metas[p]);
-                        if (output_validation_status == VX_SUCCESS)
+                        if (graph->nodes[n]->kernel->validate_output != nullptr)
                         {
-                            if (graph->postprocessOutput(n, p, &vref, metas[p], &status,
-                                                         &num_errors) == vx_false_e)
+                            output_validation_status = graph->nodes[n]->kernel->validate_output(
+                                (vx_node)graph->nodes[n], p, metas[p]);
+                            if (output_validation_status == VX_SUCCESS)
                             {
-                                break;
+                                if (graph->postprocessOutput(n, p, &vref, metas[p], &status,
+                                                             &num_errors) == vx_false_e)
+                                {
+                                    break;
+                                }
                             }
-                        }
-                        else
-                        {
-                            status = output_validation_status;
-                            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), status, "Node %s: parameter[%u] failed output validation! (status = %d)\n",
-                                          graph->nodes[n]->kernel->name, p, status);
-                            VX_PRINT(VX_ZONE_ERROR,"Failed on validation of output parameter[%u] on kernel %s, status=%d\n",
-                                     p,
-                                     graph->nodes[n]->kernel->name,
-                                     status);
+                            else
+                            {
+                                status = output_validation_status;
+                                vxAddLogEntry(reinterpret_cast<vx_reference>(graph), status,
+                                              "Node %s: parameter[%u] failed output validation! "
+                                              "(status = %d)\n",
+                                              graph->nodes[n]->kernel->name, p, status);
+                                VX_PRINT(VX_ZONE_ERROR,
+                                         "Failed on validation of output parameter[%u] on kernel "
+                                         "%s, status=%d\n",
+                                         p, graph->nodes[n]->kernel->name, status);
+                            }
                         }
                     }
                 }
@@ -2511,6 +2558,7 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
     vx_uint32 next_nodes[VX_INT_MAX_REF];
     vx_uint32 left_nodes[VX_INT_MAX_REF];
     vx_context context = vxGetContext((vx_reference)graph);
+    vx_uint32 max_pipeup_depth = 1;
     (void)depth;
 
 #if defined(OPENVX_USE_SMP)
@@ -2639,6 +2687,34 @@ static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
                     VX_PRINT(VX_ZONE_GRAPH, "Calling Node[%u] %s:%s\n",
                              next_nodes[n],
                              target->name, node->kernel->name);
+
+                    /* Check for pipeup phase:
+                     * If this is the first time we are executing the graph, we need to pipeup
+                     * all nodes with kernels in the graph that need pipeup of refs.
+                     */
+                    max_pipeup_depth = std::max(
+                        {max_pipeup_depth, node->kernel->input_depth, node->kernel->output_depth});
+                    if (node->kernel->pipeUpCounter < max_pipeup_depth - 1)
+                    {
+                        node->state = VX_NODE_STATE_PIPEUP;
+                        std::cout << "max_pipeup_depth: " << max_pipeup_depth << std::endl;
+                        node->kernel->pipeUpCounter++;
+                        // Retain input buffers during PIPEUP
+                        for (vx_uint32 i = 0; i < node->kernel->output_depth - 1; i++)
+                        {
+                            action = target->funcs.process(target, &node, 0, 1);
+                            node->kernel->pipeUpCounter++;
+                        }
+                        // For source nodes, provide new output buffers during PIPEUP
+                        for (vx_uint32 i = 0; i < node->kernel->input_depth - 1; i++)
+                        {
+                            action = target->funcs.process(target, &node, 0, 1);
+                            node->kernel->pipeUpCounter++;
+                        }
+                    }
+
+                    /* If this node was in pipeup, update its state */
+                    node->state = VX_NODE_STATE_STEADY;
 
                     action = target->funcs.process(target, &node, 0, 1);
 

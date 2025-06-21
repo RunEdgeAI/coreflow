@@ -21,23 +21,25 @@
 /******************************************************************************/
 /* INTERNAL INTERFACE                                                         */
 /******************************************************************************/
-Node::Node(vx_context context, vx_reference scope) : Reference(context, VX_TYPE_NODE, scope),
-kernel(nullptr),
-parameters(),
-status(VX_FAILURE),
-perf(),
-callback(nullptr),
-local_data_change_is_enabled(vx_false_e),
-local_data_set_by_implementation(vx_false_e),
-graph(nullptr),
-visited(vx_false_e),
-executed(vx_false_e),
-attributes(),
-affinity(0),
-child(nullptr),
-costs(),
-is_replicated(vx_false_e),
-replicated_flags()
+Node::Node(vx_context context, vx_reference scope)
+    : Reference(context, VX_TYPE_NODE, scope),
+      kernel(nullptr),
+      parameters(),
+      status(VX_FAILURE),
+      perf(),
+      callback(nullptr),
+      local_data_change_is_enabled(vx_false_e),
+      local_data_set_by_implementation(vx_false_e),
+      graph(nullptr),
+      visited(vx_false_e),
+      executed(vx_false_e),
+      attributes(),
+      affinity(0),
+      child(nullptr),
+      costs(),
+      is_replicated(vx_false_e),
+      replicated_flags(),
+      state(VX_NODE_STATE_STEADY)
 {
 }
 
@@ -382,7 +384,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryNode(vx_node node, vx_enum attribute, 
                     status = VX_ERROR_INVALID_PARAMETERS;
                 }
                 break;
-#endif
+#endif /* OPENVX_KHR_NODE_MEMORY */
             case VX_NODE_BORDER:
                 if (VX_CHECK_PARAM(ptr, size, vx_border_t, 0x3))
                 {
@@ -464,6 +466,16 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryNode(vx_node node, vx_enum attribute, 
                 }
                 break;
 #endif
+            case VX_NODE_STATE:
+                if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
+                {
+                    *(vx_enum *)ptr = node->state;
+                }
+                else
+                {
+                    status = VX_ERROR_INVALID_PARAMETERS;
+                }
+                break;
             default:
                 status = VX_ERROR_NOT_SUPPORTED;
                 break;
