@@ -17,6 +17,7 @@
 #define VX_NODE_H
 
 #include <VX/vx.h>
+#include <vector>
 
 /*!
  * \file
@@ -132,6 +133,8 @@ public:
     vx_bool             is_replicated;
     /*! \brief The replicated parameters flags */
     vx_bool             replicated_flags[VX_INT_MAX_PARAMS];
+    /*! \brief The node state */
+    vx_node_state_e     state;
 };
 
 #endif /* VX_NODE_H */

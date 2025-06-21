@@ -11,7 +11,7 @@ build --experimental_ui_max_stdouterr_bytes=-1
 
 # Test settings
 test --test_output=errors  # Show errors from tests
-test --test_env=PATH=/usr/local/bin:/usr/bin:/bin  # Example of setting environment variables for tests
+# test --test_env=PATH=/usr/local/bin:/usr/bin:/bin  # Example of setting environment variables for tests
 
 # General settings
 build --jobs=4             # Use 4 parallel jobs for builds
