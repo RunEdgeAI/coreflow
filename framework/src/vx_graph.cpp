@@ -246,7 +246,6 @@ Graph::Graph(vx_context context, vx_reference scope)
       shouldSerialize(vx_false_e),
       parentGraph(nullptr),
       delays(),
-      scheduleMode(VX_GRAPH_SCHEDULE_MODE_NORMAL),
 #ifdef OPENVX_USE_PIPELINING
       numEnqueableParams(0),
       scheduleCount(0),
@@ -255,8 +254,9 @@ Graph::Graph(vx_context context, vx_reference scope)
       isStreamingEnabled(vx_false_e),
       isStreaming(vx_false_e),
       triggerNodeIndex(0),
-      streamingThread()
+      streamingThread(),
 #endif /* OPENVX_USE_STREAMING */
+      scheduleMode(VX_GRAPH_SCHEDULE_MODE_NORMAL)
 {
 }
 
