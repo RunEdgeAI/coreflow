@@ -226,9 +226,7 @@ public:
     /*! \brief [hidden] If non-NULL, the parent graph, for scope handling. */
     vx_graph       parentGraph;
     /*! \brief The array of all delays in this graph */
-    vx_delay       delays[VX_INT_MAX_REF];
-    /*! \brief The graph scheduling mode */
-    vx_graph_schedule_mode_type_e scheduleMode;
+    vx_delay delays[VX_INT_MAX_REF];
 #ifdef OPENVX_USE_PIPELINING
     /*! \brief The number of enqueable parameters */
     vx_uint32 numEnqueableParams;
@@ -245,6 +243,8 @@ public:
     /*! \brief The thread used for streaming */
     vx_thread streamingThread;
 #endif
+    /*! \brief The graph scheduling mode */
+    vx_graph_schedule_mode_type_e scheduleMode;
 };
 
 #endif /* VX_GRAPH_H */
