@@ -1,3 +1,23 @@
+cc_test(
+    name = "test_advanced_api",
+    srcs = [
+        "test_advanced_api.cpp"
+    ],
+    deps = [
+        "//:corevx",
+        "@googletest//:gtest_main",
+        "//targets/ai_server:imported_openvx_ai_server",
+        "//targets/c_model:imported_openvx_c_model",
+        "//targets/debug:imported_openvx_debug",
+        "//targets/extras:imported_openvx_extras",
+    ],
+    linkopts = select({
+        "@platforms//os:linux": ["-Wl,-rpath,$ORIGIN"],
+        "@platforms//os:macos": ["-Wl,-rpath,@executable_path"],
+        "//conditions:default": [],
+    }),
+    size = "small"
+)
 
 cc_test(
     name = "test_aiserver",
