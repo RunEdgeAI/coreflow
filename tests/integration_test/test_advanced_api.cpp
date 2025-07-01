@@ -82,11 +82,11 @@ class AdvancedIntegrationTest : public ::testing::Test
             vx_action action = VX_ACTION_ABANDON;
             vx_size expected = 2;
             vx_parameter param = vxGetParameterByIndex(node, 1);  // copied Value
-            if (param)
+            if (vxGetStatus(param) == VX_SUCCESS)
             {
                 vx_scalar scalar = nullptr;
                 vxQueryParameter(param, VX_PARAMETER_REF, &scalar, sizeof(scalar));
-                if (scalar)
+                if (vxGetStatus(scalar) == VX_SUCCESS)
                 {
                     vx_uint8 value = 0u;
                     vxCopyScalar(scalar, &value, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);

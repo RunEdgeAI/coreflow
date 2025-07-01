@@ -61,8 +61,9 @@ public:
 
 #if defined(__linux__) || defined(_WIN32) || defined(UNDER_CE)
             // Register TensorRT Execution Provider
-            OrtSessionOptionsAppendExecutionProvider_Tensorrt(
-                session_options.operator OrtSessionOptions*(), 0);
+            // @todo investigate why ort tensorrt is not working
+            // OrtSessionOptionsAppendExecutionProvider_Tensorrt(
+                // session_options.operator OrtSessionOptions*(), 0);
 #endif
 #if defined(__APPLE__)
             // Register CoreML Execution Provider
