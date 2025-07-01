@@ -25,7 +25,9 @@
 #endif
 
 /*!
- * \file
+ * \file vx_khr_opencl_interop.h
+ * \defgroup group_opencl_interop Extension: OpenCL Interoperability
+ * \ingroup group_extensions
  * \brief The OpenVX OpenCL interop extension API.
  */
 #define OPENVX_KHR_OPENCL_INTEROP  "vx_khr_opencl_interop"

@@ -154,6 +154,7 @@ extern "C" {
  * \param [in] context The handle to the implementation context.
  * \param [in] name The string to be used to match the kernel.
  * \param [in] enumeration The enumerated value of the kernel to be used by clients.
+ * \param [in] function The kernel function pointer to be invoked.
  * \param [in] flexible_func_ptr The process-local flexible function pointer to be invoked.
  * \param [in] fast_func_ptr The process-local fast function pointer to be invoked.
  * \param [in] num_params The number of parameters for this kernel.

@@ -18,7 +18,7 @@
  * \file
  * \brief The Copy Object Kernels.
  * \author Erik Rainey <erik.rainey@gmail.com>
- * \defgroup group_debug_ext Debugging Extension
+ * \defgroup group_debug_ext Extension: Debugging
  */
 
 #include <stdio.h>

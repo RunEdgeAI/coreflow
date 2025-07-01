@@ -14,6 +14,8 @@
 #include <vector>
 
 #include <VX/vx.h>
+#include <coreml_provider_factory.h>
+#include <onnxruntime_c_api.h>
 #include <onnxruntime_cxx_api.h>
 
 /**
@@ -56,6 +58,16 @@ public:
             // Forces single-threaded execution within operators
             session_options.SetIntraOpNumThreads(1);
             session_options.SetGraphOptimizationLevel(ORT_ENABLE_ALL);
+
+#if defined(__linux__) || defined(_WIN32) || defined(UNDER_CE)
+            // Register TensorRT Execution Provider
+            OrtSessionOptionsAppendExecutionProvider_Tensorrt(
+                session_options.operator OrtSessionOptions*(), 0);
+#endif
+#if defined(__APPLE__)
+            // Register CoreML Execution Provider
+            OrtSessionOptionsAppendExecutionProvider_CoreML(session_options, 0);
+#endif
 
             // Load the model
             session = std::make_unique<Ort::Session>(getEnv(), model_path.c_str(), session_options);
@@ -173,7 +185,7 @@ public:
     /**
      * @brief Run the kernel (execute the model)
      * @param inputTensors  Input tensors
-     * @param outputTensosrs Output tensors
+     * @param outputTensors Output tensors
      * @return VX_SUCCESS on success, VX_FAILURE otherwise
      */
     vx_status run(std::vector<std::pair<float*, vx_size>>& inputTensors, std::vector<std::pair<float*, vx_size>>& outputTensors)

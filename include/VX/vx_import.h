@@ -26,9 +26,9 @@ extern "C" {
  * and also part of the OpenVX SC deployment feature set.
  */
 
- /*! \brief An enumeration of export uses. See <tt>\ref vxExportObjectsToMemory</tt> and
+/*! \brief An enumeration of export uses. See <tt>\ref vxExportObjectsToMemory</tt> and
  * <tt>\ref vxImportObjectsFromMemory</tt>
- * \ingroup vx_enum_e
+ * \ingroup group_basic_features
  */
 #define VX_ENUM_IX_USE      0x18
 /*! \brief How to export and import an object

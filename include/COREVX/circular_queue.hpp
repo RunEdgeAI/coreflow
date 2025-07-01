@@ -5,7 +5,7 @@
  * @date 2025-05-13
  *
  * @copyright Copyright (c) 2025
- *
+ * @ingroup group_corevx_ext
  */
 #include <atomic>
 #include <array>
@@ -16,7 +16,7 @@
  *
  * @tparam T Type of elements in the queue
  * @tparam MaxDepth Maximum depth of the queue
- * @ingroup group_int_corevx
+ * @ingroup group_corevx_ext
  */
 template<typename T, std::size_t MaxDepth>
 class CircularQueue
@@ -24,7 +24,7 @@ class CircularQueue
 public:
     /**
      * @brief Construct a new Circular Queue object
-     *
+     * @see group_corevx_ext
      */
     CircularQueue() : head_(0), tail_(0) {}
 

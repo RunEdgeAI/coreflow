@@ -15,9 +15,12 @@
  */
 
 /*! \file
- * \defgroup group_icd OpenVX ICD Loader API
+ * \defgroup group_icd Extension: OpenVX ICD Loader API
+ * \ingroup group_extensions
  * \brief The OpenVX Installable Client Driver (ICD) Loader API.
- * \details The vx_khr_icd extension provides a mechanism for vendors to implement Installable Client Driver (ICD) for OpenVX. The OpenVX ICD Loader API provides a mechanism for applications to access these vendor implementations.
+ * \details The vx_khr_icd extension provides a mechanism for vendors to implement Installable
+ * Client Driver (ICD) for OpenVX. The OpenVX ICD Loader API provides a mechanism for applications
+ * to access these vendor implementations.
  */
 
 #ifndef _VX_KHR_ICD_H_

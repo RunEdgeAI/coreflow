@@ -19,18 +19,34 @@
 #include <VX/vx.h>
 
 /*!
- * \file
+ * \file vx_lib_debug.h
+ * \defgroup group_debug_ext Extension: Debugging
+ * \ingroup group_extensions
  * \brief The OpenVX Debugging Extension.
- * \defgroup group_debug_ext Debugging Extension
  * \defgroup group_vision_function_copy_image Kernel: Copy Image
+ * \ingroup group_all_kernels
  * \defgroup group_vision_function_copy_array Kernel: Copy Array
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_fread_image Kernel: File Read Image
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_fread_array Kernel: File Read Array
+ * \ingroup group_all_kernels
  * \defgroup group_vision_function_fwrite_image Kernel: File Write Image
+ * \ingroup group_all_kernels
  * \defgroup group_vision_function_fwrite_array Kernel: File Write Array
+ * \ingroup group_all_kernels
  * \defgroup group_vision_function_plus1 Kernel: Plus One Image
+ * \ingroup group_all_kernels
  * \defgroup group_vision_function_fill_image Kernel: Fill Image
+ * \ingroup group_all_kernels
  * \defgroup group_vision_function_check_image Kernel: Check Image
+ * \ingroup group_all_kernels
  * \defgroup group_vision_function_check_array Kernel: Check Array
- * \defgroup group_vision_function_compare_images Kernel: Compare Images
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_compare_image Kernel: Compare Images
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_copy_ptr Kernel: Copy Pointer
+ * \ingroup group_all_kernels
  */
 
 /*! \brief The maximum filepath name length.
@@ -273,6 +289,7 @@ vx_node vxCopyImageFromPtrNode(vx_graph graph, void *ptr, vx_image output);
 /******************************************************************************/
 
 /*! \brief [Immediate] Copies the source image to the destination image.
+ * \param [in] context The handle to the context.
  * \param [in] src The input image.
  * \param [in] dst The output image.
  * \note Immediate Mode Function.
@@ -281,6 +298,7 @@ vx_node vxCopyImageFromPtrNode(vx_graph graph, void *ptr, vx_image output);
 vx_status vxuCopyImage(vx_context context, vx_image src, vx_image dst);
 
 /*! \brief [Immediate] Copies the source array to the destination array.
+ * \param [in] context The handle to the context.
  * \param [in] src The input array.
  * \param [in] dst The output array.
  * \note Immediate Mode Function.
@@ -289,6 +307,7 @@ vx_status vxuCopyImage(vx_context context, vx_image src, vx_image dst);
 vx_status vxuCopyArray(vx_context context, vx_array src, vx_array dst);
 
 /*! \brief [Immediate] Writes the source image to the file.
+ * \param [in] context The handle to the context.
  * \param [in] image The input array.
  * \param [in] name The name of the file.
  * \note Immediate Mode Function.
@@ -297,6 +316,7 @@ vx_status vxuCopyArray(vx_context context, vx_array src, vx_array dst);
 vx_status vxuFWriteImage(vx_context context, vx_image image, vx_char name[VX_MAX_FILE_NAME]);
 
 /*! \brief [Immediate] Writes the source array to the file.
+ * \param [in] context The handle to the context.
  * \param [in] array The input array.
  * \param [in] name The name of the file.
  * \note Immediate Mode Function.
@@ -305,14 +325,16 @@ vx_status vxuFWriteImage(vx_context context, vx_image image, vx_char name[VX_MAX
 vx_status vxuFWriteArray(vx_context context, vx_array array, vx_char name[VX_MAX_FILE_NAME]);
 
 /*! \brief [Immediate] Reads the source image from the file.
+ * \param [in] context The handle to the context.
  * \param [in] name The name of the file.
  * \param [out] image The output image.
-  * \note Immediate Mode Function.
+ * \note Immediate Mode Function.
  * \ingroup group_vision_function_fread_image
  */
 vx_status vxuFReadImage(vx_context context, vx_char name[VX_MAX_FILE_NAME], vx_image image);
 
 /*! \brief [Immediate] Reads the source array from the file.
+ * \param [in] context The handle to the context.
  * \param [in] name The name of the file.
  * \param [out] array The output array.
  * \note Immediate Mode Function.
@@ -321,6 +343,7 @@ vx_status vxuFReadImage(vx_context context, vx_char name[VX_MAX_FILE_NAME], vx_i
 vx_status vxuFReadArray(vx_context context, vx_char name[VX_MAX_FILE_NAME], vx_array array);
 
 /*! \brief [Immediate] Adds 1 to each uint8 pixel. This will clamp at 255.
+ * \param [in] context The handle to the context.
  * \param [in,out] image The image to increment.
  * \note Immediate Mode Function
  * \ingroup group_vision_function_plus1
@@ -329,6 +352,7 @@ vx_node vxuPlusOneNode(vx_context context, vx_image image);
 
 /*!
  * \brief [Immediate] Fills an image with a known value.
+ * \param [in] context The handle to the context.
  * \param [in] value The known value to fill the image with.
  * \param [out] output The image to fill.
  * \note Immediate Mode Function
@@ -338,7 +362,8 @@ vx_status vxuFillImage(vx_context context, vx_uint32 value, vx_image output);
 
 /*!
  * \brief [Immediate] Checks an image against a known value.
- * \param [in] output The image to check.
+ * \param [in] context The handle to the context.
+ * \param [in] input The image to check.
  * \param [in] value The known value to check the image against.
  * \param [out] numErrors The handle to the number of errors found.
  * \note Immediate Mode Function
@@ -348,6 +373,7 @@ vx_status vxuCheckImage(vx_context context, vx_image input, vx_uint32 value, vx_
 
 /*!
  * \brief [Immediate] Checks a array for a known value.
+ * \param [in] context The handle to the context.
  * \param [in] input The array to check.
  * \param [in] value The known value to check against.
  * \param [out] numErrors An output of the number of errors.
@@ -359,6 +385,7 @@ vx_status vxuCheckArray(vx_context context, vx_array input, vx_uint8 value, vx_u
 /*!
  * \brief [Immediate] Compares two images and returns the number of pixel sub-channels
  * which are different.
+ * \param [in] context The handle to the context.
  * \param [in] a The first image.
  * \param [in] b The second image.
  * \param [out] numDiffs The handle to scalar to hold the number of differences.
@@ -368,6 +395,7 @@ vx_status vxuCheckArray(vx_context context, vx_array input, vx_uint8 value, vx_u
 vx_status vxuCompareImages(vx_context context, vx_image a, vx_image b, vx_uint32 *numDiffs);
 
 /*! \brief [Immediate] Copies a HOST memory area into an image.
+ * \param [in] context The handle to the context.
  * \param [in] ptr The input pointer to the memory area to copy.
  * \param [out] output The output image.
  * \note Immediate Mode Function

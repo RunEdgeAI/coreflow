@@ -21,14 +21,17 @@
  * \file
  * \brief An example of how to wrap a User Extension Kernel.
  *
- * \defgroup group_xyz_ext The Example User Kernel Extension
- *
+ * \defgroup group_xyz_ext Extension: Example User Kernel
+ * \ingroup group_extensions
+ * \brief The Example User Kernel Extension
+ * \defgroup group_example_kernel Kernel: Example
+ * \ingroup group_all_kernels
  */
 
 #include <VX/vx.h>
 
 /*!
- * \file vx_ext_xyz.h
+ * \file vx_lib_xyz.h
  * \brief The example header for how to write a user mode extension to OpenVX.
  */
 
