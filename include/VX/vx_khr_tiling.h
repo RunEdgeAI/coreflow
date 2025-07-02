@@ -22,6 +22,7 @@
  * \brief The Khronos Extension for User Tiling Functions.
  *
  * \defgroup group_tiling Extension: User Tiling API
+ * \ingroup group_extensions
  * \brief The Khronos Extension for User Tiling Functions.
  */
 

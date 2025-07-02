@@ -16,10 +16,11 @@
 #ifndef _VX_EXT_EXTRAS_H_
 #define _VX_EXT_EXTRAS_H_
 
-/*! \file
+/*! \file vx_lib_extras.h
  * \brief Extras Extension.
  *
- * \defgroup group_extras_ext Khronos Extras Extension.
+ * \defgroup group_extras_ext Extension: Khronos Extras
+ * \ingroup group_extensions
  * \brief A Set of Kernels which extend OpenVX.
  *
  * \defgroup group_vision_function_laplacian_image Kernel: Laplacian Filter
@@ -52,6 +53,13 @@
 
     \f]
  *
+ * \defgroup group_vision_function_nonmaxsuppression Kernel: Non-Maximum Suppression (Canny)
+ * \defgroup group_vision_function_harris_score Kernel: Harris Score
+ * \defgroup group_vision_function_sobelmxn Kernel: Sobel MxN
+ * \defgroup group_vision_function_image_lister Kernel: Image Lister
+ * \defgroup group_vision_function_euclidean_nonmax Kernel: Euclidean Non-Maximum Suppression
+ * \defgroup group_vision_function_elementwise_norm Kernel: Elementwise Norm
+ * \defgroup group_vision_function_edge_trace Kernel: Edge Trace
  */
 
 /*! \brief The Khronos Extras Library
@@ -166,6 +174,7 @@ vx_node vxNonMaxSuppressionCannyNode(vx_graph graph, vx_image mag, vx_image phas
 vx_node vxLaplacian3x3Node(vx_graph graph, vx_image input, vx_image output);
 
 /*! \brief [Immediate] Computes a laplacian filter on the image by a 3x3 window.
+ * \param [in] context The handle to the context.
  * \param [in] input The input image in VX_DF_IMAGE_U8 format.
  * \param [out] output The output image in VX_DF_IMAGE_U8 format.
  * \ingroup group_vision_function_laplacian_image
@@ -175,22 +184,51 @@ vx_status vxuLaplacian3x3(vx_context context, vx_image input, vx_image output);
 /*! \brief [Graph] Creates a Scharr Filter Node.
  * \param [in] graph The handle to the graph.
  * \param [in] input The input image in VX_DF_IMAGE_U8 format.
- * \param [out] output The output image in VX_DF_IMAGE_U8 format.
+ * \param [out] output1 The VX_DF_IMAGE_S16 output gradient x image.
+ * \param [out] output2 The VX_DF_IMAGE_S16 output gradient y image.
  * \ingroup group_vision_function_laplacian_image
  */
 vx_node vxScharr3x3Node(vx_graph graph, vx_image input, vx_image output1, vx_image output2);
 
 /*! \brief [Immediate] Computes a Scharr filter on the image by a 3x3 window.
+ * \param [in] context The handle to the context.
  * \param [in] input The input image in VX_DF_IMAGE_U8 format.
- * \param [out] output The output image in VX_DF_IMAGE_U8 format.
+ * \param [out] output1 The VX_DF_IMAGE_S16 output gradient x image.
+ * \param [out] output2 The VX_DF_IMAGE_S16 output gradient y image.
  * \ingroup group_vision_function_laplacian_image
  */
 vx_status vxuScharr3x3(vx_context context, vx_image input, vx_image output1, vx_image output2);
 
+/*! \brief [Graph] Creates a Sobel MxN Node.
+ * \param [in] graph The handle to the graph.
+ * \param [in] input The VX_DF_IMAGE_U8 input image.
+ * \param [in] win Window Size (3,5,7)
+ * \param [out] gx The VX_DF_IMAGE_S16 output gradient x image.
+ * \param [out] gy The VX_DF_IMAGE_S16 output gradient y image.
+ * \ingroup group_vision_function_sobelmxn
+ */
 vx_node vxSobelMxNNode(vx_graph graph, vx_image input, vx_scalar win, vx_image gx, vx_image gy);
 
+/*! \brief [Immediate] Computes a Sobel filter on an MxN window.
+ * \param [in] context The handle to the context.
+ * \param [in] input The VX_DF_IMAGE_U8 input image.
+ * \param [in] win Window Size (3,5,7)
+ * \param [out] gx The VX_DF_IMAGE_S16 output gradient x image.
+ * \param [out] gy The VX_DF_IMAGE_S16 output gradient y image.
+ * \ingroup group_vision_function_sobelmxn
+ */
 vx_status vxuSobelMxN(vx_context context, vx_image input, vx_scalar win, vx_image gx, vx_image gy);
 
+/*! \brief [Graph] Creates a Harris Score Node.
+ * \param [in] graph The handle to the graph.
+ * \param [in] gx A VX_DF_IMAGE_S16 X Gradient
+ * \param [in] gy A VX_DF_IMAGE_S16 Y Gradient
+ * \param [in] sensitivity sensitivity
+ * \param [in] grad_size A gradient size.
+ * \param [in] block_size A block size.
+ * \param [out] score A VX_DF_IMAGE_S32 corner score per pixel.
+ * \ingroup group_vision_function_harris_score
+ */
 vx_node vxHarrisScoreNode(vx_graph graph,
                          vx_image gx,
                          vx_image gy,
@@ -199,6 +237,16 @@ vx_node vxHarrisScoreNode(vx_graph graph,
                          vx_scalar block_size,
                          vx_image score);
 
+/*! \brief [Immediate] Computes a Harris Score.
+ * \param [in] context The handle to the context.
+ * \param [in] gx A VX_DF_IMAGE_S16 X Gradient
+ * \param [in] gy A VX_DF_IMAGE_S16 Y Gradient
+ * \param [in] sensitivity sensitivity
+ * \param [in] grad_size A gradient size.
+ * \param [in] block_size A block size.
+ * \param [out] score A VX_DF_IMAGE_S32 corner score per pixel.
+ * \ingroup group_vision_function_harris_score
+ */
 vx_status vxuHarrisScore(vx_context context, vx_image gx,
                          vx_image gy,
                          vx_scalar sensitivity,
@@ -206,24 +254,69 @@ vx_status vxuHarrisScore(vx_context context, vx_image gx,
                          vx_scalar block_size,
                          vx_image score);
 
+/*! \brief [Graph] Creates a Euclidean Non-Maximum Suppression Node for Harris Corners.
+ * \param [in] graph The handle to the graph.
+ * \param [in] input The VX_DF_IMAGE_F32 image.
+ * \param [in] strength_thresh The minimum threshold
+ * \param [in] min_distance The euclidean distance from the considered pixel.
+ * \param [out] output The VX_DF_IMAGE_F32 image.
+ * \ingroup group_vision_function_euclidean_nonmax
+ */
 vx_node vxEuclideanNonMaxHarrisNode(vx_graph graph,
                               vx_image input,
                               vx_scalar strength_thresh,
                               vx_scalar min_distance,
                               vx_image output);
 
+/*! \brief [Immediate] Computes Euclidean Non-Maximum Suppression for Harris Corners.
+ * \param [in] context The handle to the context.
+ * \param [in] input The VX_DF_IMAGE_F32 image.
+ * \param [in] strength_thresh The minimum threshold
+ * \param [in] min_distance The euclidean distance from the considered pixel.
+ * \param [out] output The VX_DF_IMAGE_F32 image.
+ * \ingroup group_vision_function_euclidean_nonmax
+ */
 vx_status vxuEuclideanNonMaxHarris(vx_context context, vx_image input,
                              vx_scalar strength_thresh,
                              vx_scalar min_distance,
                              vx_image output);
 
+/*! \brief [Graph] Creates an image to list converter Node.
+ * \param [in] graph The handle to the graph.
+ * \param [in] input The VX_DF_IMAGE_U8 or VX_DF_IMAGE_S32 image.
+ * \param [out] arr The array of output
+ * \param [out] num_points The total number of non zero points in image (optional)
+ * \ingroup group_vision_function_image_lister
+ */
 vx_node vxImageListerNode(vx_graph graph, vx_image input, vx_array arr, vx_scalar num_points);
 
+/*! \brief [Immediate] Computes image to list conversion.
+ * \param [in] context The handle to the context.
+ * \param [in] input The VX_DF_IMAGE_U8 or VX_DF_IMAGE_S32 image.
+ * \param [out] arr The array of output
+ * \param [out] num_points The total number of non zero points in image (optional)
+ * \ingroup group_vision_function_image_lister
+ */
 vx_status vxuImageLister(vx_context context, vx_image input,
                          vx_array arr, vx_scalar num_points);
 
+/*! \brief [Graph] Creates an Elementwise binary norm Node.
+ * \param [in] graph The handle to the graph.
+ * \param [in] input_x Left image (VX_DF_IMAGE_S16).
+ * \param [in] input_y Right image (VX_DF_IMAGE_S16).
+ * \param [in] norm_type Norm type (vx_norm_type_e).
+ * \param [in] output Output image (VX_DF_IMAGE_U16).
+ * \ingroup group_vision_function_elementwise_norm
+ */
 vx_node vxElementwiseNormNode(vx_graph graph, vx_image input_x, vx_image input_y, vx_scalar norm_type, vx_image output);
 
+/*! \brief [Graph] Creates an Edge tracing Node.
+ * \param [in] graph The handle to the graph.
+ * \param [in] norm Norm image (VX_DF_IMAGE_U16).
+ * \param [in] threshold Threshold (VX_THRESHOLD_TYPE_RANGE).
+ * \param [out] output Output binary image (VX_DF_IMAGE_U8).
+ * \ingroup group_vision_function_edge_trace
+ */
 vx_node vxEdgeTraceNode(vx_graph graph, vx_image norm, vx_threshold threshold, vx_image output);
 
 #ifdef  __cplusplus

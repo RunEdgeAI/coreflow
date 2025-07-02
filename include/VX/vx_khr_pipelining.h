@@ -18,8 +18,18 @@
 #define _OPENVX_PIPELINING_H_
 
 /*!
- * \file
+ * \file vx_khr_pipelining.h
  * \brief The OpenVX Pipelining, Streaming and Batch Processing extension API.
+ *
+ * \defgroup group_pipelining Extension: Pipelining and Batch Processing API
+ * \ingroup group_extensions
+ * \brief The Pipelining and Batch Processing Extension
+ * \defgroup group_streaming Extension: Streaming API
+ * \ingroup group_extensions
+ * \brief The Streaming Extension
+ * \defgroup group_event Extension: Events Handling API
+ * \ingroup group_extensions
+ * \brief The Event Handling Extension
  */
 
 #define OPENVX_KHR_PIPELINING  "vx_khr_pipelining"

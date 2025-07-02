@@ -21,10 +21,10 @@
 
 #include <VX/vx.h>
 /**=============================================================================
-@function
+function
 u32Tou8
 
-@description
+description
 algorithm implementation of unint32 to unint8
 =============================================================================**/
 static vx_uint8 u32Tou8(vx_uint32 x)

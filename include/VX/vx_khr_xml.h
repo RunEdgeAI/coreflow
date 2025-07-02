@@ -21,6 +21,7 @@
  * \brief The OpenVX XML Schema Extension Header.
  *
  * \defgroup group_xml Extension: XML API
+ * \ingroup group_extensions
  * \brief The Khronos Extension for OpenVX XML Import and Export Support.
  */
 

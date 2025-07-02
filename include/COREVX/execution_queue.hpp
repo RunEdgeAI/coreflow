@@ -5,13 +5,20 @@
  * @date 2025-05-16
  *
  * @copyright Copyright (c) 2025
- *
+ * @ingroup group_corevx_ext
  */
 #include <condition_variable>
 #include <mutex>
 
 #include "circular_queue.hpp"
 
+/**
+ * @brief Execution queue implementation
+ *
+ * @tparam T        queue type
+ * @tparam MaxDepth depth of queue
+ * @ingroup group_corevx_ext
+ */
 template<typename T, std::size_t MaxDepth>
 class ExecutionQueue
 {

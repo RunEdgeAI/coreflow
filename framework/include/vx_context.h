@@ -29,7 +29,7 @@
  *
  * \defgroup group_int_context Internal Context API
  * \ingroup group_internal
- * \brief Internal Context API
+ * \brief The Internal Context API
  */
 
 /*! \brief The implementation string which is of the format "<vendor>.<substring>" */

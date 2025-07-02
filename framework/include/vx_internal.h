@@ -38,6 +38,10 @@
  * \defgroup group_int_defines Internal Defines
  * \ingroup group_internal
  * \brief Limitations on Sizes, Ranges, Values.
+ *
+ * \defgroup group_implementation Internal Kernel Implementations
+ * \ingroup group_internal
+ * \brief Implementation entry points in targets
  */
 
 #include <cstdio>
@@ -432,7 +436,7 @@ using vx_error = Error*;
  * \param [in] worker The per-thread worker data structure.
  * \retval false_e Indicates that the worker failed to process data or had some other
  * error.
- * \ingroup group_threadpools
+ * \ingroup group_int_osal
  */
 typedef vx_bool (*vx_threadpool_f)(struct vx_threadpool_worker_t *worker);
 
@@ -495,7 +499,7 @@ typedef struct vx_work_t {
 };
 
 /*! \brief An internal enum for notating which sort of reference type we need.
- * \ingroup group_int_type
+ * \ingroup group_int_types
  */
 typedef enum vx_reftype_e {
     VX_INTERNAL = 1,
@@ -552,9 +556,9 @@ typedef struct vx_kernel_attr_t {
 };
 
 /*!
-* \brief The pointer to the kernel object deinitializer.
-* \param [in] kernel object local ptr.
-*/
+ * \brief The pointer to the kernel object deinitializer.
+ * \param [in] nn_kernel object local ptr.
+ */
 typedef vx_status(VX_CALLBACK *vx_kernel_object_deinitialize_f)(vx_kernel nn_kernel);
 
 /*! \brief The function which initializes the target
@@ -721,7 +725,7 @@ typedef struct vx_module_t {
 };
 
 /*! \brief The framework's internal-external memory tracking structure.
- * \ingroup group_int_context.
+ * \ingroup group_int_context
  */
 typedef struct vx_external_t {
     /*! \brief The pointer associated with the reference. */
@@ -761,7 +765,7 @@ typedef union vx_memory_map_extra
 };
 
 /*! \brief The framework's mapping memory tracking structure.
- * \ingroup group_int_context.
+ * \ingroup group_int_context
  */
 typedef struct vx_memory_map_t
 {
