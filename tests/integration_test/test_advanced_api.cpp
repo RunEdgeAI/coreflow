@@ -94,9 +94,7 @@ class AdvancedIntegrationTest : public ::testing::Test
                     {
                         action = VX_ACTION_CONTINUE;
                     }
-                    vxReleaseScalar(&scalar);
                 }
-                vxReleaseParameter(&param);
             }
             return action;
         }
