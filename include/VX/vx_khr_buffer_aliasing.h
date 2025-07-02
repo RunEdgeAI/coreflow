@@ -19,6 +19,8 @@
 
 /*!
  * \file
+ * \defgroup group_buffer_aliasing Extension: Buffer Aliasing API
+ * \ingroup group_extensions
  * \brief The OpenVX User Kernel Buffer Aliasing extension API.
  */
 
@@ -66,29 +68,31 @@ enum vx_buffer_aliasing_processing_type_e {
 /*! \brief Notifies framework that the kernel supports buffer aliasing of specified parameters
  *
  * This is intended to be called from within the vx_publish_kernels_f callback, for applicable
- * kernels in between the call to the <tt>\ref vxAddUserKernel</tt> function and the <tt>\ref vxFinalizeKernel(kernel)</tt>
- * function for the corresponding kernel.
+ * kernels in between the call to the <tt>\ref vxAddUserKernel</tt> function and the <tt>\ref
+ * vxFinalizeKernel</tt> function for the corresponding kernel.
  *
  * If a kernel can not support buffer aliasing of its parameters (for in-place processing),
  * then it should not call this function.  However, if a kernel can support buffer aliasing of
- * a pair of its parameters, then it may call this function with the appropriate parameter indices and
- * priority value.
+ * a pair of its parameters, then it may call this function with the appropriate parameter indices
+ * and priority value.
  *
  * Note that calling this function does not guarantee that the buffers will ultimatly be aliased by
  * the framework. The framework may consider this hint as part of performance or memory optimization
- * logic along with other factors such as graph topology, other competing hints, and if the parameters
- * are virtual objects or not.
+ * logic along with other factors such as graph topology, other competing hints, and if the
+ * parameters are virtual objects or not.
  *
  * \param [in] kernel Kernel reference
  * \param [in] parameter_index_a Index of a kernel parameter to request for aliasing
- * \param [in] parameter_index_b Index of another kernel paramter to request to alias with parameter_index_a
+ * \param [in] parameter_index_b Index of another kernel paramter to request to alias with
+ * parameter_index_a
  * \param [in] processing_type Indicate the type of processing on this buffer from the kernel
  *              (See <tt>\ref vx_buffer_aliasing_processing_type_e</tt>)
  *
  * \return A <tt>\ref vx_status_e</tt> enumeration.
  * \retval VX_SUCCESS No errors.
  * \retval VX_ERROR_INVALID_REFERENCE kernel is not a valid reference
- * \retval VX_ERROR_INVALID_PARAMETERS parameter_index_a or parameter_index_b is NOT a valid kernel parameter index
+ * \retval VX_ERROR_INVALID_PARAMETERS parameter_index_a or parameter_index_b is NOT a valid kernel
+ * parameter index
  * \retval VX_FAILURE priority is not a supported enumeration value.
  *
  * \ingroup group_buffer_aliasing

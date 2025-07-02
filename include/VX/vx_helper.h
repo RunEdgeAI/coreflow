@@ -23,7 +23,8 @@
 /*! \file
  * \brief The OpenVX Helper Library Interface.
  *
- * \defgroup group_helper OpenVX Helper
+ * \defgroup group_helper Extension: OpenVX Helper
+ * \ingroup group_extensions
  * \brief The helper is an non-standardized set of convenience constructs for OpenVX.
  * \details These functions use only the OpenVX API in order to implement their
  * functionality. As such structures, objects, defines, typedefs and functions

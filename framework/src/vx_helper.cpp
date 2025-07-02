@@ -27,9 +27,7 @@
 /*! \file vx_helper.cpp
  * \brief The OpenVX Helper Implementation.
  * \author Erik Rainey <erik.rainey@gmail.com>
- * \example vx_helper.c
  */
-
 
 // no clue if this belongs here, but i don't know where better to put it. needed by c_scale.c and vx_scale.c
 uint32_t math_gcd(uint32_t a, uint32_t b)

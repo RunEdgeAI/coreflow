@@ -371,9 +371,9 @@ using vx_object_array = ObjectArray*;
 typedef struct ObjectArray* vx_object_array;
 #endif
 
- /*! \brief The multidimensional data object (Tensor).
+/*! \brief The multidimensional data object (Tensor).
  * \see vxCreateTensor
- * \ingroup group_object_tensor
+ * \ingroup group_tensor
  * \extends vx_reference
  */
 #ifdef __cplusplus
@@ -1270,7 +1270,7 @@ enum vx_object_array_attribute_e {
     VX_OBJECT_ARRAY_NUMITEMS = VX_ATTRIBUTE_BASE(VX_ID_KHRONOS, VX_TYPE_OBJECT_ARRAY) + 0x1,
 };
 /*! \brief tensor Data attributes.
- * \ingroup group_object_tensor
+ * \ingroup group_tensor
  */
 enum vx_tensor_attribute_e
 {
@@ -1612,8 +1612,9 @@ enum vx_comp_metric_e
  * logically adjacent pixel in the positive x or y direction.
  * \arg scale - The relationship of scaling from the primary plane (typically
  * the zero indexed plane) to this plane. An integer down-scaling factor of \f$ f \f$ shall be
- * set to a value equal to \f$ scale = \frac{unity}{f} \f$ and an integer up-scaling factor of \f$ f \f$
- * shall be set to a value of \f$ scale = unity * f \f$. \f$ unity \f$ is defined as <tt>\ref VX_SCALE_UNITY</tt>.
+ * set to a value equal to \f$ scale = \frac{unity}{f} \f$ and an integer up-scaling factor of \f$ f
+ * \f$ shall be set to a value of \f$ scale = unity * f \f$. \f$ unity \f$ is defined as <tt>\ref
+ * VX_SCALE_UNITY</tt>.
  * \arg step - The step is the number of logical pixel units to skip to
  * arrive at the next physically unique pixel. For example, on a plane that is
  * half-scaled in a dimension, the step in that dimension is 2 to indicate that
@@ -1621,15 +1622,16 @@ enum vx_comp_metric_e
  * where iteration over unique pixels is required, such as in serializing
  * or de-serializing the image patch information.
  * \see <tt>\ref vxMapImagePatch</tt>
- * \note For <tt>\ref VX_DF_IMAGE_U1</tt> images it is defined that \a stride_x == 0 since it is less than one byte.
- * The least significant bit (bit number 0, value 1) in the first byte in the image,
- * is the left-most pixel in the upper left corner, i.e. origo. A <tt>\ref VX_DF_IMAGE_U1</tt> image always
- * start on a byte boundary and each row has a \a stride_y that is a multiple of whole bytes, which means padding
- * bits of undefined value may be present at the end of each row.
- * Imagepatches can only be accessed at a multiple of eight pixels: the x-coordinate must be a multiple of eight.
- * Individual pixel access is also different: the byte at the imagepatch-calculated pointer value is a collection of eight pixels.
- * Each byte can then be masked with the bit-mask <tt> 1 << (x % 8)</tt> to get individual pixel values (shifted <tt>x</tt> times).
- * See \ref sub_image_access for an example.
+ * \note For <tt>\ref VX_DF_IMAGE_U1</tt> images it is defined that \a stride_x == 0 since it is
+ * less than one byte. The least significant bit (bit number 0, value 1) in the first byte in the
+ * image, is the left-most pixel in the upper left corner, i.e. origo. A <tt>\ref
+ * VX_DF_IMAGE_U1</tt> image always start on a byte boundary and each row has a \a stride_y that is
+ * a multiple of whole bytes, which means padding bits of undefined value may be present at the end
+ * of each row. Imagepatches can only be accessed at a multiple of eight pixels: the x-coordinate
+ * must be a multiple of eight. Individual pixel access is also different: the byte at the
+ * imagepatch-calculated pointer value is a collection of eight pixels. Each byte can then be masked
+ * with the bit-mask <tt> 1 << (x % 8)</tt> to get individual pixel values (shifted <tt>x</tt>
+ * times). See ref sub_image_access for an example.
  * \ingroup group_image
  */
 typedef struct _vx_imagepatch_addressing_t {
@@ -1714,7 +1716,7 @@ typedef struct _vx_tensor_matrix_multiply_params_t{
 } vx_tensor_matrix_multiply_params_t;
 
 /*! \brief Initializes a <tt>\ref vx_perf_t</tt> on the stack.
- * \ingroup group performance
+ * \ingroup group_performance
  */
 #define VX_PERF_INIT    {0ul, 0ul, 0ul, 0ul, 0ul, 0ul}
 

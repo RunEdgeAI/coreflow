@@ -85,7 +85,7 @@ public:
      * @param type Event type
      * @param data Optional event value
      * @param info Optional event info pointer
-     * @param reg  Optional vx_reference used to look up additional registration data
+     * @param ref  Optional vx_reference used to look up additional registration data
      * @return true if successful
      * @return false if failed
      */

@@ -18,34 +18,44 @@
 
 #include <VX/vx.h>
 
-/*! \file
+/*! \file vx_khr_opencl.h
+ * \defgroup group_opencl_ext Extension: The OpenCL Extension
+ * \ingroup group_extensions
  * \brief The OpenVX to OpenCL Inter-op Extension Header.
  *
  * \defgroup group_cl_api API
+ * \ingroup group_opencl_ext
  * \brief The API used by Clients to add OpenCL Kernels as <tt>vx_kernel</tt>.
  * \details
  *
- * \defgroup group_cl_def Extension Defines
+ * \defgroup group_cl_def OpenCL Extension Defines
+ * \ingroup group_opencl_ext
  * \brief The Extension defines and constants.
  *
  * \defgroup group_cl_image Images
- * \brief OpenVX Images
+ * \ingroup group_opencl_ext
+ * \brief OpenCL backed OpenVX Images
  * \details Depending on whether the OpenCL implementation supports images, <tt>vx_image</tt>
  * may map to an <tt>image2d_t</tt> or a OpenCL buffer.
  *
  * \defgroup group_cl_array Arrays
- * \brief OpenVX Arrays
+ * \ingroup group_opencl_ext
+ * \brief OpenCL backed OpenVX Arrays
  *
  * \defgroup group_cl_convolution Convolutions
- * \brief OpenVX Convolutions
+ * \ingroup group_opencl_ext
+ * \brief OpenCL backed OpenVX Convolutions
  *
  * \defgroup group_cl_distribution Distributions
- * \brief OpenVX Distributions
+ * \ingroup group_opencl_ext
+ * \brief OpenCL backed OpenVX Distributions
  *
  * \defgroup group_cl_matrix Matricies
- * \brief OpenVX Matrix
+ * \ingroup group_opencl_ext
+ * \brief OpenCL backed  OpenVX Matricies
  *
  * \defgroup group_cl_types OpenVX to OpenCL Atomic Types
+ * \ingroup group_opencl_ext
  * \brief Atomic Types
  * \details OpenVX types map to OpenCL types through this table:
  * | VX       | OpenCL|

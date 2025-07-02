@@ -1311,7 +1311,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxHint(vx_reference reference, vx_enum hint, 
 
     switch (hint)
     {
-        /*! @TODO add hints to the implementation */
+        /*! @todo add hints to the implementation */
         default:
             status = VX_ERROR_NOT_SUPPORTED;
             break;

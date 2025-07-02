@@ -177,8 +177,8 @@ VX_API_ENTRY vx_enum VX_API_CALL vxRegisterUserStructWithName(vx_context context
 /*!
  * \brief Returns the name of the user-defined structure associated with the enumeration given.
  * \param [in] context     The reference to the implementation context.
- * \param [in] type_name   The enumeration value of the user struct
- * \param [out] name_size  Name of the user struct
+ * \param [in] user_struct_type   The enumeration value of the user struct
+ * \param [out] type_name  Name of the user struct
  * \param [in] name_size   The size of allocated buffer pointed to by type_name
  * \return A <tt>\ref vx_status_e</tt> enumeration.
  * \retval VX_SUCCESS user_struct_type was valid, and name was found and returned
@@ -1415,7 +1415,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryParameter(vx_parameter parameter, vx_e
  SCALAR
  =============================================================================*/
 
-/*! \brief Creates a reference to a scalar object. Also see \ref sub_node_parameters.
+/*! \brief Creates a reference to a scalar object. Also see ref sub_node_parameters.
  * \param [in] context The reference to the system context.
  * \param [in] data_type The type of data to hold. Must be greater than
  * <tt>\ref VX_TYPE_INVALID</tt> and less than or equal to <tt>\ref VX_TYPE_VENDOR_STRUCT_END</tt>.
@@ -1428,7 +1428,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryParameter(vx_parameter parameter, vx_e
  */
 VX_API_ENTRY vx_scalar VX_API_CALL vxCreateScalar(vx_context context, vx_enum data_type, const void *ptr);
 
-/*! \brief Creates a reference to a scalar object. Also see \ref sub_node_parameters.
+/*! \brief Creates a reference to a scalar object. Also see ref sub_node_parameters.
  * \param [in] context The reference to the system context.
  * \param [in] data_type The type of data to hold. Must be greater than
  * <tt>\ref VX_TYPE_INVALID</tt> and less than or equal to <tt>\ref VX_TYPE_VENDOR_STRUCT_END</tt>.
@@ -3141,33 +3141,38 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryMetaFormatAttribute(vx_meta_format met
 =============================================================================*/
 
 /*! \brief Creates an opaque reference to a tensor data buffer.
- * \details Not guaranteed to exist until the <tt>\ref vx_graph</tt> containing it has been verified.
- * Since functions using tensors, need to understand the context of each dimension. We describe a layout of the dimensions in each function using tensors.
- * That layout is not mandatory. It is done specifically to explain the functions and not to mandate layout. Different implementation may have different layout.
- * Therefore the layout description is logical and not physical. It refers to the order of dimensions given in this function.
+ * \details Not guaranteed to exist until the <tt>\ref vx_graph</tt> containing it has been
+ * verified. Since functions using tensors, need to understand the context of each dimension. We
+ * describe a layout of the dimensions in each function using tensors. That layout is not mandatory.
+ * It is done specifically to explain the functions and not to mandate layout. Different
+ * implementation may have different layout. Therefore the layout description is logical and not
+ * physical. It refers to the order of dimensions given in this function.
  * \param [in] context The reference to the implementation context.
  * \param [in] number_of_dims The number of dimensions.
  * \param [in] dims Dimensions sizes in elements.
- * \param [in] data_type The <tt>\ref vx_type_e</tt> that represents the data type of the tensor data elements.
- * \param [in] fixed_point_position Specifies the fixed point position when the input element type is integer. if 0, calculations are performed in integer math.
+ * \param [in] data_type The <tt>\ref vx_type_e</tt> that represents the data type of the tensor
+ * data elements.
+ * \param [in] fixed_point_position Specifies the fixed point position when the input element type
+ * is integer. if 0, calculations are performed in integer math.
  * \return A tensor data reference. Any possible errors preventing a
  * successful creation should be checked using <tt>\ref vxGetStatus</tt>.
- * \ingroup group_object_tensor
+ * \ingroup group_tensor
  */
 VX_API_ENTRY vx_tensor VX_API_CALL vxCreateTensor(vx_context context, vx_size number_of_dims, const vx_size * dims, vx_enum data_type,vx_int8 fixed_point_position);
 
-/*! \brief Creates an array of images into the multi-dimension data, this can be adjacent 2D images or not depending on the stride value.
- * The stride value is representing bytes in the third dimension.
- * The OpenVX image object that points to a three dimension data and access it as an array of images.
- * This has to be portion of the third lowest dimension, and the stride correspond to that third dimension.
- * The returned Object array is an array of images. Where the image data is pointing to a specific memory in the input tensor.
+/*! \brief Creates an array of images into the multi-dimension data, this can be adjacent 2D images
+ * or not depending on the stride value. The stride value is representing bytes in the third
+ * dimension. The OpenVX image object that points to a three dimension data and access it as an
+ * array of images. This has to be portion of the third lowest dimension, and the stride correspond
+ * to that third dimension. The returned Object array is an array of images. Where the image data is
+ * pointing to a specific memory in the input tensor.
  * \param [in] tensor The tensor data from which to extract the images. Has to be a 3d tensor.
  * \param [in] rect Image coordinates within tensor data.
  * \param [in] array_size Number of images to extract.
  * \param [in] jump Delta between two images in the array.
  * \param [in] image_format The requested image format. Should match the tensor data's data type.
  * \return An array of images pointing to the tensor data's data.
- * \ingroup group_object_tensor
+ * \ingroup group_tensor
  */
 VX_API_ENTRY vx_object_array VX_API_CALL vxCreateImageObjectArrayFromTensor(vx_tensor tensor, const vx_rectangle_t *rect, vx_size array_size, vx_size jump, vx_df_image image_format);
 
@@ -3176,13 +3181,14 @@ VX_API_ENTRY vx_object_array VX_API_CALL vxCreateImageObjectArrayFromTensor(vx_t
  * updates the parent tensor data. The view must be defined within the dimensions
  * of the parent tensor data.
  * \param [in] tensor The reference to the parent tensor data.
- * \param [in] number_of_dims Number of dimensions in the view. Error return if 0 or greater than number of
- * tensor dimensions. If smaller than number of tensor dimensions, the lower dimensions are assumed.
+ * \param [in] number_of_dims Number of dimensions in the view. Error return if 0 or greater than
+ * number of tensor dimensions. If smaller than number of tensor dimensions, the lower dimensions
+ * are assumed.
  * \param [in] view_start View start coordinates
  * \param [in] view_end View end coordinates
  * \return The reference to the sub-tensor. Any possible errors preventing a
  * successful creation should be checked using <tt>\ref vxGetStatus</tt>.
- * \ingroup group_object_tensor
+ * \ingroup group_tensor
  */
 VX_API_ENTRY vx_tensor VX_API_CALL vxCreateTensorFromView(vx_tensor tensor, vx_size number_of_dims, const vx_size * view_start, const vx_size * view_end);
 
@@ -3196,18 +3202,22 @@ VX_API_ENTRY vx_tensor VX_API_CALL vxCreateTensorFromView(vx_tensor tensor, vx_s
  * in particular allows the user to define the tensor data format of the data without
  * requiring the exact dimensions. Virtual objects are scoped within the graph
  * they are declared a part of, and can't be shared outside of this scope.
- * Since functions using tensors, need to understand the context of each dimension. We describe a layout of the dimensions in each function.
- * That layout is not mandated. It is done specifically to explain the functions and not to mandate layout. Different implementation may have different layout.
- * Therfore the layout description is logical and not physical. It refers to the order of dimensions given in <tt>\ref vxCreateTensor</tt> and <tt>\ref vxCreateVirtualTensor</tt>.
+ * Since functions using tensors, need to understand the context of each dimension. We describe a
+ * layout of the dimensions in each function. That layout is not mandated. It is done specifically
+ * to explain the functions and not to mandate layout. Different implementation may have different
+ * layout. Therfore the layout description is logical and not physical. It refers to the order of
+ * dimensions given in <tt>\ref vxCreateTensor</tt> and <tt>\ref vxCreateVirtualTensor</tt>.
  * \param [in] graph The reference to the parent graph.
  * \param [in] number_of_dims The number of dimensions.
  * \param [in] dims Dimensions sizes in elements.
- * \param [in] data_type The <tt>\ref vx_type_e</tt> that represents the data type of the tensor data elements.
- * \param [in] fixed_point_position Specifies the fixed point position when the input element type is integer. If 0, calculations are performed in integer math.
+ * \param [in] data_type The <tt>\ref vx_type_e</tt> that represents the data type of the tensor
+ * data elements.
+ * \param [in] fixed_point_position Specifies the fixed point position when the input element type
+ * is integer. If 0, calculations are performed in integer math.
  * \return A tensor data reference.Any possible errors preventing a
  * successful creation should be checked using <tt>\ref vxGetStatus</tt>.
  * \note Passing this reference to <tt>\ref vxCopyTensorPatch</tt> will return an error.
- * \ingroup group_object_tensor
+ * \ingroup group_tensor
  */
 VX_API_ENTRY vx_tensor VX_API_CALL vxCreateVirtualTensor(vx_graph graph, vx_size number_of_dims, const vx_size *dims, vx_enum data_type, vx_int8 fixed_point_position);
 
@@ -3215,25 +3225,29 @@ VX_API_ENTRY vx_tensor VX_API_CALL vxCreateVirtualTensor(vx_graph graph, vx_size
  * \param [in] context The reference to the implementation context.
  * \param [in] number_of_dims The number of dimensions.
  * \param [in] dims Dimensions sizes in elements.
- * \param [in] data_type The <tt>\ref vx_type_e</tt> that represents the data type of the tensor data elements.
- * \param [in] fixed_point_position Specifies the fixed point position when the input element type is integer. if 0, calculations are performed in integer math.
- * \param [in] stride An array of stride in all dimensions in bytes. The stride value at index 0 must be size of the tensor data element type.
+ * \param [in] data_type The <tt>\ref vx_type_e</tt> that represents the data type of the tensor
+ * data elements.
+ * \param [in] fixed_point_position Specifies the fixed point position when the input element type
+ * is integer. if 0, calculations are performed in integer math.
+ * \param [in] stride An array of stride in all dimensions in bytes. The stride value at index 0
+ * must be size of the tensor data element type.
  * \param [in] ptr The platform-defined reference to tensor. See note below.
- * \param [in] memory_type <tt>\ref vx_memory_type_e</tt>. When giving <tt>\ref VX_MEMORY_TYPE_HOST</tt>
- * the \a ptr is assumed to be HOST accessible pointer to memory.
+ * \param [in] memory_type <tt>\ref vx_memory_type_e</tt>. When giving <tt>\ref
+ * VX_MEMORY_TYPE_HOST</tt> the \a ptr is assumed to be HOST accessible pointer to memory.
  * \return A tensor data reference. Any possible errors preventing a
  * successful creation should be checked using <tt>\ref vxGetStatus</tt>.
- * \note The user must call vxMapTensorPatch prior to accessing the elements of a tensor, even if the
- * tensor was created via <tt>\ref vxCreateTensorFromHandle</tt>. Reads or writes to memory referenced
- * by ptr after calling <tt>\ref vxCreateTensorFromHandle</tt> without first calling
+ * \note The user must call vxMapTensorPatch prior to accessing the elements of a tensor, even if
+ * the tensor was created via <tt>\ref vxCreateTensorFromHandle</tt>. Reads or writes to memory
+ * referenced by ptr after calling <tt>\ref vxCreateTensorFromHandle</tt> without first calling
  * <tt>\ref vxMapTensorPatch</tt> will result in undefined behavior.
  * The property of stride[] and ptr is kept by the caller (It means that the implementation will
- * make an internal copy of the provided information. \a stride and \a ptr can then simply be application's
- * local variables).
+ * make an internal copy of the provided information. \a stride and \a ptr can then simply be
+ * application's local variables).
  *
- * In order to release the tensor back to the application we should use <tt>\ref vxSwapTensorHandle</tt>.
+ * In order to release the tensor back to the application we should use <tt>\ref
+ * vxSwapTensorHandle</tt>.
  *
- * \ingroup group_object_tensor
+ * \ingroup group_tensor
  */
 VX_API_ENTRY vx_tensor VX_API_CALL vxCreateTensorFromHandle(vx_context context, vx_size number_of_dims, const vx_size *dims, vx_enum data_type, vx_int8 fixed_point_position, const vx_size * stride, void * ptr, vx_enum memory_type);
 
@@ -3274,7 +3288,6 @@ VX_API_ENTRY vx_tensor VX_API_CALL vxCreateTensorFromHandle(vx_context context, 
  */
 VX_API_ENTRY vx_status VX_API_CALL vxSwapTensorHandle(vx_tensor tensor, void* new_ptr, void** prev_ptr);
 
-
 /*! \brief Allows the application to copy a view patch from/into an tensor object .
  * \param [in] tensor The reference to the tensor object that is the source or the
  * destination of the copy.
@@ -3287,12 +3300,15 @@ VX_API_ENTRY vx_status VX_API_CALL vxSwapTensorHandle(vx_tensor tensor, void* ne
  * if the copy was requested in read mode, or from where to get the data to store into the tensor
  * object if the copy was requested in write mode. The accessible memory must be large enough
  * to contain the specified patch with the specified layout:\n
- * accessible memory in bytes >= (end[last_dimension] - start[last_dimension]) * stride[last_dimension].\n
- * The layout of the user memory must follow a row major order.
+ * accessible memory in bytes >= (end[last_dimension] - start[last_dimension]) *
+ * stride[last_dimension].\n The layout of the user memory must follow a row major order.
  * \param [in] usage This declares the effect of the copy with regard to the tensor object
- * using the <tt>\ref vx_accessor_e</tt> enumeration. Only <tt>\ref VX_READ_ONLY</tt> and <tt>\ref VX_WRITE_ONLY</tt> are supported:
- * \arg <tt>\ref VX_READ_ONLY</tt> means that data is copied from the tensor object into the application memory
- * \arg <tt>\ref VX_WRITE_ONLY</tt> means that data is copied into the tensor object from the application memory
+ * using the <tt>\ref vx_accessor_e</tt> enumeration. Only <tt>\ref VX_READ_ONLY</tt> and <tt>\ref
+ * VX_WRITE_ONLY</tt> are supported:
+ * \arg <tt>\ref VX_READ_ONLY</tt> means that data is copied from the tensor object into the
+ * application memory
+ * \arg <tt>\ref VX_WRITE_ONLY</tt> means that data is copied into the tensor object from the
+ * application memory
  * \param [in] user_memory_type A <tt>\ref vx_memory_type_e</tt> enumeration that specifies
  * the memory type of the memory referenced by the user_addr.
  * \return A <tt>\ref vx_status_e</tt> enumeration.
@@ -3300,7 +3316,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSwapTensorHandle(vx_tensor tensor, void* ne
  * accessed by the application.
  * \retval VX_ERROR_INVALID_REFERENCE The tensor reference is not actually an tensor reference.
  * \retval VX_ERROR_INVALID_PARAMETERS An other parameter is incorrect.
- * \ingroup group_object_tensor
+ * \ingroup group_tensor
  */
 VX_API_ENTRY vx_status VX_API_CALL vxCopyTensorPatch(vx_tensor tensor, vx_size number_of_dims, const vx_size * view_start, const vx_size * view_end,
         const vx_size * user_stride, void * user_ptr, vx_enum usage, vx_enum user_memory_type);
@@ -3371,7 +3387,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapTensorPatch(vx_tensor tensor, const vx
  * \retval VX_SUCCESS No errors.
  * \retval VX_ERROR_INVALID_REFERENCE If data is not a <tt>\ref vx_tensor</tt>.
  * \retval VX_ERROR_INVALID_PARAMETERS If any of the other parameters are incorrect.
- * \ingroup group_object_tensor
+ * \ingroup group_tensor
  */
 VX_API_ENTRY vx_status VX_API_CALL vxQueryTensor(vx_tensor tensor, vx_enum attribute, void *ptr, vx_size size);
 
@@ -3382,7 +3398,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryTensor(vx_tensor tensor, vx_enum attri
  * \return A <tt>\ref vx_status_e</tt> enumeration.
  * \retval VX_SUCCESS No errors; all other values indicate failure
  * \retval * An error occurred. See <tt>\ref vx_status_e</tt>.
- * \ingroup group_object_tensor
+ * \ingroup group_tensor
  */
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseTensor(vx_tensor *tensor);
 

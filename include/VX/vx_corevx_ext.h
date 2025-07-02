@@ -12,6 +12,184 @@
 
 #include <VX/vx_kernels.h>
 #include <VX/vx_types.h>
+#include <VX/vx_vendors.h>
+
+/*!
+ * \defgroup group_extensions All OpenVX Extensions
+ * \brief A comprehensive collection of all OpenVX extensions implemented.
+ *
+ * \defgroup group_all_kernels All OpenVX Kernel Functions
+ * \brief A comprehensive collection of all OpenVX kernel functions available.
+ *
+ * \defgroup group_external OpenVX User Facing Implementation
+ * \brief The OpenVX User Facing Implementation.
+ * \details A proprietary, Closed Source implementation of the OpenVX implementation
+ *
+ * \defgroup group_adv_array User Facing Custom Struct API
+ * \ingroup group_external
+ * \brief The Public User Struct API
+ *
+ * \defgroup group_adv_node User Facing Custom Node API
+ * \ingroup group_external
+ * \brief The Public Generic Node API
+ *
+ * \defgroup group_array User Facing Array API
+ * \ingroup group_external
+ * \brief The Public Array API
+ *
+ * \defgroup group_basic_features User Facing Basic Features API
+ * \ingroup group_external
+ * \brief The Public Basic Features API
+ *
+ * \defgroup group_borders User Facing Borders API
+ * \ingroup group_external
+ * \brief The Public Borders API
+ *
+ * \defgroup group_context User Facing Context API
+ * \ingroup group_external
+ * \brief The Public Context API
+ *
+ * \defgroup group_convolution User Facing Convolution API
+ * \ingroup group_external
+ * \brief The Public Convolution API
+ *
+ * \defgroup group_delay User Facing Delay API
+ * \ingroup group_external
+ * \brief The Public Delay API
+ *
+ * \defgroup group_directive User Facing Directive API
+ * \ingroup group_external
+ * \brief The Public Directive API
+ *
+ * \defgroup group_distribution User Facing Distribution API
+ * \ingroup group_external
+ * \brief The Public API
+ *
+ * \defgroup group_graph User Facing Graph API
+ * \ingroup group_external
+ * \brief The Public Graph API
+ *
+ * \defgroup group_graph_parameters User Facing Graph Parameters API
+ * \ingroup group_external
+ * \brief The Public Graph Parameters API
+ *
+ * \defgroup group_hint User Facing Hint API
+ * \ingroup group_external
+ * \brief The Public Hint API
+ *
+ * \defgroup group_image User Facing Image API
+ * \ingroup group_external
+ * \brief The Public Image API
+ *
+ * \defgroup group_import User Facing Import API
+ * \ingroup group_external
+ * \brief The Public Import API
+ *
+ * \defgroup group_import_kernel User Facing Import Kernel API
+ * \ingroup group_external
+ * \brief The Public Import Kernel API
+ *
+ * \defgroup group_kernel User Facing Kernel API
+ * \ingroup group_external
+ * \brief The Public Kernel API
+ *
+ * \defgroup group_log User Facing Log API
+ * \ingroup group_external
+ * \brief The Public Log API
+ *
+ * \defgroup group_lut User Facing LUT API
+ * \ingroup group_external
+ * \brief The Public LUT API
+ *
+ * \defgroup group_matrix User Facing Matrix API
+ * \ingroup group_external
+ * \brief The Public Matrix API
+ *
+ * \defgroup group_meta_format User Facing Meta Format API
+ * \ingroup group_external
+ * \brief The Public Meta Format API
+ *
+ * \defgroup group_node User Facing Node API
+ * \ingroup group_external
+ * \brief The Public Node API
+ *
+ * \defgroup group_node_callback User Facing Node Callback API
+ * \ingroup group_external
+ * \brief The Public Node Callback API
+ *
+ * \defgroup group_object_array User Facing Object Array API
+ * \ingroup group_external
+ * \brief The Public Object Array API
+ *
+ * \defgroup group_osal User Facing OS Abstratction Layer API
+ * \ingroup group_external
+ * \brief The Public OSAL API
+ *
+ * \defgroup group_parameter User Facing Parameter API
+ * \ingroup group_external
+ * \brief The Public API
+ *
+ * \defgroup group_performance User Facing Performance API
+ * \ingroup group_external
+ * \brief The Public Performance API
+ *
+ * \defgroup group_pyramid User Facing Pyramid API
+ * \ingroup group_external
+ * \brief The Public Pyramid API
+ *
+ * \defgroup group_reference User Facing Reference API
+ * \ingroup group_external
+ * \brief The Public Reference API
+ *
+ * \defgroup group_remap User Facing Remap API
+ * \ingroup group_external
+ * \brief The Public Remap API
+ *
+ * \defgroup group_scalar User Facing Scalar API
+ * \ingroup group_external
+ * \brief The Public Scalar API
+ *
+ * \defgroup group_target User Facing Target API
+ * \ingroup group_external
+ * \brief The Public Target API
+ *
+ * \defgroup group_tensor User Facing Tensor API
+ * \ingroup group_external
+ * \brief The Public Tensor API
+ *
+ * \defgroup group_threshold User Facing Threshold API
+ * \ingroup group_external
+ * \brief The Public Threshold API
+ *
+ * \defgroup group_user_data_object User Facing User Data Object API
+ * \ingroup group_external
+ * \brief The Public User Data Object API
+ *
+ * \defgroup group_user_kernels User Facing User Kernels API
+ * \ingroup group_external
+ * \brief The Public User Kernels API
+ */
+
+/*!
+ * \brief The OpenVX CoreVX Vendor Extension.
+ * \defgroup group_corevx_ext Extension: CoreVX
+ * \ingroup group_extensions
+ *
+ * \defgroup group_ort_function_cpu_inference Kernel: ORT Inference
+ * \ingroup group_all_kernels
+ * \brief An ONNX Runtime Inference Implementation
+ *
+ * \defgroup group_ai_function_chatbot Kernel: AI Chatbot
+ * \ingroup group_all_kernels
+ *
+ * \defgroup group_litert_function_cpu_inference Kernel: LiteRT Inference
+ * \ingroup group_all_kernels
+ * \brief A LiteRT (Formerly TFLite) Inference Implementation
+ *
+ * \defgroup group_torch_function_cpu_inference Kernel: Executorch Inference
+ * \ingroup group_all_kernels
+ * \brief An Executorch Inference Implementation
+ */
 
 #ifdef __cplusplus
 #include <string>
@@ -21,6 +199,8 @@
  * \ingroup group_basic_features
  */
 using vx_string = std::string;
+#else
+typedef vx_char* vx_string;
 #endif /* __cplusplus */
 
 /*! \brief The type enumeration lists additional types to extend the known types in OpenVX.
@@ -40,30 +220,45 @@ enum vx_vendor_id_ext_e
 };
 
 /*! \brief Define Edge AI Kernels
- * \ingroup group_kernel
+ * \ingroup group_corevx_ext
  */
 enum vx_kernel_ext_e
 {
     /*!
      * \brief The ONNX Runtime CPU Inference kernel.
+     * \param [in] vx_array The input char array.
+     * \param [in] vx_object_array The input tensor object array.
+     * \param [out] vx_object_array The output tensor object array.
+     * \see group_ort_function_cpu_inference
      */
     VX_KERNEL_ORT_CPU_INF = VX_KERNEL_BASE(VX_ID_EDGE_AI, VX_LIBRARY_KHR_BASE) + 0x1,
     /*!
      * \brief The AI Model Server Chatbot kernel.
+     * \param [in] vx_array The input char array.
+     * \param [out] vx_array The output char array.
+     * \see group_ai_function_chatbot
      */
     VX_KERNEL_AIS_CHATBOT = VX_KERNEL_BASE(VX_ID_EDGE_AI, VX_LIBRARY_KHR_BASE) + 0x2,
     /*!
      * \brief The LiteRT CPU Inference kernel.
+     * \param [in] vx_array The input char array.
+     * \param [in] vx_object_array The input tensor object array.
+     * \param [out] vx_object_array The output tensor object array.
+     * \see group_litert_function_cpu_inference
      */
     VX_KERNEL_LITERT_CPU_INF = VX_KERNEL_BASE(VX_ID_EDGE_AI, VX_LIBRARY_KHR_BASE) + 0x3,
     /*!
      * \brief The Torch CPU Inference kernel.
+     * \param [in] vx_array The input char array.
+     * \param [in] vx_object_array The input tensor object array.
+     * \param [out] vx_object_array The output tensor object array.
+     * \see group_torch_function_cpu_inference
      */
     VX_KERNEL_TORCH_CPU_INF = VX_KERNEL_BASE(VX_ID_EDGE_AI, VX_LIBRARY_KHR_BASE) + 0x4,
 };
 
 /*! \brief addtitional tensor attributes.
- * \ingroup group_object_tensor
+ * \ingroup group_int_tensor
  */
 enum vx_tensor_attribute_ext_e
 {

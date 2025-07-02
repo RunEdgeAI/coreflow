@@ -16,8 +16,11 @@
 #ifndef _VX_KHR_INTERP_H_
 #define _VX_KHR_INTERP_H_
 
-/*! \brief The Interpolation Type Query Extension.
- * \file
+/*!
+ * \file vx_khr_interp.h
+ * \defgroup group_interp_ext Extension: Interpolation Type Query
+ * \ingroup group_extensions
+ * \brief The Interpolation Type Query Extension.
  */
 
 #define OPENVX_KHR_INTERP   "vx_khr_interpolation"
@@ -25,10 +28,15 @@
 #include <VX/vx.h>
 
 /*! \brief Additional interpolation types */
-enum vx_interpolation_type_ext_e {
-    /*! \brief Bicubic interpolation method */
+enum vx_interpolation_type_ext_e
+{
+    /*! \brief Bicubic interpolation method
+     * \see group_interp_ext
+     */
     VX_INTERPOLATION_BICUBIC = VX_ENUM_BASE(VX_ID_KHRONOS, VX_ENUM_INTERPOLATION) + 0x3,
-    /*! \brief Mipmapping interpolation method */
+    /*! \brief Mipmapping interpolation method
+     * \see group_interp_ext
+     */
     VX_INTERPOLATION_MIPMAP = VX_ENUM_BASE(VX_ID_KHRONOS, VX_ENUM_INTERPOLATION) + 0x4,
 };
 

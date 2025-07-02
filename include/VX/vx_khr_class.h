@@ -18,9 +18,14 @@
 #define _VX_KHR_CLASSIFIER_H_
 
 /*!
- * \file
- * \brief The Khronos Extension for general classification.
+ * \file vx_khr_class.h
+ * \defgroup group_classifier Extension: General Classification
+ * \ingroup group_extensions
+ * \brief The Khronos Extension for General Classification.
  *
+ * \defgroup group_object_classifier_model Classifier Model
+ * \ingroup group_classifier
+ * \defgroup group_vision_function_classifier Kernel: Classifier
  */
 
 #define OPENVX_KHR_CLASS   "vx_khr_class"
@@ -102,33 +107,43 @@ VX_API_ENTRY vx_classifier_model VX_API_CALL vxImportClassifierModel(vx_context 
  * count is zero. After returning from this function the reference is zeroed/cleared.
  * \param [in] model The pointer to the ClassifierModel to release.
  * \return A <tt>\ref vx_status_e</tt> enumeration.
- * \retval <tt>\ref VX_SUCCESS</tt> No errors; all other values indicate failure
- * \retval * An error occurred. See <tt\ref >vx_status_e</tt>.
+ * \retval <tt>VX_SUCCESS</tt> No errors; all other values indicate failure
+ * \retval An error occurred. See <tt>\ref vx_status_e</tt>.
  * \ingroup group_object_classifier_model
  */
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseClassifierModel(vx_classifier_model* model);
 
-/*! \brief [Graph] Scans a feature-map (input_feature_map) and detect the classification for each scan-window.
+/*! \brief [Graph] Scans a feature-map (input_feature_map) and detect the classification for each
+ * scan-window.
  * \param [in] graph The reference to the graph
- * \param [in] input_feature_map The Feature-map, example is the output of <tt>\ref vxHOGFeaturesNode</tt>.
- * \param [in] model The pre-trained model loaded. Loaded using <tt>\ref vxImportClassifierModel</tt>
+ * \param [in] input_feature_map The Feature-map, example is the output of <tt>\ref
+ * vxHOGFeaturesNode</tt>.
+ * \param [in] model The pre-trained model loaded. Loaded using <tt>\ref
+ * vxImportClassifierModel</tt>
  * \param [in] scan_window_width Width of the scan window
  * \param [in] scan_window_height Height of the scan window
  * \param [in] step_x Horizontal step-size (along x-axis)
  * \param [in] step_y Vertical step-size (along y-axis)
- * \param [out] object_confidences [Optional] An array of confidences measure, the measure is of type <tt>\ref VX_TYPE_UINT16</tt>. The confidence measure is defined by the extensions which define classification model with defined binary format.
- * This output can be used as class index as well. In case we detect several different classes in single execution. The output will be an array of indexes of the classes.
+ * \param [out] object_confidences [Optional] An array of confidences measure, the measure is of
+ * type <tt>\ref VX_TYPE_UINT16</tt>. The confidence measure is defined by the extensions which
+ * define classification model with defined binary format. This output can be used as class index as
+ * well. In case we detect several different classes in single execution. The output will be an
+ * array of indexes of the classes.
  * \param [out] object_rectangles An array of object positions, in <tt>\ref VX_TYPE_RECTANGLE</tt>
- * \param [out] num_objects [optional] The number of object detected in a <tt>\ref VX_SIZE</tt> scalar
- * \note The border mode <tt>\ref VX_NODE_BORDER</tt> value <tt>\ref VX_BORDER_UNDEFINED</tt> is supported.
+ * \param [out] num_objects [optional] The number of object detected in a <tt>\ref vx_size</tt>
+ * scalar
+ * \note The border mode <tt>\ref VX_NODE_BORDER</tt> value <tt>\ref VX_BORDER_UNDEFINED</tt> is
+ * supported.
  * \ingroup group_vision_function_classifier
  * \return <tt>\ref vx_node</tt>.
- * \retval vx_node A node reference. Any possible errors preventing a successful creation should be checked using <tt>\ref vxGetStatus</tt>
+ * \retval vx_node A node reference. Any possible errors preventing a successful creation should be
+ * checked using <tt>\ref vxGetStatus</tt>
  */
 
-VX_API_ENTRY vx_node VX_API_CALL vxScanClassifierNode(vx_graph graph,vx_tensor input_feature_map, vx_classifier_model model, vx_int32 scanwindow_width, vx_int32 scanwindow_height, vx_int32 step_x, vx_int32 step_y,
-                                     vx_array object_confidences, vx_array object_rectangles, vx_scalar num_objects);
-
+VX_API_ENTRY vx_node VX_API_CALL vxScanClassifierNode(
+    vx_graph graph, vx_tensor input_feature_map, vx_classifier_model model,
+    vx_int32 scan_window_width, vx_int32 scan_window_height, vx_int32 step_x, vx_int32 step_y,
+    vx_array object_confidences, vx_array object_rectangles, vx_scalar num_objects);
 
 #ifdef  __cplusplus
 }

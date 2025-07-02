@@ -27,6 +27,125 @@ extern "C" {
 #endif
 
 /*!
+ * \defgroup group_vision_function_colorconvert Kernel: Color Convert
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_channelextract Kernel: Channel Extract
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_channelcombine Kernel: Channel Combine
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_sobel3x3 Kernel: Sobel 3x3
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_magnitude Kernel: Magnitude
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_phase Kernel: Phase
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_scale_image Kernel: Scale Image
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_lut Kernel: Table Lookup
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_histogram Kernel: Histogram
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_equalize_hist Kernel: Equalize Histogram
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_absdiff Kernel: Absolute Difference
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_meanstddev Kernel: Mean and Standard Deviation
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_threshold Kernel: Threshold
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_integral_image Kernel: Integral Image
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_dilate_image Kernel: Dilate 3x3
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_erode_image Kernel: Erode 3x3
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_median_image Kernel: Median 3x3
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_box_image Kernel: Box 3x3
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_gaussian_image Kernel: Gaussian 3x3
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_custom_convolution Kernel: Custom Convolution
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_gaussian_pyramid Kernel: Gaussian Pyramid
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_minmaxloc Kernel: MinMaxLoc
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_convertdepth Kernel: Convert Depth
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_canny Kernel: Canny Edge Detector
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_and Kernel: Bitwise And
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_or Kernel: Bitwise Or
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_xor Kernel: Bitwise Xor
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_not Kernel: Bitwise Not
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_mult Kernel: Multiply
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_add Kernel: Add
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_sub Kernel: Subtract
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_warp_affine Kernel: Warp Affine
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_warp_perspective Kernel: Warp Perspective
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_harris Kernel: Harris Corners
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_fast Kernel: FAST Corners
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_opticalflowpyrlk Kernel: Optical Flow PyrLK
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_remap Kernel: Remap
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_laplacian_pyramid Kernel: Laplacian Pyramid
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_laplacian_reconstruct Kernel: Laplacian Reconstruct
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_nonlinear_filter Kernel: Non Linear Filter
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_match_template Kernel: Match Template
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_lbp Kernel: LBP
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_hough_lines_p Kernel: Hough Lines P
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_tensor_multiply Kernel: Tensor Multiply
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_tensor_add Kernel: Tensor Add
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_tensor_subtract Kernel: Tensor Subtract
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_tensor_tablelookup Kernel: Tensor Table Lookup
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_tensor_transpose Kernel: Tensor Transpose
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_tensor_convert_depth Kernel: Tensor Convert Depth
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_tensor_matrix_multiply Kernel: Tensor Matrix Multiply
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_copy Kernel: Copy
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_nms Kernel: Non-Max Suppression
+ * \ingroup group_all_kernels
+ * \defgroup group_control_flow Kernel: Control Flow
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_hog Kernel: HOG Features/Cells
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_bilateral_filter Kernel: Bilateral Filter
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_max Kernel: Max
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_min Kernel: Min
+ * \ingroup group_all_kernels
+ * \defgroup group_vision_function_weighted_average Kernel: Weighted Average
+ * \ingroup group_all_kernels
+ */
+
+/*!
  * \brief The standard list of available libraries
  * \ingroup group_kernel
  */
@@ -47,7 +166,8 @@ enum vx_library_e {
  * \arg <tt>\ref VX_TYPE_IMAGE</tt> for a <tt>\ref vx_image</tt> in the size field of <tt>\ref vxGetParameterByIndex</tt> or <tt>\ref vxSetParameterByIndex</tt>  * \arg <tt>\ref VX_TYPE_ARRAY</tt> for a <tt>\ref vx_array</tt> in the size field of <tt>\ref vxGetParameterByIndex</tt> or <tt>\ref vxSetParameterByIndex</tt>  * \arg or other appropriate types in \ref vx_type_e.
  * \ingroup group_kernel
  */
-enum vx_kernel_e {
+enum vx_kernel_e
+{
 
     /*!
      * \brief The Color Space conversion kernel.
@@ -262,18 +382,18 @@ enum vx_kernel_e {
     /* kernel added in OpenVX 1.1 */
 
     /*! \brief The Laplacian Image Pyramid Kernel.
-    * \see group_vision_function_laplacian_pyramid
-    */
+     * \see group_vision_function_laplacian_pyramid
+     */
     VX_KERNEL_LAPLACIAN_PYRAMID = VX_KERNEL_BASE(VX_ID_KHRONOS, VX_LIBRARY_KHR_BASE) + 0x2A,
 
     /*! \brief The Laplacian Pyramid Reconstruct Kernel.
-    * \see group_vision_function_laplacian_pyramid
-    */
+     * \see group_vision_function_laplacian_reconstruct
+     */
     VX_KERNEL_LAPLACIAN_RECONSTRUCT = VX_KERNEL_BASE(VX_ID_KHRONOS, VX_LIBRARY_KHR_BASE) + 0x2B,
 
     /*! \brief The Non Linear Filter Kernel.
-    * \see group_vision_function_nonlinear_filter
-    */
+     * \see group_vision_function_nonlinear_filter
+     */
     VX_KERNEL_NON_LINEAR_FILTER = VX_KERNEL_BASE(VX_ID_KHRONOS, VX_LIBRARY_KHR_BASE) + 0x2C,
 
     VX_KERNEL_MAX_1_1, /*!< \internal Used for VX1.1 bounds checking in the conformance test. */
@@ -281,99 +401,99 @@ enum vx_kernel_e {
     /* kernel added in OpenVX 1.2 */
 
     /*! \brief The Match Template Kernel.
-    * \see group_vision_match_template
-    */
+     * \see group_vision_function_match_template
+     */
     VX_KERNEL_MATCH_TEMPLATE = VX_KERNEL_BASE(VX_ID_KHRONOS, VX_LIBRARY_KHR_BASE) + 0x2D,
 
     /*! \brief The LBP Kernel.
-    * \see group_lbp
-    */
+     * \see group_vision_function_lbp
+     */
     VX_KERNEL_LBP = VX_KERNEL_BASE(VX_ID_KHRONOS, VX_LIBRARY_KHR_BASE) + 0x2E,
 
     /*! \brief The hough lines probability Kernel.
-    * \see group_vision_hough_lines_p
-    */
+     * \see group_vision_function_hough_lines_p
+     */
     VX_KERNEL_HOUGH_LINES_P = VX_KERNEL_BASE(VX_ID_KHRONOS, VX_LIBRARY_KHR_BASE) + 0x2F,
 
     /*! \brief The tensor multiply Kernel.
-    * \see group_vision_function_tensor_multiply
-    */
+     * \see group_vision_function_tensor_multiply
+     */
     VX_KERNEL_TENSOR_MULTIPLY = VX_KERNEL_BASE(VX_ID_KHRONOS, VX_LIBRARY_KHR_BASE) + 0x30,
 
     /*! \brief The tensor add Kernel.
-    * \see group_vision_function_tensor_add
-    */
+     * \see group_vision_function_tensor_add
+     */
     VX_KERNEL_TENSOR_ADD = VX_KERNEL_BASE(VX_ID_KHRONOS, VX_LIBRARY_KHR_BASE) + 0x31,
 
     /*! \brief The tensor subtract Kernel.
-    * \see group_vision_function_tensor_subtract
-    */
+     * \see group_vision_function_tensor_subtract
+     */
     VX_KERNEL_TENSOR_SUBTRACT = VX_KERNEL_BASE(VX_ID_KHRONOS, VX_LIBRARY_KHR_BASE) + 0x32,
 
     /*! \brief The tensor table look up Kernel.
-    * \see group_vision_function_tensor_tablelookup
-    */
+     * \see group_vision_function_tensor_tablelookup
+     */
     VX_KERNEL_TENSOR_TABLE_LOOKUP = VX_KERNEL_BASE(VX_ID_KHRONOS, VX_LIBRARY_KHR_BASE) + 0x33,
 
     /*! \brief The tensor transpose Kernel.
-    * \see group_vision_function_tensor_transpose
-    */
+     * \see group_vision_function_tensor_transpose
+     */
     VX_KERNEL_TENSOR_TRANSPOSE = VX_KERNEL_BASE(VX_ID_KHRONOS, VX_LIBRARY_KHR_BASE) + 0x34,
 
     /*! \brief The tensor convert depth Kernel.
-    * \see group_vision_function_tensor_convert_depth
-    */
+     * \see group_vision_function_tensor_convert_depth
+     */
     VX_KERNEL_TENSOR_CONVERT_DEPTH = VX_KERNEL_BASE(VX_ID_KHRONOS, VX_LIBRARY_KHR_BASE) + 0x35,
 
     /*! \brief The tensor matrix multiply Kernel.
-    * \see group_vision_function_tensor_matrix_multiply
-    */
+     * \see group_vision_function_tensor_matrix_multiply
+     */
     VX_KERNEL_TENSOR_MATRIX_MULTIPLY = VX_KERNEL_BASE(VX_ID_KHRONOS, VX_LIBRARY_KHR_BASE) + 0x36,
 
     /*! \brief The data object copy kernel.
-    * \see group_vision_function_copy
-    */
+     * \see group_vision_function_copy
+     */
     VX_KERNEL_COPY = VX_KERNEL_BASE(VX_ID_KHRONOS, VX_LIBRARY_KHR_BASE) + 0x37,
 
     /*! \brief The non-max suppression kernel.
-    * \see group_vision_function_nms
-    */
+     * \see group_vision_function_nms
+     */
     VX_KERNEL_NON_MAX_SUPPRESSION = VX_KERNEL_BASE(VX_ID_KHRONOS, VX_LIBRARY_KHR_BASE) + 0x38,
 
     /*! \brief The scalar operation kernel.
-    * \see group_control_flow
-    */
+     * \see group_control_flow
+     */
     VX_KERNEL_SCALAR_OPERATION = VX_KERNEL_BASE(VX_ID_KHRONOS, VX_LIBRARY_KHR_BASE) + 0x39,
 
     /*! \brief The  HOG features kernel.
-    * \see group_vision_function_hog
-    */
+     * \see group_vision_function_hog
+     */
     VX_KERNEL_HOG_FEATURES = VX_KERNEL_BASE(VX_ID_KHRONOS, VX_LIBRARY_KHR_BASE) + 0x3A,
 
     /*! \brief The HOG Cells kernel.
-    * \see group_vision_function_hog
-    */
+     * \see group_vision_function_hog
+     */
     VX_KERNEL_HOG_CELLS = VX_KERNEL_BASE(VX_ID_KHRONOS, VX_LIBRARY_KHR_BASE) + 0x3B,
 
     /*! \brief The bilateral filter kernel.
-    * \see group_vision_function_bilateral_filter
-    */
+     * \see group_vision_function_bilateral_filter
+     */
     VX_KERNEL_BILATERAL_FILTER = VX_KERNEL_BASE(VX_ID_KHRONOS, VX_LIBRARY_KHR_BASE) + 0x3C,
 
     /*! \brief The select kernel.
-    * \see group_control_flow
-    */
+     * \see group_control_flow
+     */
     VX_KERNEL_SELECT = VX_KERNEL_BASE(VX_ID_KHRONOS, VX_LIBRARY_KHR_BASE) + 0x3D,
 
     /* insert new kernels here */
     VX_KERNEL_MAX_1_2, /*!< \internal Used for VX1.2 bounds checking in the conformance test. */
     /*! \brief The max kernel.
-    * \see group_vision_function_max
-    */
+     * \see group_vision_function_max
+     */
     VX_KERNEL_MAX = VX_KERNEL_BASE(VX_ID_KHRONOS, VX_LIBRARY_KHR_BASE) + 0x3E,
     /*! \brief The min kernel.
-    * \see group_vision_function_min
-    */
+     * \see group_vision_function_min
+     */
     VX_KERNEL_MIN = VX_KERNEL_BASE(VX_ID_KHRONOS, VX_LIBRARY_KHR_BASE) + 0x3F,
 
     /*! \brief The weigthed average kernel.

@@ -1,6 +1,15 @@
-# CoreVX Project
+#  What is CoreVX ?
+![](https://img.shields.io/badge/OpenVX-1.3.1-blue)
+![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black)
+![macOS](https://img.shields.io/badge/macOS-000000?logo=apple&logoColor=F0F0F0)
+![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white)
+[TOC]
 This project is an implementation of the OpenVX specification version 1.3.1, with various extensions and features enabled.
 The project is built using Google's Bazel build system and is validated by unit tests, integration tests, and the OpenVX conformance tests.
+
+- [Installation](./docs/install.md)
+- [API Reference](./docs/api_overview.md)
+- [Licenses](LICENSE.md)
 
 ## Project Structure
 ```
@@ -75,4 +84,12 @@ The following extensions are conditionally enabled for ARM and ARM64 architectur
 The project includes conformance tests to verify the implementation against the OpenVX standard. The test data path is set using the VX_TEST_DATA_PATH environment variable.
 
 ## License
-This project is of confidental and propreitary material. See the LICENSE file for more details.
+This project is of confidental and propreitary material. See the [LICENSE](LICENSE.md) file for more details.
+
+<div class="section_buttons">
+
+| Previous          |                              Next |
+|:------------------|----------------------------------:|
+| | [Installation](docs/install.md) |
+
+</div>

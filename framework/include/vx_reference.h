@@ -33,7 +33,7 @@
 /*! \brief The most basic type in the OpenVX system. Any type that inherits
  *  from vx_reference must have a vx_reference as its first memeber
  *  to allow casting to this type.
- * \ingroup group_int_refererence
+ * \ingroup group_int_reference
  */
 class Reference {
 public:

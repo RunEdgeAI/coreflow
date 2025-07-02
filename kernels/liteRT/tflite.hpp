@@ -192,8 +192,6 @@ public:
 
     /**
      * @brief Run the kernel (execute the model)
-     * @param inputTensors  Input tensors
-     * @param outputTensosrs Output tensors
      * @return VX_SUCCESS on success, VX_FAILURE otherwise
      */
     vx_status run()
