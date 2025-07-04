@@ -171,8 +171,8 @@
  */
 
 /*!
- * \brief The OpenVX CoreVX Vendor Extension.
- * \defgroup group_corevx_ext Extension: CoreVX
+ * \brief The OpenVX EdgeAI Vendor Extension.
+ * \defgroup group_corevx_ext Extension: AI/ML
  * \ingroup group_extensions
  *
  * \defgroup group_ort_function_cpu_inference Kernel: ORT Inference
