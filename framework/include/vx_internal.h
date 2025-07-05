@@ -155,7 +155,7 @@
 /*! \brief Maximum number of parameters to a kernel.
  * \ingroup group_int_defines
  */
-#define VX_INT_MAX_PARAMS   (15)
+#define VX_INT_MAX_PARAMS (22)
 
 /*! \brief Maximum number of loadable modules.
  * \ingroup group_int_defines

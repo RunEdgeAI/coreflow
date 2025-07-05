@@ -233,6 +233,13 @@ int CV_to_VX_keypoints(vector<KeyPoint> key_points, vx_array array)
     // void *ptr = NULL;
     vx_size size = 0;
 
+    if (key_points.empty())
+    {
+        vxAddLogEntry((vx_reference)array, status,
+                      "CV_to_VX_keypoints WARNING: No keypoints in frame\n");
+        return status;
+    }
+
     STATUS_ERROR_CHECK(vxQueryArray(array, VX_ARRAY_ATTRIBUTE_CAPACITY, &size, sizeof(size)));
 
     size_t 	S = key_points.size();

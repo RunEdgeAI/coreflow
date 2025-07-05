@@ -246,7 +246,8 @@ enum vx_kernel_cv_ext_e
     /*!
      * \brief The OpenCV simple_blob_detector_initialize function kernel. Kernel name is
      * "org.opencv.simple_blob_detector_initialize".
-     * \defgroup group_opencv_simple_blob_detector_initialize Kernel: OpenCV Simple Blob Detector Initialize
+     * \defgroup group_opencv_simple_blob_detector_initialize Kernel: OpenCV Simple Blob Detector
+     * Initialize
      * \ingroup group_all_kernels
      */
     VX_KERNEL_OPENCV_SIMPLE_BLOB_DETECT_INITIALIZE =

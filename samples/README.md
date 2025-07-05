@@ -8,72 +8,11 @@
 
 In this project, we provide samples that use our optimized libraries to build applications that showcase potential usage or may used as reference to develop your own products.
 
- ## Bubble Pop
+## Bubble Pop
 
 In this sample we will create an OpenVX graph to run Bubble Pop on a live camera. This sample application uses <a href="https://en.wikipedia.org/wiki/OpenCV" target="_blank">OpenCV</a> to decode input image, draw bubbles/donuts and display the output.
 
  <p align="center"><img width="60%" src="images/vx-pop-app.gif" /></p>
-
-### Prerequisites
-
-* [Conformant OpenVX Implementation](https://github.com/KhronosGroup/Khronosdotorg/blob/master/api/openvx/resources.md)
-
-* [OpenCV](https://github.com/opencv/opencv/releases/tag/3.4.0)
-
-* Camera
-
-### Steps to run the Bubble Pop sample
-
-* **Step - 1:** Build and install [Conformant OpenVX Implementation](https://github.com/KhronosGroup/OpenVX-sample-impl). In this example we will use the OpenVX Sample Implementation available on [GitHub](https://github.com/KhronosGroup/OpenVX-sample-impl)
-
-```
-Build OpenVX on Linux
-
-* Git Clone project with a recursive flag to get submodules
-
-      git clone --recursive https://github.com/KhronosGroup/OpenVX-sample-impl.git
-
-* Use Build.py script
-
-      cd OpenVX-sample-impl/
-      python Build.py --os=Linux --arch=64 --conf=Debug --conf_vision --enh_vision --conf_nn
-```
-
-* **Step - 2:** Export OpenVX Directory Path
-
-```
-export OPENVX_DIR=$(pwd)/install/Linux/x64/Debug
-```
-
-* **Step - 3:** Clone the OpenVX Samples project and build the bubble pop application
-
-```
-cd ~/ && mkdir OpenVXSample-pop
-cd OpenVXSample-pop/
-git clone https://github.com/kiritigowda/openvx-samples.git
-```
-
-* **Step - 4:** CMake and Build the pop application
-
-```
-mkdir pop-build && cd pop-build
-cmake -DOPENVX_INCLUDES=$OPENVX_DIR/include -DOPENVX_LIBRARIES=$OPENVX_DIR/bin/libopenvx.so ../openvx-samples/bubble-pop/
-make
-```
-
-* **Step - 5:** Run VX Pop application
-
-    * **Bubbles**
-
-    ```
-    ./vxPop --bubble
-    ```
-
-    * **Donuts**
-
-    ````
-    ./vxPop --donut
-    ````
 
 ## Canny Edge Detector
 
@@ -81,133 +20,19 @@ In this sample we will create an OpenVX graph to run canny edge detection on an 
 
  <p align="center"><img width="60%" src="images/canny_image.PNG" /></p>
 
-### Prerequisites
-
-* [Conformant OpenVX Implementation](https://github.com/KhronosGroup/Khronosdotorg/blob/master/api/openvx/resources.md)
-
-* [OpenCV](https://github.com/opencv/opencv/releases/tag/3.4.0)
-
-### Steps to run the canny sample
-
-* **Step - 1:** Build and install [Conformant OpenVX Implementation](https://github.com/KhronosGroup/OpenVX-sample-impl). In this example we will use the OpenVX Sample Implementation available on [GitHub](https://github.com/KhronosGroup/OpenVX-sample-impl)
-
-```
-Build OpenVX on Linux
-
-* Git Clone project with a recursive flag to get submodules
-
-      git clone --recursive https://github.com/KhronosGroup/OpenVX-sample-impl.git
-
-* Use Build.py script
-
-      cd OpenVX-sample-impl/
-      python Build.py --os=Linux --arch=64 --conf=Debug --conf_vision --enh_vision --conf_nn
-```
-
-* **Step - 2:** Export OpenVX Directory Path
-
-```
-export OPENVX_DIR=$(pwd)/install/Linux/x64/Debug
-```
-
-* **Step - 3:** Clone the OpenVX Samples project and build the canny application
-
-```
-cd ~/ && mkdir OpenVXSample-canny
-cd OpenVXSample-canny/
-git clone https://github.com/kiritigowda/openvx-samples.git
-```
-
-* **Step - 4:** CMake and Build the canny application
-
-```
-mkdir canny-build && cd canny-build
-cmake -DOPENVX_INCLUDES=$OPENVX_DIR/include -DOPENVX_LIBRARIES=$OPENVX_DIR/bin/libopenvx.so ../openvx-samples/canny-edge-detector/
-make
-```
-
-* **Step - 5:** Run Canny application
-
-    * **Live**
-
-    ```
-    ./cannyEdgeDetector --live
-    ```
-
-    * **Image**
-
-    ````
-    ./cannyEdgeDetector --image ../openvx-samples/images/face.png
-    ````
- <p align="center"><img src="images/canny-app.png" /></p>
-
- ## Optical Flow
+## Optical Flow
 
 This sample [application](./optical_flow/README.md#openvx-samples) we will create an OpenVX graph to run Optical Flow on a video/live. This sample application uses <a href="https://en.wikipedia.org/wiki/OpenCV" target="_blank">OpenCV</a> to decode input video and display the output.
 
-<p align="center"> <img width="60%" src="https://raw.githubusercontent.com/ROCm/MIVisionX/master/docs/data/optical_flow_video.gif"> </p>
+ <p align="center"> <img width="60%" src="https://raw.githubusercontent.com/ROCm/MIVisionX/master/docs/data/optical_flow_video.gif"> </p>
 
- ## Skin Tone Detector Sample
+## Skin Tone Detector
 
 In this sample we will create an OpenVX graph to run skintone detection on an image or a live camera. This sample application uses <a href="https://en.wikipedia.org/wiki/OpenCV" target="_blank">OpenCV</a> to decode input image and display the output.
 
  <p align="center"><img width="60%" src="images/skintone-detect-app.png" /></p>
 
-### Prerequisites
+## ORB (Oriented FAST and Rotated BRIEF)
+In this sample we will create an OpenVX graph to run ORB (Oriented FAST and Rotated BRIEF) on a live camera. This sample application uses <a href="https://en.wikipedia.org/wiki/OpenCV" target="_blank">OpenCV</a> to detect and display keypoints.
 
-* [Conformant OpenVX Implementation](https://github.com/KhronosGroup/Khronosdotorg/blob/master/api/openvx/resources.md)
-
-* [OpenCV](https://github.com/opencv/opencv/releases/tag/3.4.0)
-
-### Steps to run the skin tone sample
-
-* **Step - 1:** Build and install [Conformant OpenVX Implementation](https://github.com/KhronosGroup/OpenVX-sample-impl). In this example we will use the OpenVX Sample Implementation available on [GitHub](https://github.com/KhronosGroup/OpenVX-sample-impl)
-
-```
-Build OpenVX on Linux
-
-* Git Clone project with a recursive flag to get submodules
-
-      git clone --recursive https://github.com/KhronosGroup/OpenVX-sample-impl.git
-
-* Use Build.py script
-
-      cd OpenVX-sample-impl/
-      python Build.py --os=Linux --arch=64 --conf=Debug --conf_vision --enh_vision --conf_nn
-```
-
-* **Step - 2:** Export OpenVX Directory Path
-
-```
-export OPENVX_DIR=$(pwd)/install/Linux/x64/Debug
-```
-
-* **Step - 3:** Clone the OpenVX Samples project and build the Skin Tone application
-
-```
-cd ~/ && mkdir OpenVXSample-skintone
-cd OpenVXSample-skintone/
-git clone https://github.com/kiritigowda/openvx-samples.git
-```
-
-* **Step - 4:** CMake and Build the Skin Tone application
-
-```
-mkdir skintone-build && cd skintone-build
-cmake -DOPENVX_INCLUDES=$OPENVX_DIR/include -DOPENVX_LIBRARIES=$OPENVX_DIR/bin/libopenvx.so ../openvx-samples/skin-tone-detector/
-make
-```
-
-* **Step - 5:** Run Skin Tone Detector application
-
-    * **Live**
-
-    ```
-    ./skinToneDetector --live
-    ```
-
-    * **Image**
-
-    ````
-    ./skinToneDetector --image ../openvx-samples/images/face.png
-    ````
+ <p align="center"><img width="60%" src="images/orb_kp.jpg" /></p>

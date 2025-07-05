@@ -69,7 +69,7 @@ int main(int argc, char **argv)
     ERROR_CHECK_OBJECT(context);
     vxRegisterLogCallback(context, log_callback, vx_false_e);
 
-    vxLoadKernels(context, "vx_opencv");
+    vxLoadKernels(context, "openvx-opencv");
 
     vx_graph graph = vxCreateGraph(context);
     ERROR_CHECK_OBJECT(graph);

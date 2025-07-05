@@ -1,5 +1,5 @@
 cc_binary(
-    name = "opencv_orb",
+    name = "orb",
     srcs = [
         "orb.cpp",
     ],

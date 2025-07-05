@@ -48,8 +48,26 @@ THE SOFTWARE.
 using namespace cv;
 using namespace std;
 
-#define STATUS_ERROR_CHECK(call){vx_status status = call; if(status!= VX_SUCCESS) return status;}
-#define PARAM_ERROR_CHECK(call){vx_status status = call; if(status!= VX_SUCCESS) goto exit;}
+#define STATUS_ERROR_CHECK(call)                                                        \
+    {                                                                                   \
+        vx_status status = call;                                                        \
+        if (status != VX_SUCCESS)                                                       \
+        {                                                                               \
+            std::cout << "STATUS_ERROR_CHECK failed at " << __FILE__ << ":" << __LINE__ \
+                      << " with status " << status << std::endl;                        \
+            return status;                                                              \
+        }                                                                               \
+    }
+#define PARAM_ERROR_CHECK(call)                                                        \
+    {                                                                                  \
+        vx_status status = call;                                                       \
+        if (status != VX_SUCCESS)                                                      \
+        {                                                                              \
+            std::cout << "PARAM_ERROR_CHECK failed at " << __FILE__ << ":" << __LINE__ \
+                      << " with status " << status << std::endl;                       \
+            goto exit;                                                                 \
+        }                                                                              \
+    }
 #define MAX_KERNELS 100
 
 int VX_to_CV_Image(Mat**, vx_image);
@@ -67,13 +85,16 @@ int match_vx_image_parameters(vx_image, vx_image);
 class Kernellist
 {
 public:
-    struct node {
-    public:
-        std::function<vx_status(vx_context)> func;
-        node* next;
+    struct node
+    {
+        public:
+            std::function<vx_status(vx_context)> func;
+            node* next;
     };
     int count;
-    Kernellist(int max) {
+
+    Kernellist(int max)
+    {
         top = nullptr;
         maxnum = max;
         count = 0;
@@ -82,19 +103,22 @@ public:
     vx_status ADD(std::function<vx_status(vx_context)> element)
     {
         vx_status status = VX_SUCCESS;
-        if (count == maxnum) {
+        if (count == maxnum)
+        {
             return VX_ERROR_NO_RESOURCES;
         }
         else
         {
-            node *newTop = new node;
-            if (top == nullptr) {
+            node* newTop = new node;
+            if (top == nullptr)
+            {
                 newTop->func = element;
                 newTop->next = nullptr;
                 top = newTop;
                 count++;
             }
-            else {
+            else
+            {
                 newTop->func = element;
                 newTop->next = top;
                 top = newTop;
@@ -107,11 +131,13 @@ public:
     vx_status REMOVE()
     {
         vx_status status = VX_SUCCESS;
-        if (top == nullptr) {
+        if (top == nullptr)
+        {
             return VX_ERROR_NO_RESOURCES;
         }
-        else {
-            node * old = top;
+        else
+        {
+            node* old = top;
             top = top->next;
             count--;
             delete(old);
@@ -123,15 +149,17 @@ public:
     {
         vx_status status = VX_SUCCESS;
 
-        if (top == nullptr) {
+        if (top == nullptr)
+        {
             vxAddLogEntry((vx_reference)context, VX_ERROR_NO_RESOURCES, "PUBLISH Fail, Kernel list is empty");
             return VX_ERROR_NO_RESOURCES;
         }
 
         else
         {
-            node * Kernel = top;
-            for (int i = 0; i < count; i++) {
+            node* Kernel = top;
+            for (int i = 0; i < count; i++)
+            {
                 STATUS_ERROR_CHECK(Kernel->func(context));
                 Kernel = Kernel->next;
             }
@@ -140,7 +168,7 @@ public:
     }
 
 private:
-    node *top;
+    node* top;
     int maxnum;
 };
 

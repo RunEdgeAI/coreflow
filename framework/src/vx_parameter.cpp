@@ -34,7 +34,7 @@ Parameter::~Parameter()
 
 vx_bool Parameter::isValidDirection(vx_enum dir)
 {
-    if ((dir == VX_INPUT) || (dir == VX_OUTPUT)) /* Bidirectional is not valid for user kernels */
+    if ((dir == VX_INPUT) || (dir == VX_OUTPUT) || (dir == VX_BIDIRECTIONAL))
     {
         return vx_true_e;
     }
