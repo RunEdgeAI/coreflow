@@ -7,7 +7,7 @@ cc_import(
     name="opencv-highgui",
     shared_library=select({
         "@platforms//os:macos": "opencv/lib/macos/libopencv_highgui.4.11.0.dylib",
-        "@platforms//os:linux": "opencv/lib/macos/libopencv_highgui.so.4.11.0",
+        "@platforms//os:linux": "opencv/lib/linux/libopencv_highgui.so.4.11.0",
         "//conditions:default": None,
     }),
 )
@@ -16,7 +16,7 @@ cc_import(
     name="opencv-photo",
     shared_library=select({
         "@platforms//os:macos": "opencv/lib/macos/libopencv_photo.4.11.0.dylib",
-        "@platforms//os:linux": "opencv/lib/macos/libopencv_photo.so.4.11.0",
+        "@platforms//os:linux": "opencv/lib/linux/libopencv_photo.so.4.11.0",
         "//conditions:default": None,
     }),
 )
@@ -25,7 +25,7 @@ cc_import(
     name="opencv-video",
     shared_library=select({
         "@platforms//os:macos": "opencv/lib/macos/libopencv_video.4.11.0.dylib",
-        "@platforms//os:linux": "opencv/lib/macos/libopencv_video.so.4.11.0",
+        "@platforms//os:linux": "opencv/lib/linux/libopencv_video.so.4.11.0",
         "//conditions:default": None,
     }),
 )
@@ -34,7 +34,7 @@ cc_import(
     name="opencv-videoio",
     shared_library=select({
         "@platforms//os:macos": "opencv/lib/macos/libopencv_videoio.4.11.0.dylib",
-        "@platforms//os:linux": "opencv/lib/macos/libopencv_videoio.so.4.11.0",
+        "@platforms//os:linux": "opencv/lib/linux/libopencv_videoio.so.4.11.0",
         "//conditions:default": None,
     }),
 )
