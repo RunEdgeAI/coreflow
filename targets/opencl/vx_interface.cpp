@@ -266,14 +266,21 @@ extern "C" vx_status vxTargetInit(vx_target target)
                 VX_PRINT(VX_ZONE_INFO, "Kernel[%u] File: %s\n", k, cl_kernels[k]->sourcepath);
                 VX_PRINT(VX_ZONE_INFO, "Kernel[%u] Name: %s\n", k, cl_kernels[k]->kernelname);
                 VX_PRINT(VX_ZONE_INFO, "Kernel[%u] ID: %s\n", k, cl_kernels[k]->description.name);
-                std::string fullPath = std::string(cl_dirs) + std::string(cl_kernels[k]->sourcepath);
+                std::string fullPath =
+                    std::string(cl_dirs) + "/" + std::string(cl_kernels[k]->sourcepath);
                 sources = clLoadSources(const_cast<char*>(fullPath.c_str()), &programSze);
                 /* create a program with this source */
-                cl_kernels[k]->program[p] = clCreateProgramWithSource(context->global[p],
-                    1,
-                    (const char **)&sources,
-                    &programSze,
-                    &err);
+                if (sources != nullptr)
+                {
+                    cl_kernels[k]->program[p] = clCreateProgramWithSource(
+                        context->global[p], 1, (const char **)&sources, &programSze, &err);
+                }
+                else
+                {
+                    VX_PRINT(VX_ZONE_ERROR, "Failed to load source file: %s\n", fullPath.c_str());
+                    err = CL_INVALID_VALUE;
+                }
+
                 if (err == CL_SUCCESS)
                 {
                     err = clBuildProgram((cl_program)cl_kernels[k]->program[p],

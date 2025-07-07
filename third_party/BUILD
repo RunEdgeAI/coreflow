@@ -2,6 +2,56 @@
 BUILD file for build defs for third party deps
 """
 
+# OpenCV
+cc_import(
+    name="opencv-highgui",
+    shared_library=select({
+        "@platforms//os:macos": "opencv/lib/macos/libopencv_highgui.4.11.0.dylib",
+        "@platforms//os:linux": "opencv/lib/linux/libopencv_highgui.so.4.11.0",
+        "//conditions:default": None,
+    }),
+)
+
+cc_import(
+    name="opencv-photo",
+    shared_library=select({
+        "@platforms//os:macos": "opencv/lib/macos/libopencv_photo.4.11.0.dylib",
+        "@platforms//os:linux": "opencv/lib/linux/libopencv_photo.so.4.11.0",
+        "//conditions:default": None,
+    }),
+)
+
+cc_import(
+    name="opencv-video",
+    shared_library=select({
+        "@platforms//os:macos": "opencv/lib/macos/libopencv_video.4.11.0.dylib",
+        "@platforms//os:linux": "opencv/lib/linux/libopencv_video.so.4.11.0",
+        "//conditions:default": None,
+    }),
+)
+
+cc_import(
+    name="opencv-videoio",
+    shared_library=select({
+        "@platforms//os:macos": "opencv/lib/macos/libopencv_videoio.4.11.0.dylib",
+        "@platforms//os:linux": "opencv/lib/linux/libopencv_videoio.so.4.11.0",
+        "//conditions:default": None,
+    }),
+)
+
+cc_library(
+    name = "opencv-prebuilt",
+    hdrs = glob(["opencv/include/**/*.hpp"]),
+    includes = ["opencv/include"],
+    deps = [
+        ":opencv-highgui",
+        ":opencv-photo",
+        ":opencv-video",
+        ":opencv-videoio",
+    ],
+    visibility = ["//visibility:public"],
+)
+
 # ONNX Runtime
 cc_import(
     name="onnxruntime-providers",
@@ -9,7 +59,6 @@ cc_import(
         "@platforms//os:linux": "onnxruntime/lib/libonnxruntime_providers_shared.so",
         "//conditions:default": None,
     }),
-    visibility=["//visibility:public"],
 )
 
 cc_import(
@@ -20,7 +69,6 @@ cc_import(
         "//conditions:default": None,
     }),
     deps=[":onnxruntime-providers"],
-    visibility=["//visibility:public"],
 )
 
 cc_library(
