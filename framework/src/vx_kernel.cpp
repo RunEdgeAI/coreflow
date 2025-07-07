@@ -341,7 +341,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxLoadKernels(vx_context context, const vx_ch
                     status = publish((vx_context)context);
                     if (status != VX_SUCCESS)
                     {
-                        VX_PRINT(VX_ZONE_ERROR, "Failed to publish kernels in module\n");
+                        VX_PRINT(VX_ZONE_ERROR,
+                                 "Failed to publish kernels in module with status %d\n", status);
                         Osal::unloadModule(context->modules[m].handle);
                         context->modules[m].handle = nullptr;
                     }
@@ -875,6 +876,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxAddParameterToKernel(vx_kernel kernel,
                     (Parameter::isValidDirection(dir) == vx_false_e) ||
                     (Parameter::isValidState(state) == vx_false_e))
                 {
+                    VX_PRINT(VX_ZONE_ERROR,
+                             "Invalid data type, param direction, or param state!\n");
                     status = VX_ERROR_INVALID_PARAMETERS;
                 }
                 else
@@ -893,6 +896,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxAddParameterToKernel(vx_kernel kernel,
                      (Parameter::isValidState(state) == vx_false_e)) ||
                      (data_type == VX_TYPE_DELAY && dir != VX_INPUT))
                 {
+                    VX_PRINT(VX_ZONE_ERROR,
+                             "Invalid data type, param direction, or param state!\n");
                     status = VX_ERROR_INVALID_PARAMETERS;
                 }
                 else
@@ -906,6 +911,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxAddParameterToKernel(vx_kernel kernel,
         }
         else
         {
+            VX_PRINT(VX_ZONE_ERROR, "Invalid number of parameters associated!\n");
             status = VX_ERROR_INVALID_PARAMETERS;
         }
     }

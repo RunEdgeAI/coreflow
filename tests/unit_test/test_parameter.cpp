@@ -36,10 +36,10 @@ TEST_F(ParameterTest, IsValidDirection)
     // Test valid directions
     EXPECT_EQ(Parameter::isValidDirection(VX_INPUT), vx_true_e);
     EXPECT_EQ(Parameter::isValidDirection(VX_OUTPUT), vx_true_e);
+    EXPECT_EQ(Parameter::isValidDirection(VX_BIDIRECTIONAL), vx_true_e);
 
     // Test invalid direction
     EXPECT_EQ(Parameter::isValidDirection((vx_enum)100), vx_false_e);
-    EXPECT_EQ(Parameter::isValidDirection(VX_BIDIRECTIONAL), vx_false_e);
 }
 
 TEST_F(ParameterTest, IsValidTypeMatch)
