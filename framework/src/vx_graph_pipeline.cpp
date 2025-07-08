@@ -178,7 +178,11 @@ VX_API_ENTRY vx_status VX_API_CALL vxGraphParameterEnqueueReadyRef(vx_graph grap
                     graph->parameters[i].queue.movePendingToReady();
                 }
 
-                if (graph->scheduleMode == VX_GRAPH_SCHEDULE_MODE_QUEUE_AUTO)
+                if (graph->scheduleMode == VX_GRAPH_SCHEDULE_MODE_QUEUE_AUTO
+#ifdef OPENVX_USE_STREAMING
+                    && vx_false_e == graph->isStreaming
+#endif
+                )
                 {
                     /* Schedule the graph */
                     status = vxScheduleGraph(graph);
