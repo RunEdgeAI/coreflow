@@ -253,7 +253,7 @@ Graph::Graph(vx_context context, vx_reference scope)
 #ifdef OPENVX_USE_STREAMING
       isStreamingEnabled(vx_false_e),
       isStreaming(vx_false_e),
-      triggerNodeIndex(0),
+      triggerNodeIndex(UINT32_MAX),
       streamingThread(),
 #endif /* OPENVX_USE_STREAMING */
       scheduleMode(VX_GRAPH_SCHEDULE_MODE_NORMAL)
@@ -1743,11 +1743,12 @@ void Graph::streamingLoop()
         /* Wait for trigger node event if set */
         // if (triggerNodeIndex != UINT32_MAX)
         // {
+        //     VX_PRINT(VX_ZONE_INFO, "Trigger node defined -- waiting on it to trigger\n");
         //     /* Wait for the trigger node to complete */
         //     while (!nodes[triggerNodeIndex]->executed)
         //     {
         //         std::cout << "Waiting for trigger node to complete" << std::endl;
-        //         std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        //         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         //         /* Allow clean exit */
         //         if (!isStreaming) return;
         //     }
@@ -1999,7 +2000,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
                         VX_PRINT(VX_ZONE_ERROR, "Node " VX_FMT_REF " (%s) Parameter[%u] was required and not supplied!\n",
                             graph->nodes[n],
                             graph->nodes[n]->kernel->name,p);
-                        status = VX_ERROR_NOT_SUFFICIENT;
+                        status = VX_ERROR_INVALID_PARAMETERS;
                         num_errors++;
                     }
                     else if (graph->nodes[n]->parameters[p]->internal_count == 0)

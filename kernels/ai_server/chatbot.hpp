@@ -15,7 +15,7 @@
 #include <curl/curl.h>
 #include <nlohmann/json.hpp>
 
-#define DEFAULT_MODEL "llama3:8b"
+#define DEFAULT_MODEL "llama3.2:3b"
 #define SERVER_URL "http://localhost:11434"
 #define API_KEY "hardcoded-api-key"
 
