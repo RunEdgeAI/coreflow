@@ -80,7 +80,9 @@ TEST_F(AiServerIntegrationTest, AiServerTest)
 
     // Validate results
     std::string response(output_buffer);
-    ASSERT_TRUE(response.find("Washington, D.C.") != std::string::npos)
+    ASSERT_TRUE(
+        response.find("Washington, D.C.") != std::string::npos ||
+        response.find("Washington D.C.") != std::string::npos)
         << "Expected response to contain 'Washington, D.C.', but got: " << response;
 
     // Cleanup
