@@ -91,8 +91,7 @@ cc_test(
     data=[
         "//tests/raw:models",
     ],
-    size="small",
-    timeout = "moderate"
+    size="small"
 )
 
 cc_test(
