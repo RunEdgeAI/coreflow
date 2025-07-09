@@ -36,13 +36,11 @@ jobs:
       - name: Setup model server
         run: |
           curl -fsSL https://ollama.com/install.sh | sh
-          export OLLAMA_NUM_PARALLEL=2
-          export OLLAMA_FLASH_ATTENTION=1
-          export OLLAMA_KV_CACHE_TYPE=q4_0
           ollama serve &
           sleep 5
-          curl http://localhost:11434/api/generate -d '{"model": "llama3.2:3b", "keep_alive": -1}'
-          curl -s http://localhost:11434/api/tags || exit 1
+          ollama pull llama3.2:3b
+          curl -sS http://localhost:11434/api/generate -d '{"model": "llama3.2:3b", "keep_alive": -1}' || exit 1
+          curl -sS http://localhost:11434/api/tags || exit 1
 
       # Checks-out your repository under $GITHUB_WORKSPACE, which is the CWD for
       # the rest of the steps
