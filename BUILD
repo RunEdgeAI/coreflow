@@ -37,7 +37,7 @@ cc_library(
         "-lxml2"
     ],
     deps = [
-        "//kernels/NNEF-Tools/parser/cpp:nnef"
+        "//kernels/nnef:nnef"
     ],
     visibility = ["//visibility:public"],
 )

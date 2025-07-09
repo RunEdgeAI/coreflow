@@ -6,6 +6,7 @@ build --compiler=g++       # Specify the compiler if needed, e.g., gcc, clang
 build --cxxopt=-std=c++23  # Use C++23 standard (adjust if needed)
 build --cxxopt=-DCL_TARGET_OPENCL_VERSION=300
 build --per_file_copt=.*,-tests/*.cpp@-Werror,-Wall,-Wextra,-Wpedantic,-Wno-deprecated-declarations
+build --per_file_copt=kernels/nnef/NNEF-Tools/.*@-Wno-error
 build --per_file_copt=external/.*@-Wno-error
 build --experimental_ui_max_stdouterr_bytes=-1
 
