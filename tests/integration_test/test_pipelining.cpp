@@ -16,9 +16,9 @@
 
 const std::vector<std::string> question_bank =
 {
-    "what is the capital of the united states ?",
-    "who was the 20th president of the united states ?",
-    "what state is minneapolis in ?"
+    "be very brief; what is the capital of the united states ?",
+    "be very brief; who was the 20th president of the united states ?",
+    "be very brief; what state is minneapolis in ?"
 };
 
 class PipeliningTest : public ::testing::Test
@@ -255,7 +255,8 @@ TEST_F(PipeliningTest, TestStreamingAndPipelining)
     vx_size size = question_bank.size();
     std::vector<vx_array> in_arrs(size);
     std::vector<vx_array> out_arrs(size);
-    for (vx_size i = 0; i < size; ++i) {
+    for (vx_size i = 0; i < size; ++i)
+    {
         in_arrs[i] = vxCreateArray(context, VX_TYPE_CHAR, VX_MAX_FILE_NAME);
         out_arrs[i] = vxCreateArray(context, VX_TYPE_CHAR, VX_MAX_FILE_NAME);
         ASSERT_EQ(vxGetStatus(in_arrs[i]), VX_SUCCESS);
