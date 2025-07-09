@@ -1,3 +1,6 @@
 [submodule "cts"]
 	path = cts
 	url = https://github.com/amikhail48/OpenVX-cts.git
+[submodule "kernels/nnef/NNEF-Tools"]
+	path = kernels/nnef/NNEF-Tools
+	url = https://github.com/KhronosGroup/NNEF-Tools.git
