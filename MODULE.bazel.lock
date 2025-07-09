@@ -111,6 +111,8 @@
     "https://bcr.bazel.build/modules/libpfm/4.11.0/source.json": "caaffb3ac2b59b8aac456917a4ecf3167d40478ee79f15ab7a877ec9273937c9",
     "https://bcr.bazel.build/modules/libpng/1.6.47/MODULE.bazel": "66470450c2040f07d3fc3ee4b72ed25f50ec6b41388a9cf80160b39a1dc75ed1",
     "https://bcr.bazel.build/modules/libpng/1.6.47/source.json": "80f668824b3605b52c99e705062019f2c6f9066ec024b70ea5ee88db1e89b6b6",
+    "https://bcr.bazel.build/modules/libxml2/2.13.5/MODULE.bazel": "5c0415b8c82b33a73b59f187cfe41f6a757ec49bf07c4a13d76ee3a6b2af38c6",
+    "https://bcr.bazel.build/modules/libxml2/2.13.5/source.json": "8fa39a95419ab0eae1333c630783b22de112ded1fc3903a9d4cc91484a7f6e96",
     "https://bcr.bazel.build/modules/mbedtls/3.6.0/MODULE.bazel": "8e380e4698107c5f8766264d4df92e36766248447858db28187151d884995a09",
     "https://bcr.bazel.build/modules/mbedtls/3.6.0/source.json": "1dbe7eb5258050afcc3806b9d43050f71c6f539ce0175535c670df606790b30c",
     "https://bcr.bazel.build/modules/nlohmann_json/3.11.3/MODULE.bazel": "87023db2f55fc3a9949c7b08dc711fae4d4be339a80a99d04453c4bb3998eefc",

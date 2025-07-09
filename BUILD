@@ -19,13 +19,6 @@ cc_library(
         "include",
         "framework/include"
     ],
-    copts = select({
-        "@platforms//os:linux": [
-            "-I/usr/include/libxml2",
-        ],
-        "//conditions:default": [
-        ],
-    }),
     linkopts = select({
         "@platforms//os:osx": [
             "-framework OpenCL",
@@ -33,10 +26,9 @@ cc_library(
         "//conditions:default": [
             "-lOpenCL",
         ],
-    }) + [
-        "-lxml2"
-    ],
+    }),
     deps = [
+        "@libxml2",
         "//kernels/nnef:nnef"
     ],
     visibility = ["//visibility:public"],
