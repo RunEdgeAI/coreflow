@@ -20,6 +20,7 @@ bazel_dep(name = "hedron_compile_commands", dev_dependency = True)
 bazel_dep(name = "flatbuffers", version = "24.3.25")
 bazel_dep(name = "opentelemetry-cpp", version = "1.19.0")
 bazel_dep(name = "opencv", version = "4.11.0.bcr.2")
+bazel_dep(name = "libxml2", version = "2.13.5")
 
 # Hedron's Compile Commands Extractor for Bazel
 git_override(
