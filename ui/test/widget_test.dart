@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui/main.dart';
 import 'package:ui/graph_editor.dart';
+import 'package:ui/objects.dart';
 
 void main() {
   late ByteData mockXmlData;
@@ -90,5 +91,54 @@ void main() {
 
     expect(find.text('Export DOT'), findsOneWidget);
     expect(find.text('Export XML'), findsOneWidget);
+  });
+
+  test('Graph serialization/deserialization', () {
+    // Create a simple node
+    final node = Node(
+      id: 1,
+      name: 'TestNode',
+      position: const Offset(10, 20),
+      kernel: 'TestKernel',
+      target: 'TestTarget',
+      inputs: [],
+      outputs: [],
+    );
+    // Create a graph with one node and no edges
+    final graph = Graph(id: 42, nodes: [node], edges: []);
+
+    // Serialize to JSON
+    final json = graph.toJson();
+    // Deserialize from JSON
+    final graph2 = Graph.fromJson(json);
+
+    // Check that the deserialized graph matches the original
+    expect(graph2.id, graph.id);
+    expect(graph2.nodes.length, 1);
+    expect(graph2.nodes[0].name, 'TestNode');
+    expect(graph2.nodes[0].position.dx, 10);
+    expect(graph2.nodes[0].position.dy, 20);
+    expect(graph2.edges.length, 0);
+
+    // Add an edge and test again
+    final node2 = Node(
+      id: 2,
+      name: 'TestNode2',
+      position: const Offset(30, 40),
+      kernel: 'TestKernel',
+      target: 'TestTarget',
+      inputs: [],
+      outputs: [],
+    );
+    final edge = Edge(source: node, target: node2, srcId: 1, tgtId: 2);
+    final graphWithEdge = Graph(id: 43, nodes: [node, node2], edges: [edge]);
+    final json2 = graphWithEdge.toJson();
+    final graphWithEdge2 = Graph.fromJson(json2);
+    expect(graphWithEdge2.nodes.length, 2);
+    expect(graphWithEdge2.edges.length, 1);
+    expect(graphWithEdge2.edges[0].source.name, 'TestNode');
+    expect(graphWithEdge2.edges[0].target.name, 'TestNode2');
+    expect(graphWithEdge2.edges[0].srcId, 1);
+    expect(graphWithEdge2.edges[0].tgtId, 2);
   });
 }

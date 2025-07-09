@@ -1,8 +1,11 @@
 import 'dart:math';
 import 'export.dart';
+import 'generate_button.dart';
 import 'objects.dart';
+import 'package:firebase_ai/firebase_ai.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_ai_toolkit/flutter_ai_toolkit.dart';
 import 'package:xml/xml.dart' as xml;
 import 'painter.dart';
 
@@ -31,6 +34,7 @@ class GraphEditorState extends State<GraphEditor> {
   Node? edgeStartNode;
   int? edgeStartOutput;
   int _refCount = 0;
+  bool _showChatModal = false;
 
   // Public getter to check if XML is loaded
   bool get isXmlLoaded => _supported.isNotEmpty;
@@ -292,217 +296,294 @@ class GraphEditorState extends State<GraphEditor> {
               }),
           // Main area for graph visualization and interaction
           Expanded(
-            child: MouseRegion(
-              onHover: (event) {
-                setState(() {
-                  mousePosition = event.localPosition;
-                });
-              },
-              onExit: (event) {
-                setState(() {
-                  mousePosition = null;
-                });
-              },
-              child: KeyboardListener(
-                  focusNode: _focusNode,
-                  onKeyEvent: (event) {
-                    if (_nameFocusNode.hasFocus) return;
-
-                    if (event is KeyDownEvent) {
-                      if (event.logicalKey == LogicalKeyboardKey.backspace ||
-                          event.logicalKey == LogicalKeyboardKey.delete) {
-                        if (selectedGraphRow != null) {
-                          _deleteGraph(selectedGraphRow!);
-                        } else if (graphs.isNotEmpty) {
-                          _deleteSelected(graphs[selectedGraphIndex]);
-                        }
-                      } else if (event.logicalKey ==
-                          LogicalKeyboardKey.escape) {
-                        _deselectAll();
-                      }
-                    }
+            child: Stack(
+              children: [
+                // Main graph area
+                MouseRegion(
+                  onHover: (event) {
+                    setState(() {
+                      mousePosition = event.localPosition;
+                    });
                   },
-                  child: Stack(
-                    children: [
-                      // Center panel for graph visualization and node/edge creation
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          return Stack(
-                            children: [
-                              // Draw the grid background.
-                              Positioned.fill(
-                                child: CustomPaint(
-                                  painter: GridPainter(
-                                      gridSize: 60,
-                                      lineColor: Colors.grey.withAlpha(76)),
+                  onExit: (event) {
+                    setState(() {
+                      mousePosition = null;
+                    });
+                  },
+                  child: KeyboardListener(
+                    focusNode: _focusNode,
+                    onKeyEvent: (event) {
+                      if (_nameFocusNode.hasFocus) return;
+
+                      if (event is KeyDownEvent) {
+                        if (event.logicalKey == LogicalKeyboardKey.backspace ||
+                            event.logicalKey == LogicalKeyboardKey.delete) {
+                          if (selectedGraphRow != null) {
+                            _deleteGraph(selectedGraphRow!);
+                          } else if (graphs.isNotEmpty) {
+                            _deleteSelected(graphs[selectedGraphIndex]);
+                          }
+                        } else if (event.logicalKey ==
+                            LogicalKeyboardKey.escape) {
+                          _deselectAll();
+                        }
+                      }
+                    },
+                    child: Stack(
+                      children: [
+                        // Center panel for graph visualization and node/edge creation
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            return Stack(
+                              children: [
+                                // Draw the grid background.
+                                Positioned.fill(
+                                  child: CustomPaint(
+                                    painter: GridPainter(
+                                        gridSize: 60,
+                                        lineColor: Colors.grey.withAlpha(76)),
+                                  ),
                                 ),
-                              ),
-                              graphs.isNotEmpty
-                                  ? GestureDetector(
-                                      onTapDown: (details) {
-                                        final graph =
-                                            graphs[selectedGraphIndex];
-                                        final tappedNode = graph
-                                            .findNodeAt(details.localPosition);
-                                        final tappedEdge = graph
-                                            .findEdgeAt(details.localPosition);
-                                        setState(() {
-                                          if (tappedNode != null) {
-                                            // Deselect the selected edge
-                                            selectedEdge = null;
-                                            if (selectedNode == null) {
-                                              selectedNode = tappedNode;
-                                            } else {
-                                              // Deselect the selected node
-                                              selectedNode = null;
-                                            }
-                                          } else if (tappedEdge != null) {
-                                            if (selectedEdge == tappedEdge) {
-                                              // Deselect the tapped edge if it is already selected
-                                              selectedEdge = null;
-                                            } else {
-                                              // Deselect the selected node
-                                              selectedNode = null;
-                                              // Select the tapped edge
-                                              selectedEdge = tappedEdge;
-                                            }
-                                          } else {
-                                            _addNode(
-                                                graph,
-                                                details.localPosition,
-                                                constraints.biggest);
-                                            // Deselect the selected node
-                                            selectedNode = null;
-                                            // Deselect the selected edge
-                                            selectedEdge = null;
-                                            // Deselect the selected graph row
-                                            selectedGraphRow = null;
-                                            edgeStartNode = null;
-                                            edgeStartOutput = null;
-                                          }
-                                        });
-                                      },
-                                      onPanUpdate: (details) {
-                                        setState(() {
-                                          mousePosition = details.localPosition;
-                                          if (draggingNode != null) {
-                                            final newPosition =
-                                                draggingNode!.position +
-                                                    details.delta;
-                                            // Assuming the radius of the node is 25
-                                            final nodeRadius = 25.0;
-                                            // Ensure the node stays within the bounds of the center panel
-                                            if (newPosition.dx - nodeRadius >= 0 &&
-                                                newPosition.dx + nodeRadius <=
-                                                    constraints.maxWidth -
-                                                        (selectedNode != null
-                                                            ? 240
-                                                            : 0) &&
-                                                newPosition.dy - nodeRadius >=
-                                                    0 &&
-                                                newPosition.dy + nodeRadius <=
-                                                    constraints.maxHeight) {
-                                              draggingNode!.position =
-                                                  newPosition;
-                                            }
-                                          }
-                                        });
-                                      },
-                                      onPanStart: (details) {
-                                        setState(() {
+                                graphs.isNotEmpty
+                                    ? GestureDetector(
+                                        onTapDown: (details) {
                                           final graph =
                                               graphs[selectedGraphIndex];
-                                          draggingNode = graph.findNodeAt(
+                                          final tappedNode = graph.findNodeAt(
                                               details.localPosition);
-                                          dragOffset = details.localPosition;
-                                        });
-                                      },
-                                      onPanEnd: (details) {
-                                        setState(() {
-                                          draggingNode = null;
-                                          dragOffset = null;
-                                          edgeStartNode = null;
-                                          edgeStartOutput = null;
-                                          mousePosition = null;
-                                        });
-                                      },
-                                      child: CustomPaint(
-                                        painter: graphs.isNotEmpty
-                                            ? GraphPainter(
-                                                graphs[selectedGraphIndex]
-                                                    .nodes,
-                                                graphs[selectedGraphIndex]
-                                                    .edges,
-                                                selectedNode,
-                                                selectedEdge,
-                                                mousePosition,
-                                              )
-                                            : null,
-                                        child: Container(),
-                                      ),
-                                    )
-                                  : Center(child: Text('No graphs available')),
-                              ..._buildTooltips(),
-                            ],
-                          );
-                        },
-                      ),
-                      // Right panel for node attributes
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        bottom: 0,
-                        child: AnimatedSlide(
-                          duration: Duration(milliseconds: 300),
-                          offset: Offset(selectedNode != null ? 0 : 1, 0),
-                          child: AnimatedOpacity(
+                                          final tappedEdge = graph.findEdgeAt(
+                                              details.localPosition);
+                                          setState(() {
+                                            if (tappedNode != null) {
+                                              // Deselect the selected edge
+                                              selectedEdge = null;
+                                              if (selectedNode == null) {
+                                                selectedNode = tappedNode;
+                                              } else {
+                                                // Deselect the selected node
+                                                selectedNode = null;
+                                              }
+                                            } else if (tappedEdge != null) {
+                                              if (selectedEdge == tappedEdge) {
+                                                // Deselect the tapped edge if it is already selected
+                                                selectedEdge = null;
+                                              } else {
+                                                // Deselect the selected node
+                                                selectedNode = null;
+                                                // Select the tapped edge
+                                                selectedEdge = tappedEdge;
+                                              }
+                                            } else {
+                                              _addNode(
+                                                  graph,
+                                                  details.localPosition,
+                                                  constraints.biggest);
+                                              // Deselect the selected node
+                                              selectedNode = null;
+                                              // Deselect the selected edge
+                                              selectedEdge = null;
+                                              // Deselect the selected graph row
+                                              selectedGraphRow = null;
+                                              edgeStartNode = null;
+                                              edgeStartOutput = null;
+                                            }
+                                          });
+                                        },
+                                        onPanUpdate: (details) {
+                                          setState(() {
+                                            mousePosition =
+                                                details.localPosition;
+                                            if (draggingNode != null) {
+                                              final newPosition =
+                                                  draggingNode!.position +
+                                                      details.delta;
+                                              // Assuming the radius of the node is 25
+                                              final nodeRadius = 25.0;
+                                              // Ensure the node stays within the bounds of the center panel
+                                              if (newPosition.dx - nodeRadius >= 0 &&
+                                                  newPosition.dx + nodeRadius <=
+                                                      constraints.maxWidth -
+                                                          (selectedNode != null
+                                                              ? 240
+                                                              : 0) &&
+                                                  newPosition.dy - nodeRadius >=
+                                                      0 &&
+                                                  newPosition.dy + nodeRadius <=
+                                                      constraints.maxHeight) {
+                                                draggingNode!.position =
+                                                    newPosition;
+                                              }
+                                            }
+                                          });
+                                        },
+                                        onPanStart: (details) {
+                                          setState(() {
+                                            final graph =
+                                                graphs[selectedGraphIndex];
+                                            draggingNode = graph.findNodeAt(
+                                                details.localPosition);
+                                            dragOffset = details.localPosition;
+                                          });
+                                        },
+                                        onPanEnd: (details) {
+                                          setState(() {
+                                            draggingNode = null;
+                                            dragOffset = null;
+                                            edgeStartNode = null;
+                                            edgeStartOutput = null;
+                                            mousePosition = null;
+                                          });
+                                        },
+                                        child: CustomPaint(
+                                          painter: graphs.isNotEmpty
+                                              ? GraphPainter(
+                                                  graphs[selectedGraphIndex]
+                                                      .nodes,
+                                                  graphs[selectedGraphIndex]
+                                                      .edges,
+                                                  selectedNode,
+                                                  selectedEdge,
+                                                  mousePosition,
+                                                )
+                                              : null,
+                                          child: Container(),
+                                        ),
+                                      )
+                                    : Center(
+                                        child: Text('No graphs available')),
+                                ..._buildTooltips(),
+                              ],
+                            );
+                          },
+                        ),
+                        // Right panel for node attributes
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: AnimatedSlide(
                             duration: Duration(milliseconds: 300),
-                            opacity: selectedNode != null ? 1.0 : 0.0,
+                            offset: Offset(selectedNode != null ? 0 : 1, 0),
+                            child: AnimatedOpacity(
+                              duration: Duration(milliseconds: 300),
+                              opacity: selectedNode != null ? 1.0 : 0.0,
+                              child: Container(
+                                width: 220,
+                                color: Colors.grey[800],
+                                child: selectedNode != null
+                                    ? NodeAttributesPanel(
+                                        graph: graphs.isNotEmpty
+                                            ? graphs[selectedGraphIndex]
+                                            : null,
+                                        selectedNode: selectedNode,
+                                        supportedTargets: _supported,
+                                        nameController: _nameController,
+                                        nameFocusNode: _nameFocusNode,
+                                        onNameChanged: (value) {
+                                          setState(() {
+                                            selectedNode!.name = value;
+                                          });
+                                        },
+                                        onTargetChanged: (newValue) {
+                                          setState(() {
+                                            selectedNode!.target = newValue;
+                                            final target =
+                                                _supported.firstWhere(
+                                                    (t) => t.name == newValue);
+                                            if (target.kernels.isNotEmpty) {
+                                              selectedNode!.kernel =
+                                                  target.kernels.first.name;
+                                              _updateNodeIO(selectedNode!,
+                                                  selectedNode!.kernel);
+                                            }
+                                          });
+                                        },
+                                        onKernelChanged: (newValue) {
+                                          setState(() {
+                                            selectedNode!.kernel = newValue;
+                                            _updateNodeIO(
+                                                selectedNode!, newValue);
+                                          });
+                                        },
+                                      )
+                                    : null,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Place the Generate button
+                Positioned(
+                  bottom: 24,
+                  left: 24,
+                  child: GenerateButton(
+                    onPressed: () {
+                      setState(() {
+                        _showChatModal = true;
+                      });
+                    },
+                  ),
+                ),
+                // AI Chat Modal
+                if (_showChatModal)
+                  Positioned.fill(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _showChatModal = false),
+                      child: Container(
+                        color: Colors.black54,
+                        child: Center(
+                          child: GestureDetector(
+                            onTap: () {}, // Prevent tap propagation
                             child: Container(
-                              width: 220,
-                              color: Colors.grey[800],
-                              child: selectedNode != null
-                                  ? NodeAttributesPanel(
-                                      graph: graphs.isNotEmpty
-                                          ? graphs[selectedGraphIndex]
-                                          : null,
-                                      selectedNode: selectedNode,
-                                      supportedTargets: _supported,
-                                      nameController: _nameController,
-                                      nameFocusNode: _nameFocusNode,
-                                      onNameChanged: (value) {
-                                        setState(() {
-                                          selectedNode!.name = value;
-                                        });
-                                      },
-                                      onTargetChanged: (newValue) {
-                                        setState(() {
-                                          selectedNode!.target = newValue;
-                                          final target = _supported.firstWhere(
-                                              (t) => t.name == newValue);
-                                          if (target.kernels.isNotEmpty) {
-                                            selectedNode!.kernel =
-                                                target.kernels.first.name;
-                                            _updateNodeIO(selectedNode!,
-                                                selectedNode!.kernel);
-                                          }
-                                        });
-                                      },
-                                      onKernelChanged: (newValue) {
-                                        setState(() {
-                                          selectedNode!.kernel = newValue;
-                                          _updateNodeIO(
-                                              selectedNode!, newValue);
-                                        });
-                                      },
-                                    )
-                                  : null,
+                              width: 400,
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[900],
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text('AI Graph Assistant',
+                                      style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 12),
+                                  // Placeholder for chat UI or LLM chat widget
+                                  SizedBox(
+                                    height: 400,
+                                    width: 350,
+                                    child: LlmChatView(
+                                      provider: FirebaseProvider(
+                                        model: FirebaseAI.googleAI()
+                                            .generativeModel(
+                                                model: 'gemini-2.0-flash'),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: TextButton(
+                                      onPressed: () => setState(
+                                          () => _showChatModal = false),
+                                      child: Text('Close',
+                                          style:
+                                              TextStyle(color: Colors.white70)),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ],
-                  )),
+                    ),
+                  ),
+              ],
             ),
           ),
         ],
