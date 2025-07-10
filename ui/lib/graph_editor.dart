@@ -8,6 +8,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_ai_toolkit/flutter_ai_toolkit.dart';
 import 'package:xml/xml.dart' as xml;
 import 'painter.dart';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_ai_toolkit/src/providers/interface/attachments.dart';
 
 class GraphEditor extends StatefulWidget {
   const GraphEditor({super.key});
@@ -35,6 +38,7 @@ class GraphEditorState extends State<GraphEditor> {
   int? edgeStartOutput;
   int _refCount = 0;
   bool _showChatModal = false;
+  FirebaseProvider? _aiProvider;
 
   // Public getter to check if XML is loaded
   bool get isXmlLoaded => _supported.isNotEmpty;
@@ -237,9 +241,66 @@ class GraphEditorState extends State<GraphEditor> {
     });
   } // End of _updateNodeIO
 
+  String _buildSystemPrompt(List<Target> supportedTargets) {
+    final buffer = StringBuffer();
+    buffer.writeln("You are an expert AI assistant for a visual graph editor. "
+        "The user will describe a graph, and you will generate a JSON object representing the graph. "
+        "Use only the following supported targets and kernels. "
+        "Return only the JSON for the graph, matching the schema below. "
+        "Do not include any explanation or markdown formatting. "
+        "All node positions should be unique and within a 2D space (e.g., dx and dy between 0 and 500). "
+        "If a graph is already defined, preserve the position (offset) of each existing node in the output JSON, unless the user specifically requests a layout change. "
+        "For new nodes, assign a position that does not overlap with existing nodes.");
+    buffer.writeln("\nSupported Targets and Kernels:");
+    for (final target in supportedTargets) {
+      buffer.writeln("- Target: ${target.name}");
+      for (final kernel in target.kernels) {
+        buffer.writeln(
+            "  - Kernel: ${kernel.name} (inputs: ${kernel.inputs.join(', ')}, outputs: ${kernel.outputs.join(', ')})");
+      }
+    }
+    buffer.writeln("\nJSON schema example:");
+    buffer.writeln('''
+{
+  "id": 1,
+  "nodes": [
+    {
+      "id": 1,
+      "name": "A",
+      "position": {"dx": 100, "dy": 100},
+      "kernel": "add",
+      "target": "CPU",
+      "inputs": [],
+      "outputs": []
+    }
+  ],
+  "edges": [
+    {"source": 1, "target": 2, "srcId": 1, "tgtId": 2}
+  ]
+}
+''');
+    buffer.writeln("Only use the kernels and targets listed above. "
+        "Return only the JSON for the graph, with no extra text or formatting.");
+    return buffer.toString();
+  }
+
+  void _openChatModal(String systemPrompt) {
+    // Always create a new provider with the latest system prompt
+    _aiProvider = FirebaseProvider(
+      model: FirebaseAI.googleAI().generativeModel(
+        model: 'gemini-2.5-flash',
+        systemInstruction: Content.text(systemPrompt),
+      ),
+    );
+    setState(() {
+      _showChatModal = true;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     _updateNameController();
+    final systemPrompt = _buildSystemPrompt(_supported);
 
     return Scaffold(
       appBar: AppBar(
@@ -520,11 +581,7 @@ class GraphEditorState extends State<GraphEditor> {
                   bottom: 24,
                   left: 24,
                   child: GenerateButton(
-                    onPressed: () {
-                      setState(() {
-                        _showChatModal = true;
-                      });
-                    },
+                    onPressed: () => _openChatModal(systemPrompt),
                   ),
                 ),
                 // AI Chat Modal
@@ -544,38 +601,57 @@ class GraphEditorState extends State<GraphEditor> {
                                 color: Colors.grey[900],
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text('AI Graph Assistant',
-                                      style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold)),
-                                  const SizedBox(height: 12),
-                                  // Placeholder for chat UI or LLM chat widget
-                                  SizedBox(
-                                    height: 400,
-                                    width: 350,
-                                    child: LlmChatView(
-                                      provider: FirebaseProvider(
-                                        model: FirebaseAI.googleAI()
-                                            .generativeModel(
-                                                model: 'gemini-2.0-flash'),
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text('AI Graph Assistant',
+                                        style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold)),
+                                    const SizedBox(height: 12),
+                                    // Placeholder for chat UI or LLM chat widget
+                                    SizedBox(
+                                      height: 400,
+                                      width: 350,
+                                      child: _GraphAwareChatView(
+                                        provider: _aiProvider!,
+                                        systemPrompt: systemPrompt,
+                                        currentGraph: graphs.isNotEmpty
+                                            ? graphs[selectedGraphIndex]
+                                            : null,
+                                        onResponse: (Graph newGraph) {
+                                          setState(() {
+                                            if (graphs.isNotEmpty) {
+                                              graphs[selectedGraphIndex] =
+                                                  newGraph;
+                                            } else {
+                                              graphs.add(newGraph);
+                                              selectedGraphIndex = 0;
+                                            }
+                                          });
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                                content: Text(
+                                                    'Graph updated from AI!')),
+                                          );
+                                        },
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: TextButton(
-                                      onPressed: () => setState(
-                                          () => _showChatModal = false),
-                                      child: Text('Close',
-                                          style:
-                                              TextStyle(color: Colors.white70)),
+                                    const SizedBox(height: 12),
+                                    Align(
+                                      alignment: Alignment.centerRight,
+                                      child: TextButton(
+                                        onPressed: () => setState(
+                                            () => _showChatModal = false),
+                                        child: Text('Close',
+                                            style: TextStyle(
+                                                color: Colors.white70)),
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -1774,3 +1850,94 @@ class NodeAttributesPanel extends StatelessWidget {
     );
   }
 }
+class _GraphAwareChatView extends StatefulWidget {
+  final FirebaseProvider provider;
+  final String systemPrompt;
+  final Graph? currentGraph;
+  final void Function(Graph newGraph)? onResponse;
+  const _GraphAwareChatView({
+    required this.provider,
+    required this.systemPrompt,
+    this.currentGraph,
+    this.onResponse,
+  });
+
+  @override
+  State<_GraphAwareChatView> createState() => _GraphAwareChatViewState();
+}
+
+class _GraphAwareChatViewState extends State<_GraphAwareChatView> {
+  String? _lastProcessedAiMsg;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.provider.addListener(_onProviderUpdate);
+  }
+
+  @override
+  void dispose() {
+    widget.provider.removeListener(_onProviderUpdate);
+    super.dispose();
+  }
+
+  void _onProviderUpdate() {
+    final history = widget.provider.history.toList();
+    ChatMessage? lastAiMsg;
+    for (var i = history.length - 1; i >= 0; i--) {
+      final msg = history[i];
+      if (!msg.origin.isUser && (msg.text?.trim().isNotEmpty ?? false)) {
+        lastAiMsg = msg;
+        break;
+      }
+    }
+    if (lastAiMsg != null && lastAiMsg.text != _lastProcessedAiMsg) {
+      try {
+        final jsonMap = jsonDecode(lastAiMsg.text!);
+        final newGraph = Graph.fromJson(jsonMap);
+        _lastProcessedAiMsg = lastAiMsg.text;
+        if (widget.onResponse != null) {
+          widget.onResponse!(newGraph);
+        }
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Graph updated from AI!')),
+          );
+        }
+      } catch (e, st) {
+        if (lastAiMsg.text!.trim().startsWith('{')) {
+          _lastProcessedAiMsg = lastAiMsg.text;
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Could not parse graph JSON: $e')),
+            );
+          }
+        }
+      }
+    }
+  }
+
+  String _buildUserPrompt(String userMessage, Graph? currentGraph) {
+    if (currentGraph == null) return userMessage;
+    final graphJson = jsonEncode(currentGraph.toJson());
+    return '''Current graph JSON:
+$graphJson
+\nUser request:\n$userMessage''';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LlmChatView(
+      provider: widget.provider,
+      messageSender: (String userMessage,
+          {required Iterable<Attachment> attachments}) {
+        final prompt = _buildUserPrompt(userMessage, widget.currentGraph);
+        return widget.provider
+            .sendMessageStream(prompt, attachments: attachments);
+      },
+      enableAttachments: false,
+      enableVoiceNotes: false,
+    );
+  }
+}
+
