@@ -10,9 +10,6 @@ import 'package:flutter_ai_toolkit/flutter_ai_toolkit.dart';
 import 'package:xml/xml.dart' as xml;
 import 'painter.dart';
 
-const double _aiPanelMinContentWidth = 260;
-const double _aiPanelMaxWidth = 400;
-
 class GraphEditor extends StatefulWidget {
   const GraphEditor({super.key});
 
@@ -362,78 +359,26 @@ class GraphEditorState extends State<GraphEditor> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // AI Chat Panel (left)
-                AnimatedContainer(
-                  duration: Duration(milliseconds: 300),
-                  width: _showChatModal ? _aiPanelMaxWidth : 0,
-                  curve: Curves.easeInOut,
-                  child: Container(
-                    color: Colors.grey[900],
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        if (constraints.maxWidth < _aiPanelMinContentWidth) {
-                          return const SizedBox.shrink();
-                        }
-                        return AnimatedOpacity(
-                          duration: Duration(milliseconds: 200),
-                          opacity: _showChatModal ? 1.0 : 0.0,
-                          curve: Curves.easeInOut,
-                          child: Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      'AI Graph Assistant',
-                                      style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                    IconButton(
-                                      icon: Icon(Icons.close,
-                                          color: Colors.white70),
-                                      onPressed: () => setState(
-                                          () => _showChatModal = false),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Expanded(
-                                child: _aiProvider == null
-                                    ? Center(child: Text('No AI provider'))
-                                    : GraphAwareChatView(
-                                        provider: _aiProvider!,
-                                        systemPrompt: systemPrompt,
-                                        currentGraph: graphs.isNotEmpty
-                                            ? graphs[selectedGraphIndex]
-                                            : null,
-                                        onResponse: (Graph newGraph) {
-                                          setState(() {
-                                            if (graphs.isNotEmpty) {
-                                              graphs[selectedGraphIndex] =
-                                                  newGraph;
-                                            } else {
-                                              graphs.add(newGraph);
-                                              selectedGraphIndex = 0;
-                                            }
-                                          });
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            const SnackBar(
-                                                content: Text(
-                                                    'Graph updated from AI!')),
-                                          );
-                                        },
-                                      ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+                AiChatPanel(
+                  show: _showChatModal,
+                  provider: _aiProvider,
+                  systemPrompt: systemPrompt,
+                  currentGraph:
+                      graphs.isNotEmpty ? graphs[selectedGraphIndex] : null,
+                  onResponse: (Graph newGraph) {
+                    setState(() {
+                      if (graphs.isNotEmpty) {
+                        graphs[selectedGraphIndex] = newGraph;
+                      } else {
+                        graphs.add(newGraph);
+                        selectedGraphIndex = 0;
+                      }
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Graph updated from AI!')),
+                    );
+                  },
+                  onClose: () => setState(() => _showChatModal = false),
                 ),
                 // Main graph area (center)
                 Expanded(
