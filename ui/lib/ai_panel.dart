@@ -142,7 +142,7 @@ class _GraphAwareChatViewState extends State<GraphAwareChatView> {
         }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Graph updated from AI!')),
+            const SnackBar(content: Text('Graph updated by AI Assistant!')),
           );
         }
       } catch (e) {

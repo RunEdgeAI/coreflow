@@ -392,9 +392,6 @@ class GraphEditorState extends State<GraphEditor> {
                         selectedGraphIndex = 0;
                       }
                     });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Graph updated from AI!')),
-                    );
                     _restoreMainFocus();
                   },
                   onClose: () {
