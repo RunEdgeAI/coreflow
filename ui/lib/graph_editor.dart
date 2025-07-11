@@ -112,6 +112,7 @@ class GraphEditorState extends State<GraphEditor> {
       selectedGraphIndex = graphs.length - 1;
     });
     _deselectAll();
+    _restoreMainFocus();
   } // End of _addGraph
 
   void _deleteGraph(int index) {
@@ -123,6 +124,7 @@ class GraphEditorState extends State<GraphEditor> {
     });
     _deselectAll();
     _refCount--;
+    _restoreMainFocus();
   } // End of _deleteGraph
 
   void _addNode(Graph graph, Offset position, Size panelSize) {
@@ -147,6 +149,7 @@ class GraphEditorState extends State<GraphEditor> {
       graph.nodes.add(newNode);
     });
     _deselectAll();
+    _restoreMainFocus();
   } // End of _addNode
 
   void _addEdge(Graph graph, Node source, Node target, int srcId, int tgtId) {
@@ -176,6 +179,7 @@ class GraphEditorState extends State<GraphEditor> {
       });
       // Deselect selected node and any selected edge after creating an edge
       _deselectAll();
+      _restoreMainFocus();
     }
   } // End of _addEdge
 
@@ -187,6 +191,7 @@ class GraphEditorState extends State<GraphEditor> {
       edgeStartNode = null;
       edgeStartOutput = null;
     });
+    _restoreMainFocus();
   } // End of _deselectAll
 
   void _deleteSelected(Graph graph) {
@@ -211,6 +216,7 @@ class GraphEditorState extends State<GraphEditor> {
       }
       _deselectAll();
     });
+    _restoreMainFocus();
   } // End of _deleteSelected
 
   void _updateNameController() {
@@ -295,6 +301,24 @@ class GraphEditorState extends State<GraphEditor> {
     });
   }
 
+  void _restoreMainFocus() {
+    FocusScope.of(context).requestFocus(_focusNode);
+  }
+
+  void _exportDot(BuildContext context) {
+    DotExport(graphs: graphs, graphIndex: selectedGraphIndex).export(context);
+    _restoreMainFocus();
+  }
+
+  void _exportXml(BuildContext context) {
+    XmlExport(
+      graphs: graphs,
+      graphIndex: selectedGraphIndex,
+      refCount: _refCount,
+    ).export(context);
+    _restoreMainFocus();
+  }
+
   @override
   Widget build(BuildContext context) {
     _updateNameController();
@@ -313,16 +337,9 @@ class GraphEditorState extends State<GraphEditor> {
             tooltip: 'Export',
             onSelected: (value) {
               if (value == 'Export DOT') {
-                // Export the currently selected graph in DOT format.
-                DotExport(graphs: graphs, graphIndex: selectedGraphIndex)
-                    .export(context);
+                _exportDot(context);
               } else if (value == 'Export XML') {
-                // Export the currently selected graph in XML format.
-                XmlExport(
-                  graphs: graphs,
-                  graphIndex: selectedGraphIndex,
-                  refCount: _refCount,
-                ).export(context);
+                _exportXml(context);
               }
             },
             itemBuilder: (context) => [
@@ -352,6 +369,7 @@ class GraphEditorState extends State<GraphEditor> {
                   // Reset selected node when switching graphs
                   selectedNode = null;
                 });
+                _restoreMainFocus();
               }),
           // Main area for graph visualization and interaction
           Expanded(
@@ -377,8 +395,12 @@ class GraphEditorState extends State<GraphEditor> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Graph updated from AI!')),
                     );
+                    _restoreMainFocus();
                   },
-                  onClose: () => setState(() => _showChatModal = false),
+                  onClose: () {
+                    setState(() => _showChatModal = false);
+                    _restoreMainFocus();
+                  },
                 ),
                 // Main graph area (center)
                 Expanded(
@@ -398,107 +420,150 @@ class GraphEditorState extends State<GraphEditor> {
                                 ),
                               ),
                               graphs.isNotEmpty
-                                  ? GestureDetector(
-                                      onTapDown: (details) {
-                                        final graph =
-                                            graphs[selectedGraphIndex];
-                                        final tappedNode = graph
-                                            .findNodeAt(details.localPosition);
-                                        final tappedEdge = graph
-                                            .findEdgeAt(details.localPosition);
-                                        setState(() {
-                                          if (tappedNode != null) {
-                                            // Deselect the selected edge
-                                            selectedEdge = null;
-                                            if (selectedNode == null) {
-                                              selectedNode = tappedNode;
-                                            } else {
-                                              // Deselect the selected node
-                                              selectedNode = null;
+                                  ? KeyboardListener(
+                                      focusNode: _focusNode,
+                                      onKeyEvent: (event) {
+                                        if (_nameFocusNode.hasFocus) return;
+
+                                        if (event is KeyDownEvent) {
+                                          if (event.logicalKey ==
+                                                  LogicalKeyboardKey
+                                                      .backspace ||
+                                              event.logicalKey ==
+                                                  LogicalKeyboardKey.delete) {
+                                            if (selectedGraphRow != null) {
+                                              _deleteGraph(selectedGraphRow!);
+                                            } else if (graphs.isNotEmpty) {
+                                              _deleteSelected(
+                                                  graphs[selectedGraphIndex]);
                                             }
-                                          } else if (tappedEdge != null) {
-                                            if (selectedEdge == tappedEdge) {
-                                              // Deselect the tapped edge if it is already selected
-                                              selectedEdge = null;
-                                            } else {
-                                              // Deselect the selected node
-                                              selectedNode = null;
-                                              // Select the tapped edge
-                                              selectedEdge = tappedEdge;
-                                            }
-                                          } else {
-                                            _addNode(
-                                                graph,
-                                                details.localPosition,
-                                                constraints.biggest);
-                                            // Deselect the selected node
-                                            selectedNode = null;
-                                            // Deselect the selected edge
-                                            selectedEdge = null;
-                                            // Deselect the selected graph row
-                                            selectedGraphRow = null;
-                                            edgeStartNode = null;
-                                            edgeStartOutput = null;
+                                          } else if (event.logicalKey ==
+                                              LogicalKeyboardKey.escape) {
+                                            _deselectAll();
                                           }
-                                        });
+                                        }
                                       },
-                                      onPanUpdate: (details) {
-                                        setState(() {
-                                          mousePosition = details.localPosition;
-                                          if (draggingNode != null) {
-                                            final newPosition =
-                                                draggingNode!.position +
-                                                    details.delta;
-                                            // Assuming the radius of the node is 25
-                                            final nodeRadius = 25.0;
-                                            // Ensure the node stays within the bounds of the center panel
-                                            if (newPosition.dx - nodeRadius >= 0 &&
-                                                newPosition.dx + nodeRadius <=
-                                                    constraints.maxWidth -
-                                                        (selectedNode != null
-                                                            ? 240
-                                                            : 0) &&
-                                                newPosition.dy - nodeRadius >=
-                                                    0 &&
-                                                newPosition.dy + nodeRadius <=
-                                                    constraints.maxHeight) {
-                                              draggingNode!.position =
-                                                  newPosition;
-                                            }
-                                          }
-                                        });
-                                      },
-                                      onPanStart: (details) {
-                                        setState(() {
-                                          final graph =
-                                              graphs[selectedGraphIndex];
-                                          draggingNode = graph.findNodeAt(
-                                              details.localPosition);
-                                          dragOffset = details.localPosition;
-                                        });
-                                      },
-                                      onPanEnd: (details) {
-                                        setState(() {
-                                          draggingNode = null;
-                                          dragOffset = null;
-                                          edgeStartNode = null;
-                                          edgeStartOutput = null;
-                                          mousePosition = null;
-                                        });
-                                      },
-                                      child: CustomPaint(
-                                        painter: graphs.isNotEmpty
-                                            ? GraphPainter(
-                                                graphs[selectedGraphIndex]
-                                                    .nodes,
-                                                graphs[selectedGraphIndex]
-                                                    .edges,
-                                                selectedNode,
-                                                selectedEdge,
-                                                mousePosition,
-                                              )
-                                            : null,
-                                        child: Container(),
+                                      child: MouseRegion(
+                                        onHover: (event) {
+                                          setState(() {
+                                            mousePosition = event.localPosition;
+                                          });
+                                        },
+                                        onExit: (event) {
+                                          setState(() {
+                                            mousePosition = null;
+                                          });
+                                        },
+                                        child: GestureDetector(
+                                          onTapDown: (details) {
+                                            final graph =
+                                                graphs[selectedGraphIndex];
+                                            final tappedNode = graph.findNodeAt(
+                                                details.localPosition);
+                                            final tappedEdge = graph.findEdgeAt(
+                                                details.localPosition);
+                                            setState(() {
+                                              if (tappedNode != null) {
+                                                // Deselect the selected edge
+                                                selectedEdge = null;
+                                                if (selectedNode == null) {
+                                                  selectedNode = tappedNode;
+                                                } else {
+                                                  // Deselect the selected node
+                                                  selectedNode = null;
+                                                }
+                                              } else if (tappedEdge != null) {
+                                                if (selectedEdge ==
+                                                    tappedEdge) {
+                                                  // Deselect the tapped edge if it is already selected
+                                                  selectedEdge = null;
+                                                } else {
+                                                  // Deselect the selected node
+                                                  selectedNode = null;
+                                                  // Select the tapped edge
+                                                  selectedEdge = tappedEdge;
+                                                }
+                                              } else {
+                                                _addNode(
+                                                    graph,
+                                                    details.localPosition,
+                                                    constraints.biggest);
+                                                // Deselect the selected node
+                                                selectedNode = null;
+                                                // Deselect the selected edge
+                                                selectedEdge = null;
+                                                // Deselect the selected graph row
+                                                selectedGraphRow = null;
+                                                edgeStartNode = null;
+                                                edgeStartOutput = null;
+                                              }
+                                            });
+                                          },
+                                          onPanUpdate: (details) {
+                                            setState(() {
+                                              mousePosition =
+                                                  details.localPosition;
+                                              if (draggingNode != null) {
+                                                final newPosition =
+                                                    draggingNode!.position +
+                                                        details.delta;
+                                                // Assuming the radius of the node is 25
+                                                final nodeRadius = 25.0;
+                                                // Ensure the node stays within the bounds of the center panel
+                                                if (newPosition.dx - nodeRadius >= 0 &&
+                                                    newPosition.dx +
+                                                            nodeRadius <=
+                                                        constraints.maxWidth -
+                                                            (selectedNode !=
+                                                                    null
+                                                                ? 240
+                                                                : 0) &&
+                                                    newPosition.dy -
+                                                            nodeRadius >=
+                                                        0 &&
+                                                    newPosition.dy +
+                                                            nodeRadius <=
+                                                        constraints.maxHeight) {
+                                                  draggingNode!.position =
+                                                      newPosition;
+                                                }
+                                              }
+                                            });
+                                          },
+                                          onPanStart: (details) {
+                                            setState(() {
+                                              final graph =
+                                                  graphs[selectedGraphIndex];
+                                              draggingNode = graph.findNodeAt(
+                                                  details.localPosition);
+                                              dragOffset =
+                                                  details.localPosition;
+                                            });
+                                          },
+                                          onPanEnd: (details) {
+                                            setState(() {
+                                              draggingNode = null;
+                                              dragOffset = null;
+                                              edgeStartNode = null;
+                                              edgeStartOutput = null;
+                                              mousePosition = null;
+                                            });
+                                          },
+                                          child: CustomPaint(
+                                            painter: graphs.isNotEmpty
+                                                ? GraphPainter(
+                                                    graphs[selectedGraphIndex]
+                                                        .nodes,
+                                                    graphs[selectedGraphIndex]
+                                                        .edges,
+                                                    selectedNode,
+                                                    selectedEdge,
+                                                    mousePosition,
+                                                  )
+                                                : null,
+                                            child: Container(),
+                                          ),
+                                        ),
                                       ),
                                     )
                                   : Center(child: Text('No graphs available')),
@@ -557,6 +622,8 @@ class GraphEditorState extends State<GraphEditor> {
                                                       selectedNode!, newValue);
                                                 });
                                               },
+                                              onNameEditComplete:
+                                                  _restoreMainFocus,
                                             )
                                           : null,
                                     ),
@@ -1596,6 +1663,7 @@ class NodeAttributesPanel extends StatelessWidget {
   final Function(String) onNameChanged;
   final Function(String) onTargetChanged;
   final Function(String) onKernelChanged;
+  final VoidCallback? onNameEditComplete;
 
   const NodeAttributesPanel({
     super.key,
@@ -1607,6 +1675,7 @@ class NodeAttributesPanel extends StatelessWidget {
     required this.onNameChanged,
     required this.onTargetChanged,
     required this.onKernelChanged,
+    this.onNameEditComplete,
   });
 
   @override
@@ -1643,7 +1712,7 @@ class NodeAttributesPanel extends StatelessWidget {
                   onChanged: onNameChanged,
                   onEditingComplete: () {
                     FocusScope.of(context).unfocus(); // Dismiss the keyboard
-                    // _focusNode.requestFocus();
+                    if (onNameEditComplete != null) onNameEditComplete!();
                   },
                 ),
                 SizedBox(height: 8.0),
