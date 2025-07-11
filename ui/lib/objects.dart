@@ -296,6 +296,7 @@ class Graph extends Reference {
         .toList();
   } // End of _getDownstreamDependencies
 
+  @override
   Map<String, dynamic> toJson() => {
     'id': id,
     'type': type,
@@ -416,9 +417,6 @@ class Lut extends Array {
     super.elemType = 'TYPE_UINT8',
     super.type = 'Lut',
   });
-
-  @override
-  Map<String, dynamic> toJson() => super.toJson();
 
   static Lut fromJson(Map<String, dynamic> json) => Lut(
     id: json['id'],
