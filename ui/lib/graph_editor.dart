@@ -1,3 +1,4 @@
+import 'ai_panel.dart';
 import 'dart:math';
 import 'export.dart';
 import 'generate_button.dart';
@@ -8,9 +9,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_ai_toolkit/flutter_ai_toolkit.dart';
 import 'package:xml/xml.dart' as xml;
 import 'painter.dart';
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_ai_toolkit/src/providers/interface/attachments.dart';
 
 const double _aiPanelMinContentWidth = 260;
 const double _aiPanelMaxWidth = 400;
@@ -405,7 +403,7 @@ class GraphEditorState extends State<GraphEditor> {
                               Expanded(
                                 child: _aiProvider == null
                                     ? Center(child: Text('No AI provider'))
-                                    : _GraphAwareChatView(
+                                    : GraphAwareChatView(
                                         provider: _aiProvider!,
                                         systemPrompt: systemPrompt,
                                         currentGraph: graphs.isNotEmpty
@@ -1834,94 +1832,3 @@ class NodeAttributesPanel extends StatelessWidget {
     );
   }
 }
-class _GraphAwareChatView extends StatefulWidget {
-  final FirebaseProvider provider;
-  final String systemPrompt;
-  final Graph? currentGraph;
-  final void Function(Graph newGraph)? onResponse;
-  const _GraphAwareChatView({
-    required this.provider,
-    required this.systemPrompt,
-    this.currentGraph,
-    this.onResponse,
-  });
-
-  @override
-  State<_GraphAwareChatView> createState() => _GraphAwareChatViewState();
-}
-
-class _GraphAwareChatViewState extends State<_GraphAwareChatView> {
-  String? _lastProcessedAiMsg;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.provider.addListener(_onProviderUpdate);
-  }
-
-  @override
-  void dispose() {
-    widget.provider.removeListener(_onProviderUpdate);
-    super.dispose();
-  }
-
-  void _onProviderUpdate() {
-    final history = widget.provider.history.toList();
-    ChatMessage? lastAiMsg;
-    for (var i = history.length - 1; i >= 0; i--) {
-      final msg = history[i];
-      if (!msg.origin.isUser && (msg.text?.trim().isNotEmpty ?? false)) {
-        lastAiMsg = msg;
-        break;
-      }
-    }
-    if (lastAiMsg != null && lastAiMsg.text != _lastProcessedAiMsg) {
-      try {
-        final jsonMap = jsonDecode(lastAiMsg.text!);
-        final newGraph = Graph.fromJson(jsonMap);
-        _lastProcessedAiMsg = lastAiMsg.text;
-        if (widget.onResponse != null) {
-          widget.onResponse!(newGraph);
-        }
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Graph updated from AI!')),
-          );
-        }
-      } catch (e, st) {
-        if (lastAiMsg.text!.trim().startsWith('{')) {
-          _lastProcessedAiMsg = lastAiMsg.text;
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Could not parse graph JSON: $e')),
-            );
-          }
-        }
-      }
-    }
-  }
-
-  String _buildUserPrompt(String userMessage, Graph? currentGraph) {
-    if (currentGraph == null) return userMessage;
-    final graphJson = jsonEncode(currentGraph.toJson());
-    return '''Current graph JSON:
-$graphJson
-\nUser request:\n$userMessage''';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return LlmChatView(
-      provider: widget.provider,
-      messageSender: (String userMessage,
-          {required Iterable<Attachment> attachments}) {
-        final prompt = _buildUserPrompt(userMessage, widget.currentGraph);
-        return widget.provider
-            .sendMessageStream(prompt, attachments: attachments);
-      },
-      enableAttachments: false,
-      enableVoiceNotes: false,
-    );
-  }
-}
-
