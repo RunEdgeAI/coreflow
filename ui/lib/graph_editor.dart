@@ -12,6 +12,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_ai_toolkit/src/providers/interface/attachments.dart';
 
+const double _aiPanelMinContentWidth = 260;
+const double _aiPanelMaxWidth = 400;
+
 class GraphEditor extends StatefulWidget {
   const GraphEditor({super.key});
 
@@ -363,14 +366,14 @@ class GraphEditorState extends State<GraphEditor> {
                 // AI Chat Panel (left)
                 AnimatedContainer(
                   duration: Duration(milliseconds: 300),
-                  width: _showChatModal ? 400 : 0,
+                  width: _showChatModal ? _aiPanelMaxWidth : 0,
                   curve: Curves.easeInOut,
                   child: Container(
                     color: Colors.grey[900],
                     child: LayoutBuilder(
                       builder: (context, constraints) {
-                        if (constraints.maxWidth < 260) {
-                          return SizedBox.shrink();
+                        if (constraints.maxWidth < _aiPanelMinContentWidth) {
+                          return const SizedBox.shrink();
                         }
                         return AnimatedOpacity(
                           duration: Duration(milliseconds: 200),
