@@ -54,7 +54,8 @@ void main() {
 
     // Verify initial UI
     expect(find.text('Edge Studio'), findsOneWidget);
-    expect(find.byIcon(Icons.code_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.file_upload), findsOneWidget); // Import
+    expect(find.byIcon(Icons.file_download), findsOneWidget); // Export
     expect(find.byType(GraphEditor), findsOneWidget);
     expect(find.byType(GraphListPanel), findsOneWidget);
 
@@ -86,7 +87,7 @@ void main() {
     expect(find.byType(CustomPaint), findsWidgets);
 
     // Test export menu
-    await tester.tap(find.byIcon(Icons.code_rounded));
+    await tester.tap(find.byIcon(Icons.file_download));
     await tester.pump();
 
     expect(find.text('Export DOT'), findsOneWidget);

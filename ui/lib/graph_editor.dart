@@ -2,6 +2,7 @@ import 'ai_panel.dart';
 import 'dart:math';
 import 'export.dart';
 import 'generate_button.dart';
+import 'import.dart';
 import 'objects.dart';
 import 'package:firebase_ai/firebase_ai.dart';
 import 'package:flutter/material.dart';
@@ -226,8 +227,18 @@ class GraphEditorState extends State<GraphEditor> {
   } // End of _updateNameController
 
   void _updateNodeIO(Node node, String kernelName) {
-    final target = _supported.firstWhere((t) => t.name == node.target);
-    final kernel = target.kernels.firstWhere((k) => k.name == kernelName);
+    final target = _supported.firstWhere(
+      (t) => t.name == node.target,
+      orElse: () => _supported.first,
+    );
+
+    final kernel = target.kernels.firstWhere(
+      (k) => k.name == kernelName,
+      orElse: () => target.kernels.first,
+    );
+
+    node.kernel = kernel.name; // Ensure node.kernel is valid
+    node.target = target.name; // Ensure node.target is valid
 
     setState(() {
       // Decrement reference count for old inputs and outputs
@@ -333,7 +344,39 @@ class GraphEditorState extends State<GraphEditor> {
         ),
         actions: [
           PopupMenuButton<String>(
-            icon: Icon(Icons.code_rounded), // Single export icon
+            icon: Icon(Icons.file_upload),
+            tooltip: 'Import',
+            onSelected: (value) async {
+              if (value == 'Import') {
+                final importedGraph = await showImportDialog(context);
+                if (importedGraph != null) {
+                  // Populate IO for each node based on kernel/target
+                  for (final node in importedGraph.nodes) {
+                    _updateNodeIO(node, node.kernel);
+                  }
+                  setState(() {
+                    graphs.add(importedGraph);
+                    selectedGraphIndex = graphs.length - 1;
+                  });
+
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Graph imported successfully!')),
+                    );
+                  }
+                  _restoreMainFocus();
+                }
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'Import',
+                child: Text('Import'),
+              ),
+            ],
+          ),
+          PopupMenuButton<String>(
+            icon: Icon(Icons.file_download), // Single export icon
             tooltip: 'Export',
             onSelected: (value) {
               if (value == 'Export DOT') {
