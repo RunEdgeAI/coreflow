@@ -18,10 +18,7 @@ class Utils {
     if (t < 0 || t > 1) return false;
 
     // Calculate closest point on line
-    final projection = Offset(
-      start.dx + t * vec.dx,
-      start.dy + t * vec.dy,
-    );
+    final projection = Offset(start.dx + t * vec.dx, start.dy + t * vec.dy);
 
     // Check distance to line
     return (point - projection).distance < threshold;

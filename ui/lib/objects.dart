@@ -16,9 +16,10 @@ List<String> refTypes = [
   "USER_DATA_OBJECT",
 ];
 
-List<String> objectArrayTypes = refTypes
-    .where((type) => type != 'ARRAY' && type != 'OBJECT_ARRAY')
-    .toList();
+List<String> objectArrayTypes =
+    refTypes
+        .where((type) => type != 'ARRAY' && type != 'OBJECT_ARRAY')
+        .toList();
 
 List<String> imageTypes = [
   "VIRT",
@@ -52,16 +53,11 @@ List<String> numTypes = [
   "FLOAT64",
 ];
 
-List<String> scalarTypes = numTypes +
-    [
-      "CHAR",
-      "DF_IMAGE",
-      "ENUM",
-      "SIZE",
-      "BOOL",
-    ];
+List<String> scalarTypes =
+    numTypes + ["CHAR", "DF_IMAGE", "ENUM", "SIZE", "BOOL"];
 
-List<String> arrayTypes = scalarTypes +
+List<String> arrayTypes =
+    scalarTypes +
     [
       "RECTANGLE",
       "KEYPOINT",
@@ -70,21 +66,21 @@ List<String> arrayTypes = scalarTypes +
       "COORDINATES2DF",
     ];
 
-List<String> thresholdTypes = [
-  "TYPE_BINARY",
-  "TYPE_RANGE",
-];
+List<String> thresholdTypes = ["TYPE_BINARY", "TYPE_RANGE"];
 
-List<String> thresholdDataTypes = scalarTypes
-    .where((type) =>
-        type != 'CHAR' &&
-        type != 'DF_IMAGE' &&
-        type != 'ENUM' &&
-        type != 'SIZE' &&
-        type != 'FLOAT16' &&
-        type != 'FLOAT32' &&
-        type != 'FLOAT64')
-    .toList();
+List<String> thresholdDataTypes =
+    scalarTypes
+        .where(
+          (type) =>
+              type != 'CHAR' &&
+              type != 'DF_IMAGE' &&
+              type != 'ENUM' &&
+              type != 'SIZE' &&
+              type != 'FLOAT16' &&
+              type != 'FLOAT32' &&
+              type != 'FLOAT64',
+        )
+        .toList();
 
 class Reference {
   final int id;
@@ -103,59 +99,78 @@ class Reference {
     // Logic to determine the type of Reference to create
     if (name == ('TYPE_ARRAY')) {
       return Array(
-          id: refCount, name: name, capacity: 0, elemType: arrayTypes.first);
+        id: refCount,
+        name: name,
+        capacity: 0,
+        elemType: arrayTypes.first,
+      );
     } else if (name.contains('CONVOLUTION')) {
       return Convolution(id: refCount, name: name, rows: 0, cols: 0, scale: 1);
     } else if (name.contains('IMAGE')) {
       return Img(
-          id: refCount,
-          name: name,
-          width: 0,
-          height: 0,
-          format: imageTypes.first);
+        id: refCount,
+        name: name,
+        width: 0,
+        height: 0,
+        format: imageTypes.first,
+      );
     } else if (name.contains('LUT')) {
       return Lut(id: refCount, name: name, capacity: 0);
     } else if (name.contains('MATRIX')) {
       return Matrix(
-          id: refCount, name: name, rows: 0, cols: 0, elemType: numTypes.first);
+        id: refCount,
+        name: name,
+        rows: 0,
+        cols: 0,
+        elemType: numTypes.first,
+      );
     } else if (name.contains('OBJECT_ARRAY')) {
       return ObjectArray(
-          id: refCount,
-          name: name,
-          numObjects: 0,
-          elemType: objectArrayTypes.first);
+        id: refCount,
+        name: name,
+        numObjects: 0,
+        elemType: objectArrayTypes.first,
+      );
     } else if (name.contains('PYRAMID')) {
       return Pyramid(
-          id: refCount,
-          name: name,
-          numLevels: 0,
-          width: 0,
-          height: 0,
-          format: imageTypes.first);
+        id: refCount,
+        name: name,
+        numLevels: 0,
+        width: 0,
+        height: 0,
+        format: imageTypes.first,
+      );
     } else if (name.contains('REMAP')) {
       return Remap(
-          id: refCount,
-          name: name,
-          srcWidth: 0,
-          srcHeight: 0,
-          dstWidth: 0,
-          dstHeight: 0);
+        id: refCount,
+        name: name,
+        srcWidth: 0,
+        srcHeight: 0,
+        dstWidth: 0,
+        dstHeight: 0,
+      );
     } else if (name.contains('SCALAR')) {
       return Scalar(
-          id: refCount, name: name, elemType: scalarTypes.first, value: 0.0);
+        id: refCount,
+        name: name,
+        elemType: scalarTypes.first,
+        value: 0.0,
+      );
     } else if (name.contains('TENSOR')) {
       return Tensor(
-          id: refCount,
-          name: name,
-          shape: [],
-          numDims: 0,
-          elemType: numTypes.first);
+        id: refCount,
+        name: name,
+        shape: [],
+        numDims: 0,
+        elemType: numTypes.first,
+      );
     } else if (name.contains('THRESHOLD')) {
       return Thrshld(
-          id: refCount,
-          name: name,
-          thresType: thresholdTypes.first,
-          dataType: thresholdDataTypes.first);
+        id: refCount,
+        name: name,
+        thresType: thresholdTypes.first,
+        dataType: thresholdDataTypes.first,
+      );
     } else if (name.contains('USER_DATA_OBJECT')) {
       return UserDataObject(id: refCount, name: name, sizeInBytes: 0);
     }
@@ -248,12 +263,14 @@ class Node extends Reference {
       ),
       kernel: json['kernel'] ?? '',
       target: json['target'] ?? '',
-      inputs: (json['inputs'] as List<dynamic>? ?? [])
-          .map((e) => Reference.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      outputs: (json['outputs'] as List<dynamic>? ?? [])
-          .map((e) => Reference.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      inputs:
+          (json['inputs'] as List<dynamic>? ?? [])
+              .map((e) => Reference.fromJson(e as Map<String, dynamic>))
+              .toList(),
+      outputs:
+          (json['outputs'] as List<dynamic>? ?? [])
+              .map((e) => Reference.fromJson(e as Map<String, dynamic>))
+              .toList(),
     );
   }
 }
@@ -261,7 +278,12 @@ class Node extends Reference {
 class Graph extends Reference {
   List<Node> nodes;
   List<Edge> edges;
-  Graph({required super.id, super.type = 'Graph', required this.nodes, required this.edges});
+  Graph({
+    required super.id,
+    super.type = 'Graph',
+    required this.nodes,
+    required this.edges,
+  });
 
   Node? findNodeAt(Offset position) {
     for (var node in nodes.reversed) {
@@ -275,7 +297,10 @@ class Graph extends Reference {
   Edge? findEdgeAt(Offset position) {
     for (var edge in edges.reversed) {
       if (Utils.isPointNearEdge(
-          position, edge.source.position, edge.target.position)) {
+        position,
+        edge.source.position,
+        edge.target.position,
+      )) {
         return edge;
       }
     }
@@ -305,19 +330,17 @@ class Graph extends Reference {
   };
 
   static Graph fromJson(Map<String, dynamic> json) {
-    final nodes = (json['nodes'] as List<dynamic>? ?? [])
-        .map((e) => Node.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final nodes =
+        (json['nodes'] as List<dynamic>? ?? [])
+            .map((e) => Node.fromJson(e as Map<String, dynamic>))
+            .toList();
     // Build a map for node lookup by id
     final nodeMap = {for (var n in nodes) n.id: n};
-    final edges = (json['edges'] as List<dynamic>? ?? [])
-        .map((e) => Edge.fromJson(e as Map<String, dynamic>, nodeMap))
-        .toList();
-    return Graph(
-      id: json['id'],
-      nodes: nodes,
-      edges: edges,
-    );
+    final edges =
+        (json['edges'] as List<dynamic>? ?? [])
+            .map((e) => Edge.fromJson(e as Map<String, dynamic>, nodeMap))
+            .toList();
+    return Graph(id: json['id'], nodes: nodes, edges: edges);
   }
 }
 
@@ -364,10 +387,7 @@ class Convolution extends Matrix {
   });
 
   @override
-  Map<String, dynamic> toJson() => {
-    ...super.toJson(),
-    'scale': scale,
-  };
+  Map<String, dynamic> toJson() => {...super.toJson(), 'scale': scale};
 
   static Convolution fromJson(Map<String, dynamic> json) => Convolution(
     id: json['id'],
@@ -509,7 +529,9 @@ class ObjectArray extends Reference {
     name: json['name'] ?? '',
     numObjects: json['numObjects'] ?? 0,
     elemType: json['elemType'] ?? '',
-    elementAttributes: Map<String, dynamic>.from(json['elementAttributes'] ?? {}),
+    elementAttributes: Map<String, dynamic>.from(
+      json['elementAttributes'] ?? {},
+    ),
     applyToAll: json['applyToAll'] ?? true,
   );
 }
@@ -637,7 +659,8 @@ class Tensor extends Reference {
     id: json['id'],
     name: json['name'] ?? '',
     numDims: json['numDims'] ?? 0,
-    shape: (json['shape'] as List<dynamic>? ?? []).map((e) => e as int).toList(),
+    shape:
+        (json['shape'] as List<dynamic>? ?? []).map((e) => e as int).toList(),
     elemType: json['elemType'] ?? '',
   );
 }
@@ -744,19 +767,12 @@ class Kernel {
   final List<String> inputs;
   final List<String> outputs;
 
-  Kernel({
-    required this.name,
-    required this.inputs,
-    required this.outputs,
-  });
+  Kernel({required this.name, required this.inputs, required this.outputs});
 }
 
 class Target {
   final String name;
   final List<Kernel> kernels;
 
-  Target({
-    required this.name,
-    required this.kernels,
-  });
+  Target({required this.name, required this.kernels});
 }

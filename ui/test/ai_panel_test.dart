@@ -4,7 +4,9 @@ import 'package:ui/ai_panel.dart';
 
 void main() {
   group('AiChatPanel', () {
-    testWidgets('renders and hides with show=false', (WidgetTester tester) async {
+    testWidgets('renders and hides with show=false', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: AiChatPanel(
@@ -16,11 +18,15 @@ void main() {
         ),
       );
       // Should have opacity 0.0
-      final animatedOpacity = tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity));
+      final animatedOpacity = tester.widget<AnimatedOpacity>(
+        find.byType(AnimatedOpacity),
+      );
       expect(animatedOpacity.opacity, equals(0.0));
     });
 
-    testWidgets('renders and shows with show=true', (WidgetTester tester) async {
+    testWidgets('renders and shows with show=true', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: AiChatPanel(
@@ -35,7 +41,9 @@ void main() {
       expect(find.text('AI Assistant'), findsOneWidget);
     });
 
-    testWidgets('calls onClose when close button is tapped', (WidgetTester tester) async {
+    testWidgets('calls onClose when close button is tapped', (
+      WidgetTester tester,
+    ) async {
       bool closed = false;
       await tester.pumpWidget(
         MaterialApp(
@@ -52,7 +60,9 @@ void main() {
       expect(closed, isTrue);
     });
 
-    testWidgets('shows No AI provider if provider is null', (WidgetTester tester) async {
+    testWidgets('shows No AI provider if provider is null', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: AiChatPanel(
@@ -66,7 +76,9 @@ void main() {
       expect(find.text('No AI provider'), findsOneWidget);
     });
 
-    testWidgets('animates panel visibility when show changes', (WidgetTester tester) async {
+    testWidgets('animates panel visibility when show changes', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: AiChatPanel(
@@ -79,7 +91,9 @@ void main() {
       );
 
       // Initially hidden - opacity should be 0
-      final initialOpacity = tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity));
+      final initialOpacity = tester.widget<AnimatedOpacity>(
+        find.byType(AnimatedOpacity),
+      );
       expect(initialOpacity.opacity, equals(0.0));
 
       // Change to show
@@ -95,7 +109,9 @@ void main() {
       );
 
       // Should animate to visible - opacity should be 1
-      final finalOpacity = tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity));
+      final finalOpacity = tester.widget<AnimatedOpacity>(
+        find.byType(AnimatedOpacity),
+      );
       expect(finalOpacity.opacity, equals(1.0));
     });
   });

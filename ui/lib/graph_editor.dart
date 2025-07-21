@@ -81,19 +81,25 @@ class GraphEditorState extends State<GraphEditor> {
         // Parse <Inputs> and <Outputs> elements within the <Kernel>.
         final inputsElement = kernelElement.findElements('Inputs').firstOrNull;
         if (inputsElement != null) {
-          inputs = inputsElement
-              .findElements('Input')
-              .map((element) => element.innerText.trim().replaceAll('VX_', ''))
-              .toList();
+          inputs =
+              inputsElement
+                  .findElements('Input')
+                  .map(
+                    (element) => element.innerText.trim().replaceAll('VX_', ''),
+                  )
+                  .toList();
         }
 
         final outputsElement =
             kernelElement.findElements('Outputs').firstOrNull;
         if (outputsElement != null) {
-          outputs = outputsElement
-              .findElements('Output')
-              .map((element) => element.innerText.trim().replaceAll('VX_', ''))
-              .toList();
+          outputs =
+              outputsElement
+                  .findElements('Output')
+                  .map(
+                    (element) => element.innerText.trim().replaceAll('VX_', ''),
+                  )
+                  .toList();
         }
 
         kernels.add(Kernel(name: kernelName, inputs: inputs, outputs: outputs));
@@ -131,10 +137,14 @@ class GraphEditorState extends State<GraphEditor> {
   void _addNode(Graph graph, Offset position, Size panelSize) {
     // Assuming the radius of the node is 25
     final nodeRadius = 25.0;
-    final clampedX =
-        position.dx.clamp(nodeRadius, panelSize.width - nodeRadius);
-    final clampedY =
-        position.dy.clamp(nodeRadius, panelSize.height - nodeRadius);
+    final clampedX = position.dx.clamp(
+      nodeRadius,
+      panelSize.width - nodeRadius,
+    );
+    final clampedY = position.dy.clamp(
+      nodeRadius,
+      panelSize.height - nodeRadius,
+    );
     final clampedPosition = Offset(clampedX, clampedY);
 
     setState(() {
@@ -160,10 +170,13 @@ class GraphEditorState extends State<GraphEditor> {
     }
 
     // Check if an edge already exists between the same pair of nodes
-    bool edgeExists = graph.edges.any((edge) => (edge.source == source &&
-        edge.target == target &&
-        edge.srcId == srcId &&
-        edge.tgtId == tgtId));
+    bool edgeExists = graph.edges.any(
+      (edge) =>
+          (edge.source == source &&
+              edge.target == target &&
+              edge.srcId == srcId &&
+              edge.tgtId == tgtId),
+    );
 
     if (!edgeExists) {
       setState(() {
@@ -173,8 +186,12 @@ class GraphEditorState extends State<GraphEditor> {
           // target.inputs[index] = source.outputs.firstWhere((output) => output.id == srcId);
           target.inputs[index].linkId = srcId;
           // Create a new edge
-          final newEdge =
-              Edge(source: source, target: target, srcId: srcId, tgtId: tgtId);
+          final newEdge = Edge(
+            source: source,
+            target: target,
+            srcId: srcId,
+            tgtId: tgtId,
+          );
           graph.edges.add(newEdge);
         }
       });
@@ -199,8 +216,9 @@ class GraphEditorState extends State<GraphEditor> {
     setState(() {
       if (selectedNode != null) {
         // First remove all edges connected to this node
-        graph.edges.removeWhere((edge) =>
-            edge.source == selectedNode || edge.target == selectedNode);
+        graph.edges.removeWhere(
+          (edge) => edge.source == selectedNode || edge.target == selectedNode,
+        );
 
         // Decrement reference count for all inputs and outputs
         _refCount -= selectedNode!.inputs.length;
@@ -246,32 +264,37 @@ class GraphEditorState extends State<GraphEditor> {
       _refCount -= node.outputs.length;
 
       // Create new inputs and outputs
-      node.inputs = kernel.inputs
-          .map((input) => Reference.createReference(input, _refCount++))
-          .toList();
-      node.outputs = kernel.outputs
-          .map((output) => Reference.createReference(output, _refCount++))
-          .toList();
+      node.inputs =
+          kernel.inputs
+              .map((input) => Reference.createReference(input, _refCount++))
+              .toList();
+      node.outputs =
+          kernel.outputs
+              .map((output) => Reference.createReference(output, _refCount++))
+              .toList();
       _buildTooltips();
     });
   } // End of _updateNodeIO
 
   String _buildSystemPrompt(List<Target> supportedTargets) {
     final buffer = StringBuffer();
-    buffer.writeln("You are an expert AI assistant for a visual graph editor. "
-        "The user will describe a graph, and you will generate a JSON object representing the graph. "
-        "Use only the following supported targets and kernels. "
-        "Return only the JSON for the graph, matching the schema below. "
-        "Do not include any explanation or markdown formatting. "
-        "All node positions should be unique and within a 2D space (e.g., dx and dy between 0 and 500). "
-        "If a graph is already defined, preserve the position (offset) of each existing node in the output JSON, unless the user specifically requests a layout change. "
-        "For new nodes, assign a position that does not overlap with existing nodes.");
+    buffer.writeln(
+      "You are an expert AI assistant for a visual graph editor. "
+      "The user will describe a graph, and you will generate a JSON object representing the graph. "
+      "Use only the following supported targets and kernels. "
+      "Return only the JSON for the graph, matching the schema below. "
+      "Do not include any explanation or markdown formatting. "
+      "All node positions should be unique and within a 2D space (e.g., dx and dy between 0 and 500). "
+      "If a graph is already defined, preserve the position (offset) of each existing node in the output JSON, unless the user specifically requests a layout change. "
+      "For new nodes, assign a position that does not overlap with existing nodes.",
+    );
     buffer.writeln("\nSupported Targets and Kernels:");
     for (final target in supportedTargets) {
       buffer.writeln("- Target: ${target.name}");
       for (final kernel in target.kernels) {
         buffer.writeln(
-            "  - Kernel: ${kernel.name} (inputs: ${kernel.inputs.join(', ')}, outputs: ${kernel.outputs.join(', ')})");
+          "  - Kernel: ${kernel.name} (inputs: ${kernel.inputs.join(', ')}, outputs: ${kernel.outputs.join(', ')})",
+        );
       }
     }
     buffer.writeln("\nJSON schema example:");
@@ -294,8 +317,10 @@ class GraphEditorState extends State<GraphEditor> {
   ]
 }
 ''');
-    buffer.writeln("Only use the kernels and targets listed above. "
-        "Return only the JSON for the graph, with no extra text or formatting.");
+    buffer.writeln(
+      "Only use the kernels and targets listed above. "
+      "Return only the JSON for the graph, with no extra text or formatting.",
+    );
     return buffer.toString();
   }
 
@@ -368,12 +393,10 @@ class GraphEditorState extends State<GraphEditor> {
                 }
               }
             },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'Import',
-                child: Text('Import'),
-              ),
-            ],
+            itemBuilder:
+                (context) => [
+                  PopupMenuItem(value: 'Import', child: Text('Import')),
+                ],
           ),
           PopupMenuButton<String>(
             icon: Icon(Icons.file_download), // Single export icon
@@ -385,16 +408,11 @@ class GraphEditorState extends State<GraphEditor> {
                 _exportXml(context);
               }
             },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'Export DOT',
-                child: Text('Export DOT'),
-              ),
-              PopupMenuItem(
-                value: 'Export XML',
-                child: Text('Export XML'),
-              ),
-            ],
+            itemBuilder:
+                (context) => [
+                  PopupMenuItem(value: 'Export DOT', child: Text('Export DOT')),
+                  PopupMenuItem(value: 'Export XML', child: Text('Export XML')),
+                ],
           ),
         ],
       ),
@@ -402,18 +420,19 @@ class GraphEditorState extends State<GraphEditor> {
         children: [
           // Panel for graph list and 'add graph' button
           GraphListPanel(
-              graphs: graphs,
-              selectedGraphRow: selectedGraphRow,
-              onAddGraph: _addGraph,
-              onSelectGraph: (int index) {
-                setState(() {
-                  selectedGraphIndex = index;
-                  selectedGraphRow = index;
-                  // Reset selected node when switching graphs
-                  selectedNode = null;
-                });
-                _restoreMainFocus();
-              }),
+            graphs: graphs,
+            selectedGraphRow: selectedGraphRow,
+            onAddGraph: _addGraph,
+            onSelectGraph: (int index) {
+              setState(() {
+                selectedGraphIndex = index;
+                selectedGraphRow = index;
+                // Reset selected node when switching graphs
+                selectedNode = null;
+              });
+              _restoreMainFocus();
+            },
+          ),
           // Main area for graph visualization and interaction
           Expanded(
             child: Row(
@@ -455,143 +474,144 @@ class GraphEditorState extends State<GraphEditor> {
                               Positioned.fill(
                                 child: CustomPaint(
                                   painter: GridPainter(
-                                      gridSize: 60,
-                                      lineColor: Colors.grey.withAlpha(76)),
+                                    gridSize: 60,
+                                    lineColor: Colors.grey.withAlpha(76),
+                                  ),
                                 ),
                               ),
                               graphs.isNotEmpty
                                   ? KeyboardListener(
-                                      focusNode: _focusNode,
-                                      onKeyEvent: (event) {
-                                        if (_nameFocusNode.hasFocus) return;
+                                    focusNode: _focusNode,
+                                    onKeyEvent: (event) {
+                                      if (_nameFocusNode.hasFocus) return;
 
-                                        if (event is KeyDownEvent) {
-                                          if (event.logicalKey ==
-                                                  LogicalKeyboardKey
-                                                      .backspace ||
-                                              event.logicalKey ==
-                                                  LogicalKeyboardKey.delete) {
-                                            if (selectedGraphRow != null) {
-                                              _deleteGraph(selectedGraphRow!);
-                                            } else if (graphs.isNotEmpty) {
-                                              _deleteSelected(
-                                                  graphs[selectedGraphIndex]);
-                                            }
-                                          } else if (event.logicalKey ==
-                                              LogicalKeyboardKey.escape) {
-                                            _deselectAll();
+                                      if (event is KeyDownEvent) {
+                                        if (event.logicalKey ==
+                                                LogicalKeyboardKey.backspace ||
+                                            event.logicalKey ==
+                                                LogicalKeyboardKey.delete) {
+                                          if (selectedGraphRow != null) {
+                                            _deleteGraph(selectedGraphRow!);
+                                          } else if (graphs.isNotEmpty) {
+                                            _deleteSelected(
+                                              graphs[selectedGraphIndex],
+                                            );
                                           }
+                                        } else if (event.logicalKey ==
+                                            LogicalKeyboardKey.escape) {
+                                          _deselectAll();
                                         }
+                                      }
+                                    },
+                                    child: MouseRegion(
+                                      onHover: (event) {
+                                        setState(() {
+                                          mousePosition = event.localPosition;
+                                        });
                                       },
-                                      child: MouseRegion(
-                                        onHover: (event) {
+                                      onExit: (event) {
+                                        setState(() {
+                                          mousePosition = null;
+                                        });
+                                      },
+                                      child: GestureDetector(
+                                        onTapDown: (details) {
+                                          final graph =
+                                              graphs[selectedGraphIndex];
+                                          final tappedNode = graph.findNodeAt(
+                                            details.localPosition,
+                                          );
+                                          final tappedEdge = graph.findEdgeAt(
+                                            details.localPosition,
+                                          );
                                           setState(() {
-                                            mousePosition = event.localPosition;
+                                            if (tappedNode != null) {
+                                              // Deselect the selected edge
+                                              selectedEdge = null;
+                                              if (selectedNode == null) {
+                                                selectedNode = tappedNode;
+                                              } else {
+                                                // Deselect the selected node
+                                                selectedNode = null;
+                                              }
+                                            } else if (tappedEdge != null) {
+                                              if (selectedEdge == tappedEdge) {
+                                                // Deselect the tapped edge if it is already selected
+                                                selectedEdge = null;
+                                              } else {
+                                                // Deselect the selected node
+                                                selectedNode = null;
+                                                // Select the tapped edge
+                                                selectedEdge = tappedEdge;
+                                              }
+                                            } else {
+                                              _addNode(
+                                                graph,
+                                                details.localPosition,
+                                                constraints.biggest,
+                                              );
+                                              // Deselect the selected node
+                                              selectedNode = null;
+                                              // Deselect the selected edge
+                                              selectedEdge = null;
+                                              // Deselect the selected graph row
+                                              selectedGraphRow = null;
+                                              edgeStartNode = null;
+                                              edgeStartOutput = null;
+                                            }
                                           });
                                         },
-                                        onExit: (event) {
+                                        onPanUpdate: (details) {
                                           setState(() {
+                                            mousePosition =
+                                                details.localPosition;
+                                            if (draggingNode != null) {
+                                              final newPosition =
+                                                  draggingNode!.position +
+                                                  details.delta;
+                                              // Assuming the radius of the node is 25
+                                              final nodeRadius = 25.0;
+                                              // Ensure the node stays within the bounds of the center panel
+                                              if (newPosition.dx - nodeRadius >=
+                                                      0 &&
+                                                  newPosition.dx + nodeRadius <=
+                                                      constraints.maxWidth -
+                                                          (selectedNode != null
+                                                              ? 240
+                                                              : 0) &&
+                                                  newPosition.dy - nodeRadius >=
+                                                      0 &&
+                                                  newPosition.dy + nodeRadius <=
+                                                      constraints.maxHeight) {
+                                                draggingNode!.position =
+                                                    newPosition;
+                                              }
+                                            }
+                                          });
+                                        },
+                                        onPanStart: (details) {
+                                          setState(() {
+                                            final graph =
+                                                graphs[selectedGraphIndex];
+                                            draggingNode = graph.findNodeAt(
+                                              details.localPosition,
+                                            );
+                                            dragOffset = details.localPosition;
+                                          });
+                                        },
+                                        onPanEnd: (details) {
+                                          setState(() {
+                                            draggingNode = null;
+                                            dragOffset = null;
+                                            edgeStartNode = null;
+                                            edgeStartOutput = null;
                                             mousePosition = null;
                                           });
                                         },
-                                        child: GestureDetector(
-                                          onTapDown: (details) {
-                                            final graph =
-                                                graphs[selectedGraphIndex];
-                                            final tappedNode = graph.findNodeAt(
-                                                details.localPosition);
-                                            final tappedEdge = graph.findEdgeAt(
-                                                details.localPosition);
-                                            setState(() {
-                                              if (tappedNode != null) {
-                                                // Deselect the selected edge
-                                                selectedEdge = null;
-                                                if (selectedNode == null) {
-                                                  selectedNode = tappedNode;
-                                                } else {
-                                                  // Deselect the selected node
-                                                  selectedNode = null;
-                                                }
-                                              } else if (tappedEdge != null) {
-                                                if (selectedEdge ==
-                                                    tappedEdge) {
-                                                  // Deselect the tapped edge if it is already selected
-                                                  selectedEdge = null;
-                                                } else {
-                                                  // Deselect the selected node
-                                                  selectedNode = null;
-                                                  // Select the tapped edge
-                                                  selectedEdge = tappedEdge;
-                                                }
-                                              } else {
-                                                _addNode(
-                                                    graph,
-                                                    details.localPosition,
-                                                    constraints.biggest);
-                                                // Deselect the selected node
-                                                selectedNode = null;
-                                                // Deselect the selected edge
-                                                selectedEdge = null;
-                                                // Deselect the selected graph row
-                                                selectedGraphRow = null;
-                                                edgeStartNode = null;
-                                                edgeStartOutput = null;
-                                              }
-                                            });
-                                          },
-                                          onPanUpdate: (details) {
-                                            setState(() {
-                                              mousePosition =
-                                                  details.localPosition;
-                                              if (draggingNode != null) {
-                                                final newPosition =
-                                                    draggingNode!.position +
-                                                        details.delta;
-                                                // Assuming the radius of the node is 25
-                                                final nodeRadius = 25.0;
-                                                // Ensure the node stays within the bounds of the center panel
-                                                if (newPosition.dx - nodeRadius >= 0 &&
-                                                    newPosition.dx +
-                                                            nodeRadius <=
-                                                        constraints.maxWidth -
-                                                            (selectedNode !=
-                                                                    null
-                                                                ? 240
-                                                                : 0) &&
-                                                    newPosition.dy -
-                                                            nodeRadius >=
-                                                        0 &&
-                                                    newPosition.dy +
-                                                            nodeRadius <=
-                                                        constraints.maxHeight) {
-                                                  draggingNode!.position =
-                                                      newPosition;
-                                                }
-                                              }
-                                            });
-                                          },
-                                          onPanStart: (details) {
-                                            setState(() {
-                                              final graph =
-                                                  graphs[selectedGraphIndex];
-                                              draggingNode = graph.findNodeAt(
-                                                  details.localPosition);
-                                              dragOffset =
-                                                  details.localPosition;
-                                            });
-                                          },
-                                          onPanEnd: (details) {
-                                            setState(() {
-                                              draggingNode = null;
-                                              dragOffset = null;
-                                              edgeStartNode = null;
-                                              edgeStartOutput = null;
-                                              mousePosition = null;
-                                            });
-                                          },
-                                          child: CustomPaint(
-                                            painter: graphs.isNotEmpty
-                                                ? GraphPainter(
+                                        child: CustomPaint(
+                                          painter:
+                                              graphs.isNotEmpty
+                                                  ? GraphPainter(
                                                     graphs[selectedGraphIndex]
                                                         .nodes,
                                                     graphs[selectedGraphIndex]
@@ -600,12 +620,12 @@ class GraphEditorState extends State<GraphEditor> {
                                                     selectedEdge,
                                                     mousePosition,
                                                   )
-                                                : null,
-                                            child: Container(),
-                                          ),
+                                                  : null,
+                                          child: Container(),
                                         ),
                                       ),
-                                    )
+                                    ),
+                                  )
                                   : Center(child: Text('No graphs available')),
                               ..._buildTooltips(),
                               // Right panel for node attributes (overlay style)
@@ -615,57 +635,71 @@ class GraphEditorState extends State<GraphEditor> {
                                 bottom: 0,
                                 child: AnimatedSlide(
                                   duration: Duration(milliseconds: 300),
-                                  offset:
-                                      Offset(selectedNode != null ? 0 : 1, 0),
+                                  offset: Offset(
+                                    selectedNode != null ? 0 : 1,
+                                    0,
+                                  ),
                                   child: AnimatedOpacity(
                                     duration: Duration(milliseconds: 300),
                                     opacity: selectedNode != null ? 1.0 : 0.0,
                                     child: Container(
                                       width: 220,
                                       color: Colors.grey[800],
-                                      child: selectedNode != null
-                                          ? NodeAttributesPanel(
-                                              graph: graphs.isNotEmpty
-                                                  ? graphs[selectedGraphIndex]
-                                                  : null,
-                                              selectedNode: selectedNode,
-                                              supportedTargets: _supported,
-                                              nameController: _nameController,
-                                              nameFocusNode: _nameFocusNode,
-                                              onNameChanged: (value) {
-                                                setState(() {
-                                                  selectedNode!.name = value;
-                                                });
-                                              },
-                                              onTargetChanged: (newValue) {
-                                                setState(() {
-                                                  selectedNode!.target =
-                                                      newValue;
-                                                  final target = _supported
-                                                      .firstWhere((t) =>
-                                                          t.name == newValue);
-                                                  if (target
-                                                      .kernels.isNotEmpty) {
+                                      child:
+                                          selectedNode != null
+                                              ? NodeAttributesPanel(
+                                                graph:
+                                                    graphs.isNotEmpty
+                                                        ? graphs[selectedGraphIndex]
+                                                        : null,
+                                                selectedNode: selectedNode,
+                                                supportedTargets: _supported,
+                                                nameController: _nameController,
+                                                nameFocusNode: _nameFocusNode,
+                                                onNameChanged: (value) {
+                                                  setState(() {
+                                                    selectedNode!.name = value;
+                                                  });
+                                                },
+                                                onTargetChanged: (newValue) {
+                                                  setState(() {
+                                                    selectedNode!.target =
+                                                        newValue;
+                                                    final target = _supported
+                                                        .firstWhere(
+                                                          (t) =>
+                                                              t.name ==
+                                                              newValue,
+                                                        );
+                                                    if (target
+                                                        .kernels
+                                                        .isNotEmpty) {
+                                                      selectedNode!.kernel =
+                                                          target
+                                                              .kernels
+                                                              .first
+                                                              .name;
+                                                      _updateNodeIO(
+                                                        selectedNode!,
+                                                        selectedNode!.kernel,
+                                                      );
+                                                    }
+                                                  });
+                                                },
+                                                onKernelChanged: (newValue) {
+                                                  setState(() {
                                                     selectedNode!.kernel =
-                                                        target
-                                                            .kernels.first.name;
-                                                    _updateNodeIO(selectedNode!,
-                                                        selectedNode!.kernel);
-                                                  }
-                                                });
-                                              },
-                                              onKernelChanged: (newValue) {
-                                                setState(() {
-                                                  selectedNode!.kernel =
-                                                      newValue;
-                                                  _updateNodeIO(
-                                                      selectedNode!, newValue);
-                                                });
-                                              },
-                                              onNameEditComplete:
-                                                  _restoreMainFocus,
-                                            )
-                                          : null,
+                                                        newValue;
+                                                    _updateNodeIO(
+                                                      selectedNode!,
+                                                      newValue,
+                                                    );
+                                                  });
+                                                },
+                                                onNameEditComplete:
+                                                    _restoreMainFocus,
+                                              )
+                                              : null,
                                     ),
                                   ),
                                 ),
@@ -709,83 +743,100 @@ class GraphEditorState extends State<GraphEditor> {
         for (int i = 0; i < node.inputs.length; i++) {
           // Distribute the inputs from radians 3pi/4 to 5pi/4 aroud the node.
           // If there is only one input, it should be at pi radians.
-          final angle = (node.inputs.length == 1)
-              ? pi
-              : (3 * pi / 4) + (i * (pi / 2) / (node.inputs.length - 1));
+          final angle =
+              (node.inputs.length == 1)
+                  ? pi
+                  : (3 * pi / 4) + (i * (pi / 2) / (node.inputs.length - 1));
           final iconOffset = Offset(
             node.position.dx + 30 * cos(angle),
             node.position.dy + 30 * sin(angle),
           );
-          tooltips.add(Positioned(
-            left: iconOffset.dx - 8,
-            top: iconOffset.dy - 8,
-            child: GestureDetector(
-              onTapDown: (details) {
-                setState(() {
-                  if (edgeStartNode != null && edgeStartOutput != null) {
-                    final graph = graphs[selectedGraphIndex];
-                    _addEdge(graph, edgeStartNode!, node, edgeStartOutput!,
-                        node.inputs[i].id);
-                    edgeStartNode = null;
-                    edgeEndInput = null;
-                    edgeStartOutput = null;
-                  } else {
-                    edgeStartNode = node;
-                    edgeEndInput = node.inputs[i].id;
-                  }
-                });
-              },
-              onDoubleTap: () {
-                _showAttributeDialog(context, node.inputs[i]);
-              },
-              child: Tooltip(
-                message: node.inputs[i].name,
-                child: Icon(Icons.input,
+          tooltips.add(
+            Positioned(
+              left: iconOffset.dx - 8,
+              top: iconOffset.dy - 8,
+              child: GestureDetector(
+                onTapDown: (details) {
+                  setState(() {
+                    if (edgeStartNode != null && edgeStartOutput != null) {
+                      final graph = graphs[selectedGraphIndex];
+                      _addEdge(
+                        graph,
+                        edgeStartNode!,
+                        node,
+                        edgeStartOutput!,
+                        node.inputs[i].id,
+                      );
+                      edgeStartNode = null;
+                      edgeEndInput = null;
+                      edgeStartOutput = null;
+                    } else {
+                      edgeStartNode = node;
+                      edgeEndInput = node.inputs[i].id;
+                    }
+                  });
+                },
+                onDoubleTap: () {
+                  _showAttributeDialog(context, node.inputs[i]);
+                },
+                child: Tooltip(
+                  message: node.inputs[i].name,
+                  child: Icon(
+                    Icons.input,
                     size: 16,
-                    color: edgeStartNode == node &&
-                            edgeEndInput == node.inputs[i].id
-                        ? Colors.white
-                        : Colors.green),
+                    color:
+                        edgeStartNode == node &&
+                                edgeEndInput == node.inputs[i].id
+                            ? Colors.white
+                            : Colors.green,
+                  ),
+                ),
               ),
             ),
-          ));
+          );
         }
 
         for (int i = 0; i < node.outputs.length; i++) {
           // Distribute the outputs from radians pi/4 to 7pi/4 around the node.
           // If there is only one output, it should be at 0 or 2pi radians.
-          final angle = (node.outputs.length == 1)
-              ? 0
-              : (pi / 4) + (i * (3 * pi / 2) / (node.outputs.length - 1));
+          final angle =
+              (node.outputs.length == 1)
+                  ? 0
+                  : (pi / 4) + (i * (3 * pi / 2) / (node.outputs.length - 1));
           final iconOffset = Offset(
             node.position.dx + 30 * cos(angle),
             node.position.dy + 30 * sin(angle),
           );
-          tooltips.add(Positioned(
-            left: iconOffset.dx - 8,
-            top: iconOffset.dy - 8,
-            child: GestureDetector(
-              onTapDown: (details) {
-                setState(() {
-                  edgeEndInput = null;
-                  edgeStartNode = node;
-                  edgeStartOutput = node.outputs[i].id;
-                });
-              },
-              onDoubleTap: () {
-                _showAttributeDialog(context, node.outputs[i]);
-              },
-              child: Tooltip(
-                message: node.outputs[i].name,
-                child: Icon(Icons.output,
+          tooltips.add(
+            Positioned(
+              left: iconOffset.dx - 8,
+              top: iconOffset.dy - 8,
+              child: GestureDetector(
+                onTapDown: (details) {
+                  setState(() {
+                    edgeEndInput = null;
+                    edgeStartNode = node;
+                    edgeStartOutput = node.outputs[i].id;
+                  });
+                },
+                onDoubleTap: () {
+                  _showAttributeDialog(context, node.outputs[i]);
+                },
+                child: Tooltip(
+                  message: node.outputs[i].name,
+                  child: Icon(
+                    Icons.output,
                     size: 16,
-                    color: edgeStartNode == node &&
-                            edgeStartOutput == node.outputs[i].id
-                        ? Colors.white
-                        : Colors.green),
+                    color:
+                        edgeStartNode == node &&
+                                edgeStartOutput == node.outputs[i].id
+                            ? Colors.white
+                            : Colors.green,
+                  ),
+                ),
               ),
             ),
-          ));
+          );
         }
       }
     }
@@ -812,7 +863,8 @@ class GraphEditorState extends State<GraphEditor> {
                   // Array specific attributes
                   TextField(
                     controller: TextEditingController(
-                        text: reference.capacity.toString()),
+                      text: reference.capacity.toString(),
+                    ),
                     decoration: InputDecoration(labelText: 'Capacity'),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
@@ -823,40 +875,44 @@ class GraphEditorState extends State<GraphEditor> {
                   DropdownButtonFormField<String>(
                     value: reference.elemType,
                     decoration: InputDecoration(labelText: 'Element Type'),
-                    items: arrayTypes.map((type) {
-                      return DropdownMenuItem<String>(
-                        value: type,
-                        child: Text(type),
-                      );
-                    }).toList(),
+                    items:
+                        arrayTypes.map((type) {
+                          return DropdownMenuItem<String>(
+                            value: type,
+                            child: Text(type),
+                          );
+                        }).toList(),
                     onChanged: (value) {
                       reference.elemType = value!;
                     },
                   ),
                   TextField(
                     controller: TextEditingController(
-                        text: reference.values.join(', ')),
+                      text: reference.values.join(', '),
+                    ),
                     decoration: InputDecoration(labelText: 'Values'),
                     keyboardType: TextInputType.text,
                     onChanged: (value) {
                       // Remove trailing commas and split
-                      reference.values = value
-                          .split(',')
-                          .map((e) => e.trim())
-                          .where((e) => e.isNotEmpty)
-                          .toList();
+                      reference.values =
+                          value
+                              .split(',')
+                              .map((e) => e.trim())
+                              .where((e) => e.isNotEmpty)
+                              .toList();
                     },
-                    onEditingComplete: () =>
-                        _updateArrayCapacity(context, reference),
-                    onTapOutside: (event) =>
-                        _updateArrayCapacity(context, reference),
+                    onEditingComplete:
+                        () => _updateArrayCapacity(context, reference),
+                    onTapOutside:
+                        (event) => _updateArrayCapacity(context, reference),
                   ),
                 ],
                 if (reference is Convolution) ...[
                   // Convolution specific attributes
                   TextField(
-                    controller:
-                        TextEditingController(text: reference.rows.toString()),
+                    controller: TextEditingController(
+                      text: reference.rows.toString(),
+                    ),
                     decoration: InputDecoration(labelText: 'Rows'),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
@@ -864,8 +920,9 @@ class GraphEditorState extends State<GraphEditor> {
                     },
                   ),
                   TextField(
-                    controller:
-                        TextEditingController(text: reference.cols.toString()),
+                    controller: TextEditingController(
+                      text: reference.cols.toString(),
+                    ),
                     decoration: InputDecoration(labelText: 'Columns'),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
@@ -873,8 +930,9 @@ class GraphEditorState extends State<GraphEditor> {
                     },
                   ),
                   TextField(
-                    controller:
-                        TextEditingController(text: reference.scale.toString()),
+                    controller: TextEditingController(
+                      text: reference.scale.toString(),
+                    ),
                     decoration: InputDecoration(labelText: 'Scale'),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
@@ -886,8 +944,9 @@ class GraphEditorState extends State<GraphEditor> {
                 if (reference is Img) ...[
                   // Img specific attributes
                   TextField(
-                    controller:
-                        TextEditingController(text: reference.width.toString()),
+                    controller: TextEditingController(
+                      text: reference.width.toString(),
+                    ),
                     decoration: InputDecoration(labelText: 'Width'),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
@@ -896,7 +955,8 @@ class GraphEditorState extends State<GraphEditor> {
                   ),
                   TextField(
                     controller: TextEditingController(
-                        text: reference.height.toString()),
+                      text: reference.height.toString(),
+                    ),
                     decoration: InputDecoration(labelText: 'Height'),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
@@ -907,12 +967,13 @@ class GraphEditorState extends State<GraphEditor> {
                   DropdownButtonFormField<String>(
                     value: reference.format,
                     decoration: InputDecoration(labelText: 'Format'),
-                    items: imageTypes.map((type) {
-                      return DropdownMenuItem<String>(
-                        value: type,
-                        child: Text(type),
-                      );
-                    }).toList(),
+                    items:
+                        imageTypes.map((type) {
+                          return DropdownMenuItem<String>(
+                            value: type,
+                            child: Text(type),
+                          );
+                        }).toList(),
                     onChanged: (value) {
                       reference.format = value!;
                     },
@@ -922,7 +983,8 @@ class GraphEditorState extends State<GraphEditor> {
                   // Lut specific attributes
                   TextField(
                     controller: TextEditingController(
-                        text: reference.capacity.toString()),
+                      text: reference.capacity.toString(),
+                    ),
                     decoration: InputDecoration(labelText: 'Capacity'),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
@@ -941,8 +1003,9 @@ class GraphEditorState extends State<GraphEditor> {
                 if (reference is Matrix) ...[
                   // Matrix specific attributes
                   TextField(
-                    controller:
-                        TextEditingController(text: reference.rows.toString()),
+                    controller: TextEditingController(
+                      text: reference.rows.toString(),
+                    ),
                     decoration: InputDecoration(labelText: 'Rows'),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
@@ -950,8 +1013,9 @@ class GraphEditorState extends State<GraphEditor> {
                     },
                   ),
                   TextField(
-                    controller:
-                        TextEditingController(text: reference.cols.toString()),
+                    controller: TextEditingController(
+                      text: reference.cols.toString(),
+                    ),
                     decoration: InputDecoration(labelText: 'Columns'),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
@@ -961,12 +1025,13 @@ class GraphEditorState extends State<GraphEditor> {
                   DropdownButtonFormField<String>(
                     value: reference.elemType,
                     decoration: InputDecoration(labelText: 'Element Type'),
-                    items: numTypes.map((type) {
-                      return DropdownMenuItem<String>(
-                        value: type,
-                        child: Text(type),
-                      );
-                    }).toList(),
+                    items:
+                        numTypes.map((type) {
+                          return DropdownMenuItem<String>(
+                            value: type,
+                            child: Text(type),
+                          );
+                        }).toList(),
                     onChanged: (value) {
                       reference.elemType = value!;
                     },
@@ -977,11 +1042,13 @@ class GraphEditorState extends State<GraphEditor> {
                   Builder(
                     builder: (context) {
                       final controller = TextEditingController(
-                          text: reference.numObjects.toString());
+                        text: reference.numObjects.toString(),
+                      );
                       return TextField(
                         controller: controller,
-                        decoration:
-                            InputDecoration(labelText: 'Number of Objects'),
+                        decoration: InputDecoration(
+                          labelText: 'Number of Objects',
+                        ),
                         keyboardType: TextInputType.number,
                         onEditingComplete: () {
                           final newValue = int.tryParse(controller.text) ?? 0;
@@ -1007,12 +1074,13 @@ class GraphEditorState extends State<GraphEditor> {
                   DropdownButtonFormField<String>(
                     value: reference.elemType,
                     decoration: InputDecoration(labelText: 'Element Type'),
-                    items: objectArrayTypes.map((type) {
-                      return DropdownMenuItem<String>(
-                        value: type,
-                        child: Text(type),
-                      );
-                    }).toList(),
+                    items:
+                        objectArrayTypes.map((type) {
+                          return DropdownMenuItem<String>(
+                            value: type,
+                            child: Text(type),
+                          );
+                        }).toList(),
                     onChanged: (value) {
                       if (value != null) {
                         reference.elemType = value;
@@ -1054,7 +1122,8 @@ class GraphEditorState extends State<GraphEditor> {
                   // Pyramid specific attributes
                   TextField(
                     controller: TextEditingController(
-                        text: reference.numLevels.toString()),
+                      text: reference.numLevels.toString(),
+                    ),
                     decoration: InputDecoration(labelText: 'Number of Levels'),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
@@ -1063,8 +1132,9 @@ class GraphEditorState extends State<GraphEditor> {
                     },
                   ),
                   TextField(
-                    controller:
-                        TextEditingController(text: reference.width.toString()),
+                    controller: TextEditingController(
+                      text: reference.width.toString(),
+                    ),
                     decoration: InputDecoration(labelText: 'Width'),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
@@ -1073,7 +1143,8 @@ class GraphEditorState extends State<GraphEditor> {
                   ),
                   TextField(
                     controller: TextEditingController(
-                        text: reference.height.toString()),
+                      text: reference.height.toString(),
+                    ),
                     decoration: InputDecoration(labelText: 'Height'),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
@@ -1084,12 +1155,13 @@ class GraphEditorState extends State<GraphEditor> {
                   DropdownButtonFormField<String>(
                     value: reference.format,
                     decoration: InputDecoration(labelText: 'Format'),
-                    items: imageTypes.map((type) {
-                      return DropdownMenuItem<String>(
-                        value: type,
-                        child: Text(type),
-                      );
-                    }).toList(),
+                    items:
+                        imageTypes.map((type) {
+                          return DropdownMenuItem<String>(
+                            value: type,
+                            child: Text(type),
+                          );
+                        }).toList(),
                     onChanged: (value) {
                       reference.format = value!;
                     },
@@ -1099,7 +1171,8 @@ class GraphEditorState extends State<GraphEditor> {
                   // Remap specific attributes
                   TextField(
                     controller: TextEditingController(
-                        text: reference.srcWidth.toString()),
+                      text: reference.srcWidth.toString(),
+                    ),
                     decoration: InputDecoration(labelText: 'Source Width'),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
@@ -1109,7 +1182,8 @@ class GraphEditorState extends State<GraphEditor> {
                   ),
                   TextField(
                     controller: TextEditingController(
-                        text: reference.srcHeight.toString()),
+                      text: reference.srcHeight.toString(),
+                    ),
                     decoration: InputDecoration(labelText: 'Source Height'),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
@@ -1119,7 +1193,8 @@ class GraphEditorState extends State<GraphEditor> {
                   ),
                   TextField(
                     controller: TextEditingController(
-                        text: reference.dstWidth.toString()),
+                      text: reference.dstWidth.toString(),
+                    ),
                     decoration: InputDecoration(labelText: 'Destination Width'),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
@@ -1129,9 +1204,11 @@ class GraphEditorState extends State<GraphEditor> {
                   ),
                   TextField(
                     controller: TextEditingController(
-                        text: reference.dstHeight.toString()),
-                    decoration:
-                        InputDecoration(labelText: 'Destination Height'),
+                      text: reference.dstHeight.toString(),
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Destination Height',
+                    ),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       reference.dstHeight =
@@ -1144,19 +1221,21 @@ class GraphEditorState extends State<GraphEditor> {
                   DropdownButtonFormField<String>(
                     value: reference.elemType,
                     decoration: InputDecoration(labelText: 'Element Type'),
-                    items: scalarTypes.map((type) {
-                      return DropdownMenuItem<String>(
-                        value: type,
-                        child: Text(type),
-                      );
-                    }).toList(),
+                    items:
+                        scalarTypes.map((type) {
+                          return DropdownMenuItem<String>(
+                            value: type,
+                            child: Text(type),
+                          );
+                        }).toList(),
                     onChanged: (value) {
                       reference.elemType = value!;
                     },
                   ),
                   TextField(
-                    controller:
-                        TextEditingController(text: reference.value.toString()),
+                    controller: TextEditingController(
+                      text: reference.value.toString(),
+                    ),
                     decoration: InputDecoration(labelText: 'Value'),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
@@ -1169,9 +1248,11 @@ class GraphEditorState extends State<GraphEditor> {
                   // Tensor specific attributes
                   TextField(
                     controller: TextEditingController(
-                        text: reference.numDims.toString()),
-                    decoration:
-                        InputDecoration(labelText: 'Number of Dimensions'),
+                      text: reference.numDims.toString(),
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Number of Dimensions',
+                    ),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       reference.numDims =
@@ -1179,26 +1260,29 @@ class GraphEditorState extends State<GraphEditor> {
                     },
                   ),
                   TextField(
-                    controller:
-                        TextEditingController(text: reference.shape.toString()),
+                    controller: TextEditingController(
+                      text: reference.shape.toString(),
+                    ),
                     decoration: InputDecoration(labelText: 'Shape'),
                     onChanged: (value) {
-                      reference.shape = value
-                          .replaceAll(RegExp(r'[\[\]]'), '')
-                          .split(',')
-                          .map((e) => int.tryParse(e.trim()) ?? 0)
-                          .toList();
+                      reference.shape =
+                          value
+                              .replaceAll(RegExp(r'[\[\]]'), '')
+                              .split(',')
+                              .map((e) => int.tryParse(e.trim()) ?? 0)
+                              .toList();
                     },
                   ),
                   DropdownButtonFormField<String>(
                     value: reference.elemType,
                     decoration: InputDecoration(labelText: 'Element Type'),
-                    items: numTypes.map((type) {
-                      return DropdownMenuItem<String>(
-                        value: type,
-                        child: Text(type),
-                      );
-                    }).toList(),
+                    items:
+                        numTypes.map((type) {
+                          return DropdownMenuItem<String>(
+                            value: type,
+                            child: Text(type),
+                          );
+                        }).toList(),
                     onChanged: (value) {
                       reference.elemType = value!;
                     },
@@ -1207,8 +1291,9 @@ class GraphEditorState extends State<GraphEditor> {
                 if (reference is Thrshld) ...[
                   // Threshold specific attributes
                   TextField(
-                    controller:
-                        TextEditingController(text: reference.thresType),
+                    controller: TextEditingController(
+                      text: reference.thresType,
+                    ),
                     decoration: InputDecoration(labelText: 'Threshold Type'),
                     onChanged: (value) {
                       reference.thresType = value;
@@ -1217,12 +1302,13 @@ class GraphEditorState extends State<GraphEditor> {
                   DropdownButtonFormField<String>(
                     value: reference.dataType,
                     decoration: InputDecoration(labelText: 'Element Type'),
-                    items: thresholdDataTypes.map((type) {
-                      return DropdownMenuItem<String>(
-                        value: type,
-                        child: Text(type),
-                      );
-                    }).toList(),
+                    items:
+                        thresholdDataTypes.map((type) {
+                          return DropdownMenuItem<String>(
+                            value: type,
+                            child: Text(type),
+                          );
+                        }).toList(),
                     onChanged: (value) {
                       reference.dataType = value!;
                     },
@@ -1232,7 +1318,8 @@ class GraphEditorState extends State<GraphEditor> {
                   // UserDataObject specific attributes
                   TextField(
                     controller: TextEditingController(
-                        text: reference.sizeInBytes.toString()),
+                      text: reference.sizeInBytes.toString(),
+                    ),
                     decoration: InputDecoration(labelText: 'Size in Bytes'),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
@@ -1259,9 +1346,10 @@ class GraphEditorState extends State<GraphEditor> {
   void _updateArrayCapacity(BuildContext context, Array reference) {
     // For strings, capacity is based on total character count
     // For other types, capacity is based on number of elements
-    final newCapacity = reference.elemType == 'CHAR'
-        ? reference.values.join(', ').length
-        : reference.values.length;
+    final newCapacity =
+        reference.elemType == 'CHAR'
+            ? reference.values.join(', ').length
+            : reference.values.length;
 
     if (newCapacity != reference.capacity) {
       reference.capacity = newCapacity;
@@ -1271,14 +1359,17 @@ class GraphEditorState extends State<GraphEditor> {
     }
   } // End of _updateArrayCapacity
 
-  List<Widget> _buildElementTypeAttributes(ObjectArray reference,
-      {int? objectIndex}) {
+  List<Widget> _buildElementTypeAttributes(
+    ObjectArray reference, {
+    int? objectIndex,
+  }) {
     // Get the appropriate attributes map based on whether we're dealing with individual objects
-    Map<String, dynamic> attributes = objectIndex != null
-        ? (reference.elementAttributes['object_$objectIndex']
-                as Map<String, dynamic>? ??
-            {})
-        : reference.elementAttributes;
+    Map<String, dynamic> attributes =
+        objectIndex != null
+            ? (reference.elementAttributes['object_$objectIndex']
+                    as Map<String, dynamic>? ??
+                {})
+            : reference.elementAttributes;
 
     // Helper function to get attribute value
     T? getAttribute<T>(String key) {
@@ -1306,7 +1397,8 @@ class GraphEditorState extends State<GraphEditor> {
         return [
           TextField(
             controller: TextEditingController(
-                text: getAttribute<int>('numDims')?.toString() ?? '0'),
+              text: getAttribute<int>('numDims')?.toString() ?? '0',
+            ),
             decoration: InputDecoration(labelText: 'Number of Dimensions'),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -1315,27 +1407,30 @@ class GraphEditorState extends State<GraphEditor> {
           ),
           TextField(
             controller: TextEditingController(
-                text: getAttribute<List<int>>('shape')?.toString() ?? '[]'),
+              text: getAttribute<List<int>>('shape')?.toString() ?? '[]',
+            ),
             decoration: InputDecoration(labelText: 'Shape'),
             onChanged: (value) {
               setAttribute(
-                  'shape',
-                  value
-                      .replaceAll(RegExp(r'[\[\]]'), '')
-                      .split(',')
-                      .map((e) => int.tryParse(e.trim()) ?? 0)
-                      .toList());
+                'shape',
+                value
+                    .replaceAll(RegExp(r'[\[\]]'), '')
+                    .split(',')
+                    .map((e) => int.tryParse(e.trim()) ?? 0)
+                    .toList(),
+              );
             },
           ),
           DropdownButtonFormField<String>(
             value: getAttribute<String>('elemType') ?? numTypes.first,
             decoration: InputDecoration(labelText: 'Element Type'),
-            items: numTypes.map((type) {
-              return DropdownMenuItem<String>(
-                value: type,
-                child: Text(type),
-              );
-            }).toList(),
+            items:
+                numTypes.map((type) {
+                  return DropdownMenuItem<String>(
+                    value: type,
+                    child: Text(type),
+                  );
+                }).toList(),
             onChanged: (value) {
               if (value != null) {
                 setAttribute('elemType', value);
@@ -1347,7 +1442,8 @@ class GraphEditorState extends State<GraphEditor> {
         return [
           TextField(
             controller: TextEditingController(
-                text: getAttribute<int>('width')?.toString() ?? '0'),
+              text: getAttribute<int>('width')?.toString() ?? '0',
+            ),
             decoration: InputDecoration(labelText: 'Width'),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -1356,7 +1452,8 @@ class GraphEditorState extends State<GraphEditor> {
           ),
           TextField(
             controller: TextEditingController(
-                text: getAttribute<int>('height')?.toString() ?? '0'),
+              text: getAttribute<int>('height')?.toString() ?? '0',
+            ),
             decoration: InputDecoration(labelText: 'Height'),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -1366,12 +1463,13 @@ class GraphEditorState extends State<GraphEditor> {
           DropdownButtonFormField<String>(
             value: getAttribute<String>('format') ?? imageTypes.first,
             decoration: InputDecoration(labelText: 'Format'),
-            items: imageTypes.map((type) {
-              return DropdownMenuItem<String>(
-                value: type,
-                child: Text(type),
-              );
-            }).toList(),
+            items:
+                imageTypes.map((type) {
+                  return DropdownMenuItem<String>(
+                    value: type,
+                    child: Text(type),
+                  );
+                }).toList(),
             onChanged: (value) {
               if (value != null) {
                 setAttribute('format', value);
@@ -1383,7 +1481,8 @@ class GraphEditorState extends State<GraphEditor> {
         return [
           TextField(
             controller: TextEditingController(
-                text: getAttribute<int>('capacity')?.toString() ?? '0'),
+              text: getAttribute<int>('capacity')?.toString() ?? '0',
+            ),
             decoration: InputDecoration(labelText: 'Capacity'),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -1393,12 +1492,13 @@ class GraphEditorState extends State<GraphEditor> {
           DropdownButtonFormField<String>(
             value: getAttribute<String>('elemType') ?? arrayTypes.first,
             decoration: InputDecoration(labelText: 'Element Type'),
-            items: arrayTypes.map((type) {
-              return DropdownMenuItem<String>(
-                value: type,
-                child: Text(type),
-              );
-            }).toList(),
+            items:
+                arrayTypes.map((type) {
+                  return DropdownMenuItem<String>(
+                    value: type,
+                    child: Text(type),
+                  );
+                }).toList(),
             onChanged: (value) {
               if (value != null) {
                 setAttribute('elemType', value);
@@ -1410,7 +1510,8 @@ class GraphEditorState extends State<GraphEditor> {
         return [
           TextField(
             controller: TextEditingController(
-                text: getAttribute<int>('rows')?.toString() ?? '0'),
+              text: getAttribute<int>('rows')?.toString() ?? '0',
+            ),
             decoration: InputDecoration(labelText: 'Rows'),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -1419,7 +1520,8 @@ class GraphEditorState extends State<GraphEditor> {
           ),
           TextField(
             controller: TextEditingController(
-                text: getAttribute<int>('cols')?.toString() ?? '0'),
+              text: getAttribute<int>('cols')?.toString() ?? '0',
+            ),
             decoration: InputDecoration(labelText: 'Columns'),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -1429,12 +1531,13 @@ class GraphEditorState extends State<GraphEditor> {
           DropdownButtonFormField<String>(
             value: getAttribute<String>('elemType') ?? numTypes.first,
             decoration: InputDecoration(labelText: 'Element Type'),
-            items: numTypes.map((type) {
-              return DropdownMenuItem<String>(
-                value: type,
-                child: Text(type),
-              );
-            }).toList(),
+            items:
+                numTypes.map((type) {
+                  return DropdownMenuItem<String>(
+                    value: type,
+                    child: Text(type),
+                  );
+                }).toList(),
             onChanged: (value) {
               if (value != null) {
                 setAttribute('elemType', value);
@@ -1447,12 +1550,13 @@ class GraphEditorState extends State<GraphEditor> {
           DropdownButtonFormField<String>(
             value: getAttribute<String>('elemType') ?? scalarTypes.first,
             decoration: InputDecoration(labelText: 'Element Type'),
-            items: scalarTypes.map((type) {
-              return DropdownMenuItem<String>(
-                value: type,
-                child: Text(type),
-              );
-            }).toList(),
+            items:
+                scalarTypes.map((type) {
+                  return DropdownMenuItem<String>(
+                    value: type,
+                    child: Text(type),
+                  );
+                }).toList(),
             onChanged: (value) {
               if (value != null) {
                 setAttribute('elemType', value);
@@ -1461,7 +1565,8 @@ class GraphEditorState extends State<GraphEditor> {
           ),
           TextField(
             controller: TextEditingController(
-                text: getAttribute<double>('value')?.toString() ?? '0'),
+              text: getAttribute<double>('value')?.toString() ?? '0',
+            ),
             decoration: InputDecoration(labelText: 'Value'),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -1473,7 +1578,8 @@ class GraphEditorState extends State<GraphEditor> {
         return [
           TextField(
             controller: TextEditingController(
-                text: getAttribute<int>('rows')?.toString() ?? '0'),
+              text: getAttribute<int>('rows')?.toString() ?? '0',
+            ),
             decoration: InputDecoration(labelText: 'Rows'),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -1482,7 +1588,8 @@ class GraphEditorState extends State<GraphEditor> {
           ),
           TextField(
             controller: TextEditingController(
-                text: getAttribute<int>('cols')?.toString() ?? '0'),
+              text: getAttribute<int>('cols')?.toString() ?? '0',
+            ),
             decoration: InputDecoration(labelText: 'Columns'),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -1491,7 +1598,8 @@ class GraphEditorState extends State<GraphEditor> {
           ),
           TextField(
             controller: TextEditingController(
-                text: getAttribute<int>('scale')?.toString() ?? '0'),
+              text: getAttribute<int>('scale')?.toString() ?? '0',
+            ),
             decoration: InputDecoration(labelText: 'Scale'),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -1503,7 +1611,8 @@ class GraphEditorState extends State<GraphEditor> {
         return [
           TextField(
             controller: TextEditingController(
-                text: getAttribute<int>('numLevels')?.toString() ?? '0'),
+              text: getAttribute<int>('numLevels')?.toString() ?? '0',
+            ),
             decoration: InputDecoration(labelText: 'Number of Levels'),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -1512,7 +1621,8 @@ class GraphEditorState extends State<GraphEditor> {
           ),
           TextField(
             controller: TextEditingController(
-                text: getAttribute<int>('width')?.toString() ?? '0'),
+              text: getAttribute<int>('width')?.toString() ?? '0',
+            ),
             decoration: InputDecoration(labelText: 'Width'),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -1521,7 +1631,8 @@ class GraphEditorState extends State<GraphEditor> {
           ),
           TextField(
             controller: TextEditingController(
-                text: getAttribute<int>('height')?.toString() ?? '0'),
+              text: getAttribute<int>('height')?.toString() ?? '0',
+            ),
             decoration: InputDecoration(labelText: 'Height'),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -1531,12 +1642,13 @@ class GraphEditorState extends State<GraphEditor> {
           DropdownButtonFormField<String>(
             value: getAttribute<String>('format') ?? imageTypes.first,
             decoration: InputDecoration(labelText: 'Format'),
-            items: imageTypes.map((type) {
-              return DropdownMenuItem<String>(
-                value: type,
-                child: Text(type),
-              );
-            }).toList(),
+            items:
+                imageTypes.map((type) {
+                  return DropdownMenuItem<String>(
+                    value: type,
+                    child: Text(type),
+                  );
+                }).toList(),
             onChanged: (value) {
               if (value != null) {
                 setAttribute('format', value);
@@ -1548,7 +1660,8 @@ class GraphEditorState extends State<GraphEditor> {
         return [
           TextField(
             controller: TextEditingController(
-                text: getAttribute<int>('srcWidth')?.toString() ?? '0'),
+              text: getAttribute<int>('srcWidth')?.toString() ?? '0',
+            ),
             decoration: InputDecoration(labelText: 'Source Width'),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -1557,7 +1670,8 @@ class GraphEditorState extends State<GraphEditor> {
           ),
           TextField(
             controller: TextEditingController(
-                text: getAttribute<int>('srcHeight')?.toString() ?? '0'),
+              text: getAttribute<int>('srcHeight')?.toString() ?? '0',
+            ),
             decoration: InputDecoration(labelText: 'Source Height'),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -1566,7 +1680,8 @@ class GraphEditorState extends State<GraphEditor> {
           ),
           TextField(
             controller: TextEditingController(
-                text: getAttribute<int>('dstWidth')?.toString() ?? '0'),
+              text: getAttribute<int>('dstWidth')?.toString() ?? '0',
+            ),
             decoration: InputDecoration(labelText: 'Destination Width'),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -1575,7 +1690,8 @@ class GraphEditorState extends State<GraphEditor> {
           ),
           TextField(
             controller: TextEditingController(
-                text: getAttribute<int>('dstHeight')?.toString() ?? '0'),
+              text: getAttribute<int>('dstHeight')?.toString() ?? '0',
+            ),
             decoration: InputDecoration(labelText: 'Destination Height'),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -1587,7 +1703,8 @@ class GraphEditorState extends State<GraphEditor> {
         return [
           TextField(
             controller: TextEditingController(
-                text: getAttribute<String>('thresType') ?? ''),
+              text: getAttribute<String>('thresType') ?? '',
+            ),
             decoration: InputDecoration(labelText: 'Threshold Type'),
             onChanged: (value) {
               setAttribute('thresType', value);
@@ -1596,12 +1713,13 @@ class GraphEditorState extends State<GraphEditor> {
           DropdownButtonFormField<String>(
             value: getAttribute<String>('dataType') ?? thresholdDataTypes.first,
             decoration: InputDecoration(labelText: 'Data Type'),
-            items: thresholdDataTypes.map((type) {
-              return DropdownMenuItem<String>(
-                value: type,
-                child: Text(type),
-              );
-            }).toList(),
+            items:
+                thresholdDataTypes.map((type) {
+                  return DropdownMenuItem<String>(
+                    value: type,
+                    child: Text(type),
+                  );
+                }).toList(),
             onChanged: (value) {
               if (value != null) {
                 setAttribute('dataType', value);
@@ -1613,7 +1731,8 @@ class GraphEditorState extends State<GraphEditor> {
         return [
           TextField(
             controller: TextEditingController(
-                text: getAttribute<int>('capacity')?.toString() ?? '0'),
+              text: getAttribute<int>('capacity')?.toString() ?? '0',
+            ),
             decoration: InputDecoration(labelText: 'Capacity'),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -1623,12 +1742,13 @@ class GraphEditorState extends State<GraphEditor> {
           DropdownButtonFormField<String>(
             value: getAttribute<String>('elemType') ?? numTypes.first,
             decoration: InputDecoration(labelText: 'Element Type'),
-            items: numTypes.map((type) {
-              return DropdownMenuItem<String>(
-                value: type,
-                child: Text(type),
-              );
-            }).toList(),
+            items:
+                numTypes.map((type) {
+                  return DropdownMenuItem<String>(
+                    value: type,
+                    child: Text(type),
+                  );
+                }).toList(),
             onChanged: (value) {
               if (value != null) {
                 setAttribute('elemType', value);
@@ -1679,9 +1799,10 @@ class GraphListPanel extends StatelessWidget {
                     onTap: () => onSelectGraph(index),
                     child: Chip(
                       label: Text('Graph ${index + 1}'),
-                      backgroundColor: selectedGraphRow == index
-                          ? Colors.blue
-                          : Colors.grey[700],
+                      backgroundColor:
+                          selectedGraphRow == index
+                              ? Colors.blue
+                              : Colors.grey[700],
                     ),
                   ),
                 );
@@ -1724,146 +1845,152 @@ class NodeAttributesPanel extends StatelessWidget {
       duration: Duration(milliseconds: 300),
       width: selectedNode != null ? 200 : 0,
       color: Colors.grey[800],
-      child: selectedNode != null
-          ? ListView(
-              padding: EdgeInsets.all(8.0),
-              children: [
-                Text(
-                  'Node Attributes',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 8.0),
-                TextField(
-                  controller:
-                      TextEditingController(text: selectedNode!.id.toString()),
-                  decoration: InputDecoration(
-                    labelText: 'ID',
+      child:
+          selectedNode != null
+              ? ListView(
+                padding: EdgeInsets.all(8.0),
+                children: [
+                  Text(
+                    'Node Attributes',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  // Make ID field read-only
-                  enabled: false,
-                ),
-                SizedBox(height: 8.0),
-                TextField(
-                  controller: nameController,
-                  focusNode: nameFocusNode,
-                  decoration: InputDecoration(
-                    labelText: 'Name',
+                  SizedBox(height: 8.0),
+                  TextField(
+                    controller: TextEditingController(
+                      text: selectedNode!.id.toString(),
+                    ),
+                    decoration: InputDecoration(labelText: 'ID'),
+                    // Make ID field read-only
+                    enabled: false,
                   ),
-                  onChanged: onNameChanged,
-                  onEditingComplete: () {
-                    FocusScope.of(context).unfocus(); // Dismiss the keyboard
-                    if (onNameEditComplete != null) onNameEditComplete!();
-                  },
-                ),
-                SizedBox(height: 8.0),
-                DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  value: selectedNode!.target,
-                  decoration: InputDecoration(
-                    labelText:
-                        Text('Target', overflow: TextOverflow.ellipsis).data,
-                    isDense: true,
+                  SizedBox(height: 8.0),
+                  TextField(
+                    controller: nameController,
+                    focusNode: nameFocusNode,
+                    decoration: InputDecoration(labelText: 'Name'),
+                    onChanged: onNameChanged,
+                    onEditingComplete: () {
+                      FocusScope.of(context).unfocus(); // Dismiss the keyboard
+                      if (onNameEditComplete != null) onNameEditComplete!();
+                    },
                   ),
-                  items: supportedTargets
-                      .map((target) => DropdownMenuItem<String>(
-                            alignment: Alignment.centerLeft,
-                            value: target.name,
-                            child: Text(
-                              target.name,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ))
-                      .toList(),
-                  onChanged: (newValue) {
-                    onTargetChanged(newValue!);
-                  },
-                ),
-                SizedBox(height: 8.0),
-                DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  value: selectedNode!.kernel,
-                  decoration: InputDecoration(
-                    labelText:
-                        Text('Kernel', overflow: TextOverflow.ellipsis).data,
-                    isDense: true,
-                  ),
-                  items: supportedTargets
-                      .firstWhere(
-                        (target) => target.name == selectedNode!.target,
-                        orElse: () => supportedTargets.first,
-                      )
-                      .kernels
-                      .map((kernel) => DropdownMenuItem<String>(
-                            value: kernel.name,
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                kernel.name,
-                                style: TextStyle(fontSize: 12),
-                                overflow: TextOverflow.ellipsis,
+                  SizedBox(height: 8.0),
+                  DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    value: selectedNode!.target,
+                    decoration: InputDecoration(
+                      labelText:
+                          Text('Target', overflow: TextOverflow.ellipsis).data,
+                      isDense: true,
+                    ),
+                    items:
+                        supportedTargets
+                            .map(
+                              (target) => DropdownMenuItem<String>(
+                                alignment: Alignment.centerLeft,
+                                value: target.name,
+                                child: Text(
+                                  target.name,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
-                            ),
-                          ))
-                      .toList(),
-                  onChanged: (newValue) {
-                    onKernelChanged(newValue!);
-                  },
-                ),
-                SizedBox(height: 8.0),
-                _buildDependenciesSection(
-                  title: 'Upstream Dependencies',
-                  dependencies: graph!.getUpstreamDependencies(selectedNode!),
-                ),
-                SizedBox(height: 8.0),
-                _buildDependenciesSection(
-                  title: 'Downstream Dependencies',
-                  dependencies: graph!.getDownstreamDependencies(selectedNode!),
-                ),
-                SizedBox(height: 8.0),
-                Text(
-                  'Inputs',
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: supportedTargets
-                      .firstWhere(
-                        (target) => target.name == selectedNode!.target,
-                        orElse: () => supportedTargets.first,
-                      )
-                      .kernels
-                      .firstWhere(
-                        (kernel) => kernel.name == selectedNode!.kernel,
-                        orElse: () => supportedTargets.first.kernels.first,
-                      )
-                      .inputs
-                      .map((input) => Text(input))
-                      .toList(),
-                ),
-                SizedBox(height: 8.0),
-                Text(
-                  'Outputs',
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: supportedTargets
-                      .firstWhere(
-                        (target) => target.name == selectedNode!.target,
-                        orElse: () => supportedTargets.first,
-                      )
-                      .kernels
-                      .firstWhere(
-                        (kernel) => kernel.name == selectedNode!.kernel,
-                        orElse: () => supportedTargets.first.kernels.first,
-                      )
-                      .outputs
-                      .map((output) => Text(output))
-                      .toList(),
-                ),
-                // Add more attributes as needed
-              ],
-            )
-          : Container(),
+                            )
+                            .toList(),
+                    onChanged: (newValue) {
+                      onTargetChanged(newValue!);
+                    },
+                  ),
+                  SizedBox(height: 8.0),
+                  DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    value: selectedNode!.kernel,
+                    decoration: InputDecoration(
+                      labelText:
+                          Text('Kernel', overflow: TextOverflow.ellipsis).data,
+                      isDense: true,
+                    ),
+                    items:
+                        supportedTargets
+                            .firstWhere(
+                              (target) => target.name == selectedNode!.target,
+                              orElse: () => supportedTargets.first,
+                            )
+                            .kernels
+                            .map(
+                              (kernel) => DropdownMenuItem<String>(
+                                value: kernel.name,
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    kernel.name,
+                                    style: TextStyle(fontSize: 12),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                    onChanged: (newValue) {
+                      onKernelChanged(newValue!);
+                    },
+                  ),
+                  SizedBox(height: 8.0),
+                  _buildDependenciesSection(
+                    title: 'Upstream Dependencies',
+                    dependencies: graph!.getUpstreamDependencies(selectedNode!),
+                  ),
+                  SizedBox(height: 8.0),
+                  _buildDependenciesSection(
+                    title: 'Downstream Dependencies',
+                    dependencies: graph!.getDownstreamDependencies(
+                      selectedNode!,
+                    ),
+                  ),
+                  SizedBox(height: 8.0),
+                  Text('Inputs'),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children:
+                        supportedTargets
+                            .firstWhere(
+                              (target) => target.name == selectedNode!.target,
+                              orElse: () => supportedTargets.first,
+                            )
+                            .kernels
+                            .firstWhere(
+                              (kernel) => kernel.name == selectedNode!.kernel,
+                              orElse:
+                                  () => supportedTargets.first.kernels.first,
+                            )
+                            .inputs
+                            .map((input) => Text(input))
+                            .toList(),
+                  ),
+                  SizedBox(height: 8.0),
+                  Text('Outputs'),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children:
+                        supportedTargets
+                            .firstWhere(
+                              (target) => target.name == selectedNode!.target,
+                              orElse: () => supportedTargets.first,
+                            )
+                            .kernels
+                            .firstWhere(
+                              (kernel) => kernel.name == selectedNode!.kernel,
+                              orElse:
+                                  () => supportedTargets.first.kernels.first,
+                            )
+                            .outputs
+                            .map((output) => Text(output))
+                            .toList(),
+                  ),
+                  // Add more attributes as needed
+                ],
+              )
+              : Container(),
     );
   }
 
@@ -1878,10 +2005,12 @@ class NodeAttributesPanel extends StatelessWidget {
           title,
           // style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        ...dependencies.map((dep) => TextField(
-              controller: TextEditingController(text: dep),
-              enabled: false, // Make dependencies read-only
-            )),
+        ...dependencies.map(
+          (dep) => TextField(
+            controller: TextEditingController(text: dep),
+            enabled: false, // Make dependencies read-only
+          ),
+        ),
       ],
     );
   }

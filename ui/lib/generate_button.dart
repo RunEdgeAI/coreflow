@@ -26,7 +26,11 @@ class GenerateButton extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: Center(
-              child: Icon(Icons.auto_awesome, color: Colors.white, size: 24), // white icon for contrast
+              child: Icon(
+                Icons.auto_awesome,
+                color: Colors.white,
+                size: 24,
+              ), // white icon for contrast
             ),
           ),
         ),
