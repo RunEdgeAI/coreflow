@@ -81,25 +81,23 @@ class GraphEditorState extends State<GraphEditor> {
         // Parse <Inputs> and <Outputs> elements within the <Kernel>.
         final inputsElement = kernelElement.findElements('Inputs').firstOrNull;
         if (inputsElement != null) {
-          inputs =
-              inputsElement
-                  .findElements('Input')
-                  .map(
-                    (element) => element.innerText.trim().replaceAll('VX_', ''),
-                  )
-                  .toList();
+          inputs = inputsElement
+              .findElements('Input')
+              .map(
+                (element) => element.innerText.trim().replaceAll('VX_', ''),
+              )
+              .toList();
         }
 
         final outputsElement =
             kernelElement.findElements('Outputs').firstOrNull;
         if (outputsElement != null) {
-          outputs =
-              outputsElement
-                  .findElements('Output')
-                  .map(
-                    (element) => element.innerText.trim().replaceAll('VX_', ''),
-                  )
-                  .toList();
+          outputs = outputsElement
+              .findElements('Output')
+              .map(
+                (element) => element.innerText.trim().replaceAll('VX_', ''),
+              )
+              .toList();
         }
 
         kernels.add(Kernel(name: kernelName, inputs: inputs, outputs: outputs));
@@ -171,11 +169,10 @@ class GraphEditorState extends State<GraphEditor> {
 
     // Check if an edge already exists between the same pair of nodes
     bool edgeExists = graph.edges.any(
-      (edge) =>
-          (edge.source == source &&
-              edge.target == target &&
-              edge.srcId == srcId &&
-              edge.tgtId == tgtId),
+      (edge) => (edge.source == source &&
+          edge.target == target &&
+          edge.srcId == srcId &&
+          edge.tgtId == tgtId),
     );
 
     if (!edgeExists) {
@@ -264,14 +261,12 @@ class GraphEditorState extends State<GraphEditor> {
       _refCount -= node.outputs.length;
 
       // Create new inputs and outputs
-      node.inputs =
-          kernel.inputs
-              .map((input) => Reference.createReference(input, _refCount++))
-              .toList();
-      node.outputs =
-          kernel.outputs
-              .map((output) => Reference.createReference(output, _refCount++))
-              .toList();
+      node.inputs = kernel.inputs
+          .map((input) => Reference.createReference(input, _refCount++))
+          .toList();
+      node.outputs = kernel.outputs
+          .map((output) => Reference.createReference(output, _refCount++))
+          .toList();
       _buildTooltips();
     });
   } // End of _updateNodeIO
@@ -393,10 +388,9 @@ class GraphEditorState extends State<GraphEditor> {
                 }
               }
             },
-            itemBuilder:
-                (context) => [
-                  PopupMenuItem(value: 'Import', child: Text('Import')),
-                ],
+            itemBuilder: (context) => [
+              PopupMenuItem(value: 'Import', child: Text('Import')),
+            ],
           ),
           PopupMenuButton<String>(
             icon: Icon(Icons.file_download), // Single export icon
@@ -408,11 +402,10 @@ class GraphEditorState extends State<GraphEditor> {
                 _exportXml(context);
               }
             },
-            itemBuilder:
-                (context) => [
-                  PopupMenuItem(value: 'Export DOT', child: Text('Export DOT')),
-                  PopupMenuItem(value: 'Export XML', child: Text('Export XML')),
-                ],
+            itemBuilder: (context) => [
+              PopupMenuItem(value: 'Export DOT', child: Text('Export DOT')),
+              PopupMenuItem(value: 'Export XML', child: Text('Export XML')),
+            ],
           ),
         ],
       ),
@@ -481,137 +474,142 @@ class GraphEditorState extends State<GraphEditor> {
                               ),
                               graphs.isNotEmpty
                                   ? KeyboardListener(
-                                    focusNode: _focusNode,
-                                    onKeyEvent: (event) {
-                                      if (_nameFocusNode.hasFocus) return;
+                                      focusNode: _focusNode,
+                                      onKeyEvent: (event) {
+                                        if (_nameFocusNode.hasFocus) return;
 
-                                      if (event is KeyDownEvent) {
-                                        if (event.logicalKey ==
-                                                LogicalKeyboardKey.backspace ||
-                                            event.logicalKey ==
-                                                LogicalKeyboardKey.delete) {
-                                          if (selectedGraphRow != null) {
-                                            _deleteGraph(selectedGraphRow!);
-                                          } else if (graphs.isNotEmpty) {
-                                            _deleteSelected(
-                                              graphs[selectedGraphIndex],
-                                            );
-                                          }
-                                        } else if (event.logicalKey ==
-                                            LogicalKeyboardKey.escape) {
-                                          _deselectAll();
-                                        }
-                                      }
-                                    },
-                                    child: MouseRegion(
-                                      onHover: (event) {
-                                        setState(() {
-                                          mousePosition = event.localPosition;
-                                        });
-                                      },
-                                      onExit: (event) {
-                                        setState(() {
-                                          mousePosition = null;
-                                        });
-                                      },
-                                      child: GestureDetector(
-                                        onTapDown: (details) {
-                                          final graph =
-                                              graphs[selectedGraphIndex];
-                                          final tappedNode = graph.findNodeAt(
-                                            details.localPosition,
-                                          );
-                                          final tappedEdge = graph.findEdgeAt(
-                                            details.localPosition,
-                                          );
-                                          setState(() {
-                                            if (tappedNode != null) {
-                                              // Deselect the selected edge
-                                              selectedEdge = null;
-                                              if (selectedNode == null) {
-                                                selectedNode = tappedNode;
-                                              } else {
-                                                // Deselect the selected node
-                                                selectedNode = null;
-                                              }
-                                            } else if (tappedEdge != null) {
-                                              if (selectedEdge == tappedEdge) {
-                                                // Deselect the tapped edge if it is already selected
-                                                selectedEdge = null;
-                                              } else {
-                                                // Deselect the selected node
-                                                selectedNode = null;
-                                                // Select the tapped edge
-                                                selectedEdge = tappedEdge;
-                                              }
-                                            } else {
-                                              _addNode(
-                                                graph,
-                                                details.localPosition,
-                                                constraints.biggest,
+                                        if (event is KeyDownEvent) {
+                                          if (event.logicalKey ==
+                                                  LogicalKeyboardKey
+                                                      .backspace ||
+                                              event.logicalKey ==
+                                                  LogicalKeyboardKey.delete) {
+                                            if (selectedGraphRow != null) {
+                                              _deleteGraph(selectedGraphRow!);
+                                            } else if (graphs.isNotEmpty) {
+                                              _deleteSelected(
+                                                graphs[selectedGraphIndex],
                                               );
-                                              // Deselect the selected node
-                                              selectedNode = null;
-                                              // Deselect the selected edge
-                                              selectedEdge = null;
-                                              // Deselect the selected graph row
-                                              selectedGraphRow = null;
-                                              edgeStartNode = null;
-                                              edgeStartOutput = null;
                                             }
+                                          } else if (event.logicalKey ==
+                                              LogicalKeyboardKey.escape) {
+                                            _deselectAll();
+                                          }
+                                        }
+                                      },
+                                      child: MouseRegion(
+                                        onHover: (event) {
+                                          setState(() {
+                                            mousePosition = event.localPosition;
                                           });
                                         },
-                                        onPanUpdate: (details) {
+                                        onExit: (event) {
                                           setState(() {
-                                            mousePosition =
-                                                details.localPosition;
-                                            if (draggingNode != null) {
-                                              final newPosition =
-                                                  draggingNode!.position +
-                                                  details.delta;
-                                              // Assuming the radius of the node is 25
-                                              final nodeRadius = 25.0;
-                                              // Ensure the node stays within the bounds of the center panel
-                                              if (newPosition.dx - nodeRadius >=
-                                                      0 &&
-                                                  newPosition.dx + nodeRadius <=
-                                                      constraints.maxWidth -
-                                                          (selectedNode != null
-                                                              ? 240
-                                                              : 0) &&
-                                                  newPosition.dy - nodeRadius >=
-                                                      0 &&
-                                                  newPosition.dy + nodeRadius <=
-                                                      constraints.maxHeight) {
-                                                draggingNode!.position =
-                                                    newPosition;
-                                              }
-                                            }
-                                          });
-                                        },
-                                        onPanStart: (details) {
-                                          setState(() {
-                                            final graph =
-                                                graphs[selectedGraphIndex];
-                                            draggingNode = graph.findNodeAt(
-                                              details.localPosition,
-                                            );
-                                            dragOffset = details.localPosition;
-                                          });
-                                        },
-                                        onPanEnd: (details) {
-                                          setState(() {
-                                            draggingNode = null;
-                                            dragOffset = null;
-                                            edgeStartNode = null;
-                                            edgeStartOutput = null;
                                             mousePosition = null;
                                           });
                                         },
-                                        child: CustomPaint(
-                                          painter:
-                                              graphs.isNotEmpty
-                                                  ? GraphPainter(
+                                        child: GestureDetector(
+                                          onTapDown: (details) {
+                                            final graph =
+                                                graphs[selectedGraphIndex];
+                                            final tappedNode = graph.findNodeAt(
+                                              details.localPosition,
+                                            );
+                                            final tappedEdge = graph.findEdgeAt(
+                                              details.localPosition,
+                                            );
+                                            setState(() {
+                                              if (tappedNode != null) {
+                                                // Deselect the selected edge
+                                                selectedEdge = null;
+                                                if (selectedNode == null) {
+                                                  selectedNode = tappedNode;
+                                                } else {
+                                                  // Deselect the selected node
+                                                  selectedNode = null;
+                                                }
+                                              } else if (tappedEdge != null) {
+                                                if (selectedEdge ==
+                                                    tappedEdge) {
+                                                  // Deselect the tapped edge if it is already selected
+                                                  selectedEdge = null;
+                                                } else {
+                                                  // Deselect the selected node
+                                                  selectedNode = null;
+                                                  // Select the tapped edge
+                                                  selectedEdge = tappedEdge;
+                                                }
+                                              } else {
+                                                _addNode(
+                                                  graph,
+                                                  details.localPosition,
+                                                  constraints.biggest,
+                                                );
+                                                // Deselect the selected node
+                                                selectedNode = null;
+                                                // Deselect the selected edge
+                                                selectedEdge = null;
+                                                // Deselect the selected graph row
+                                                selectedGraphRow = null;
+                                                edgeStartNode = null;
+                                                edgeStartOutput = null;
+                                              }
+                                            });
+                                          },
+                                          onPanUpdate: (details) {
+                                            setState(() {
+                                              mousePosition =
+                                                  details.localPosition;
+                                              if (draggingNode != null) {
+                                                final newPosition =
+                                                    draggingNode!.position +
+                                                        details.delta;
+                                                // Assuming the radius of the node is 25
+                                                final nodeRadius = 25.0;
+                                                // Ensure the node stays within the bounds of the center panel
+                                                if (newPosition.dx - nodeRadius >= 0 &&
+                                                    newPosition.dx +
+                                                            nodeRadius <=
+                                                        constraints.maxWidth -
+                                                            (selectedNode !=
+                                                                    null
+                                                                ? 240
+                                                                : 0) &&
+                                                    newPosition.dy -
+                                                            nodeRadius >=
+                                                        0 &&
+                                                    newPosition.dy +
+                                                            nodeRadius <=
+                                                        constraints.maxHeight) {
+                                                  draggingNode!.position =
+                                                      newPosition;
+                                                }
+                                              }
+                                            });
+                                          },
+                                          onPanStart: (details) {
+                                            setState(() {
+                                              final graph =
+                                                  graphs[selectedGraphIndex];
+                                              draggingNode = graph.findNodeAt(
+                                                details.localPosition,
+                                              );
+                                              dragOffset =
+                                                  details.localPosition;
+                                            });
+                                          },
+                                          onPanEnd: (details) {
+                                            setState(() {
+                                              draggingNode = null;
+                                              dragOffset = null;
+                                              edgeStartNode = null;
+                                              edgeStartOutput = null;
+                                              mousePosition = null;
+                                            });
+                                          },
+                                          child: CustomPaint(
+                                            painter: graphs.isNotEmpty
+                                                ? GraphPainter(
                                                     graphs[selectedGraphIndex]
                                                         .nodes,
                                                     graphs[selectedGraphIndex]
@@ -620,12 +618,12 @@ class GraphEditorState extends State<GraphEditor> {
                                                     selectedEdge,
                                                     mousePosition,
                                                   )
-                                                  : null,
-                                          child: Container(),
+                                                : null,
+                                            child: Container(),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  )
+                                    )
                                   : Center(child: Text('No graphs available')),
                               ..._buildTooltips(),
                               // Right panel for node attributes (overlay style)
@@ -645,61 +643,54 @@ class GraphEditorState extends State<GraphEditor> {
                                     child: Container(
                                       width: 220,
                                       color: Colors.grey[800],
-                                      child:
-                                          selectedNode != null
-                                              ? NodeAttributesPanel(
-                                                graph:
-                                                    graphs.isNotEmpty
-                                                        ? graphs[selectedGraphIndex]
-                                                        : null,
-                                                selectedNode: selectedNode,
-                                                supportedTargets: _supported,
-                                                nameController: _nameController,
-                                                nameFocusNode: _nameFocusNode,
-                                                onNameChanged: (value) {
-                                                  setState(() {
-                                                    selectedNode!.name = value;
-                                                  });
-                                                },
-                                                onTargetChanged: (newValue) {
-                                                  setState(() {
-                                                    selectedNode!.target =
-                                                        newValue;
-                                                    final target = _supported
-                                                        .firstWhere(
-                                                          (t) =>
-                                                              t.name ==
-                                                              newValue,
-                                                        );
-                                                    if (target
-                                                        .kernels
-                                                        .isNotEmpty) {
-                                                      selectedNode!.kernel =
-                                                          target
-                                                              .kernels
-                                                              .first
-                                                              .name;
-                                                      _updateNodeIO(
-                                                        selectedNode!,
-                                                        selectedNode!.kernel,
-                                                      );
-                                                    }
-                                                  });
-                                                },
-                                                onKernelChanged: (newValue) {
-                                                  setState(() {
+                                      child: selectedNode != null
+                                          ? NodeAttributesPanel(
+                                              graph: graphs.isNotEmpty
+                                                  ? graphs[selectedGraphIndex]
+                                                  : null,
+                                              selectedNode: selectedNode,
+                                              supportedTargets: _supported,
+                                              nameController: _nameController,
+                                              nameFocusNode: _nameFocusNode,
+                                              onNameChanged: (value) {
+                                                setState(() {
+                                                  selectedNode!.name = value;
+                                                });
+                                              },
+                                              onTargetChanged: (newValue) {
+                                                setState(() {
+                                                  selectedNode!.target =
+                                                      newValue;
+                                                  final target =
+                                                      _supported.firstWhere(
+                                                    (t) => t.name == newValue,
+                                                  );
+                                                  if (target
+                                                      .kernels.isNotEmpty) {
                                                     selectedNode!.kernel =
-                                                        newValue;
+                                                        target
+                                                            .kernels.first.name;
                                                     _updateNodeIO(
                                                       selectedNode!,
-                                                      newValue,
+                                                      selectedNode!.kernel,
                                                     );
-                                                  });
-                                                },
-                                                onNameEditComplete:
-                                                    _restoreMainFocus,
-                                              )
-                                              : null,
+                                                  }
+                                                });
+                                              },
+                                              onKernelChanged: (newValue) {
+                                                setState(() {
+                                                  selectedNode!.kernel =
+                                                      newValue;
+                                                  _updateNodeIO(
+                                                    selectedNode!,
+                                                    newValue,
+                                                  );
+                                                });
+                                              },
+                                              onNameEditComplete:
+                                                  _restoreMainFocus,
+                                            )
+                                          : null,
                                     ),
                                   ),
                                 ),
@@ -743,10 +734,9 @@ class GraphEditorState extends State<GraphEditor> {
         for (int i = 0; i < node.inputs.length; i++) {
           // Distribute the inputs from radians 3pi/4 to 5pi/4 aroud the node.
           // If there is only one input, it should be at pi radians.
-          final angle =
-              (node.inputs.length == 1)
-                  ? pi
-                  : (3 * pi / 4) + (i * (pi / 2) / (node.inputs.length - 1));
+          final angle = (node.inputs.length == 1)
+              ? pi
+              : (3 * pi / 4) + (i * (pi / 2) / (node.inputs.length - 1));
           final iconOffset = Offset(
             node.position.dx + 30 * cos(angle),
             node.position.dy + 30 * sin(angle),
@@ -784,11 +774,10 @@ class GraphEditorState extends State<GraphEditor> {
                   child: Icon(
                     Icons.input,
                     size: 16,
-                    color:
-                        edgeStartNode == node &&
-                                edgeEndInput == node.inputs[i].id
-                            ? Colors.white
-                            : Colors.green,
+                    color: edgeStartNode == node &&
+                            edgeEndInput == node.inputs[i].id
+                        ? Colors.white
+                        : Colors.green,
                   ),
                 ),
               ),
@@ -799,10 +788,9 @@ class GraphEditorState extends State<GraphEditor> {
         for (int i = 0; i < node.outputs.length; i++) {
           // Distribute the outputs from radians pi/4 to 7pi/4 around the node.
           // If there is only one output, it should be at 0 or 2pi radians.
-          final angle =
-              (node.outputs.length == 1)
-                  ? 0
-                  : (pi / 4) + (i * (3 * pi / 2) / (node.outputs.length - 1));
+          final angle = (node.outputs.length == 1)
+              ? 0
+              : (pi / 4) + (i * (3 * pi / 2) / (node.outputs.length - 1));
           final iconOffset = Offset(
             node.position.dx + 30 * cos(angle),
             node.position.dy + 30 * sin(angle),
@@ -827,11 +815,10 @@ class GraphEditorState extends State<GraphEditor> {
                   child: Icon(
                     Icons.output,
                     size: 16,
-                    color:
-                        edgeStartNode == node &&
-                                edgeStartOutput == node.outputs[i].id
-                            ? Colors.white
-                            : Colors.green,
+                    color: edgeStartNode == node &&
+                            edgeStartOutput == node.outputs[i].id
+                        ? Colors.white
+                        : Colors.green,
                   ),
                 ),
               ),
@@ -875,13 +862,12 @@ class GraphEditorState extends State<GraphEditor> {
                   DropdownButtonFormField<String>(
                     value: reference.elemType,
                     decoration: InputDecoration(labelText: 'Element Type'),
-                    items:
-                        arrayTypes.map((type) {
-                          return DropdownMenuItem<String>(
-                            value: type,
-                            child: Text(type),
-                          );
-                        }).toList(),
+                    items: arrayTypes.map((type) {
+                      return DropdownMenuItem<String>(
+                        value: type,
+                        child: Text(type),
+                      );
+                    }).toList(),
                     onChanged: (value) {
                       reference.elemType = value!;
                     },
@@ -894,17 +880,16 @@ class GraphEditorState extends State<GraphEditor> {
                     keyboardType: TextInputType.text,
                     onChanged: (value) {
                       // Remove trailing commas and split
-                      reference.values =
-                          value
-                              .split(',')
-                              .map((e) => e.trim())
-                              .where((e) => e.isNotEmpty)
-                              .toList();
+                      reference.values = value
+                          .split(',')
+                          .map((e) => e.trim())
+                          .where((e) => e.isNotEmpty)
+                          .toList();
                     },
-                    onEditingComplete:
-                        () => _updateArrayCapacity(context, reference),
-                    onTapOutside:
-                        (event) => _updateArrayCapacity(context, reference),
+                    onEditingComplete: () =>
+                        _updateArrayCapacity(context, reference),
+                    onTapOutside: (event) =>
+                        _updateArrayCapacity(context, reference),
                   ),
                 ],
                 if (reference is Convolution) ...[
@@ -967,13 +952,12 @@ class GraphEditorState extends State<GraphEditor> {
                   DropdownButtonFormField<String>(
                     value: reference.format,
                     decoration: InputDecoration(labelText: 'Format'),
-                    items:
-                        imageTypes.map((type) {
-                          return DropdownMenuItem<String>(
-                            value: type,
-                            child: Text(type),
-                          );
-                        }).toList(),
+                    items: imageTypes.map((type) {
+                      return DropdownMenuItem<String>(
+                        value: type,
+                        child: Text(type),
+                      );
+                    }).toList(),
                     onChanged: (value) {
                       reference.format = value!;
                     },
@@ -1025,13 +1009,12 @@ class GraphEditorState extends State<GraphEditor> {
                   DropdownButtonFormField<String>(
                     value: reference.elemType,
                     decoration: InputDecoration(labelText: 'Element Type'),
-                    items:
-                        numTypes.map((type) {
-                          return DropdownMenuItem<String>(
-                            value: type,
-                            child: Text(type),
-                          );
-                        }).toList(),
+                    items: numTypes.map((type) {
+                      return DropdownMenuItem<String>(
+                        value: type,
+                        child: Text(type),
+                      );
+                    }).toList(),
                     onChanged: (value) {
                       reference.elemType = value!;
                     },
@@ -1074,13 +1057,12 @@ class GraphEditorState extends State<GraphEditor> {
                   DropdownButtonFormField<String>(
                     value: reference.elemType,
                     decoration: InputDecoration(labelText: 'Element Type'),
-                    items:
-                        objectArrayTypes.map((type) {
-                          return DropdownMenuItem<String>(
-                            value: type,
-                            child: Text(type),
-                          );
-                        }).toList(),
+                    items: objectArrayTypes.map((type) {
+                      return DropdownMenuItem<String>(
+                        value: type,
+                        child: Text(type),
+                      );
+                    }).toList(),
                     onChanged: (value) {
                       if (value != null) {
                         reference.elemType = value;
@@ -1155,13 +1137,12 @@ class GraphEditorState extends State<GraphEditor> {
                   DropdownButtonFormField<String>(
                     value: reference.format,
                     decoration: InputDecoration(labelText: 'Format'),
-                    items:
-                        imageTypes.map((type) {
-                          return DropdownMenuItem<String>(
-                            value: type,
-                            child: Text(type),
-                          );
-                        }).toList(),
+                    items: imageTypes.map((type) {
+                      return DropdownMenuItem<String>(
+                        value: type,
+                        child: Text(type),
+                      );
+                    }).toList(),
                     onChanged: (value) {
                       reference.format = value!;
                     },
@@ -1221,13 +1202,12 @@ class GraphEditorState extends State<GraphEditor> {
                   DropdownButtonFormField<String>(
                     value: reference.elemType,
                     decoration: InputDecoration(labelText: 'Element Type'),
-                    items:
-                        scalarTypes.map((type) {
-                          return DropdownMenuItem<String>(
-                            value: type,
-                            child: Text(type),
-                          );
-                        }).toList(),
+                    items: scalarTypes.map((type) {
+                      return DropdownMenuItem<String>(
+                        value: type,
+                        child: Text(type),
+                      );
+                    }).toList(),
                     onChanged: (value) {
                       reference.elemType = value!;
                     },
@@ -1265,24 +1245,22 @@ class GraphEditorState extends State<GraphEditor> {
                     ),
                     decoration: InputDecoration(labelText: 'Shape'),
                     onChanged: (value) {
-                      reference.shape =
-                          value
-                              .replaceAll(RegExp(r'[\[\]]'), '')
-                              .split(',')
-                              .map((e) => int.tryParse(e.trim()) ?? 0)
-                              .toList();
+                      reference.shape = value
+                          .replaceAll(RegExp(r'[\[\]]'), '')
+                          .split(',')
+                          .map((e) => int.tryParse(e.trim()) ?? 0)
+                          .toList();
                     },
                   ),
                   DropdownButtonFormField<String>(
                     value: reference.elemType,
                     decoration: InputDecoration(labelText: 'Element Type'),
-                    items:
-                        numTypes.map((type) {
-                          return DropdownMenuItem<String>(
-                            value: type,
-                            child: Text(type),
-                          );
-                        }).toList(),
+                    items: numTypes.map((type) {
+                      return DropdownMenuItem<String>(
+                        value: type,
+                        child: Text(type),
+                      );
+                    }).toList(),
                     onChanged: (value) {
                       reference.elemType = value!;
                     },
@@ -1302,13 +1280,12 @@ class GraphEditorState extends State<GraphEditor> {
                   DropdownButtonFormField<String>(
                     value: reference.dataType,
                     decoration: InputDecoration(labelText: 'Element Type'),
-                    items:
-                        thresholdDataTypes.map((type) {
-                          return DropdownMenuItem<String>(
-                            value: type,
-                            child: Text(type),
-                          );
-                        }).toList(),
+                    items: thresholdDataTypes.map((type) {
+                      return DropdownMenuItem<String>(
+                        value: type,
+                        child: Text(type),
+                      );
+                    }).toList(),
                     onChanged: (value) {
                       reference.dataType = value!;
                     },
@@ -1346,10 +1323,9 @@ class GraphEditorState extends State<GraphEditor> {
   void _updateArrayCapacity(BuildContext context, Array reference) {
     // For strings, capacity is based on total character count
     // For other types, capacity is based on number of elements
-    final newCapacity =
-        reference.elemType == 'CHAR'
-            ? reference.values.join(', ').length
-            : reference.values.length;
+    final newCapacity = reference.elemType == 'CHAR'
+        ? reference.values.join(', ').length
+        : reference.values.length;
 
     if (newCapacity != reference.capacity) {
       reference.capacity = newCapacity;
@@ -1364,12 +1340,11 @@ class GraphEditorState extends State<GraphEditor> {
     int? objectIndex,
   }) {
     // Get the appropriate attributes map based on whether we're dealing with individual objects
-    Map<String, dynamic> attributes =
-        objectIndex != null
-            ? (reference.elementAttributes['object_$objectIndex']
-                    as Map<String, dynamic>? ??
-                {})
-            : reference.elementAttributes;
+    Map<String, dynamic> attributes = objectIndex != null
+        ? (reference.elementAttributes['object_$objectIndex']
+                as Map<String, dynamic>? ??
+            {})
+        : reference.elementAttributes;
 
     // Helper function to get attribute value
     T? getAttribute<T>(String key) {
@@ -1424,13 +1399,12 @@ class GraphEditorState extends State<GraphEditor> {
           DropdownButtonFormField<String>(
             value: getAttribute<String>('elemType') ?? numTypes.first,
             decoration: InputDecoration(labelText: 'Element Type'),
-            items:
-                numTypes.map((type) {
-                  return DropdownMenuItem<String>(
-                    value: type,
-                    child: Text(type),
-                  );
-                }).toList(),
+            items: numTypes.map((type) {
+              return DropdownMenuItem<String>(
+                value: type,
+                child: Text(type),
+              );
+            }).toList(),
             onChanged: (value) {
               if (value != null) {
                 setAttribute('elemType', value);
@@ -1463,13 +1437,12 @@ class GraphEditorState extends State<GraphEditor> {
           DropdownButtonFormField<String>(
             value: getAttribute<String>('format') ?? imageTypes.first,
             decoration: InputDecoration(labelText: 'Format'),
-            items:
-                imageTypes.map((type) {
-                  return DropdownMenuItem<String>(
-                    value: type,
-                    child: Text(type),
-                  );
-                }).toList(),
+            items: imageTypes.map((type) {
+              return DropdownMenuItem<String>(
+                value: type,
+                child: Text(type),
+              );
+            }).toList(),
             onChanged: (value) {
               if (value != null) {
                 setAttribute('format', value);
@@ -1492,13 +1465,12 @@ class GraphEditorState extends State<GraphEditor> {
           DropdownButtonFormField<String>(
             value: getAttribute<String>('elemType') ?? arrayTypes.first,
             decoration: InputDecoration(labelText: 'Element Type'),
-            items:
-                arrayTypes.map((type) {
-                  return DropdownMenuItem<String>(
-                    value: type,
-                    child: Text(type),
-                  );
-                }).toList(),
+            items: arrayTypes.map((type) {
+              return DropdownMenuItem<String>(
+                value: type,
+                child: Text(type),
+              );
+            }).toList(),
             onChanged: (value) {
               if (value != null) {
                 setAttribute('elemType', value);
@@ -1531,13 +1503,12 @@ class GraphEditorState extends State<GraphEditor> {
           DropdownButtonFormField<String>(
             value: getAttribute<String>('elemType') ?? numTypes.first,
             decoration: InputDecoration(labelText: 'Element Type'),
-            items:
-                numTypes.map((type) {
-                  return DropdownMenuItem<String>(
-                    value: type,
-                    child: Text(type),
-                  );
-                }).toList(),
+            items: numTypes.map((type) {
+              return DropdownMenuItem<String>(
+                value: type,
+                child: Text(type),
+              );
+            }).toList(),
             onChanged: (value) {
               if (value != null) {
                 setAttribute('elemType', value);
@@ -1550,13 +1521,12 @@ class GraphEditorState extends State<GraphEditor> {
           DropdownButtonFormField<String>(
             value: getAttribute<String>('elemType') ?? scalarTypes.first,
             decoration: InputDecoration(labelText: 'Element Type'),
-            items:
-                scalarTypes.map((type) {
-                  return DropdownMenuItem<String>(
-                    value: type,
-                    child: Text(type),
-                  );
-                }).toList(),
+            items: scalarTypes.map((type) {
+              return DropdownMenuItem<String>(
+                value: type,
+                child: Text(type),
+              );
+            }).toList(),
             onChanged: (value) {
               if (value != null) {
                 setAttribute('elemType', value);
@@ -1642,13 +1612,12 @@ class GraphEditorState extends State<GraphEditor> {
           DropdownButtonFormField<String>(
             value: getAttribute<String>('format') ?? imageTypes.first,
             decoration: InputDecoration(labelText: 'Format'),
-            items:
-                imageTypes.map((type) {
-                  return DropdownMenuItem<String>(
-                    value: type,
-                    child: Text(type),
-                  );
-                }).toList(),
+            items: imageTypes.map((type) {
+              return DropdownMenuItem<String>(
+                value: type,
+                child: Text(type),
+              );
+            }).toList(),
             onChanged: (value) {
               if (value != null) {
                 setAttribute('format', value);
@@ -1713,13 +1682,12 @@ class GraphEditorState extends State<GraphEditor> {
           DropdownButtonFormField<String>(
             value: getAttribute<String>('dataType') ?? thresholdDataTypes.first,
             decoration: InputDecoration(labelText: 'Data Type'),
-            items:
-                thresholdDataTypes.map((type) {
-                  return DropdownMenuItem<String>(
-                    value: type,
-                    child: Text(type),
-                  );
-                }).toList(),
+            items: thresholdDataTypes.map((type) {
+              return DropdownMenuItem<String>(
+                value: type,
+                child: Text(type),
+              );
+            }).toList(),
             onChanged: (value) {
               if (value != null) {
                 setAttribute('dataType', value);
@@ -1742,13 +1710,12 @@ class GraphEditorState extends State<GraphEditor> {
           DropdownButtonFormField<String>(
             value: getAttribute<String>('elemType') ?? numTypes.first,
             decoration: InputDecoration(labelText: 'Element Type'),
-            items:
-                numTypes.map((type) {
-                  return DropdownMenuItem<String>(
-                    value: type,
-                    child: Text(type),
-                  );
-                }).toList(),
+            items: numTypes.map((type) {
+              return DropdownMenuItem<String>(
+                value: type,
+                child: Text(type),
+              );
+            }).toList(),
             onChanged: (value) {
               if (value != null) {
                 setAttribute('elemType', value);
@@ -1799,10 +1766,9 @@ class GraphListPanel extends StatelessWidget {
                     onTap: () => onSelectGraph(index),
                     child: Chip(
                       label: Text('Graph ${index + 1}'),
-                      backgroundColor:
-                          selectedGraphRow == index
-                              ? Colors.blue
-                              : Colors.grey[700],
+                      backgroundColor: selectedGraphRow == index
+                          ? Colors.blue
+                          : Colors.grey[700],
                     ),
                   ),
                 );
@@ -1845,152 +1811,145 @@ class NodeAttributesPanel extends StatelessWidget {
       duration: Duration(milliseconds: 300),
       width: selectedNode != null ? 200 : 0,
       color: Colors.grey[800],
-      child:
-          selectedNode != null
-              ? ListView(
-                padding: EdgeInsets.all(8.0),
-                children: [
-                  Text(
-                    'Node Attributes',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      child: selectedNode != null
+          ? ListView(
+              padding: EdgeInsets.all(8.0),
+              children: [
+                Text(
+                  'Node Attributes',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8.0),
+                TextField(
+                  controller: TextEditingController(
+                    text: selectedNode!.id.toString(),
                   ),
-                  SizedBox(height: 8.0),
-                  TextField(
-                    controller: TextEditingController(
-                      text: selectedNode!.id.toString(),
-                    ),
-                    decoration: InputDecoration(labelText: 'ID'),
-                    // Make ID field read-only
-                    enabled: false,
+                  decoration: InputDecoration(labelText: 'ID'),
+                  // Make ID field read-only
+                  enabled: false,
+                ),
+                SizedBox(height: 8.0),
+                TextField(
+                  controller: nameController,
+                  focusNode: nameFocusNode,
+                  decoration: InputDecoration(labelText: 'Name'),
+                  onChanged: onNameChanged,
+                  onEditingComplete: () {
+                    FocusScope.of(context).unfocus(); // Dismiss the keyboard
+                    if (onNameEditComplete != null) onNameEditComplete!();
+                  },
+                ),
+                SizedBox(height: 8.0),
+                DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  value: selectedNode!.target,
+                  decoration: InputDecoration(
+                    labelText:
+                        Text('Target', overflow: TextOverflow.ellipsis).data,
+                    isDense: true,
                   ),
-                  SizedBox(height: 8.0),
-                  TextField(
-                    controller: nameController,
-                    focusNode: nameFocusNode,
-                    decoration: InputDecoration(labelText: 'Name'),
-                    onChanged: onNameChanged,
-                    onEditingComplete: () {
-                      FocusScope.of(context).unfocus(); // Dismiss the keyboard
-                      if (onNameEditComplete != null) onNameEditComplete!();
-                    },
+                  items: supportedTargets
+                      .map(
+                        (target) => DropdownMenuItem<String>(
+                          alignment: Alignment.centerLeft,
+                          value: target.name,
+                          child: Text(
+                            target.name,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (newValue) {
+                    onTargetChanged(newValue!);
+                  },
+                ),
+                SizedBox(height: 8.0),
+                DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  value: selectedNode!.kernel,
+                  decoration: InputDecoration(
+                    labelText:
+                        Text('Kernel', overflow: TextOverflow.ellipsis).data,
+                    isDense: true,
                   ),
-                  SizedBox(height: 8.0),
-                  DropdownButtonFormField<String>(
-                    isExpanded: true,
-                    value: selectedNode!.target,
-                    decoration: InputDecoration(
-                      labelText:
-                          Text('Target', overflow: TextOverflow.ellipsis).data,
-                      isDense: true,
-                    ),
-                    items:
-                        supportedTargets
-                            .map(
-                              (target) => DropdownMenuItem<String>(
-                                alignment: Alignment.centerLeft,
-                                value: target.name,
-                                child: Text(
-                                  target.name,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            )
-                            .toList(),
-                    onChanged: (newValue) {
-                      onTargetChanged(newValue!);
-                    },
+                  items: supportedTargets
+                      .firstWhere(
+                        (target) => target.name == selectedNode!.target,
+                        orElse: () => supportedTargets.first,
+                      )
+                      .kernels
+                      .map(
+                        (kernel) => DropdownMenuItem<String>(
+                          value: kernel.name,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              kernel.name,
+                              style: TextStyle(fontSize: 12),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (newValue) {
+                    onKernelChanged(newValue!);
+                  },
+                ),
+                SizedBox(height: 8.0),
+                _buildDependenciesSection(
+                  title: 'Upstream Dependencies',
+                  dependencies: graph!.getUpstreamDependencies(selectedNode!),
+                ),
+                SizedBox(height: 8.0),
+                _buildDependenciesSection(
+                  title: 'Downstream Dependencies',
+                  dependencies: graph!.getDownstreamDependencies(
+                    selectedNode!,
                   ),
-                  SizedBox(height: 8.0),
-                  DropdownButtonFormField<String>(
-                    isExpanded: true,
-                    value: selectedNode!.kernel,
-                    decoration: InputDecoration(
-                      labelText:
-                          Text('Kernel', overflow: TextOverflow.ellipsis).data,
-                      isDense: true,
-                    ),
-                    items:
-                        supportedTargets
-                            .firstWhere(
-                              (target) => target.name == selectedNode!.target,
-                              orElse: () => supportedTargets.first,
-                            )
-                            .kernels
-                            .map(
-                              (kernel) => DropdownMenuItem<String>(
-                                value: kernel.name,
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    kernel.name,
-                                    style: TextStyle(fontSize: 12),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ),
-                            )
-                            .toList(),
-                    onChanged: (newValue) {
-                      onKernelChanged(newValue!);
-                    },
-                  ),
-                  SizedBox(height: 8.0),
-                  _buildDependenciesSection(
-                    title: 'Upstream Dependencies',
-                    dependencies: graph!.getUpstreamDependencies(selectedNode!),
-                  ),
-                  SizedBox(height: 8.0),
-                  _buildDependenciesSection(
-                    title: 'Downstream Dependencies',
-                    dependencies: graph!.getDownstreamDependencies(
-                      selectedNode!,
-                    ),
-                  ),
-                  SizedBox(height: 8.0),
-                  Text('Inputs'),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children:
-                        supportedTargets
-                            .firstWhere(
-                              (target) => target.name == selectedNode!.target,
-                              orElse: () => supportedTargets.first,
-                            )
-                            .kernels
-                            .firstWhere(
-                              (kernel) => kernel.name == selectedNode!.kernel,
-                              orElse:
-                                  () => supportedTargets.first.kernels.first,
-                            )
-                            .inputs
-                            .map((input) => Text(input))
-                            .toList(),
-                  ),
-                  SizedBox(height: 8.0),
-                  Text('Outputs'),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children:
-                        supportedTargets
-                            .firstWhere(
-                              (target) => target.name == selectedNode!.target,
-                              orElse: () => supportedTargets.first,
-                            )
-                            .kernels
-                            .firstWhere(
-                              (kernel) => kernel.name == selectedNode!.kernel,
-                              orElse:
-                                  () => supportedTargets.first.kernels.first,
-                            )
-                            .outputs
-                            .map((output) => Text(output))
-                            .toList(),
-                  ),
-                  // Add more attributes as needed
-                ],
-              )
-              : Container(),
+                ),
+                SizedBox(height: 8.0),
+                Text('Inputs'),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: supportedTargets
+                      .firstWhere(
+                        (target) => target.name == selectedNode!.target,
+                        orElse: () => supportedTargets.first,
+                      )
+                      .kernels
+                      .firstWhere(
+                        (kernel) => kernel.name == selectedNode!.kernel,
+                        orElse: () => supportedTargets.first.kernels.first,
+                      )
+                      .inputs
+                      .map((input) => Text(input))
+                      .toList(),
+                ),
+                SizedBox(height: 8.0),
+                Text('Outputs'),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: supportedTargets
+                      .firstWhere(
+                        (target) => target.name == selectedNode!.target,
+                        orElse: () => supportedTargets.first,
+                      )
+                      .kernels
+                      .firstWhere(
+                        (kernel) => kernel.name == selectedNode!.kernel,
+                        orElse: () => supportedTargets.first.kernels.first,
+                      )
+                      .outputs
+                      .map((output) => Text(output))
+                      .toList(),
+                ),
+                // Add more attributes as needed
+              ],
+            )
+          : Container(),
     );
   }
 

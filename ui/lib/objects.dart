@@ -16,10 +16,9 @@ List<String> refTypes = [
   "USER_DATA_OBJECT",
 ];
 
-List<String> objectArrayTypes =
-    refTypes
-        .where((type) => type != 'ARRAY' && type != 'OBJECT_ARRAY')
-        .toList();
+List<String> objectArrayTypes = refTypes
+    .where((type) => type != 'ARRAY' && type != 'OBJECT_ARRAY')
+    .toList();
 
 List<String> imageTypes = [
   "VIRT",
@@ -56,8 +55,7 @@ List<String> numTypes = [
 List<String> scalarTypes =
     numTypes + ["CHAR", "DF_IMAGE", "ENUM", "SIZE", "BOOL"];
 
-List<String> arrayTypes =
-    scalarTypes +
+List<String> arrayTypes = scalarTypes +
     [
       "RECTANGLE",
       "KEYPOINT",
@@ -68,19 +66,18 @@ List<String> arrayTypes =
 
 List<String> thresholdTypes = ["TYPE_BINARY", "TYPE_RANGE"];
 
-List<String> thresholdDataTypes =
-    scalarTypes
-        .where(
-          (type) =>
-              type != 'CHAR' &&
-              type != 'DF_IMAGE' &&
-              type != 'ENUM' &&
-              type != 'SIZE' &&
-              type != 'FLOAT16' &&
-              type != 'FLOAT32' &&
-              type != 'FLOAT64',
-        )
-        .toList();
+List<String> thresholdDataTypes = scalarTypes
+    .where(
+      (type) =>
+          type != 'CHAR' &&
+          type != 'DF_IMAGE' &&
+          type != 'ENUM' &&
+          type != 'SIZE' &&
+          type != 'FLOAT16' &&
+          type != 'FLOAT32' &&
+          type != 'FLOAT64',
+    )
+    .toList();
 
 class Reference {
   final int id;
@@ -180,11 +177,11 @@ class Reference {
   } // End of _createReference
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'type': type,
-    'linkId': linkId,
-  };
+        'id': id,
+        'name': name,
+        'type': type,
+        'linkId': linkId,
+      };
 
   static Reference fromJson(Map<String, dynamic> json) {
     final type = json['type'] ?? '';
@@ -245,13 +242,13 @@ class Node extends Reference {
 
   @override
   Map<String, dynamic> toJson() => {
-    ...super.toJson(),
-    'position': {'dx': position.dx, 'dy': position.dy},
-    'kernel': kernel,
-    'target': target,
-    'inputs': inputs.map((e) => e.toJson()).toList(),
-    'outputs': outputs.map((e) => e.toJson()).toList(),
-  };
+        ...super.toJson(),
+        'position': {'dx': position.dx, 'dy': position.dy},
+        'kernel': kernel,
+        'target': target,
+        'inputs': inputs.map((e) => e.toJson()).toList(),
+        'outputs': outputs.map((e) => e.toJson()).toList(),
+      };
 
   static Node fromJson(Map<String, dynamic> json) {
     return Node(
@@ -263,14 +260,12 @@ class Node extends Reference {
       ),
       kernel: json['kernel'] ?? '',
       target: json['target'] ?? '',
-      inputs:
-          (json['inputs'] as List<dynamic>? ?? [])
-              .map((e) => Reference.fromJson(e as Map<String, dynamic>))
-              .toList(),
-      outputs:
-          (json['outputs'] as List<dynamic>? ?? [])
-              .map((e) => Reference.fromJson(e as Map<String, dynamic>))
-              .toList(),
+      inputs: (json['inputs'] as List<dynamic>? ?? [])
+          .map((e) => Reference.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      outputs: (json['outputs'] as List<dynamic>? ?? [])
+          .map((e) => Reference.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 }
@@ -323,23 +318,21 @@ class Graph extends Reference {
 
   @override
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'type': type,
-    'nodes': nodes.map((n) => n.toJson()).toList(),
-    'edges': edges.map((e) => e.toJson()).toList(),
-  };
+        'id': id,
+        'type': type,
+        'nodes': nodes.map((n) => n.toJson()).toList(),
+        'edges': edges.map((e) => e.toJson()).toList(),
+      };
 
   static Graph fromJson(Map<String, dynamic> json) {
-    final nodes =
-        (json['nodes'] as List<dynamic>? ?? [])
-            .map((e) => Node.fromJson(e as Map<String, dynamic>))
-            .toList();
+    final nodes = (json['nodes'] as List<dynamic>? ?? [])
+        .map((e) => Node.fromJson(e as Map<String, dynamic>))
+        .toList();
     // Build a map for node lookup by id
     final nodeMap = {for (var n in nodes) n.id: n};
-    final edges =
-        (json['edges'] as List<dynamic>? ?? [])
-            .map((e) => Edge.fromJson(e as Map<String, dynamic>, nodeMap))
-            .toList();
+    final edges = (json['edges'] as List<dynamic>? ?? [])
+        .map((e) => Edge.fromJson(e as Map<String, dynamic>, nodeMap))
+        .toList();
     return Graph(id: json['id'], nodes: nodes, edges: edges);
   }
 }
@@ -359,19 +352,19 @@ class Array extends Reference {
 
   @override
   Map<String, dynamic> toJson() => {
-    ...super.toJson(),
-    'capacity': capacity,
-    'elemType': elemType,
-    'values': values,
-  };
+        ...super.toJson(),
+        'capacity': capacity,
+        'elemType': elemType,
+        'values': values,
+      };
 
   static Array fromJson(Map<String, dynamic> json) => Array(
-    id: json['id'],
-    name: json['name'] ?? '',
-    capacity: json['capacity'] ?? 0,
-    elemType: json['elemType'] ?? '',
-    values: json['values'] ?? [],
-  );
+        id: json['id'],
+        name: json['name'] ?? '',
+        capacity: json['capacity'] ?? 0,
+        elemType: json['elemType'] ?? '',
+        values: json['values'] ?? [],
+      );
 }
 
 class Convolution extends Matrix {
@@ -390,13 +383,13 @@ class Convolution extends Matrix {
   Map<String, dynamic> toJson() => {...super.toJson(), 'scale': scale};
 
   static Convolution fromJson(Map<String, dynamic> json) => Convolution(
-    id: json['id'],
-    name: json['name'] ?? '',
-    rows: json['rows'] ?? 0,
-    cols: json['cols'] ?? 0,
-    scale: json['scale'] ?? 1,
-    elemType: json['elemType'] ?? 'TYPE_INT16',
-  );
+        id: json['id'],
+        name: json['name'] ?? '',
+        rows: json['rows'] ?? 0,
+        cols: json['cols'] ?? 0,
+        scale: json['scale'] ?? 1,
+        elemType: json['elemType'] ?? 'TYPE_INT16',
+      );
 }
 
 class Img extends Reference {
@@ -414,19 +407,19 @@ class Img extends Reference {
 
   @override
   Map<String, dynamic> toJson() => {
-    ...super.toJson(),
-    'width': width,
-    'height': height,
-    'format': format,
-  };
+        ...super.toJson(),
+        'width': width,
+        'height': height,
+        'format': format,
+      };
 
   static Img fromJson(Map<String, dynamic> json) => Img(
-    id: json['id'],
-    name: json['name'] ?? '',
-    width: json['width'] ?? 0,
-    height: json['height'] ?? 0,
-    format: json['format'] ?? '',
-  );
+        id: json['id'],
+        name: json['name'] ?? '',
+        width: json['width'] ?? 0,
+        height: json['height'] ?? 0,
+        format: json['format'] ?? '',
+      );
 }
 
 class Lut extends Array {
@@ -439,11 +432,11 @@ class Lut extends Array {
   });
 
   static Lut fromJson(Map<String, dynamic> json) => Lut(
-    id: json['id'],
-    name: json['name'] ?? '',
-    capacity: json['capacity'] ?? 0,
-    elemType: json['elemType'] ?? 'TYPE_UINT8',
-  );
+        id: json['id'],
+        name: json['name'] ?? '',
+        capacity: json['capacity'] ?? 0,
+        elemType: json['elemType'] ?? 'TYPE_UINT8',
+      );
 }
 
 class Matrix extends Reference {
@@ -461,19 +454,19 @@ class Matrix extends Reference {
 
   @override
   Map<String, dynamic> toJson() => {
-    ...super.toJson(),
-    'rows': rows,
-    'cols': cols,
-    'elemType': elemType,
-  };
+        ...super.toJson(),
+        'rows': rows,
+        'cols': cols,
+        'elemType': elemType,
+      };
 
   static Matrix fromJson(Map<String, dynamic> json) => Matrix(
-    id: json['id'],
-    name: json['name'] ?? '',
-    rows: json['rows'] ?? 0,
-    cols: json['cols'] ?? 0,
-    elemType: json['elemType'] ?? '',
-  );
+        id: json['id'],
+        name: json['name'] ?? '',
+        rows: json['rows'] ?? 0,
+        cols: json['cols'] ?? 0,
+        elemType: json['elemType'] ?? '',
+      );
 }
 
 class ObjectArray extends Reference {
@@ -517,23 +510,23 @@ class ObjectArray extends Reference {
 
   @override
   Map<String, dynamic> toJson() => {
-    ...super.toJson(),
-    'numObjects': numObjects,
-    'elemType': elemType,
-    'elementAttributes': elementAttributes,
-    'applyToAll': applyToAll,
-  };
+        ...super.toJson(),
+        'numObjects': numObjects,
+        'elemType': elemType,
+        'elementAttributes': elementAttributes,
+        'applyToAll': applyToAll,
+      };
 
   static ObjectArray fromJson(Map<String, dynamic> json) => ObjectArray(
-    id: json['id'],
-    name: json['name'] ?? '',
-    numObjects: json['numObjects'] ?? 0,
-    elemType: json['elemType'] ?? '',
-    elementAttributes: Map<String, dynamic>.from(
-      json['elementAttributes'] ?? {},
-    ),
-    applyToAll: json['applyToAll'] ?? true,
-  );
+        id: json['id'],
+        name: json['name'] ?? '',
+        numObjects: json['numObjects'] ?? 0,
+        elemType: json['elemType'] ?? '',
+        elementAttributes: Map<String, dynamic>.from(
+          json['elementAttributes'] ?? {},
+        ),
+        applyToAll: json['applyToAll'] ?? true,
+      );
 }
 
 class Pyramid extends Reference {
@@ -555,23 +548,23 @@ class Pyramid extends Reference {
 
   @override
   Map<String, dynamic> toJson() => {
-    ...super.toJson(),
-    'width': width,
-    'height': height,
-    'format': format,
-    'numLevels': numLevels,
-    // 'levels': levels, // Not serializing Image objects for now
-  };
+        ...super.toJson(),
+        'width': width,
+        'height': height,
+        'format': format,
+        'numLevels': numLevels,
+        // 'levels': levels, // Not serializing Image objects for now
+      };
 
   static Pyramid fromJson(Map<String, dynamic> json) => Pyramid(
-    id: json['id'],
-    name: json['name'] ?? '',
-    width: json['width'] ?? 0,
-    height: json['height'] ?? 0,
-    format: json['format'] ?? '',
-    numLevels: json['numLevels'] ?? 0,
-    // levels: [], // Not deserializing Image objects for now
-  );
+        id: json['id'],
+        name: json['name'] ?? '',
+        width: json['width'] ?? 0,
+        height: json['height'] ?? 0,
+        format: json['format'] ?? '',
+        numLevels: json['numLevels'] ?? 0,
+        // levels: [], // Not deserializing Image objects for now
+      );
 }
 
 class Remap extends Reference {
@@ -591,21 +584,21 @@ class Remap extends Reference {
 
   @override
   Map<String, dynamic> toJson() => {
-    ...super.toJson(),
-    'srcWidth': srcWidth,
-    'srcHeight': srcHeight,
-    'dstWidth': dstWidth,
-    'dstHeight': dstHeight,
-  };
+        ...super.toJson(),
+        'srcWidth': srcWidth,
+        'srcHeight': srcHeight,
+        'dstWidth': dstWidth,
+        'dstHeight': dstHeight,
+      };
 
   static Remap fromJson(Map<String, dynamic> json) => Remap(
-    id: json['id'],
-    name: json['name'] ?? '',
-    srcWidth: json['srcWidth'] ?? 0,
-    srcHeight: json['srcHeight'] ?? 0,
-    dstWidth: json['dstWidth'] ?? 0,
-    dstHeight: json['dstHeight'] ?? 0,
-  );
+        id: json['id'],
+        name: json['name'] ?? '',
+        srcWidth: json['srcWidth'] ?? 0,
+        srcHeight: json['srcHeight'] ?? 0,
+        dstWidth: json['dstWidth'] ?? 0,
+        dstHeight: json['dstHeight'] ?? 0,
+      );
 }
 
 class Scalar extends Reference {
@@ -621,17 +614,17 @@ class Scalar extends Reference {
 
   @override
   Map<String, dynamic> toJson() => {
-    ...super.toJson(),
-    'elemType': elemType,
-    'value': value,
-  };
+        ...super.toJson(),
+        'elemType': elemType,
+        'value': value,
+      };
 
   static Scalar fromJson(Map<String, dynamic> json) => Scalar(
-    id: json['id'],
-    name: json['name'] ?? '',
-    elemType: json['elemType'] ?? '',
-    value: (json['value'] as num?)?.toDouble() ?? 0.0,
-  );
+        id: json['id'],
+        name: json['name'] ?? '',
+        elemType: json['elemType'] ?? '',
+        value: (json['value'] as num?)?.toDouble() ?? 0.0,
+      );
 }
 
 class Tensor extends Reference {
@@ -649,20 +642,21 @@ class Tensor extends Reference {
 
   @override
   Map<String, dynamic> toJson() => {
-    ...super.toJson(),
-    'numDims': numDims,
-    'shape': shape,
-    'elemType': elemType,
-  };
+        ...super.toJson(),
+        'numDims': numDims,
+        'shape': shape,
+        'elemType': elemType,
+      };
 
   static Tensor fromJson(Map<String, dynamic> json) => Tensor(
-    id: json['id'],
-    name: json['name'] ?? '',
-    numDims: json['numDims'] ?? 0,
-    shape:
-        (json['shape'] as List<dynamic>? ?? []).map((e) => e as int).toList(),
-    elemType: json['elemType'] ?? '',
-  );
+        id: json['id'],
+        name: json['name'] ?? '',
+        numDims: json['numDims'] ?? 0,
+        shape: (json['shape'] as List<dynamic>? ?? [])
+            .map((e) => e as int)
+            .toList(),
+        elemType: json['elemType'] ?? '',
+      );
 }
 
 class Thrshld extends Reference {
@@ -688,27 +682,27 @@ class Thrshld extends Reference {
 
   @override
   Map<String, dynamic> toJson() => {
-    ...super.toJson(),
-    'thresType': thresType,
-    'binary': binary,
-    'lower': lower,
-    'upper': upper,
-    'trueVal': trueVal,
-    'falseVal': falseVal,
-    'dataType': dataType,
-  };
+        ...super.toJson(),
+        'thresType': thresType,
+        'binary': binary,
+        'lower': lower,
+        'upper': upper,
+        'trueVal': trueVal,
+        'falseVal': falseVal,
+        'dataType': dataType,
+      };
 
   static Thrshld fromJson(Map<String, dynamic> json) => Thrshld(
-    id: json['id'],
-    name: json['name'] ?? '',
-    thresType: json['thresType'] ?? '',
-    binary: json['binary'] ?? 0,
-    lower: json['lower'] ?? 0,
-    upper: json['upper'] ?? 0,
-    trueVal: json['trueVal'] ?? 0,
-    falseVal: json['falseVal'] ?? 0,
-    dataType: json['dataType'] ?? '',
-  );
+        id: json['id'],
+        name: json['name'] ?? '',
+        thresType: json['thresType'] ?? '',
+        binary: json['binary'] ?? 0,
+        lower: json['lower'] ?? 0,
+        upper: json['upper'] ?? 0,
+        trueVal: json['trueVal'] ?? 0,
+        falseVal: json['falseVal'] ?? 0,
+        dataType: json['dataType'] ?? '',
+      );
 }
 
 class UserDataObject extends Reference {
@@ -722,15 +716,15 @@ class UserDataObject extends Reference {
 
   @override
   Map<String, dynamic> toJson() => {
-    ...super.toJson(),
-    'sizeInBytes': sizeInBytes,
-  };
+        ...super.toJson(),
+        'sizeInBytes': sizeInBytes,
+      };
 
   static UserDataObject fromJson(Map<String, dynamic> json) => UserDataObject(
-    id: json['id'],
-    name: json['name'] ?? '',
-    sizeInBytes: json['sizeInBytes'] ?? 0,
-  );
+        id: json['id'],
+        name: json['name'] ?? '',
+        sizeInBytes: json['sizeInBytes'] ?? 0,
+      );
 }
 
 class Edge {
@@ -746,11 +740,11 @@ class Edge {
   });
 
   Map<String, dynamic> toJson() => {
-    'source': source.id,
-    'target': target.id,
-    'srcId': srcId,
-    'tgtId': tgtId,
-  };
+        'source': source.id,
+        'target': target.id,
+        'srcId': srcId,
+        'tgtId': tgtId,
+      };
 
   static Edge fromJson(Map<String, dynamic> json, Map<int, Node> nodeMap) {
     return Edge(

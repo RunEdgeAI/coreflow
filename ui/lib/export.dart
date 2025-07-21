@@ -33,60 +33,58 @@ class XmlExport {
       final xml = _exportXML(graph, refCount);
       showDialog(
         context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text("Export XML"),
-              content: SingleChildScrollView(child: Text(xml)),
-              actions: [
-                TextButton(
-                  onPressed: () async {
-                    // Use FilePicker to save the XML file
-                    final result = await FilePicker.platform.saveFile(
-                      dialogTitle: 'Save XML File',
-                      fileName: 'graph.xml',
+        builder: (context) => AlertDialog(
+          title: Text("Export XML"),
+          content: SingleChildScrollView(child: Text(xml)),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                // Use FilePicker to save the XML file
+                final result = await FilePicker.platform.saveFile(
+                  dialogTitle: 'Save XML File',
+                  fileName: 'graph.xml',
+                );
+
+                if (result != null) {
+                  final file = File(result);
+                  await file.writeAsString(xml);
+
+                  // Show a confirmation message
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('XML file saved to $result')),
                     );
+                  }
+                }
 
-                    if (result != null) {
-                      final file = File(result);
-                      await file.writeAsString(xml);
-
-                      // Show a confirmation message
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('XML file saved to $result')),
-                        );
-                      }
-                    }
-
-                    // Close the dialog
-                    if (context.mounted) {
-                      Navigator.of(context).pop();
-                    }
-                  },
-                  child: Text("Save"),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text("Close"),
-                ),
-              ],
+                // Close the dialog
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text("Save"),
             ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("Close"),
+            ),
+          ],
+        ),
       );
     } else {
       // Show a message if there are no graphs to export
       showDialog(
         context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text("No Graphs Defined!"),
-              content: Text("There are no graphs to export."),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text("Close"),
-                ),
-              ],
+        builder: (context) => AlertDialog(
+          title: Text("No Graphs Defined!"),
+          content: Text("There are no graphs to export."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("Close"),
             ),
+          ],
+        ),
       );
     }
   }
@@ -110,11 +108,9 @@ class XmlExport {
               (ref.numObjects > 0 && ref.applyToAll) ? 1 : ref.numObjects;
 
           for (int i = 0; i < numChildren; i++) {
-            final objectAttrs =
-                ref.applyToAll
-                    ? ref.elementAttributes
-                    : ref.elementAttributes['object_$i']
-                        as Map<String, dynamic>?;
+            final objectAttrs = ref.applyToAll
+                ? ref.elementAttributes
+                : ref.elementAttributes['object_$i'] as Map<String, dynamic>?;
 
             if (objectAttrs == null) continue;
 
@@ -283,62 +279,59 @@ class XmlExport {
           'capacity': ref.capacity.toString(),
           'elemType': "VX_TYPE_${ref.elemType}",
         },
-        nest:
-            ref.values.isEmpty
-                ? null
-                : () {
-                  final type = ref.elemType.toUpperCase();
+        nest: ref.values.isEmpty
+            ? null
+            : () {
+                final type = ref.elemType.toUpperCase();
 
-                  if (type == 'CHAR') {
-                    // Export as a single <char>...</char> element
-                    builder.element('char', nest: ref.values.join());
-                  } else if (type == 'RECTANGLE' && ref.values.length == 4) {
-                    // Export as <rectangle><start_x>...</start_x>...</rectangle>
-                    builder.element(
-                      'rectangle',
-                      nest: () {
-                        builder.element('start_x', nest: ref.values[0]);
-                        builder.element('start_y', nest: ref.values[1]);
-                        builder.element('end_x', nest: ref.values[2]);
-                        builder.element('end_y', nest: ref.values[3]);
-                      },
-                    );
-                  } else if (type == 'COORDINATES2D' &&
-                      ref.values.length == 2) {
-                    builder.element(
-                      'coordinates2d',
-                      nest: () {
-                        builder.element('x', nest: ref.values[0]);
-                        builder.element('y', nest: ref.values[1]);
-                      },
-                    );
-                  } else if (type == 'COORDINATES3D' &&
-                      ref.values.length == 3) {
-                    builder.element(
-                      'coordinates3d',
-                      nest: () {
-                        builder.element('x', nest: ref.values[0]);
-                        builder.element('y', nest: ref.values[1]);
-                        builder.element('z', nest: ref.values[2]);
-                      },
-                    );
-                  } else if (type.startsWith('FLOAT') ||
-                      type.startsWith('INT') ||
-                      type.startsWith('UINT')) {
-                    // Export each value as <float32>...</float32> or <int16>...</int16> etc.
-                    final tag = type.toLowerCase();
-                    for (final v in ref.values) {
-                      // Validate/parse as number
-                      final parsed = num.tryParse(v);
-                      builder.element(tag, nest: parsed?.toString() ?? v);
-                    }
-                  } else {
-                    // Default: export each value as <value>...</value>
-                    for (final v in ref.values) {
-                      builder.element('value', nest: v);
-                    }
+                if (type == 'CHAR') {
+                  // Export as a single <char>...</char> element
+                  builder.element('char', nest: ref.values.join());
+                } else if (type == 'RECTANGLE' && ref.values.length == 4) {
+                  // Export as <rectangle><start_x>...</start_x>...</rectangle>
+                  builder.element(
+                    'rectangle',
+                    nest: () {
+                      builder.element('start_x', nest: ref.values[0]);
+                      builder.element('start_y', nest: ref.values[1]);
+                      builder.element('end_x', nest: ref.values[2]);
+                      builder.element('end_y', nest: ref.values[3]);
+                    },
+                  );
+                } else if (type == 'COORDINATES2D' && ref.values.length == 2) {
+                  builder.element(
+                    'coordinates2d',
+                    nest: () {
+                      builder.element('x', nest: ref.values[0]);
+                      builder.element('y', nest: ref.values[1]);
+                    },
+                  );
+                } else if (type == 'COORDINATES3D' && ref.values.length == 3) {
+                  builder.element(
+                    'coordinates3d',
+                    nest: () {
+                      builder.element('x', nest: ref.values[0]);
+                      builder.element('y', nest: ref.values[1]);
+                      builder.element('z', nest: ref.values[2]);
+                    },
+                  );
+                } else if (type.startsWith('FLOAT') ||
+                    type.startsWith('INT') ||
+                    type.startsWith('UINT')) {
+                  // Export each value as <float32>...</float32> or <int16>...</int16> etc.
+                  final tag = type.toLowerCase();
+                  for (final v in ref.values) {
+                    // Validate/parse as number
+                    final parsed = num.tryParse(v);
+                    builder.element(tag, nest: parsed?.toString() ?? v);
                   }
-                },
+                } else {
+                  // Default: export each value as <value>...</value>
+                  for (final v in ref.values) {
+                    builder.element('value', nest: v);
+                  }
+                }
+              },
       );
     } else if (ref is Convolution) {
       builder.element(
@@ -462,10 +455,9 @@ class XmlExport {
                       'parameter',
                       attributes: {
                         'index': i.toString(),
-                        'reference':
-                            node.inputs[i].linkId != -1
-                                ? node.inputs[i].linkId.toString()
-                                : node.inputs[i].id.toString(),
+                        'reference': node.inputs[i].linkId != -1
+                            ? node.inputs[i].linkId.toString()
+                            : node.inputs[i].id.toString(),
                       },
                     );
                   }
@@ -528,58 +520,56 @@ class DotExport {
       final dot = _exportDOT(graph);
       showDialog(
         context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text("Export DOT"),
-              content: SingleChildScrollView(child: Text(dot)),
-              actions: [
-                TextButton(
-                  onPressed: () async {
-                    final result = await FilePicker.platform.saveFile(
-                      dialogTitle: 'Save DOT File',
-                      fileName: 'graph.dot',
+        builder: (context) => AlertDialog(
+          title: Text("Export DOT"),
+          content: SingleChildScrollView(child: Text(dot)),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                final result = await FilePicker.platform.saveFile(
+                  dialogTitle: 'Save DOT File',
+                  fileName: 'graph.dot',
+                );
+
+                if (result != null) {
+                  final file = File(result);
+                  await file.writeAsString(dot);
+
+                  // Show a confirmation message
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('DOT file saved to $result')),
                     );
+                  }
+                }
 
-                    if (result != null) {
-                      final file = File(result);
-                      await file.writeAsString(dot);
-
-                      // Show a confirmation message
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('DOT file saved to $result')),
-                        );
-                      }
-                    }
-
-                    if (context.mounted) {
-                      Navigator.of(context).pop(); // Close the dialog
-                    }
-                  },
-                  child: Text("Save"),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text("Close"),
-                ),
-              ],
+                if (context.mounted) {
+                  Navigator.of(context).pop(); // Close the dialog
+                }
+              },
+              child: Text("Save"),
             ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("Close"),
+            ),
+          ],
+        ),
       );
     } else {
       // Show a message if there are no graphs to export
       showDialog(
         context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text("No Graphs Defined!"),
-              content: Text("There are no graphs to export."),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text("Close"),
-                ),
-              ],
+        builder: (context) => AlertDialog(
+          title: Text("No Graphs Defined!"),
+          content: Text("There are no graphs to export."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("Close"),
             ),
+          ],
+        ),
       );
     }
   }
@@ -653,11 +643,10 @@ class DotExport {
     for (var edge in graph.edges) {
       // Use linkId for the source reference if it exists
       final sourceReferenceId = edge.srcId;
-      final targetReferenceId =
-          graph.nodes
-              .expand((node) => node.inputs)
-              .firstWhere((input) => input.id == edge.tgtId)
-              .linkId;
+      final targetReferenceId = graph.nodes
+          .expand((node) => node.inputs)
+          .firstWhere((input) => input.id == edge.tgtId)
+          .linkId;
 
       // Edge from source node's output to the data object
       dot.writeln('  N${edge.source.id} -> D$sourceReferenceId;');

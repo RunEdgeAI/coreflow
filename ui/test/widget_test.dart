@@ -37,15 +37,15 @@ void main() {
 
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMessageHandler('flutter/assets', (ByteData? message) async {
-          if (message == null) return null;
-          final String assetPath = String.fromCharCodes(
-            message.buffer.asUint8List(),
-          );
-          if (assetPath == 'assets/supported.xml') {
-            return mockXmlData;
-          }
-          return null;
-        });
+      if (message == null) return null;
+      final String assetPath = String.fromCharCodes(
+        message.buffer.asUint8List(),
+      );
+      if (assetPath == 'assets/supported.xml') {
+        return mockXmlData;
+      }
+      return null;
+    });
   });
 
   testWidgets('App functionality test', (WidgetTester tester) async {

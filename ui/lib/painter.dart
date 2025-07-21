@@ -30,14 +30,12 @@ class GraphPainter extends CustomPainter {
     var basePoint = end - direction * arrowSize;
 
     // Calculate arrow points
-    var leftPoint =
-        basePoint +
+    var leftPoint = basePoint +
         Offset(
           arrowSize * (direction.dy * cos(angle) - direction.dx * sin(angle)),
           arrowSize * (-direction.dx * cos(angle) - direction.dy * sin(angle)),
         );
-    var rightPoint =
-        basePoint +
+    var rightPoint = basePoint +
         Offset(
           arrowSize * (-direction.dy * cos(angle) - direction.dx * sin(angle)),
           arrowSize * (direction.dx * cos(angle) - direction.dy * sin(angle)),
@@ -47,41 +45,36 @@ class GraphPainter extends CustomPainter {
     canvas.drawLine(start, end, paint);
 
     // Draw arrowhead
-    final Path path =
-        Path()
-          ..moveTo(basePoint.dx, basePoint.dy)
-          ..lineTo(leftPoint.dx, leftPoint.dy)
-          ..lineTo(end.dx, end.dy)
-          ..lineTo(rightPoint.dx, rightPoint.dy)
-          ..close();
+    final Path path = Path()
+      ..moveTo(basePoint.dx, basePoint.dy)
+      ..lineTo(leftPoint.dx, leftPoint.dy)
+      ..lineTo(end.dx, end.dy)
+      ..lineTo(rightPoint.dx, rightPoint.dy)
+      ..close();
     canvas.drawPath(path, paint..style = PaintingStyle.fill);
   }
 
   @override
   void paint(Canvas canvas, Size size) {
-    final nodePaint =
-        Paint()
-          ..color = Color(0xFF2196F3)
-          ..style = PaintingStyle.fill
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 2);
+    final nodePaint = Paint()
+      ..color = Color(0xFF2196F3)
+      ..style = PaintingStyle.fill
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 2);
 
-    final selectedNodePaint =
-        Paint()
-          ..color = Colors.blue.shade400
-          ..style = PaintingStyle.fill;
+    final selectedNodePaint = Paint()
+      ..color = Colors.blue.shade400
+      ..style = PaintingStyle.fill;
 
-    final edgePaint =
-        Paint()
-          ..color = Color.alphaBlend(Colors.white.withAlpha(178), Colors.white)
-          ..strokeWidth = 2
-          ..style = PaintingStyle.stroke;
+    final edgePaint = Paint()
+      ..color = Color.alphaBlend(Colors.white.withAlpha(178), Colors.white)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
 
     // Update edge paint to include selection state
-    final selectedEdgePaint =
-        Paint()
-          ..color = Colors.white70
-          ..strokeWidth = 3
-          ..style = PaintingStyle.stroke;
+    final selectedEdgePaint = Paint()
+      ..color = Colors.white70
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke;
 
     // Draw edges with selection highlighting
     for (var edge in edges) {
@@ -91,29 +84,27 @@ class GraphPainter extends CustomPainter {
       final sourceNode = edge.source;
       final targetNode = edge.target;
 
-      final sourceAngle =
-          (sourceNode.outputs.length == 1)
-              ? 0
-              : (pi / 4) +
-                  (sourceNode.outputs.indexWhere(
-                        (output) => output.id == edge.srcId,
-                      ) *
-                      (3 * pi / 2) /
-                      (sourceNode.outputs.length - 1));
+      final sourceAngle = (sourceNode.outputs.length == 1)
+          ? 0
+          : (pi / 4) +
+              (sourceNode.outputs.indexWhere(
+                    (output) => output.id == edge.srcId,
+                  ) *
+                  (3 * pi / 2) /
+                  (sourceNode.outputs.length - 1));
       final sourceIconOffset = Offset(
         sourceNode.position.dx + 30 * cos(sourceAngle),
         sourceNode.position.dy + 30 * sin(sourceAngle),
       );
 
-      final targetAngle =
-          (targetNode.inputs.length == 1)
-              ? pi
-              : (3 * pi / 4) +
-                  (targetNode.inputs.indexWhere(
-                        (input) => input.id == edge.tgtId,
-                      ) *
-                      (pi / 2) /
-                      (targetNode.inputs.length - 1));
+      final targetAngle = (targetNode.inputs.length == 1)
+          ? pi
+          : (3 * pi / 4) +
+              (targetNode.inputs.indexWhere(
+                    (input) => input.id == edge.tgtId,
+                  ) *
+                  (pi / 2) /
+                  (targetNode.inputs.length - 1));
       final targetIconOffset = Offset(
         targetNode.position.dx + 30 * cos(targetAngle),
         targetNode.position.dy + 30 * sin(targetAngle),
@@ -185,11 +176,10 @@ class GraphPainter extends CustomPainter {
         node.position,
         25,
         Paint()
-          ..color =
-              node == selectedNode
-                  ? // Colors.white.withOpacity(0.8)
-                  Color.alphaBlend(Colors.white.withAlpha(204), Colors.white)
-                  : Colors.blue.shade300
+          ..color = node == selectedNode
+              ? // Colors.white.withOpacity(0.8)
+              Color.alphaBlend(Colors.white.withAlpha(204), Colors.white)
+              : Colors.blue.shade300
           ..style = PaintingStyle.stroke
           ..strokeWidth = node == selectedNode ? 3 : 2,
       );
@@ -198,10 +188,9 @@ class GraphPainter extends CustomPainter {
       final textSpan = TextSpan(
         text: node.name,
         style: TextStyle(
-          color:
-              node == selectedNode
-                  ? Colors.white
-                  : Color.alphaBlend(Colors.white.withAlpha(229), Colors.white),
+          color: node == selectedNode
+              ? Colors.white
+              : Color.alphaBlend(Colors.white.withAlpha(229), Colors.white),
           //  Colors.white.withOpacity(0.9),
           fontSize: node == selectedNode ? 14 : 12,
           fontWeight: node == selectedNode ? FontWeight.bold : FontWeight.w500,
@@ -243,10 +232,9 @@ class GridPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = lineColor
-          ..strokeWidth = 0.5;
+    final paint = Paint()
+      ..color = lineColor
+      ..strokeWidth = 0.5;
 
     // Draw vertical lines
     for (double x = 0; x <= size.width; x += gridSize) {

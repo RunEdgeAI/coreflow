@@ -73,15 +73,14 @@ class AiChatPanel extends StatelessWidget {
                     ),
                   ),
                   Expanded(
-                    child:
-                        provider == null
-                            ? Center(child: Text('No AI provider'))
-                            : GraphAwareChatView(
-                              provider: provider!,
-                              systemPrompt: systemPrompt,
-                              currentGraph: currentGraph,
-                              onResponse: onResponse,
-                            ),
+                    child: provider == null
+                        ? Center(child: Text('No AI provider'))
+                        : GraphAwareChatView(
+                            provider: provider!,
+                            systemPrompt: systemPrompt,
+                            currentGraph: currentGraph,
+                            onResponse: onResponse,
+                          ),
                   ),
                 ],
               ),
@@ -276,10 +275,11 @@ ActionButtonStyle _darkActionButtonStyle(ActionButtonType type) {
     iconDecoration: switch (type) {
       ActionButtonType.add ||
       ActionButtonType.record ||
-      ActionButtonType.stop => BoxDecoration(
-        color: _greyBackground,
-        shape: BoxShape.circle,
-      ),
+      ActionButtonType.stop =>
+        BoxDecoration(
+          color: _greyBackground,
+          shape: BoxShape.circle,
+        ),
       _ => _invertDecoration(style.iconDecoration),
     },
     text: style.text,
@@ -319,27 +319,26 @@ SuggestionStyle _darkSuggestionStyle() {
 
 const Color _greyBackground = Color(0xFF535353);
 
-Color? _invertColor(Color? color) =>
-    color != null
-        ? Color.from(
-          alpha: color.a,
-          red: 1 - color.r,
-          green: 1 - color.g,
-          blue: 1 - color.b,
-        )
-        : null;
+Color? _invertColor(Color? color) => color != null
+    ? Color.from(
+        alpha: color.a,
+        red: 1 - color.r,
+        green: 1 - color.g,
+        blue: 1 - color.b,
+      )
+    : null;
 
 Decoration _invertDecoration(Decoration? decoration) => switch (decoration!) {
-  final BoxDecoration d => d.copyWith(color: _invertColor(d.color)),
-  final ShapeDecoration d => ShapeDecoration(
-    color: _invertColor(d.color),
-    shape: d.shape,
-    shadows: d.shadows,
-    image: d.image,
-    gradient: d.gradient,
-  ),
-  _ => decoration,
-};
+      final BoxDecoration d => d.copyWith(color: _invertColor(d.color)),
+      final ShapeDecoration d => ShapeDecoration(
+          color: _invertColor(d.color),
+          shape: d.shape,
+          shadows: d.shadows,
+          image: d.image,
+          gradient: d.gradient,
+        ),
+      _ => decoration,
+    };
 
 TextStyle _invertTextStyle(TextStyle? style) =>
     style!.copyWith(color: _invertColor(style.color));
