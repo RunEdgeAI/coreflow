@@ -29,7 +29,6 @@
 
 /*!
  * \file
- * \author Erik Rainey <erik.rainey@gmail.com>
  *
  * \defgroup group_int_debug Internal Debugging API
  * \ingroup group_internal

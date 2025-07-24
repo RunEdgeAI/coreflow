@@ -21,7 +21,6 @@
 /*!
  * \file
  * \brief The internal matrix implementation
- * \author Erik Rainey <erik.rainey@gmail.com>
  *
  * \defgroup group_int_matrix Internal Matrix API
  * \ingroup group_internal

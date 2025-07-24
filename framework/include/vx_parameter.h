@@ -21,13 +21,11 @@
 /*!
  * \file
  * \brief The internal parameter implementation
- * \author Erik Rainey <erik.rainey@gmail.com>
  *
  * \defgroup group_int_parameter Internal Parameter API
  * \ingroup group_internal
  * \brief The Internal Parameter API
  */
-
 
 /*! \brief The internal representation of a parameter.
  * \ingroup group_int_parameter

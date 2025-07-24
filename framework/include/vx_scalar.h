@@ -22,7 +22,6 @@
 /*!
  * \file
  * \brief The internal scalars implementation.
- * \author Erik Rainey <erik.rainey@gmail.com>
  * \defgroup group_int_scalar Internal Scalar API
  * \ingroup group_internal
  * \brief The Internal Scalar API.

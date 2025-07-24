@@ -22,7 +22,6 @@
 /*!
  * \file
  * \brief The internal kernel implementation.
- * \author Erik Rainey <erik.rainey@gmail.com>
  *
  * \defgroup group_int_kernel Internal Kernel API
  * \ingroup group_internal

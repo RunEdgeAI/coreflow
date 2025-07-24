@@ -26,7 +26,6 @@
 
 /*! \file vx_helper.cpp
  * \brief The OpenVX Helper Implementation.
- * \author Erik Rainey <erik.rainey@gmail.com>
  */
 
 // no clue if this belongs here, but i don't know where better to put it. needed by c_scale.c and vx_scale.c

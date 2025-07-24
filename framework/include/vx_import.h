@@ -23,7 +23,6 @@
 /*!
  * \file
  * \brief The Import Object Internal API.
- * \author Jesse Villarreal <jesse.villarreal@ti.com>
  *
  * \defgroup group_int_import Internal Import Object API
  * \ingroup group_internal

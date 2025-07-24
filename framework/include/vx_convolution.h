@@ -23,7 +23,6 @@
 /*!
  * \file
  * \brief The internal convolution implementation
- * \author Erik Rainey <erik.rainey@gmail.com>
  *
  * \defgroup group_int_convolution Internal Convolution API
  * \ingroup group_internal

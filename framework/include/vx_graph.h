@@ -25,7 +25,6 @@
 /*!
  * \file
  * \brief The internal graph implementation
- * \author Erik Rainey <erik.rainey@gmail.com>
  *
  * \defgroup group_int_graph Internal Graph API
  * \ingroup group_internal

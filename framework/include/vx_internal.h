@@ -20,7 +20,6 @@
 /*!
  * \file vx_internal.h
  * \brief The internal implementation header.
- * \author Erik Rainey <erik.rainey@gmail.com>
  *
  * \defgroup group_internal OpenVX Implementation
  * \brief The OpenVX Implementation.

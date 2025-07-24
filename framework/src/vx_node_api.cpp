@@ -17,7 +17,6 @@
 /*!
  * \file
  * \brief The Graph Mode Interface for all Base Kernels.
- * \author Erik Rainey <erik.rainey@gmail.com>
  */
 
 #include "vx_internal.h"

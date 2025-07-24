@@ -25,7 +25,6 @@
 /*!
  * \file
  * \brief
- * \author Erik Rainey <erik.rainey@gmail.com>
  *
  * \defgroup group_int_context Internal Context API
  * \ingroup group_internal

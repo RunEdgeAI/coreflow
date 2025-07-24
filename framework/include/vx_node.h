@@ -22,7 +22,6 @@
 /*!
  * \file
  * \brief The internal node implementation.
- * \author Erik Rainey <erik.rainey@gmail.com>
  *
  * \defgroup group_int_node Internal Node API
  * \ingroup group_internal

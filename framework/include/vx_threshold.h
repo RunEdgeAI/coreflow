@@ -21,7 +21,6 @@
 /*!
  * \file
  * \brief The internal thresholds implementation.
- * \author Erik Rainey <erik.rainey@gmail.com>
  * \defgroup group_int_threshold Internal Threshold API
  * \ingroup group_internal
  * \brief The Internal Threshold API.

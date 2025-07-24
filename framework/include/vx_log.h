@@ -21,11 +21,10 @@
 /*!
  * \file
  * \brief The internal log implementation
- * \author Erik Rainey <erik.rainey@gmail.com>
  *
  * \defgroup group_int_log Internal Log API
  * \ingroup group_internal
  * \brief The Internal Log API
  */
 
- #endif /* VX_LOG_H */
+#endif /* VX_LOG_H */

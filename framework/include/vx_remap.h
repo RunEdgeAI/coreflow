@@ -22,7 +22,6 @@
 /*!
  * \file
  * \brief The Internal Remap API
- * \author Erik Rainey <erik.rainey@gmail.com>
  * \defgroup group_int_remap Internal Remap API
  * \ingroup group_internal
  * \brief The Internal Remap API

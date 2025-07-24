@@ -22,7 +22,6 @@
 /*!
  * \file
  * \brief The internal image implementation
- * \author Erik Rainey <erik.rainey@gmail.com>
  *
  * \defgroup group_int_image Internal Image API
  * \ingroup group_internal

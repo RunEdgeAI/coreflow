@@ -22,7 +22,6 @@
 /*!
  * \file
  * \brief The internal LUT implementation
- * \author Erik Rainey <erik.rainey@gmail.com>
  *
  * \defgroup group_int_lut Internal LUT API
  * \ingroup group_internal

@@ -21,13 +21,11 @@
 /*!
  * \file
  * \brief The internal error implementation
- * \author Erik Rainey <erik.rainey@gmail.com>
  *
  * \defgroup group_int_error Internal Error API
  * \ingroup group_internal
  * \brief The Internal Error API.
  */
-
 
 /*! \brief The internal representation of the error object.
  * \ingroup group_int_error

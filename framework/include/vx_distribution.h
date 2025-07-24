@@ -22,16 +22,15 @@
 /*!
  * \file
  * \brief The internal distribution implementation
- * \author Erik Rainey <erik.rainey@gmail.com>
  *
  * \defgroup group_int_distribution Internal Distribution API
  * \ingroup group_internal
  * \brief The Internal Distribution API.
  */
 
- /*! \brief A Distribution.
-  * \ingroup group_int_distribution
-  */
+/*! \brief A Distribution.
+ * \ingroup group_int_distribution
+ */
 class Distribution : public Reference
 {
 public:

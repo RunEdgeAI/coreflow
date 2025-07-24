@@ -22,7 +22,6 @@
 /*!
  * \file
  * \brief The internal pyramid implementation
- * \author Erik Rainey <erik.rainey@gmail.com>
  *
  * \defgroup group_int_pyramid Internal Pyramid API
  * \ingroup group_internal
