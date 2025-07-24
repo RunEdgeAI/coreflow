@@ -60,4 +60,5 @@ public:
      */
     static void addLogEntry(vx_reference ref, vx_status status, const char *message, va_list ap);
 };
+
 #endif /* VX_LOG_H */
