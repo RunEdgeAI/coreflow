@@ -43,26 +43,27 @@ enum vx_debug_zone_e {
     VX_ZONE_WARNING     = 1,    /*!< Used to warning developers of possible issues */
     VX_ZONE_API         = 2,    /*!< Used to trace API calls and return values */
     VX_ZONE_INFO        = 3,    /*!< Used to show run-time processing debug */
+    VX_ZONE_DEBUG       = 4,    /*!< Used to show detailed debug information */
 
-    VX_ZONE_PERF        = 4,    /*!< Used to show performance information */
-    VX_ZONE_CONTEXT     = 5,
-    VX_ZONE_OSAL        = 6,
-    VX_ZONE_REFERENCE   = 7,
+    VX_ZONE_PERF        = 5,    /*!< Used to show performance information */
+    VX_ZONE_CONTEXT     = 6,    /*!< Used to show only context logs */
+    VX_ZONE_OSAL        = 7,    /*!< Used to show only OSAL logs */
+    VX_ZONE_REFERENCE   = 8,    /*!< Used to show only reference logs */
 
-    VX_ZONE_ARRAY       = 8,
-    VX_ZONE_IMAGE       = 9,
-    VX_ZONE_SCALAR      = 10,
-    VX_ZONE_KERNEL      = 11,
+    VX_ZONE_ARRAY       = 9,    /*!< Used to show only array logs */
+    VX_ZONE_IMAGE       = 10,    /*!< Used to show only image logs */
+    VX_ZONE_SCALAR      = 11,   /*!< Used to show only scalar logs */
+    VX_ZONE_KERNEL      = 12,   /*!< Used to show only kernel logs */
 
-    VX_ZONE_GRAPH       = 12,
-    VX_ZONE_NODE        = 13,
-    VX_ZONE_PARAMETER   = 14,
-    VX_ZONE_DELAY       = 15,
+    VX_ZONE_GRAPH       = 13,   /*!< Used to show only graph logs */
+    VX_ZONE_NODE        = 14,   /*!< Used to show only node logs */
+    VX_ZONE_PARAMETER   = 15,   /*!< Used to show only parameter logs */
+    VX_ZONE_DELAY       = 16,   /*!< Used to show only delay logs */
 
-    VX_ZONE_TARGET      = 16,
-    VX_ZONE_LOG         = 17,
+    VX_ZONE_TARGET      = 17,   /*!< Used to show only target logs */
+    VX_ZONE_LOG         = 18,   /*!< Used to show only log logs */
 
-    VX_ZONE_MAX         = 32
+    VX_ZONE_MAX         = 32    /*!< The maximum number of zones */
 };
 
 #if defined(_WIN32) && !defined(__GNUC__)
