@@ -137,6 +137,58 @@ public:
     vx_bool initVirtualArray(vx_enum item_type, vx_size capacity);
 
     /**
+     * @brief Add items to array
+     *
+     * @param count     number of items to add
+     * @param ptr       pointer to data
+     * @param stride    size of stride
+     * @return vx_status
+     * @ingroup group_int_array
+     */
+    vx_status addItems(vx_size count, const void *ptr, vx_size stride);
+
+    /**
+     * @brief Truncate array to new number of items
+     *
+     * @param new_num_items   new number of items
+     * @return vx_status
+     * @ingroup group_int_array
+     */
+    vx_status truncate(vx_size new_num_items);
+
+    /**
+     * @brief Get item type of array
+     *
+     * @return vx_enum
+     * @ingroup group_int_array
+     */
+    vx_enum itemType() const;
+
+    /**
+     * @brief Get number of items in array
+     *
+     * @return vx_size
+     * @ingroup group_int_array
+     */
+    vx_size numItems() const;
+
+    /**
+     * @brief Get capacity of array
+     *
+     * @return vx_size
+     * @ingroup group_int_array
+     */
+    vx_size totalCapacity() const;
+
+    /**
+     * @brief Get item size in array
+     *
+     * @return vx_size
+     * @ingroup group_int_array
+     */
+    vx_size itemSize() const;
+
+    /**
      * @brief Access array range in object
      *
      * @param start     start index
