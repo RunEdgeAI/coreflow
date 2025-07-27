@@ -54,6 +54,198 @@ public:
     ~Threshold();
 
     /**
+     * @brief Set the binary threshold value
+     *
+     * @param value The binary threshold value
+     * @ingroup group_int_threshold
+     */
+    void setBinaryValue(vx_int32 value);
+
+    /**
+     * @brief Set the binary threshold value as a pixel value union
+     *
+     * @param value The binary threshold value as a pixel value union
+     * @ingroup group_int_threshold
+     */
+    void setBinaryValueUnion(vx_pixel_value_t value);
+
+    /**
+     * @brief Set the lower bound for range threshold
+     *
+     * @param lower The lower bound value
+     * @ingroup group_int_threshold
+     */
+    void setLowerBound(vx_int32 lower);
+
+    /**
+     * @brief Set the lower bound for range threshold as a pixel value union
+     *
+     * @param lower The lower bound value as a pixel value union
+     * @ingroup group_int_threshold
+     */
+    void setLowerBoundUnion(vx_pixel_value_t lower);
+
+    /**
+     * @brief Set the upper bound for range threshold
+     *
+     * @param upper The upper bound value
+     * @ingroup group_int_threshold
+     */
+    void setUpperBound(vx_int32 upper);
+
+    /**
+     * @brief Set the upper bound for range threshold as a pixel value union
+     *
+     * @param upper The upper bound value as a pixel value union
+     * @ingroup group_int_threshold
+     */
+    void setUpperBoundUnion(vx_pixel_value_t upper);
+
+    /**
+     * @brief Set the true value for output
+     *
+     * @param true_value The true value
+     * @ingroup group_int_threshold
+     */
+    void setTrueValue(vx_int32 true_value);
+
+    /**
+     * @brief Set the true value for output as a pixel value union
+     *
+     * @param true_value The true value as a pixel value union
+     * @ingroup group_int_threshold
+     */
+    void setTrueValueUnion(vx_pixel_value_t true_value);
+
+    /**
+     * @brief Set the false value for output
+     *
+     * @param false_value The false value
+     * @ingroup group_int_threshold
+     */
+    void setFalseValue(vx_int32 false_value);
+
+    /**
+     * @brief Set the false value for output as a pixel value union
+     *
+     * @param false_value The false value as a pixel value union
+     * @ingroup group_int_threshold
+     */
+    void setFalseValueUnion(vx_pixel_value_t false_value);
+
+    /**
+     * @brief Get the binary threshold value
+     *
+     * @return vx_int32 The binary threshold value
+     * @ingroup group_int_threshold
+     */
+    vx_int32 binaryValue() const;
+
+    /**
+     * @brief Get the binary threshold value as a pixel value union
+     *
+     * @return vx_pixel_value_t
+     * @ingroup group_int_threshold
+     */
+    vx_pixel_value_t binaryValueUnion() const;
+
+    /**
+     * @brief Get the lower bound for range threshold
+     *
+     * @return vx_int32 The lower bound value
+     * @ingroup group_int_threshold
+     */
+    vx_int32 lowerBound() const;
+
+    /**
+     * @brief Get the lower bound for range threshold as a pixel value union
+     *
+     * @return vx_pixel_value_t
+     * @ingroup group_int_threshold
+     */
+    vx_pixel_value_t lowerBoundUnion() const;
+
+    /**
+     * @brief Get the upper bound for range threshold
+     *
+     * @return vx_int32 The upper bound value
+     * @ingroup group_int_threshold
+     */
+    vx_int32 upperBound() const;
+
+    /**
+     * @brief Get the upper bound for range threshold as a pixel value union
+     *
+     * @return vx_pixel_value_t
+     * @ingroup group_int_threshold
+     */
+    vx_pixel_value_t upperBoundUnion() const;
+
+    /**
+     * @brief Get the true value for output
+     *
+     * @return vx_int32 The true value
+     * @ingroup group_int_threshold
+     */
+    vx_int32 trueValue() const;
+
+    /**
+     * @brief Get the true value for output as a pixel value union
+     *
+     * @return vx_pixel_value_t
+     * @ingroup group_int_threshold
+     */
+    vx_pixel_value_t trueValueUnion() const;
+
+    /**
+     * @brief Get the false value for output
+     *
+     * @return vx_int32 The false value
+     * @ingroup group_int_threshold
+     */
+    vx_int32 falseValue() const;
+
+    /**
+     * @brief Get the false value for output as a pixel value union
+     *
+     * @return vx_pixel_value_t
+     * @ingroup group_int_threshold
+     */
+    vx_pixel_value_t falseValueUnion() const;
+
+    /**
+     * @brief Get the data type of the threshold
+     *
+     * @return vx_enum The data type
+     * @ingroup group_int_threshold
+     */
+    vx_enum dataType() const;
+
+    /**
+     * @brief Get the threshold type
+     *
+     * @return vx_enum The threshold type
+     * @ingroup group_int_threshold
+     */
+    vx_enum threshType() const;
+
+    /**
+     * @brief Get the input image format
+     *
+     * @return vx_df_image The input image format
+     * @ingroup group_int_threshold
+     */
+    vx_df_image inputFormat() const;
+
+    /**
+     * @brief Get the output image format
+     *
+     * @return vx_df_image The output image format
+     * @ingroup group_int_threshold
+     */
+    vx_df_image outputFormat() const;
+
+    /**
      * @brief Validate threshold type
      *
      * @param thresh_type
@@ -70,6 +262,50 @@ public:
      * @ingroup group_int_threshold
      */
     static vx_bool isValidThresholdDataType(vx_enum data_type);
+
+    /**
+     * @brief Validate threshold format
+     *
+     * @param format   Threshold format to validate
+     * @return vx_bool true if valid, false otherwise
+     * @ingroup group_int_threshold
+     */
+    static vx_bool isValidThresholdFormat(vx_df_image format);
+
+    /**
+     * @brief Copy the threshold output to/from user memory
+     *
+     * @param true_value_ptr   Pointer to the true value
+     * @param false_value_ptr  Pointer to the false value
+     * @param usage            Memory usage type (read/write)
+     * @param user_mem_type    The type of memory (host, opencl, etc.)
+     * @return vx_status       VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_threshold
+     */
+    vx_status copyOutput(vx_pixel_value_t *true_value_ptr, vx_pixel_value_t *false_value_ptr,
+                         vx_enum usage, vx_enum user_mem_type);
+
+    /**
+     * @brief Copy the threshold range to/from user memory
+     * @param lower_value_ptr  Pointer to the lower value
+     * @param upper_value_ptr  Pointer to the upper value
+     * @param usage            Memory usage type (read/write)
+     * @param user_mem_type    The type of memory (host, opencl, etc.)
+     * @return vx_status       VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_threshold
+     */
+    vx_status copyRange(vx_pixel_value_t *lower_value_ptr, vx_pixel_value_t *upper_value_ptr,
+                        vx_enum usage, vx_enum user_mem_type);
+
+    /**
+     * @brief Copy the threshold value to/from user memory
+     * @param value_ptr       Pointer to the value
+     * @param usage           Memory usage type (read/write)
+     * @param user_mem_type   The type of memory (host, opencl, etc.)
+     * @return vx_status      VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_threshold
+     */
+    vx_status copyValue(vx_pixel_value_t *value_ptr, vx_enum usage, vx_enum user_mem_type);
 
     /*! \brief From \ref vx_threshold_type_e */
     vx_enum thresh_type;
