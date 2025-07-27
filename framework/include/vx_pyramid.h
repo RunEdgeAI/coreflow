@@ -49,6 +49,76 @@ public:
      */
     ~Pyramid();
 
+    /**
+     * @brief Create a Pyramid object
+     *
+     * @param context      The context associated with this obj
+     * @param levels       The number of levels in the pyramid
+     * @param scale        The scale factor between levels
+     * @param width        The width of the pyramid at level 0
+     * @param height       The height of the pyramid at level 0
+     * @param format       The format of the images in the pyramid
+     * @param is_virtual   Whether the pyramid is virtual
+     * @return vx_pyramid  The created pyramid object
+     * @ingroup group_int_pyramid
+     */
+    static vx_pyramid createPyramid(vx_context context,
+                                      vx_size levels,
+                                      vx_float32 scale,
+                                      vx_uint32 width,
+                                      vx_uint32 height,
+                                      vx_df_image format,
+                                      vx_bool is_virtual);
+
+    /**
+     * @brief Get the number of levels in the pyramid
+     *
+     * @return vx_size The number of levels
+     * @ingroup group_int_pyramid
+     */
+    vx_size numLvls() const;
+
+    /**
+     * @brief Get the scale factor of the pyramid
+     *
+     * @return vx_float32 The scale factor
+     * @ingroup group_int_pyramid
+     */
+    vx_float32 scaleFactor() const;
+
+    /**
+     * @brief Get the width of the pyramid at level 0
+     *
+     * @return vx_uint32 The width
+     * @ingroup group_int_pyramid
+     */
+    vx_uint32 wid() const;
+
+    /**
+     * @brief Get the height of the pyramid at level 0
+     *
+     * @return vx_uint32 The height
+     * @ingroup group_int_pyramid
+     */
+    vx_uint32 hght() const;
+
+    /**
+     * @brief Get the format of the pyramid images
+     *
+     * @return vx_enum The image format
+     * @ingroup group_int_pyramid
+     */
+    vx_enum fmt() const;
+
+    /**
+     * @brief Get the image at a specific level in the pyramid
+     *
+     * @param index The level index
+     * @return vx_image The image at the specified level
+     * @ingroup group_int_pyramid
+     */
+    vx_image getAtLevel(vx_size index);
+
     /*! \brief Initializes the internals of a pyramid structure
      * \ingroup group_int_pyramid
      */
