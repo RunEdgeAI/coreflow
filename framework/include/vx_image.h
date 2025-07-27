@@ -173,6 +173,193 @@ public:
      */
     static vx_size sizeOfChannel(vx_df_image color);
 
+    /**
+     * @brief Get the width of the image
+     *
+     * @return vx_uint32 The width in pixels
+     * @ingroup group_int_image
+     */
+    vx_uint32 wdth() const;
+
+    /**
+     * @brief Get the height of the image
+     *
+     * @return vx_uint32 The height in pixels
+     * @ingroup group_int_image
+     */
+    vx_uint32 hght() const;
+
+    /**
+     * @brief Get the format of the image
+     *
+     * @return vx_df_image The format of the image
+     * @ingroup group_int_image
+     */
+    vx_df_image fmt() const;
+
+    /**
+     * @brief Get the number of planes in the image
+     *
+     * @return vx_uint32 The number of planes
+     * @ingroup group_int_image
+     */
+    vx_size numPlanes() const;
+
+    /**
+     * @brief Get the color space of the image
+     *
+     * @return vx_enum The color space of the image
+     * @ingroup group_int_image
+     */
+    vx_enum colorSpace() const;
+
+    /**
+     * @brief Get the color range of the image
+     *
+     * @return vx_enum The color range of the image
+     * @ingroup group_int_image
+     */
+    vx_enum colorRange() const;
+
+    /**
+     * @brief Get size of image
+     *
+     * @return vx_size   The size in bytes
+     * @ingroup group_int_image
+     */
+    vx_size size() const;
+
+    /**
+     * @brief Get the memory type
+     *
+     * @return vx_enum   The memory type
+     * @ingroup group_int_image
+     */
+    vx_enum memoryType() const;
+
+    /**
+     * @brief Set the color space
+     *
+     * @param value The space value to set
+     * @ingroup group_int_image
+     */
+    void setSpace(vx_enum value);
+
+    /**
+     * @brief Swap the handle of the image
+     *
+     * @param new_ptrs   The new pointers to the image planes
+     * @param prev_ptrs  The previous pointers to the image planes
+     * @param num_planes The number of planes in the image
+     * @return vx_status VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_image
+     */
+    vx_status swapHandle(void *const new_ptrs[], void *prev_ptrs[], vx_size num_planes);
+
+    /**
+     * @brief Get the Valid Region object
+     *
+     * @param rect       The rectangle to fill with the valid region
+     * @return vx_status VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_image
+     */
+    vx_status getValidRegion(vx_rectangle_t *rect);
+
+    /**
+     * @brief Set the Valid Region object
+     *
+     * @param rect       The rectangle to set as the valid region
+     * @return vx_status VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_image
+     */
+    vx_status setValidRect(const vx_rectangle_t *rect);
+
+    /**
+     * @brief Get the pixel values of the image
+     *
+     * @param pixel_value The pixel value structure to fill
+     * @return vx_status VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_image
+     */
+    vx_status setPixelValues(const vx_pixel_value_t *pixel_value);
+
+    /**
+     * @brief Compute the size of the patch in bytes
+     *
+     * @param rect       The rectangle to compute the size for
+     * @param plane_index The plane index to compute the size for
+     * @return vx_size The size in bytes
+     * @ingroup group_int_image
+     */
+    vx_size computePatchSize(const vx_rectangle_t *rect, vx_uint32 plane_index);
+
+    /**
+     * @brief Access the image patch
+     *
+     * @param rect       The rectangle to access
+     * @param plane_index The plane index to access
+     * @param addr       The addressing information for the patch
+     * @param ptr        The pointer to the user memory
+     * @param mem_type   The type of memory (host, opencl, etc.)
+     * @param usage      The usage of the memory (read/write)
+     * @return vx_status VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_image
+     */
+    vx_status accessPatch(const vx_rectangle_t *rect, vx_uint32 plane_index,
+                          vx_imagepatch_addressing_t *addr, void **ptr, vx_enum usage);
+
+    /**
+     * @brief Commit the image patch
+     * @param rect       The rectangle to commit
+     * @param plane_index The plane index to commit
+     * @param addr       The addressing information for the patch
+     * @param ptr        The pointer to the user memory
+     * @return vx_status VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_image
+     */
+    vx_status commitPatch(const vx_rectangle_t *rect, vx_uint32 plane_index,
+                          const vx_imagepatch_addressing_t *addr, const void *ptr);
+
+    /**
+     * @brief Copy the image patch to/from user memory
+     *
+     * @param rect       The rectangle to copy
+     * @param plane_index The plane index to copy
+     * @param addr       The addressing information for the patch
+     * @param ptr        The pointer to the user memory
+     * @param usage      The usage of the memory (read/write)
+     * @param mem_type   The type of memory (host, opencl, etc.)
+     * @return vx_status VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_image
+     */
+    vx_status copyPatch(const vx_rectangle_t *rect, vx_uint32 plane_index,
+                        const vx_imagepatch_addressing_t *addr, void *ptr, vx_enum usage,
+                        vx_enum mem_type);
+
+    /*! \brief Used to map an image patch.
+     * \param [in] rect The rectangle to map.
+     * \param [in] plane_index The plane index to map.
+     * \param [out] map_id The map id to use.
+     * \param [out] addr The addressing information for the patch.
+     * \param [out] ptr The pointer to the mapped memory.
+     * \param [in] usage The usage of the memory (read/write).
+     * \param [in] mem_type The type of memory (host, opencl, etc.).
+     * \param [in] flags Additional flags for mapping.
+     * \ingroup group_int_image
+     */
+    vx_status mapPatch(const vx_rectangle_t *rect, vx_uint32 plane_index, vx_map_id *map_id,
+                       vx_imagepatch_addressing_t *addr, void **ptr, vx_enum usage,
+                       vx_enum mem_type, vx_uint32 flags);
+
+    /**
+     * @brief Unmap an image patch
+     *
+     * @param map_id     The map id to unmap
+     * @return vx_status VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_image
+     */
+    vx_status unmapPatch(vx_map_id map_id);
+
     /*! \brief Prints the values of the images.
      * \ingroup group_int_image
      */

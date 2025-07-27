@@ -414,6 +414,1750 @@ vx_bool Image::isValidDimensions(vx_uint32 width, vx_uint32 height, vx_df_image 
     return vx_true_e;
 }
 
+vx_df_image Image::fmt() const
+{
+    return format;
+}
+
+vx_uint32 Image::wdth() const
+{
+    return width;
+}
+
+vx_uint32 Image::hght() const
+{
+    return height;
+}
+
+vx_size Image::numPlanes() const
+{
+    return planes;
+}
+
+vx_enum Image::colorSpace() const
+{
+    return space;
+}
+
+vx_enum Image::colorRange() const
+{
+    return range;
+}
+
+vx_size Image::size() const
+{
+    vx_size size = 0ul;
+    vx_uint32 p;
+    for (p = 0; p < planes; p++)
+    {
+        size += (abs(memory.strides[p][VX_DIM_Y]) * memory.dims[p][VX_DIM_Y]);
+    }
+
+    return size;
+}
+
+vx_enum Image::memoryType() const
+{
+    return memory_type;
+}
+
+void Image::setSpace(vx_enum value)
+{
+    space = value;
+}
+
+vx_status Image::swapHandle(void *const new_ptrs[], void *prev_ptrs[], vx_size num_planes)
+{
+    vx_status status = VX_SUCCESS;
+    (void)num_planes;
+
+    if (memory_type != VX_MEMORY_TYPE_NONE)
+    {
+        vx_uint32 i;
+        vx_uint32 p;
+
+        if (new_ptrs != nullptr)
+        {
+            for (p = 0; p < planes; p++)
+            {
+                if (new_ptrs[p] == nullptr) return VX_ERROR_INVALID_PARAMETERS;
+            }
+        }
+
+        if (prev_ptrs != nullptr && parent != nullptr)
+        {
+            /* do not return prev pointers for subimages */
+            return VX_ERROR_INVALID_PARAMETERS;
+        }
+
+        if (prev_ptrs != nullptr && parent == nullptr)
+        {
+            /* return previous image handles */
+            for (p = 0; p < planes; p++)
+            {
+#ifdef OPENVX_USE_OPENCL_INTEROP
+                if (memory_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
+                {
+                    clEnqueueUnmapMemObject(context->opencl_command_queue,
+                                            memory.opencl_buf[p], memory.ptrs[p], 0,
+                                            nullptr, nullptr);
+                    clFinish(context->opencl_command_queue);
+                    prev_ptrs[p] = memory.opencl_buf[p];
+                    memory.opencl_buf[p] = nullptr;
+                    memory.ptrs[p] = nullptr;
+                }
+                else
+#endif
+                    prev_ptrs[p] = memory.ptrs[p];
+            }
+        }
+
+        /* visit each subimage of this image and reclaim its pointers */
+        for (i = 0; i < VX_INT_MAX_REF; i++)
+        {
+            if (subimages[i] != nullptr)
+            {
+                if (new_ptrs == nullptr)
+                    status =
+                        vxSwapImageHandle(subimages[i], nullptr, nullptr, planes);
+                else
+                {
+                    vx_uint8 *ptrs[4];
+
+                    for (p = 0; p < subimages[i]->planes; p++)
+                    {
+                        vx_uint32 offset = subimages[i]->memory.offset[p];
+                        ptrs[p] = (vx_uint8 *)new_ptrs[p] + offset;
+                    }
+
+                    status = vxSwapImageHandle(subimages[i], (void **)ptrs, nullptr,
+                                               planes);
+                }
+
+                break;
+            }
+        }
+
+        /* reclaim previous and set new handles for this image */
+        for (p = 0; p < planes; p++)
+        {
+            if (new_ptrs == nullptr)
+                memory.ptrs[p] = 0;
+            else
+            {
+                /* set new pointers for subimage */
+#ifdef OPENVX_USE_OPENCL_INTEROP
+                if (memory_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
+                {
+                    memory.opencl_buf[p] = (cl_mem)new_ptrs[p];
+                    size_t size = 0;
+                    cl_int cerr = clGetMemObjectInfo(memory.opencl_buf[p], CL_MEM_SIZE,
+                                                     sizeof(size_t), &size, nullptr);
+                    VX_PRINT(VX_ZONE_CONTEXT,
+                             "OPENCL: vxSwapImageHandle: clGetMemObjectInfo(%p) => (%d)\n",
+                             memory.opencl_buf[p], cerr);
+                    if (cerr != CL_SUCCESS)
+                    {
+                        return VX_ERROR_INVALID_PARAMETERS;
+                    }
+                    memory.ptrs[p] = (vx_uint8 *)clEnqueueMapBuffer(
+                        context->opencl_command_queue, memory.opencl_buf[p], CL_TRUE,
+                        CL_MAP_READ | CL_MAP_WRITE, 0, size, 0, nullptr, nullptr, &cerr);
+                    VX_PRINT(VX_ZONE_CONTEXT,
+                             "OPENCL: vxSwapImageHandle: clEnqueueMapBuffer(%p) => %p (%d)\n",
+                             memory.opencl_buf[p], memory.ptrs[p], cerr);
+                    if (cerr != CL_SUCCESS)
+                    {
+                        return VX_ERROR_INVALID_PARAMETERS;
+                    }
+                }
+                else
+#endif
+                    memory.ptrs[p] = reinterpret_cast<vx_uint8 *>(new_ptrs[p]);
+            }
+        }
+
+        /* clear flag if pointers were reclaimed */
+        memory.allocated = (new_ptrs == nullptr) ? vx_false_e : vx_true_e;
+    }
+    else
+    {
+        status = VX_ERROR_INVALID_PARAMETERS;
+    }
+
+    return status;
+}
+
+vx_status Image::getValidRegion(vx_rectangle_t *rect)
+{
+    vx_status status = VX_ERROR_INVALID_PARAMETERS;
+
+    if (rect)
+    {
+        if ((region.start_x <= region.end_x) && (region.start_y <= region.end_y))
+        {
+            rect->start_x = region.start_x;
+            rect->start_y = region.start_y;
+            rect->end_x = region.end_x;
+            rect->end_y = region.end_y;
+        }
+        else
+        {
+            rect->start_x = 0;
+            rect->start_y = 0;
+            rect->end_x = width;
+            rect->end_y = height;
+        }
+        status = VX_SUCCESS;
+    }
+
+    return status;
+}
+
+vx_status Image::setValidRect(const vx_rectangle_t *rect)
+{
+    vx_status status = VX_FAILURE;
+
+    if (rect)
+    {
+        if ((rect->start_x <= rect->end_x) && (rect->start_y <= rect->end_y) &&
+            (rect->end_x <= width) && (rect->end_y <= height))
+        {
+            region.start_x = rect->start_x;
+            region.start_y = rect->start_y;
+            region.end_x = rect->end_x;
+            region.end_y = rect->end_y;
+            status = VX_SUCCESS;
+        }
+        else
+        {
+            status = VX_ERROR_INVALID_PARAMETERS;
+        }
+    }
+    else
+    {
+        region.start_x = 0;
+        region.start_y = 0;
+        region.end_x = width;
+        region.end_y = height;
+        status = VX_SUCCESS;
+    }
+
+    return status;
+}
+
+vx_status Image::setPixelValues(const vx_pixel_value_t *pixel_value)
+{
+    vx_status status = VX_SUCCESS;
+    vx_uint32 x, y, p, width, height;
+    vx_size planes = 0;
+    vx_rectangle_t rect = {0, 0, 0, 0};
+    vxGetValidRegionImage(this, &rect);
+    vx_df_image format = 0;
+    vxQueryImage(this, VX_IMAGE_FORMAT, &format, sizeof(format));
+    vxQueryImage(this, VX_IMAGE_PLANES, &planes, sizeof(planes));
+
+    for (p = 0; p < planes; p++)
+    {
+        vx_imagepatch_addressing_t addr;
+        void *base = nullptr;
+        if (vxAccessImagePatch(this, &rect, p, &addr, &base, VX_WRITE_ONLY) == VX_SUCCESS)
+        {
+            Image::printImageAddressing(&addr);
+            width = (format == VX_DF_IMAGE_U1) ? addr.dim_x - rect.start_x % 8 : addr.dim_x;
+            height = addr.dim_y;
+            for (y = 0; y < height; y += addr.step_y)
+            {
+                for (x = 0; x < width; x += addr.step_x)
+                {
+                    if (format == VX_DF_IMAGE_U1)
+                    {
+                        vx_uint32 xShftd = x + rect.start_x % 8;
+                        vx_uint8 *ptr = reinterpret_cast<vx_uint8 *>(
+                            vxFormatImagePatchAddress2d(base, xShftd, y, &addr));
+                        vx_uint8 offset = xShftd % 8;
+                        vx_uint8 mask = 1 << offset;
+                        *ptr = (*ptr & ~mask) | ((pixel_value->U1 ? 1 : 0) << offset);
+                    }
+                    if (format == VX_DF_IMAGE_U8)
+                    {
+                        vx_uint8 *ptr = reinterpret_cast<vx_uint8 *>(
+                            vxFormatImagePatchAddress2d(base, x, y, &addr));
+                        *ptr = pixel_value->U8;
+                    }
+                    else if (format == VX_DF_IMAGE_U16)
+                    {
+                        vx_uint16 *ptr = reinterpret_cast<vx_uint16 *>(
+                            vxFormatImagePatchAddress2d(base, x, y, &addr));
+                        *ptr = pixel_value->U16;
+                    }
+                    else if (format == VX_DF_IMAGE_U32)
+                    {
+                        vx_uint32 *ptr = reinterpret_cast<vx_uint32 *>(
+                            vxFormatImagePatchAddress2d(base, x, y, &addr));
+                        *ptr = pixel_value->U32;
+                    }
+                    else if (format == VX_DF_IMAGE_S16)
+                    {
+                        vx_int16 *ptr = reinterpret_cast<vx_int16 *>(
+                            vxFormatImagePatchAddress2d(base, x, y, &addr));
+                        *ptr = pixel_value->S16;
+                    }
+                    else if (format == VX_DF_IMAGE_S32)
+                    {
+                        vx_int32 *ptr = reinterpret_cast<vx_int32 *>(
+                            vxFormatImagePatchAddress2d(base, x, y, &addr));
+                        *ptr = pixel_value->S32;
+                    }
+                    else if ((format == VX_DF_IMAGE_RGB) || (format == VX_DF_IMAGE_RGBX))
+                    {
+                        vx_uint8 *ptr = reinterpret_cast<vx_uint8 *>(
+                            vxFormatImagePatchAddress2d(base, x, y, &addr));
+                        ptr[0] = pixel_value->RGBX[0];
+                        ptr[1] = pixel_value->RGBX[1];
+                        ptr[2] = pixel_value->RGBX[2];
+                        if (format == VX_DF_IMAGE_RGBX) ptr[3] = pixel_value->RGBX[3];
+                    }
+                    else if ((format == VX_DF_IMAGE_YUV4) || (format == VX_DF_IMAGE_IYUV))
+                    {
+                        vx_uint8 *pixel = (vx_uint8 *)&pixel_value->YUV;
+                        vx_uint8 *ptr = reinterpret_cast<vx_uint8 *>(
+                            vxFormatImagePatchAddress2d(base, x, y, &addr));
+                        *ptr = pixel[p];
+                    }
+                    else if ((p == 0) &&
+                             ((format == VX_DF_IMAGE_NV12) || (format == VX_DF_IMAGE_NV21)))
+                    {
+                        vx_uint8 *pixel = (vx_uint8 *)&pixel_value->YUV;
+                        vx_uint8 *ptr = reinterpret_cast<vx_uint8 *>(
+                            vxFormatImagePatchAddress2d(base, x, y, &addr));
+                        *ptr = pixel[0];
+                    }
+                    else if ((p == 1) && (format == VX_DF_IMAGE_NV12))
+                    {
+                        vx_uint8 *pixel = (vx_uint8 *)&pixel_value->YUV;
+                        vx_uint8 *ptr = reinterpret_cast<vx_uint8 *>(
+                            vxFormatImagePatchAddress2d(base, x, y, &addr));
+                        ptr[0] = pixel[1];
+                        ptr[1] = pixel[2];
+                    }
+                    else if ((p == 1) && (format == VX_DF_IMAGE_NV21))
+                    {
+                        vx_uint8 *pixel = (vx_uint8 *)&pixel_value->YUV;
+                        vx_uint8 *ptr = reinterpret_cast<vx_uint8 *>(
+                            vxFormatImagePatchAddress2d(base, x, y, &addr));
+                        ptr[0] = pixel[2];
+                        ptr[1] = pixel[1];
+                    }
+                    else if (format == VX_DF_IMAGE_UYVY)
+                    {
+                        vx_uint8 *pixel = (vx_uint8 *)&pixel_value->YUV;
+                        vx_uint8 *ptr = reinterpret_cast<vx_uint8 *>(
+                            vxFormatImagePatchAddress2d(base, x, y, &addr));
+                        if (x % 2 == 0)
+                        {
+                            ptr[0] = pixel[1];
+                            ptr[1] = pixel[0];
+                        }
+                        else
+                        {
+                            ptr[0] = pixel[2];
+                            ptr[1] = pixel[0];
+                        }
+                    }
+                    else if (format == VX_DF_IMAGE_YUYV)
+                    {
+                        vx_uint8 *pixel = (vx_uint8 *)&pixel_value->YUV;
+                        vx_uint8 *ptr = reinterpret_cast<vx_uint8 *>(
+                            vxFormatImagePatchAddress2d(base, x, y, &addr));
+                        if (x % 2 == 0)
+                        {
+                            ptr[0] = pixel[0];
+                            ptr[1] = pixel[1];
+                        }
+                        else
+                        {
+                            ptr[0] = pixel[0];
+                            ptr[1] = pixel[2];
+                        }
+                    }
+                }
+            }
+            if (vxCommitImagePatch(this, &rect, p, &addr, base) != VX_SUCCESS)
+            {
+                VX_PRINT(VX_ZONE_ERROR,
+                         "Failed to set initial image patch on plane %u on const image!\n", p);
+                status = VX_FAILURE;
+                break;
+            }
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Failed to get image patch on plane %u in const image!\n", p);
+            status = VX_FAILURE;
+            break;
+        }
+    } /* for loop */
+
+    return status;
+}
+
+vx_size Image::computePatchSize(const vx_rectangle_t *rect, vx_uint32 plane_index)
+{
+    vx_size size = 0ul;
+    vx_uint32 start_x = 0u, start_y = 0u, end_x = 0u, end_y = 0u;
+
+    if (rect)
+    {
+        start_x = rect->start_x;
+        start_y = rect->start_y;
+        end_x = rect->end_x;
+        end_y = rect->end_y;
+
+        if (memory.ptrs[0] == nullptr)
+        {
+            if (allocateImage() == vx_false_e)
+            {
+                vxAddLogEntry((vx_reference)this, VX_ERROR_NO_MEMORY,
+                              "Failed to allocate image!\n");
+                return 0;
+            }
+        }
+        if (plane_index < planes)
+        {
+            vx_size pixelSize;
+            vx_size numPixels = ((end_x - start_x) / scale[plane_index][VX_DIM_X]) *
+                                ((end_y - start_y) / scale[plane_index][VX_DIM_Y]);
+            Image::printImage(this);
+            if (memory.strides[plane_index][VX_DIM_X] == 0 &&
+                memory.stride_x_bits[plane_index] != 0)
+            {
+                /* data type does not have integer byte size, e.g. VX_DF_IMAGE_U1 image */
+                pixelSize = memory.stride_x_bits[plane_index];  // bits
+                if (start_x * pixelSize % 8 !=
+                    0)  // Handle case where imagepatch doesn't start at byte boundary
+                    start_x -= (start_x * pixelSize % 8) / pixelSize;
+
+                vx_size lineSize =
+                    ((end_x - start_x) / scale[plane_index][VX_DIM_X] * pixelSize + 7ul) / 8ul;
+                VX_PRINT(VX_ZONE_IMAGE,
+                         "numPixels = " VX_FMT_SIZE " pixelSize = " VX_FMT_SIZE " bits\n",
+                         numPixels, pixelSize);
+                size = lineSize * ((end_y - start_y) / scale[plane_index][VX_DIM_Y]);
+            }
+            else
+            {
+                pixelSize = memory.strides[plane_index][VX_DIM_X];
+                VX_PRINT(VX_ZONE_IMAGE, "numPixels = " VX_FMT_SIZE " pixelSize = " VX_FMT_SIZE "\n",
+                         numPixels, pixelSize);
+                size = numPixels * pixelSize;
+            }
+        }
+        else
+        {
+            vxAddLogEntry((vx_reference)this, VX_ERROR_INVALID_PARAMETERS,
+                          "Plane index %u is out of bounds!", plane_index);
+        }
+
+        VX_PRINT(VX_ZONE_IMAGE,
+                 "image %p for patch {%u,%u to %u,%u} has a byte size of " VX_FMT_SIZE "\n", this,
+                 start_x, start_y, end_x, end_y, size);
+    }
+    else
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Rect reference is invalid!\n");
+    }
+
+    return size;
+}
+
+vx_status Image::accessPatch(const vx_rectangle_t *rect, vx_uint32 plane_index,
+                             vx_imagepatch_addressing_t *addr, void **ptr, vx_enum usage)
+{
+    vx_uint8 *p = nullptr;
+    vx_status status = VX_FAILURE;
+    vx_bool mapped = vx_false_e;
+    vx_uint32 start_x = rect ? rect->start_x : 0u;
+    vx_uint32 start_y = rect ? rect->start_y : 0u;
+    vx_uint32 end_x = rect ? rect->end_x : 0u;
+    vx_uint32 end_y = rect ? rect->end_y : 0u;
+    vx_bool zero_area =
+        ((((end_x - start_x) == 0) || ((end_y - start_y) == 0)) ? vx_true_e : vx_false_e);
+
+    /* bad parameters */
+    if ((usage < VX_READ_ONLY) || (VX_READ_AND_WRITE < usage) || (addr == nullptr) ||
+        (ptr == nullptr))
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid parameters for AccessImagePatch!\n");
+        status = VX_ERROR_INVALID_PARAMETERS;
+        goto exit;
+    }
+
+    /* determine if virtual before checking for memory */
+    if (is_virtual == vx_true_e)
+    {
+        if (is_accessible == vx_false_e)
+        {
+            /* User tried to access a "virtual" image. */
+            VX_PRINT(VX_ZONE_ERROR, "Can not access a virtual image\n");
+            status = VX_ERROR_OPTIMIZED_AWAY;
+            goto exit;
+        }
+        /* framework trying to access a virtual image, this is ok. */
+    }
+
+    /* more bad parameters */
+    if (zero_area == vx_false_e &&
+        ((plane_index >= memory.nptrs) || (plane_index >= planes) ||
+         (rect->start_x >= rect->end_x) || (rect->start_y >= rect->end_y)))
+    {
+        status = VX_ERROR_INVALID_PARAMETERS;
+        goto exit;
+    }
+
+    /* The image needs to be allocated */
+    if ((memory.ptrs[0] == nullptr) && (allocateImage() == vx_false_e))
+    {
+        VX_PRINT(VX_ZONE_ERROR, "No memory!\n");
+        status = VX_ERROR_NO_MEMORY;
+        goto exit;
+    }
+
+    /* can't write to constant */
+    if ((constant == vx_true_e) && ((usage == VX_WRITE_ONLY) || (usage == VX_READ_AND_WRITE)))
+    {
+        status = VX_ERROR_NOT_SUPPORTED;
+        VX_PRINT(VX_ZONE_ERROR, "Can't write to constant data, only read!\n");
+        vxAddLogEntry(reinterpret_cast<vx_reference>(this), status,
+                      "Can't write to constant data, only read!\n");
+        goto exit;
+    }
+
+    /*************************************************************************/
+    VX_PRINT(VX_ZONE_IMAGE,
+             "AccessImagePatch from " VX_FMT_REF " to ptr %p from {%u,%u} to {%u,%u} plane %u\n",
+             this, *ptr, rect->start_x, rect->start_y, rect->end_x, rect->end_y, plane_index);
+
+    /* POSSIBILITIES:
+     * 1.) !*ptr && RO == MAP
+     * 2.) !*ptr && WO == MAP
+     * 3.) !*ptr && RW == MAP
+     * 4.)  *ptr && RO||RW == COPY (UNLESS MAP)
+     */
+
+    if ((*ptr == nullptr) &&
+        ((usage == VX_READ_ONLY) || (usage == VX_WRITE_ONLY) || (usage == VX_READ_AND_WRITE)))
+    {
+        mapped = vx_true_e;
+    }
+
+    /* MAP mode */
+    if (mapped == vx_true_e)
+    {
+        vx_uint32 index = 0u;
+
+        /* lock the memory plane for multiple writers*/
+        if (usage != VX_READ_ONLY)
+        {
+            if (Osal::semWait(&memory.locks[plane_index]) == vx_false_e)
+            {
+                status = VX_ERROR_NO_RESOURCES;
+                goto exit;
+            }
+        }
+        Memory::printMemory(&memory);
+        p = (vx_uint8 *)memory.ptrs[plane_index];
+
+        /* use the addressing of the internal format */
+        if (format == VX_DF_IMAGE_U1)
+        {
+            addr->dim_x = rect->end_x - rect->start_x +
+                          rect->start_x % 8;  // Round start down to byte boundary
+        }
+        else
+        {
+            addr->dim_x = rect->end_x - rect->start_x;
+        }
+        addr->dim_y = rect->end_y - rect->start_y;
+        addr->stride_x = memory.strides[plane_index][VX_DIM_X];
+        addr->stride_y = memory.strides[plane_index][VX_DIM_Y];
+        addr->stride_x_bits = memory.stride_x_bits[plane_index];
+        addr->step_x = scale[plane_index][VX_DIM_X];
+        addr->step_y = scale[plane_index][VX_DIM_Y];
+        addr->scale_x = VX_SCALE_UNITY / scale[plane_index][VX_DIM_X];
+        addr->scale_y = VX_SCALE_UNITY / scale[plane_index][VX_DIM_Y];
+
+        index = Image::computePatchOffset(rect->start_x, rect->start_y, addr);
+        *ptr = &p[index];
+        VX_PRINT(VX_ZONE_IMAGE, "Returning mapped pointer %p which is offset by %lu\n", *ptr,
+                 index);
+
+        // ownReadFromReference(&base);
+        incrementReference(VX_EXTERNAL);
+
+        status = VX_SUCCESS;
+    }
+
+    /* COPY mode */
+    else
+    {
+        /* Inconsistent strides for non-integer byte size data? */
+        if ((addr->stride_x == 0 || memory.strides[plane_index][VX_DIM_X] == 0) &&
+            addr->stride_x_bits != memory.stride_x_bits[plane_index])
+        {
+            VX_PRINT(VX_ZONE_ERROR,
+                     "Copying of non-integer byte size data without preserving stride in "
+                     "x-dimension is not supported! Attempted to copy with strides {stride_x, "
+                     "stride_x_bits}:"
+                     " {%d, %u} <- {%d, %u}\n",
+                     addr->stride_x, addr->stride_x_bits, memory.strides[plane_index][VX_DIM_X],
+                     memory.stride_x_bits[plane_index]);
+            status = VX_ERROR_NOT_SUPPORTED;
+            goto exit;
+        }
+
+        vx_size size = vxComputeImagePatchSize(this, rect, plane_index);
+        vx_uint32 a = 0u;
+
+        vx_imagepatch_addressing_t *addr_save = new vx_imagepatch_addressing_t();
+        /* Strides given by the application */
+        addr_save->stride_x = addr->stride_x;
+        addr_save->stride_y = addr->stride_y;
+        addr_save->stride_x_bits = addr->stride_x_bits;
+        /* Computed by the application */
+        if (format == VX_DF_IMAGE_U1)
+        {
+            addr->dim_x = addr_save->dim_x =
+                rect->end_x - rect->start_x + rect->start_x % 8;  // Round start to byte boundary
+        }
+        else
+        {
+            addr->dim_x = addr_save->dim_x = rect->end_x - rect->start_x;
+        }
+        addr->dim_y = addr_save->dim_y = rect->end_y - rect->start_y;
+        addr->step_x = addr_save->step_x = scale[plane_index][VX_DIM_X];
+        addr->step_y = addr_save->step_y = scale[plane_index][VX_DIM_Y];
+        addr->scale_x = addr_save->scale_x = VX_SCALE_UNITY / scale[plane_index][VX_DIM_X];
+        addr->scale_y = addr_save->scale_y = VX_SCALE_UNITY / scale[plane_index][VX_DIM_Y];
+
+        if (context->addAccessor(size, usage, *ptr, this, &a, addr_save) == vx_false_e)
+        {
+            status = VX_ERROR_NO_MEMORY;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(this), status,
+                          "Failed to allocate memory for COPY! Size=" VX_FMT_SIZE "\n", size);
+            goto exit;
+        }
+
+        {
+            vx_uint32 x, y;
+            vx_uint8 *tmp = (vx_uint8 *)*ptr;
+
+            /*! \todo implement overlapping multi-writers lock, not just single writer lock */
+            if ((usage == VX_WRITE_ONLY) || (usage == VX_READ_AND_WRITE))
+            {
+                if (Osal::semWait(&memory.locks[plane_index]) == vx_false_e)
+                {
+                    status = VX_ERROR_NO_RESOURCES;
+                    goto exit;
+                }
+            }
+
+            if ((usage == VX_READ_ONLY) || (usage == VX_READ_AND_WRITE))
+            {
+                /* Copy the patch _from_ the image
+                 * (For non-integer byte size images line-by-line copying only works if the patch
+                 * starts and ends at byte boundaries) */
+                if (addr_save->stride_x == memory.strides[plane_index][VX_DIM_X] &&
+                    (addr_save->stride_x != 0
+                         ? 1
+                         : (addr_save->stride_x_bits == memory.stride_x_bits[plane_index] &&
+                            rect->start_x * addr_save->stride_x_bits % 8 == 0 &&
+                            rect->end_x * addr_save->stride_x_bits % 8 == 0)))
+                {
+                    /* Both have compact lines */
+                    for (y = rect->start_y; y < rect->end_y; y += addr_save->step_y)
+                    {
+                        vx_uint32 i =
+                            Image::computePlaneOffset(this, rect->start_x, y, plane_index);
+                        vx_uint32 j = Image::computePatchOffset(0, (y - rect->start_y), addr_save);
+                        vx_uint32 len =
+                            Image::computePlaneRangeSize(this, addr_save->dim_x, plane_index);
+                        VX_PRINT(VX_ZONE_IMAGE, "%p[%u] <= %p[%u] for %u\n", tmp, j,
+                                 memory.ptrs[plane_index], i, len);
+                        memcpy(&tmp[j], &memory.ptrs[plane_index][i], len);
+                    }
+                }
+
+                else
+                {
+                    /* The destination is not compact, we need to copy per element */
+                    vx_uint8 *pDestLine = &tmp[0];
+                    for (y = rect->start_y; y < rect->end_y; y += addr_save->step_y)
+                    {
+                        vx_uint8 *pDest = pDestLine;
+
+                        vx_uint32 offset =
+                            Image::computePlaneOffset(this, rect->start_x, y, plane_index);
+                        vx_uint8 *pSrc = &memory.ptrs[plane_index][offset];
+
+                        for (x = rect->start_x; x < rect->end_x; x += addr_save->step_x)
+                        {
+                            if (format == VX_DF_IMAGE_U1)
+                            {
+                                /* U1 patch not starting and ending at byte boundary in image,
+                                 * do pixel-by-pixel copy from the image */
+                                offset = Image::computePlaneOffset(this, x, y, plane_index);
+                                pSrc = &memory.ptrs[plane_index][offset];
+                                pDest = &pDestLine[Image::computePatchOffset(
+                                    x - rect->start_x + rect->start_x % 8, 0, addr_save)];
+
+                                vx_uint8 mask = 1 << (x % 8);
+                                *pDest = (*pDest & ~mask) | (*pSrc & mask);
+                            }
+                            else
+                            {
+                                /* One element */
+                                memcpy(pDest, pSrc, memory.strides[plane_index][VX_DIM_X]);
+
+                                pSrc += memory.strides[plane_index][VX_DIM_X];
+                                pDest += addr_save->stride_x;
+                            }
+                        }
+                        VX_PRINT(VX_ZONE_IMAGE,
+                                 "Copied %u pixels from row %u in image starting at %p to patch "
+                                 "starting at %p\n",
+                                 end_x - start_x, y, memory.ptrs[plane_index], tmp);
+
+                        pDestLine += addr_save->stride_y;
+                    }
+                }
+
+                VX_PRINT(VX_ZONE_IMAGE, "Copied image into %p\n", *ptr);
+                // ownReadFromReference(&base);
+            }
+
+            incrementReference(VX_EXTERNAL);
+
+            status = VX_SUCCESS;
+        }
+    }
+exit:
+    VX_PRINT(VX_ZONE_API, "returned %d\n", status);
+
+    return status;
+}
+
+vx_status Image::commitPatch(const vx_rectangle_t *rect, vx_uint32 plane_index,
+                             const vx_imagepatch_addressing_t *addr, const void *ptr)
+{
+    vx_status status = VX_FAILURE;
+    vx_int32 i = 0;
+    vx_bool external = vx_true_e;  // assume that it was an allocated buffer
+    vx_uint32 start_x = rect ? rect->start_x : 0u;
+    vx_uint32 start_y = rect ? rect->start_y : 0u;
+    vx_uint32 end_x = rect ? rect->end_x : 0u;
+    vx_uint32 end_y = rect ? rect->end_y : 0u;
+    vx_uint8 *tmp = (vx_uint8 *)ptr;
+    vx_bool zero_area =
+        ((((end_x - start_x) == 0) || ((end_y - start_y) == 0)) ? vx_true_e : vx_false_e);
+    vx_uint32 index = UINT32_MAX;  // out of bounds, if given to remove, won't do anything
+
+    VX_PRINT(VX_ZONE_IMAGE,
+             "CommitImagePatch to " VX_FMT_REF " from ptr %p plane %u to {%u,%u},{%u,%u}\n", this,
+             ptr, plane_index, start_x, start_y, end_x, end_y);
+
+    Image::printImage(this);
+    Image::printImageAddressing(addr);
+
+    /* determine if virtual before checking for memory */
+    if (is_virtual == vx_true_e && zero_area == vx_false_e)
+    {
+        if (is_accessible == vx_false_e)
+        {
+            /* User tried to access a "virtual" image. */
+            VX_PRINT(VX_ZONE_ERROR, "Can not access a virtual image\n");
+            status = VX_ERROR_OPTIMIZED_AWAY;
+            goto exit;
+        }
+        /* framework trying to access a virtual image, this is ok. */
+    }
+
+    if (zero_area == vx_false_e && ((plane_index >= planes) || (plane_index >= memory.nptrs) ||
+                                    (ptr == nullptr) || (addr == nullptr)))
+    {
+        return VX_ERROR_INVALID_PARAMETERS;
+    }
+
+    /* check the rectangle, it has to be in actual plane space */
+    if (zero_area == vx_false_e && ((start_x >= end_x) || ((end_x - start_x) > addr->dim_x) ||
+                                    (start_y >= end_y) || ((end_y - start_y) > addr->dim_y) ||
+                                    (end_x > (vx_uint32)memory.dims[plane_index][VX_DIM_X] *
+                                                 (vx_uint32)scale[plane_index][VX_DIM_X]) ||
+                                    (end_y > (vx_uint32)memory.dims[plane_index][VX_DIM_Y] *
+                                                 (vx_uint32)scale[plane_index][VX_DIM_X])))
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid start,end coordinates! plane %u {%u,%u},{%u,%u}\n",
+                 plane_index, start_x, start_y, end_x, end_y);
+        Image::printImage(this);
+        DEBUG_BREAK();
+        status = VX_ERROR_INVALID_PARAMETERS;
+        goto exit;
+    }
+
+    /* Inconsistent strides for non-integer byte size data? */
+    if ((addr->stride_x == 0 || memory.strides[plane_index][VX_DIM_X] == 0) &&
+        addr->stride_x_bits != memory.stride_x_bits[plane_index])
+    {
+        VX_PRINT(VX_ZONE_ERROR,
+                 "Copying of non-integer byte size data without preserving stride in "
+                 "x-dimension is not supported! Attempted to copy with strides {stride_x, "
+                 "stride_x_bits}:"
+                 " {%u, %u} -> {%u, %u}\n",
+                 addr->stride_x, addr->stride_x_bits, memory.strides[plane_index][VX_DIM_X],
+                 memory.stride_x_bits[plane_index]);
+        status = VX_ERROR_NOT_SUPPORTED;
+        goto exit;
+    }
+
+    {
+        /* VARIABLES:
+         * 1.) ZERO_AREA
+         * 2.) CONSTANT - independant
+         * 3.) INTERNAL - independant of area
+         * 4.) EXTERNAL - dependant on area (do nothing on zero, determine on non-zero)
+         * 5.) !INTERNAL && !EXTERNAL == MAPPED
+         */
+        vx_bool internal = context->findAccessor(ptr, &index);
+
+        if ((zero_area == vx_false_e) && (constant == vx_true_e))
+        {
+            /* we tried to modify constant data! */
+            VX_PRINT(VX_ZONE_ERROR, "Can't set constant image data!\n");
+            status = VX_ERROR_NOT_SUPPORTED;
+            /* don't modify the accessor here, it's an error case */
+            goto exit;
+        }
+        else if (zero_area == vx_false_e && constant == vx_false_e)
+        {
+            /* this could be a write-back */
+            if (internal == vx_true_e && context->accessors[index].usage == VX_READ_ONLY)
+            {
+                /* this is a buffer that we allocated on behalf of the user and now they are done.
+                 * Do nothing else*/
+                context->removeAccessor(index);
+            }
+            else
+            {
+                /* determine if this grows the valid region */
+                if (region.start_x > start_x) region.start_x = start_x;
+                if (region.start_y > start_y) region.start_y = start_y;
+                if (region.end_x < end_x) region.end_x = end_x;
+                if (region.end_y < end_y) region.end_y = end_y;
+
+                /* index of 1 pixel line past last. */
+                i = (memory.dims[plane_index][VX_DIM_Y] * memory.strides[plane_index][VX_DIM_Y]);
+
+                VX_PRINT(VX_ZONE_IMAGE, "base:%p tmp:%p end:%p\n", memory.ptrs[plane_index], ptr,
+                         &memory.ptrs[plane_index][i]);
+
+                if ((memory.ptrs[plane_index] <= (vx_uint8 *)ptr) &&
+                    ((vx_uint8 *)ptr < &memory.ptrs[plane_index][i]))
+                {
+                    /* corner case for 2d memory */
+                    if (memory.strides[plane_index][VX_DIM_X] != 0
+                            ? /* Integer byte size data format */
+                            memory.strides[plane_index][VX_DIM_Y] !=
+                                (int)memory.dims[plane_index][VX_DIM_X] *
+                                    memory.strides[plane_index][VX_DIM_X]
+                            : /* Non-integer byte size data format */
+                            memory.strides[plane_index][VX_DIM_Y] !=
+                                ((int)memory.dims[plane_index][VX_DIM_X] *
+                                     memory.stride_x_bits[plane_index] +
+                                 7) /
+                                    8)
+                    {
+                        /* determine if the pointer is within the image boundary. */
+                        vx_uint8 *base = memory.ptrs[plane_index];
+                        vx_size offset =
+                            ((vx_size)(tmp - base)) % memory.strides[plane_index][VX_DIM_Y];
+                        if (memory.strides[plane_index][VX_DIM_X] != 0
+                                ? /* Integer byte size data format */
+                                offset < (vx_size)(memory.dims[plane_index][VX_DIM_X] *
+                                                   memory.strides[plane_index][VX_DIM_X])
+                                : /* Non-integer byte size data format */
+                                offset < (vx_size)(memory.dims[plane_index][VX_DIM_X] *
+                                                       memory.stride_x_bits[plane_index] +
+                                                   7) /
+                                             8ul)
+                        {
+                            VX_PRINT(VX_ZONE_IMAGE, "Pointer is within 2D image\n");
+                            external = vx_false_e;
+                        }
+                    }
+                    else
+                    {
+                        /* the pointer in contained in the image, so it was mapped, thus
+                         * there's nothing else to do. */
+                        external = vx_false_e;
+                        VX_PRINT(VX_ZONE_IMAGE, "Mapped pointer detected!\n");
+                    }
+                }
+                if (external == vx_true_e || internal == vx_true_e)
+                {
+                    if (internal == vx_true_e)
+                    {
+                        /* Copy the patch back _to_ the image
+                         * (For non-integer byte size images line-by-line copying only works if the
+                         * patch starts and ends at byte boundaries or at the left/right edges of
+                         * the image's valid region) */
+                        if (addr->stride_x == memory.strides[plane_index][VX_DIM_X] &&
+                            (addr->stride_x != 0
+                                 ? 1
+                                 : (addr->stride_x_bits == memory.stride_x_bits[plane_index] &&
+                                    (start_x * addr->stride_x_bits % 8 == 0 ||
+                                     start_x == region.start_x) &&
+                                    (end_x * addr->stride_x_bits % 8 == 0 ||
+                                     end_x == region.end_x))))
+                        {
+                            /* Both source and destination have compact lines */
+                            vx_uint32 y;
+                            for (y = start_y; y < end_y; y += addr->step_y)
+                            {
+                                vx_uint32 i =
+                                    Image::computePlaneOffset(this, start_x, y, plane_index);
+                                vx_uint32 j = Image::computePatchOffset(0, (y - start_y), addr);
+                                vx_uint32 len =
+                                    Image::computePatchRangeSize((end_x - start_x), addr);
+                                VX_PRINT(VX_ZONE_IMAGE, "%p[%u] <= %p[%u] for %u\n",
+                                         memory.ptrs[plane_index], i, tmp, j, len);
+                                memcpy(&memory.ptrs[plane_index][i], &tmp[j], len);
+                            }
+                        }
+
+                        else
+                        {
+                            /* The source is not compact, we need to copy per element */
+                            vx_uint32 x, y;
+                            vx_uint8 *pDestLine = &tmp[0];
+                            for (y = start_y; y < end_y; y += addr->step_y)
+                            {
+                                vx_uint8 *pSrc = pDestLine;
+
+                                vx_uint32 offset =
+                                    Image::computePlaneOffset(this, start_x, y, plane_index);
+                                vx_uint8 *pDest = &memory.ptrs[plane_index][offset];
+
+                                for (x = start_x; x < end_x; x += addr->step_x)
+                                {
+                                    if (format == VX_DF_IMAGE_U1)
+                                    {
+                                        /* U1 patch not starting and ending at byte boundary or
+                                         * left/right edges of valid region in image, do
+                                         * pixel-by-pixel copy to the image */
+                                        offset = Image::computePlaneOffset(this, x, y, plane_index);
+                                        pDest = &memory.ptrs[plane_index][offset];
+                                        pSrc = &pDestLine[Image::computePatchOffset(
+                                            x - start_x + start_x % 8, 0, addr)];
+
+                                        vx_uint8 mask = 1 << (x % 8);
+                                        *pDest = (*pDest & ~mask) | (*pSrc & mask);
+                                    }
+                                    else
+                                    {
+                                        /* One element */
+                                        memcpy(pDest, pSrc, memory.strides[plane_index][VX_DIM_X]);
+
+                                        pDest += memory.strides[plane_index][VX_DIM_X];
+                                        pSrc += addr->stride_x;
+                                    }
+                                }
+                                VX_PRINT(VX_ZONE_IMAGE,
+                                         "Copied %u pixels from row %u in imagepatch starting at "
+                                         "%p to image starting "
+                                         "at %p\n",
+                                         end_x - start_x, y - start_y, tmp,
+                                         memory.ptrs[plane_index]);
+
+                                pDestLine += addr->stride_y;
+                            }
+                        }
+
+                        /* a write only or read/write copy */
+                        context->removeAccessor(index);
+                    }
+                    else
+                    {
+                        /* copy the patch back to the image. */
+                        vx_uint32 x, y, i, j, len;
+                        for (y = start_y; y < end_y; y += addr->step_y)
+                        {
+                            if (format == VX_DF_IMAGE_U1)
+                            {
+                                /* U1: Do pixel-by-pixel copy to the image in case patch doesn't
+                                 * start or end at a byte boundary or at the left/right edges of the
+                                 * valid region */
+                                for (x = start_x; x < end_x; x += addr->step_x)
+                                {
+                                    i = Image::computePlaneOffset(this, x, y, plane_index);
+                                    j = Image::computePatchOffset((x - start_x + start_x % 8),
+                                                                  (y - start_y), addr);
+
+                                    vx_uint8 mask = 1 << (x % 8);
+                                    memory.ptrs[plane_index][i] =
+                                        (memory.ptrs[plane_index][i] & ~mask) | (tmp[j] & mask);
+                                }
+                                VX_PRINT(VX_ZONE_IMAGE,
+                                         "Copied %u pixels from row %u in external patch starting "
+                                         "at %p to image starting "
+                                         "at %p\n",
+                                         end_x - start_x, y - start_y, tmp,
+                                         memory.ptrs[plane_index]);
+                            }
+                            else
+                            {
+                                i = Image::computePlaneOffset(this, start_x, y, plane_index);
+                                j = Image::computePatchOffset(0, (y - start_y), addr);
+                                len = Image::computePatchRangeSize((end_x - start_x), addr);
+                                VX_PRINT(VX_ZONE_IMAGE, "%p[%u] <= %p[%u] for %u\n",
+                                         memory.ptrs[plane_index], i, tmp, j, len);
+                                memcpy(&memory.ptrs[plane_index][i], &tmp[j], len);
+                            }
+                        }
+                    }
+                }
+                // ownWroteToReference(&base);
+            }
+            status = VX_SUCCESS;
+            Osal::semPost(&memory.locks[plane_index]);
+        }
+        else if (zero_area == vx_true_e)
+        {
+            /* could be RO|WO|RW where they decided not to commit anything. */
+            if (internal == vx_true_e)  // RO
+            {
+                context->removeAccessor(index);
+            }
+            else  // RW|WO
+            {
+                /*! \bug (possible bug, but maybe not) anyone can decrement an
+                 *  image access, should we limit to incrementor? that would be
+                 *  a lot to track */
+                Osal::semPost(&memory.locks[plane_index]);
+            }
+            status = VX_SUCCESS;
+        }
+        VX_PRINT(VX_ZONE_IMAGE, "Decrementing Image Reference\n");
+        decrementReference(VX_EXTERNAL);
+    }
+exit:
+    VX_PRINT(VX_ZONE_API, "return %d\n", status);
+    return status;
+}
+
+vx_status Image::copyPatch(const vx_rectangle_t *rect, vx_uint32 plane_index,
+                           const vx_imagepatch_addressing_t *addr, void *ptr, vx_enum usage,
+                           vx_enum mem_type)
+{
+    vx_status status = VX_SUCCESS;
+
+    vx_uint32 start_x = rect ? rect->start_x : 0u;
+    vx_uint32 start_y = rect ? rect->start_y : 0u;
+    vx_uint32 end_x = rect ? rect->end_x : 0u;
+    vx_uint32 end_y = rect ? rect->end_y : 0u;
+    vx_bool zero_area =
+        ((((end_x - start_x) == 0) || ((end_y - start_y) == 0)) ? vx_true_e : vx_false_e);
+
+    /* bad parameters */
+    if (((VX_READ_ONLY != usage) && (VX_WRITE_ONLY != usage)) || (rect == nullptr) ||
+        (addr == nullptr) || (ptr == nullptr))
+    {
+        status = VX_ERROR_INVALID_PARAMETERS;
+    }
+
+    /* determine if virtual before checking for memory */
+    if (VX_SUCCESS == status && is_virtual == vx_true_e)
+    {
+        if (is_accessible == vx_false_e)
+        {
+            /* User tried to access a "virtual" image. */
+            VX_PRINT(VX_ZONE_ERROR, "Can not access a virtual image\n");
+            status = VX_ERROR_OPTIMIZED_AWAY;
+        }
+        /* framework trying to access a virtual image, this is ok. */
+    }
+
+    /* more bad parameters */
+    if (VX_SUCCESS == status)
+    {
+        if (zero_area == vx_true_e || ((plane_index >= memory.nptrs) || (plane_index >= planes) ||
+                                       (start_x >= end_x) || (start_y >= end_y)))
+        {
+            status = VX_ERROR_INVALID_PARAMETERS;
+        }
+    }
+
+    /* The image needs to be allocated */
+    if ((VX_SUCCESS == status) && (memory.ptrs[0] == nullptr) && (allocateImage() == vx_false_e))
+    {
+        VX_PRINT(VX_ZONE_ERROR, "No memory!\n");
+        status = VX_ERROR_NO_MEMORY;
+    }
+
+    /* can't write to constant */
+    if ((VX_SUCCESS == status) && (constant == vx_true_e) && (usage == VX_WRITE_ONLY))
+    {
+        status = VX_ERROR_NOT_SUPPORTED;
+        VX_PRINT(VX_ZONE_ERROR, "Can't write to constant data, only read!\n");
+        vxAddLogEntry(reinterpret_cast<vx_reference>(this), status,
+                      "Can't write to constant data, only read!\n");
+    }
+
+    /* Inconsistent strides for non-integer byte size data? */
+    if ((VX_SUCCESS == status) &&
+        (addr->stride_x == 0 || memory.strides[plane_index][VX_DIM_X] == 0) &&
+        (addr->stride_x_bits != memory.stride_x_bits[plane_index]))
+    {
+        VX_PRINT(VX_ZONE_ERROR,
+                 "Copying of non-integer byte size data without preserving stride in "
+                 "x-dimension is not supported! Attempted to copy with strides {stride_x, "
+                 "stride_x_bits}:"
+                 " {%d, %u} %s {%d, %u}\n",
+                 addr->stride_x, addr->stride_x_bits, usage == VX_READ_ONLY ? "<-" : "->",
+                 memory.strides[plane_index][VX_DIM_X], memory.stride_x_bits[plane_index]);
+        status = VX_ERROR_NOT_SUPPORTED;
+    }
+
+    /*************************************************************************/
+    if (VX_SUCCESS == status)
+    {
+        VX_PRINT(VX_ZONE_IMAGE,
+                 "CopyImagePatch from " VX_FMT_REF " to ptr %p from {%u,%u} to {%u,%u} plane %u\n",
+                 this, ptr, start_x, start_y, end_x, end_y, plane_index);
+
+#ifdef OPENVX_USE_OPENCL_INTEROP
+        void *ptr_given = ptr;
+        vx_enum mem_type_given = mem_type;
+        if (mem_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
+        {
+            // get ptr from OpenCL buffer for HOST
+            size_t size = 0;
+            cl_mem opencl_buf = (cl_mem)ptr;
+            cl_int cerr =
+                clGetMemObjectInfo(opencl_buf, CL_MEM_SIZE, sizeof(size_t), &size, nullptr);
+            VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyImagePatch: clGetMemObjectInfo(%p) => (%d)\n",
+                     opencl_buf, cerr);
+            if (cerr != CL_SUCCESS)
+            {
+                return VX_ERROR_INVALID_PARAMETERS;
+            }
+            ptr =
+                clEnqueueMapBuffer(context->opencl_command_queue, opencl_buf, CL_TRUE,
+                                   CL_MAP_READ | CL_MAP_WRITE, 0, size, 0, nullptr, nullptr, &cerr);
+            VX_PRINT(VX_ZONE_CONTEXT,
+                     "OPENCL: vxCopyImagePatch: clEnqueueMapBuffer(%p,%d) => %p (%d)\n", opencl_buf,
+                     (int)size, ptr, cerr);
+            if (cerr != CL_SUCCESS)
+            {
+                return VX_ERROR_INVALID_PARAMETERS;
+            }
+            mem_type = VX_MEMORY_TYPE_HOST;
+        }
+#endif
+
+        if (usage == VX_READ_ONLY)
+        {
+            /* Copy from image (READ) mode */
+
+            vx_uint32 x;
+            vx_uint32 y;
+            vx_uint8 *pSrc = memory.ptrs[plane_index];
+            vx_uint8 *pDst = (vx_uint8 *)ptr;
+
+            vx_imagepatch_addressing_t addr_save = VX_IMAGEPATCH_ADDR_INIT;
+
+            /* Strides given by the application */
+            addr_save.dim_x = addr->dim_x;
+            addr_save.dim_y = addr->dim_y;
+            addr_save.stride_x = addr->stride_x;
+            addr_save.stride_y = addr->stride_y;
+            addr_save.stride_x_bits = addr->stride_x_bits;
+
+            addr_save.step_x = scale[plane_index][VX_DIM_X];
+            addr_save.step_y = scale[plane_index][VX_DIM_Y];
+            addr_save.scale_x = VX_SCALE_UNITY / scale[plane_index][VX_DIM_X];
+            addr_save.scale_y = VX_SCALE_UNITY / scale[plane_index][VX_DIM_Y];
+
+            /* Copy the patch _from_ the image
+             * (For non-integer byte size images line-by-line copying only works if the patch starts
+             * and ends at byte boundaries) */
+            if (addr_save.stride_x == memory.strides[plane_index][VX_DIM_X] &&
+                (addr_save.stride_x != 0
+                     ? 1
+                     : (addr_save.stride_x_bits == memory.stride_x_bits[plane_index] &&
+                        start_x * addr_save.stride_x_bits % 8 == 0 &&
+                        end_x * addr_save.stride_x_bits % 8 == 0)))
+            {
+                /* Both have compact lines */
+                for (y = start_y; y < end_y; y += addr_save.step_y)
+                {
+                    vx_uint32 srcOffset = Image::computePlaneOffset(this, start_x, y, plane_index);
+                    vx_uint8 *pSrcLine = &pSrc[srcOffset];
+
+                    vx_uint32 dstOffset = Image::computePatchOffset(0, (y - start_y), &addr_save);
+                    vx_uint8 *pDstLine = &pDst[dstOffset];
+
+                    vx_uint32 len =
+                        Image::computePlaneRangeSize(this, end_x - start_x /*width*/, plane_index);
+
+                    VX_PRINT(VX_ZONE_IMAGE, "%p[%u] <= %p[%u] for %u\n", pDst, dstOffset, pSrc,
+                             srcOffset, len);
+
+                    memcpy(pDstLine, pSrcLine, len);
+                }
+            }
+            else
+            {
+                /* The destination is not compact, we need to copy per element */
+                for (y = start_y; y < end_y; y += addr_save.step_y)
+                {
+                    vx_uint32 srcOffset = Image::computePlaneOffset(this, start_x, y, plane_index);
+                    vx_uint8 *pSrcLine = &pSrc[srcOffset];
+
+                    vx_uint8 *pDstLine = pDst;
+
+                    vx_uint32 bitShiftU1 = start_x % 8;  // U1 start_x pixel bit-shift
+                    vx_uint32 len = memory.strides[plane_index][VX_DIM_X];
+
+                    for (x = start_x; x < end_x; x += addr_save.step_x)
+                    {
+                        if (format == VX_DF_IMAGE_U1)
+                        {
+                            /* U1 patch not starting and ending at byte boundary in image,
+                             * do pixel-by-pixel copy from the image */
+                            vx_uint8 mask = 1 << (x % 8);
+                            pDstLine[(x - start_x + bitShiftU1) / 8] =
+                                (pDstLine[(x - start_x + bitShiftU1) / 8] & ~mask) |
+                                (pSrcLine[(x - start_x + bitShiftU1) / 8] & mask);
+                        }
+                        else
+                        {
+                            /* One element */
+                            memcpy(pDstLine, pSrcLine, len);
+
+                            pSrcLine += len;
+                            pDstLine += addr_save.stride_x;
+                        }
+                    }
+                    VX_PRINT(VX_ZONE_IMAGE,
+                             "Copied %u pixels from row %u in image starting at %p to patch "
+                             "starting at %p\n",
+                             end_x - start_x, y, memory.ptrs[plane_index], ptr);
+
+                    pDst += addr_save.stride_y;
+                }
+            }
+
+            VX_PRINT(VX_ZONE_IMAGE, "Copied image into %p\n", ptr);
+
+            // ownReadFromReference(&base);
+        }
+        else
+        {
+            /* Copy to image (WRITE) mode */
+            vx_uint32 x;
+            vx_uint32 y;
+            vx_uint8 *pSrc = (vx_uint8 *)ptr;
+            vx_uint8 *pDst = memory.ptrs[plane_index];
+
+            vx_imagepatch_addressing_t addr_save = VX_IMAGEPATCH_ADDR_INIT;
+
+            /* Strides given by the application */
+            addr_save.dim_x = addr->dim_x;
+            addr_save.dim_y = addr->dim_y;
+            addr_save.stride_x = addr->stride_x;
+            addr_save.stride_y = addr->stride_y;
+            addr_save.stride_x_bits = addr->stride_x_bits;
+
+            addr_save.step_x = scale[plane_index][VX_DIM_X];
+            addr_save.step_y = scale[plane_index][VX_DIM_Y];
+            addr_save.scale_x = VX_SCALE_UNITY / scale[plane_index][VX_DIM_X];
+            addr_save.scale_y = VX_SCALE_UNITY / scale[plane_index][VX_DIM_Y];
+
+            /* lock image plane from multiple writers */
+            if (Osal::semWait(&memory.locks[plane_index]) == vx_false_e)
+            {
+                status = VX_ERROR_NO_RESOURCES;
+            }
+
+            /* Copy the patch _to_ the image
+             * (For non-integer byte size images line-by-line copying only works if the patch starts
+             * and ends at byte boundaries or at the left/right edges of the image's valid region)
+             */
+            if (VX_SUCCESS == status &&
+                addr_save.stride_x == memory.strides[plane_index][VX_DIM_X] &&
+                (addr_save.stride_x != 0
+                     ? 1
+                     : (addr_save.stride_x_bits == memory.stride_x_bits[plane_index] &&
+                        (start_x * addr_save.stride_x_bits % 8 == 0 || start_x == region.start_x) &&
+                        (end_x * addr_save.stride_x_bits % 8 == 0 || end_x == region.end_x))))
+            {
+                /* Both source and destination have compact lines */
+                for (y = start_y; y < end_y; y += addr_save.step_y)
+                {
+                    vx_uint32 srcOffset = Image::computePatchOffset(0, (y - start_y), &addr_save);
+                    vx_uint8 *pSrcLine = &pSrc[srcOffset];
+
+                    vx_uint32 dstOffset = Image::computePlaneOffset(this, start_x, y, plane_index);
+                    vx_uint8 *pDstLine = &pDst[dstOffset];
+
+                    vx_uint32 len = Image::computePatchRangeSize((end_x - start_x), &addr_save);
+
+                    VX_PRINT(VX_ZONE_IMAGE, "%p[%u] <= %p[%u] for %u\n", pDst, dstOffset, pSrc,
+                             srcOffset, len);
+
+                    memcpy(pDstLine, pSrcLine, len);
+                }
+            }
+            else
+            {
+                /* The destination is not compact, we need to copy per element */
+                for (y = start_y; y < end_y; y += addr_save.step_y)
+                {
+                    vx_uint8 *pSrcLine = pSrc;
+
+                    vx_uint32 dstOffset = Image::computePlaneOffset(this, start_x, y, plane_index);
+                    vx_uint8 *pDstLine = &pDst[dstOffset];
+
+                    vx_uint32 bitShiftU1 = start_x % 8;  // U1 start_x pixel bit-shift
+                    vx_uint32 len = memory.strides[plane_index][VX_DIM_X];
+
+                    for (x = start_x; x < end_x; x += addr_save.step_x)
+                    {
+                        if (format == VX_DF_IMAGE_U1)
+                        {
+                            /* U1 patch not starting and ending at byte boundary or left/right edges
+                             * of valid region in image, do pixel-by-pixel copy from the patch */
+                            vx_uint32 xAdjusted = x - start_x + bitShiftU1;
+                            vx_uint8 mask = 1 << (xAdjusted % 8);
+                            pDstLine[xAdjusted / 8] = (pDstLine[xAdjusted / 8] & ~mask) |
+                                                      (pSrcLine[xAdjusted / 8] & mask);
+                        }
+                        else
+                        {
+                            /* One element */
+                            memcpy(pDstLine, pSrcLine, len);
+
+                            pSrcLine += addr_save.stride_x;
+                            pDstLine += len;
+                        }
+                    }
+                    VX_PRINT(VX_ZONE_IMAGE,
+                             "Copied %u pixels from row %u in %spatch starting at %p to image "
+                             "starting at %p\n",
+                             end_x - start_x, y - start_x,
+                             (mem_type == VX_MEMORY_TYPE_NONE) ? "image" : "external ", ptr,
+                             memory.ptrs[plane_index]);
+
+                    pSrc += addr_save.stride_y;
+                }
+            }
+
+            VX_PRINT(VX_ZONE_IMAGE, "Copied to image from %p\n", ptr);
+
+            // ownWroteToReference(&base);
+            /* unlock image plane */
+            Osal::semPost(&memory.locks[plane_index]);
+        }
+
+#ifdef OPENVX_USE_OPENCL_INTEROP
+        if (VX_SUCCESS == status && mem_type_given == VX_MEMORY_TYPE_OPENCL_BUFFER)
+        {
+            clEnqueueUnmapMemObject(context->opencl_command_queue, (cl_mem)ptr_given, ptr, 0,
+                                    nullptr, nullptr);
+            clFinish(context->opencl_command_queue);
+        }
+#endif
+    }
+
+    VX_PRINT(VX_ZONE_API, "returned %d\n", status);
+    return status;
+}
+
+vx_status Image::mapPatch(const vx_rectangle_t *rect, vx_uint32 plane_index, vx_map_id *map_id,
+                          vx_imagepatch_addressing_t *addr, void **ptr, vx_enum usage,
+                          vx_enum mem_type, vx_uint32 flags)
+{
+#ifdef OPENVX_USE_OPENCL_INTEROP
+    vx_enum mem_type_requested = mem_type;
+    if (mem_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
+    {
+        mem_type = VX_MEMORY_TYPE_HOST;
+    }
+#endif
+    vx_size size = 0;
+    vx_uint32 start_x = rect ? rect->start_x : 0u;
+    vx_uint32 start_y = rect ? rect->start_y : 0u;
+    vx_uint32 end_x = rect ? rect->end_x : 0u;
+    vx_uint32 end_y = rect ? rect->end_y : 0u;
+    vx_bool zero_area =
+        ((((end_x - start_x) == 0) || ((end_y - start_y) == 0)) ? vx_true_e : vx_false_e);
+    vx_status status = VX_FAILURE;
+
+    /* bad parameters */
+    if ((rect == nullptr) || (map_id == nullptr) || (addr == nullptr) || (ptr == nullptr))
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to MapImagePatch!\n");
+        status = VX_ERROR_INVALID_PARAMETERS;
+        goto exit;
+    }
+
+    /* determine if virtual before checking for memory */
+    if (is_virtual == vx_true_e)
+    {
+        if (is_accessible == vx_false_e)
+        {
+            /* User tried to access a "virtual" image. */
+            VX_PRINT(VX_ZONE_ERROR, "Can not access a virtual image\n");
+            status = VX_ERROR_OPTIMIZED_AWAY;
+            goto exit;
+        }
+        /* framework trying to access a virtual image, this is ok. */
+    }
+
+    /* more bad parameters */
+    if (zero_area == vx_true_e || ((plane_index >= memory.nptrs) || (plane_index >= planes) ||
+                                   (start_x >= end_x) || (start_y >= end_y)))
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to MapImagePatch!\n");
+        status = VX_ERROR_INVALID_PARAMETERS;
+        goto exit;
+    }
+
+    /* The image needs to be allocated */
+    if ((memory.ptrs[0] == nullptr) && (allocateImage() == vx_false_e))
+    {
+        VX_PRINT(VX_ZONE_ERROR, "No memory!\n");
+        status = VX_ERROR_NO_MEMORY;
+        goto exit;
+    }
+
+    /* can't write to constant */
+    if ((constant == vx_true_e) && ((usage == VX_WRITE_ONLY) || (usage == VX_READ_AND_WRITE)))
+    {
+        status = VX_ERROR_NOT_SUPPORTED;
+        VX_PRINT(VX_ZONE_ERROR, "Can't write to constant data, only read!\n");
+        vxAddLogEntry(reinterpret_cast<vx_reference>(this), status,
+                      "Can't write to constant data, only read!\n");
+        goto exit;
+    }
+
+    /*************************************************************************/
+    VX_PRINT(VX_ZONE_IMAGE,
+             "MapImagePatch from " VX_FMT_REF " to ptr %p from {%u,%u} to {%u,%u} plane %u\n", this,
+             *ptr, start_x, start_y, end_x, end_y, plane_index);
+
+    /* MAP mode */
+    {
+        vx_memory_map_extra extra;
+        vx_uint8 *buf = 0;
+
+        size = vxComputeImagePatchSize(this, rect, plane_index);
+
+        extra.image_data.plane_index = plane_index;
+        extra.image_data.rect = *rect;
+
+        if (VX_MEMORY_TYPE_NONE != memory_type &&
+            vx_true_e == context->memoryMap((vx_reference)this, 0, usage, mem_type, flags, &extra,
+                                            (void **)&buf, map_id))
+        {
+            /* use the addressing of the internal format */
+            if (format == VX_DF_IMAGE_U1 && start_x % 8 != 0)
+                addr->dim_x = end_x - start_x + start_x % 8;
+            else
+                addr->dim_x = end_x - start_x;
+            addr->dim_y = end_y - start_y;
+            addr->stride_x = memory.strides[plane_index][VX_DIM_X];
+            addr->stride_y = memory.strides[plane_index][VX_DIM_Y];
+            addr->stride_x_bits = memory.stride_x_bits[plane_index];
+            addr->step_x = scale[plane_index][VX_DIM_X];
+            addr->step_y = scale[plane_index][VX_DIM_Y];
+            addr->scale_x = VX_SCALE_UNITY / scale[plane_index][VX_DIM_X];
+            addr->scale_y = VX_SCALE_UNITY / scale[plane_index][VX_DIM_Y];
+
+            buf = memory.ptrs[plane_index];
+
+            vx_uint32 index = Image::computePatchOffset(rect->start_x, rect->start_y, addr);
+            *ptr = &buf[index];
+            VX_PRINT(VX_ZONE_IMAGE, "Returning mapped pointer %p\n", *ptr);
+
+            incrementReference(VX_EXTERNAL);
+
+            status = VX_SUCCESS;
+        }
+        else
+            /* get mapping buffer of sufficient size and map_id */
+            if (vx_true_e == context->memoryMap((vx_reference)this, size, usage, mem_type, flags,
+                                                &extra, (void **)&buf, map_id))
+            {
+                /* use the addressing of the internal format */
+                if (format == VX_DF_IMAGE_U1 && start_x % 8 != 0)
+                    addr->dim_x = end_x - start_x + start_x % 8;
+                else
+                    addr->dim_x = end_x - start_x;
+                addr->dim_y = end_y - start_y;
+                addr->stride_x = memory.strides[plane_index][VX_DIM_X];
+                addr->stride_x_bits = memory.stride_x_bits[plane_index];
+                addr->stride_y =
+                    addr->stride_x != 0
+                        ? addr->stride_x * addr->dim_x / scale[plane_index][VX_DIM_Y]
+                        : (addr->stride_x_bits * addr->dim_x / scale[plane_index][VX_DIM_Y] + 7) /
+                              8;
+                addr->step_x = scale[plane_index][VX_DIM_X];
+                addr->step_y = scale[plane_index][VX_DIM_Y];
+                addr->scale_x = VX_SCALE_UNITY / scale[plane_index][VX_DIM_X];
+                addr->scale_y = VX_SCALE_UNITY / scale[plane_index][VX_DIM_Y];
+
+                /* initialize mapping buffer with image patch data for read/read-modify-write access
+                 */
+                if (VX_READ_ONLY == usage || VX_READ_AND_WRITE == usage)
+                {
+                    /* lock image plane even for read access to avoid mix of simultaneous read/write
+                     */
+                    if (vx_true_e == Osal::semWait(&memory.locks[plane_index]))
+                    {
+                        vx_uint32 y;
+                        vx_uint8 *pSrc = memory.ptrs[plane_index];
+                        vx_uint8 *pDst = buf;
+
+                        Memory::printMemory(&memory);
+
+                        /* Both have compact lines */
+                        for (y = start_y; y < end_y; y += addr->step_y)
+                        {
+                            vx_uint32 srcOffset =
+                                Image::computePlaneOffset(this, start_x, y, plane_index);
+                            vx_uint8 *pSrcLine = &pSrc[srcOffset];
+
+                            vx_uint32 dstOffset = Image::computePatchOffset(0, (y - start_y), addr);
+                            vx_uint8 *pDstLine = &pDst[dstOffset];
+
+                            vx_uint32 len =
+                                Image::computePlaneRangeSize(this, addr->dim_x, plane_index);
+
+                            VX_PRINT(VX_ZONE_IMAGE, "%p[%u] <= %p[%u] for %u\n", pDst, dstOffset,
+                                     pSrc, srcOffset, len);
+
+                            memcpy(pDstLine, pSrcLine, len);
+                        }
+
+                        // ownReadFromReference(&base);
+
+                        /* we're done, unlock the image plane */
+                        Osal::semPost(&memory.locks[plane_index]);
+                    }
+                    else
+                    {
+                        status = VX_FAILURE;
+                        VX_PRINT(VX_ZONE_ERROR, "Can't lock memory plane for mapping\n");
+                        goto exit;
+                    }
+                } /* if VX_READ_ONLY or VX_READ_AND_WRITE */
+
+                *ptr = buf;
+                VX_PRINT(VX_ZONE_IMAGE, "Returning mapped pointer %p\n", *ptr);
+
+                incrementReference(VX_EXTERNAL);
+
+                status = VX_SUCCESS;
+            }
+            else
+            {
+                status = VX_FAILURE;
+            }
+    }
+
+exit:
+
+#ifdef OPENVX_USE_OPENCL_INTEROP
+    if ((status == VX_SUCCESS) && context->opencl_context &&
+        (mem_type_requested == VX_MEMORY_TYPE_OPENCL_BUFFER) && (size > 0) && ptr && *ptr)
+    {
+        /* create OpenCL buffer using the host allocated pointer */
+        cl_int cerr = 0;
+        cl_mem opencl_buf = clCreateBuffer(
+            context->opencl_context, CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, size, *ptr, &cerr);
+        VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxMapImagePatch: clCreateBuffer(%u) => %p (%d)\n",
+                 (vx_uint32)size, opencl_buf, cerr);
+        if (cerr == CL_SUCCESS)
+        {
+            context->memory_maps[*map_id].opencl_buf = opencl_buf;
+            *ptr = opencl_buf;
+        }
+        else
+        {
+            status = VX_FAILURE;
+        }
+    }
+#endif
+
+    VX_PRINT(VX_ZONE_API, "return %d\n", status);
+    return status;
+}
+
+vx_status Image::unmapPatch(vx_map_id map_id)
+{
+    vx_status status = VX_SUCCESS;
+
+    /* bad parameters */
+    if (context->findMemoryMap((vx_reference)this, map_id) != vx_true_e)
+    {
+        status = VX_ERROR_INVALID_PARAMETERS;
+        VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to unmap image patch\n");
+        return status;
+    }
+
+#ifdef OPENVX_USE_OPENCL_INTEROP
+    if (context->opencl_context && context->memory_maps[map_id].opencl_buf &&
+        context->memory_maps[map_id].ptr)
+    {
+        clEnqueueUnmapMemObject(context->opencl_command_queue,
+                                context->memory_maps[map_id].opencl_buf,
+                                context->memory_maps[map_id].ptr, 0, nullptr, nullptr);
+        clFinish(context->opencl_command_queue);
+        cl_int cerr = clReleaseMemObject(context->memory_maps[map_id].opencl_buf);
+        VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxUnmapImagePatch: clReleaseMemObject(%p) => (%d)\n",
+                 context->memory_maps[map_id].opencl_buf, cerr);
+        context->memory_maps[map_id].opencl_buf = nullptr;
+    }
+#endif
+
+    {
+        vx_memory_map_t *map = &context->memory_maps[map_id];
+
+        if (map->used && map->ref == (vx_reference)this)
+        {
+            /* commit changes for write access */
+            if ((VX_WRITE_ONLY == map->usage || VX_READ_AND_WRITE == map->usage) &&
+                nullptr != map->ptr)
+            {
+                vx_uint32 plane_index = map->extra.image_data.plane_index;
+                vx_rectangle_t rect = map->extra.image_data.rect;
+
+                /* lock image plane for simultaneous write */
+                if (vx_true_e == Osal::semWait(&memory.locks[plane_index]))
+                {
+                    vx_uint32 x, y;
+                    vx_uint8 *pSrc = (vx_uint8 *)map->ptr;
+                    vx_uint8 *pDst = memory.ptrs[plane_index];
+                    vx_imagepatch_addressing_t addr = VX_IMAGEPATCH_ADDR_INIT;
+
+                    /* use the addressing of the internal format */
+                    if (format == VX_DF_IMAGE_U1 && rect.start_x % 8 != 0)
+                        addr.dim_x = rect.end_x - rect.start_x + rect.start_x % 8;
+                    else
+                        addr.dim_x = rect.end_x - rect.start_x;
+                    addr.dim_y = rect.end_y - rect.start_y;
+                    addr.stride_x = memory.strides[plane_index][VX_DIM_X];
+                    addr.stride_x_bits = memory.stride_x_bits[plane_index];
+                    addr.stride_y =
+                        addr.stride_x != 0
+                            ? addr.stride_x * addr.dim_x / scale[plane_index][VX_DIM_Y]
+                            : (addr.stride_x_bits * addr.dim_x / scale[plane_index][VX_DIM_Y] + 7) /
+                                  8;
+                    addr.step_x = scale[plane_index][VX_DIM_X];
+                    addr.step_y = scale[plane_index][VX_DIM_Y];
+                    addr.scale_x = VX_SCALE_UNITY / scale[plane_index][VX_DIM_X];
+                    addr.scale_y = VX_SCALE_UNITY / scale[plane_index][VX_DIM_Y];
+
+                    /* Both source and destination have compact lines, begin write-back to image
+                     * (For non-integer byte size images line-by-line write-back only works if the
+                     * patch starts and ends at byte boundaries or at the left/right edges of the
+                     * image's valid region) */
+                    if ((addr.stride_x == 0 && addr.stride_x_bits != 0) &&
+                        !((rect.start_x * addr.stride_x_bits % 8 == 0 ||
+                           rect.start_x == region.start_x) &&
+                          (rect.end_x * addr.stride_x_bits % 8 == 0 || rect.end_x == region.end_x)))
+                    {
+                        /* Pixel-by-pixel write-back */
+                        for (y = rect.start_y; y < rect.end_y; y += addr.step_y)
+                        {
+                            vx_uint32 srcOffset =
+                                Image::computePatchOffset(0, (y - rect.start_y), &addr);
+                            vx_uint8 *pSrcLine = &pSrc[srcOffset];
+
+                            vx_uint32 dstOffset =
+                                Image::computePlaneOffset(this, rect.start_x, y, plane_index);
+                            vx_uint8 *pDstLine = &pDst[dstOffset];
+
+                            vx_uint32 bitOffset =
+                                rect.start_x %
+                                8;  // Respect pixel bit-offsets (cf. vxMapImagePatch)
+
+                            for (x = rect.start_x; x < rect.end_x; x += addr.step_x)
+                            {
+                                vx_uint32 xAdjusted = x - rect.start_x + bitOffset;
+                                vx_uint8 mask = 1 << (xAdjusted % 8);
+                                pDstLine[xAdjusted / 8] = (pDstLine[xAdjusted / 8] & ~mask) |
+                                                          (pSrcLine[xAdjusted / 8] & mask);
+                            }
+                            VX_PRINT(VX_ZONE_IMAGE,
+                                     "Wrote back %u pixels from row %u in mapped imagepatch: "
+                                     "%p[%u] <= %p[%u]\n",
+                                     rect.end_x - rect.start_x, y, pDst, dstOffset, pSrc,
+                                     srcOffset);
+                        }
+                    }
+                    else
+                    {
+                        /* Line-by-line write-back */
+                        for (y = rect.start_y; y < rect.end_y; y += addr.step_y)
+                        {
+                            vx_uint32 srcOffset =
+                                Image::computePatchOffset(0, (y - rect.start_y), &addr);
+                            vx_uint8 *pSrcLine = &pSrc[srcOffset];
+
+                            vx_uint32 dstOffset =
+                                Image::computePlaneOffset(this, rect.start_x, y, plane_index);
+                            vx_uint8 *pDstLine = &pDst[dstOffset];
+
+                            vx_uint32 len =
+                                Image::computePatchRangeSize((rect.end_x - rect.start_x), &addr);
+
+                            VX_PRINT(VX_ZONE_IMAGE, "%p[%u] <= %p[%u] for %u\n", pDst, dstOffset,
+                                     pSrc, srcOffset, len);
+
+                            memcpy(pDstLine, pSrcLine, len);
+                        }
+                    }
+
+                    /* we're done, unlock the image plane */
+                    Osal::semPost(&memory.locks[plane_index]);
+                }
+                else
+                {
+                    status = VX_FAILURE;
+                    VX_PRINT(VX_ZONE_ERROR, "Can't lock memory plane for unmapping\n");
+                    goto exit;
+                }
+            }
+
+            /* freeing mapping buffer */
+            context->memoryUnmap((vx_uint32)map_id);
+
+            decrementReference(VX_EXTERNAL);
+            status = VX_SUCCESS;
+        }
+        else
+        {
+            status = VX_FAILURE;
+        }
+    }
+
+exit:
+    VX_PRINT(VX_ZONE_API, "return %d\n", status);
+    return status;
+}
+
 void Image::printImage(vx_image image)
 {
     vx_uint32 p = 0;
@@ -1058,119 +2802,10 @@ VX_API_ENTRY vx_status VX_API_CALL vxSwapImageHandle(vx_image image, void* const
     void* prev_ptrs[], vx_size num_planes)
 {
     vx_status status = VX_SUCCESS;
-    (void)num_planes;
 
     if (Image::isValidImage(image) == vx_true_e)
     {
-        if (image->memory_type != VX_MEMORY_TYPE_NONE)
-        {
-            vx_uint32 i;
-            vx_uint32 p;
-
-            if (new_ptrs != nullptr)
-            {
-                for (p = 0; p < image->planes; p++)
-                {
-                    if (new_ptrs[p] == nullptr)
-                        return VX_ERROR_INVALID_PARAMETERS;
-                }
-            }
-
-            if (prev_ptrs != nullptr && image->parent != nullptr)
-            {
-                /* do not return prev pointers for subimages */
-                return VX_ERROR_INVALID_PARAMETERS;
-            }
-
-            if (prev_ptrs != nullptr && image->parent == nullptr)
-            {
-                /* return previous image handles */
-                for (p = 0; p < image->planes; p++)
-                {
-#ifdef OPENVX_USE_OPENCL_INTEROP
-                    if (image->memory_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
-                    {
-                        clEnqueueUnmapMemObject(image->context->opencl_command_queue,
-                            image->memory.opencl_buf[p], image->memory.ptrs[p], 0, nullptr, nullptr);
-                        clFinish(image->context->opencl_command_queue);
-                        prev_ptrs[p] = image->memory.opencl_buf[p];
-                        image->memory.opencl_buf[p] = nullptr;
-                        image->memory.ptrs[p] = nullptr;
-                    }
-                    else
-#endif
-                    prev_ptrs[p] = image->memory.ptrs[p];
-                }
-            }
-
-            /* visit each subimage of this image and reclaim its pointers */
-            for (i = 0; i < VX_INT_MAX_REF; i++)
-            {
-                if (image->subimages[i] != nullptr)
-                {
-                    if (new_ptrs == nullptr)
-                        status = vxSwapImageHandle(image->subimages[i], nullptr, nullptr, image->planes);
-                    else
-                    {
-                        vx_uint8* ptrs[4];
-
-                        for (p = 0; p < image->subimages[i]->planes; p++)
-                        {
-                            vx_uint32 offset = image->subimages[i]->memory.offset[p];
-                            ptrs[p] = (vx_uint8*)new_ptrs[p] + offset;
-                        }
-
-                        status = vxSwapImageHandle(image->subimages[i], (void**)ptrs, nullptr, image->planes);
-                    }
-
-                    break;
-                }
-            }
-
-            /* reclaim previous and set new handles for this image */
-            for (p = 0; p < image->planes; p++)
-            {
-                if (new_ptrs == nullptr)
-                    image->memory.ptrs[p] = 0;
-                else
-                {
-                    /* set new pointers for subimage */
-#ifdef OPENVX_USE_OPENCL_INTEROP
-                    if (image->memory_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
-                    {
-                        image->memory.opencl_buf[p] = (cl_mem)new_ptrs[p];
-                        size_t size = 0;
-                        cl_int cerr = clGetMemObjectInfo(image->memory.opencl_buf[p],
-                                            CL_MEM_SIZE, sizeof(size_t), &size, nullptr);
-                        VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxSwapImageHandle: clGetMemObjectInfo(%p) => (%d)\n",
-                            image->memory.opencl_buf[p], cerr);
-                        if (cerr != CL_SUCCESS)
-                        {
-                            return VX_ERROR_INVALID_PARAMETERS;
-                        }
-                        image->memory.ptrs[p] = (vx_uint8*)clEnqueueMapBuffer(image->context->opencl_command_queue,
-                            image->memory.opencl_buf[p], CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, size,
-                            0, nullptr, nullptr, &cerr);
-                        VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxSwapImageHandle: clEnqueueMapBuffer(%p) => %p (%d)\n",
-                            image->memory.opencl_buf[p], image->memory.ptrs[p], cerr);
-                        if (cerr != CL_SUCCESS)
-                        {
-                            return VX_ERROR_INVALID_PARAMETERS;
-                        }
-                    }
-                    else
-#endif
-                    image->memory.ptrs[p] = reinterpret_cast<vx_uint8*>(new_ptrs[p]);
-                }
-            }
-
-            /* clear flag if pointers were reclaimed */
-            image->memory.allocated = (new_ptrs == nullptr) ? vx_false_e : vx_true_e;
-        }
-        else
-        {
-            status = VX_ERROR_INVALID_PARAMETERS;
-        }
+        status = image->swapHandle(new_ptrs, prev_ptrs, num_planes);
     }
     else
     {
@@ -1190,7 +2825,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryImage(vx_image image, vx_enum attribut
             case VX_IMAGE_FORMAT:
                 if (VX_CHECK_PARAM(ptr, size, vx_df_image, 0x3))
                 {
-                    *(vx_df_image *)ptr = image->format;
+                    *(vx_df_image *)ptr = image->fmt();
                 }
                 else
                 {
@@ -1200,7 +2835,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryImage(vx_image image, vx_enum attribut
             case VX_IMAGE_WIDTH:
                 if (VX_CHECK_PARAM(ptr, size, vx_uint32, 0x3))
                 {
-                    *(vx_uint32 *)ptr = image->width;
+                    *(vx_uint32 *)ptr = image->wdth();
                 }
                 else
                 {
@@ -1210,7 +2845,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryImage(vx_image image, vx_enum attribut
             case VX_IMAGE_HEIGHT:
                 if (VX_CHECK_PARAM(ptr, size, vx_uint32, 0x3))
                 {
-                    *(vx_uint32 *)ptr = image->height;
+                    *(vx_uint32 *)ptr = image->hght();
                 }
                 else
                 {
@@ -1220,7 +2855,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryImage(vx_image image, vx_enum attribut
             case VX_IMAGE_PLANES:
                 if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
                 {
-                    *(vx_size *)ptr = image->planes;
+                    *(vx_size *)ptr = image->numPlanes();
                 }
                 else
                 {
@@ -1230,7 +2865,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryImage(vx_image image, vx_enum attribut
             case VX_IMAGE_SPACE:
                 if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
                 {
-                    *(vx_enum *)ptr = image->space;
+                    *(vx_enum *)ptr = image->colorSpace();
                 }
                 else
                 {
@@ -1240,7 +2875,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryImage(vx_image image, vx_enum attribut
             case VX_IMAGE_RANGE:
                 if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
                 {
-                    *(vx_enum *)ptr = image->range;
+                    *(vx_enum *)ptr = image->colorRange();
                 }
                 else
                 {
@@ -1250,13 +2885,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryImage(vx_image image, vx_enum attribut
             case VX_IMAGE_SIZE:
                 if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
                 {
-                    vx_size size = 0ul;
-                    vx_uint32 p;
-                    for (p = 0; p < image->planes; p++)
-                    {
-                        size += (abs(image->memory.strides[p][VX_DIM_Y]) * image->memory.dims[p][VX_DIM_Y]);
-                    }
-                    *(vx_size *)ptr = size;
+                    *(vx_size *)ptr = image->size();
                 }
                 else
                 {
@@ -1266,7 +2895,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryImage(vx_image image, vx_enum attribut
             case VX_IMAGE_MEMORY_TYPE:
                 if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
                 {
-                    *(vx_enum *)ptr = image->memory_type;
+                    *(vx_enum *)ptr = image->memoryType();
                 }
                 else
                 {
@@ -1296,7 +2925,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetImageAttribute(vx_image image, vx_enum a
             case VX_IMAGE_SPACE:
                 if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
                 {
-                    image->space = *(vx_enum *)ptr;
+                    image->setSpace(*(vx_enum *)ptr);
                 }
                 else
                 {
@@ -1320,185 +2949,16 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetImageAttribute(vx_image image, vx_enum a
 VX_API_ENTRY vx_status VX_API_CALL vxSetImagePixelValues(vx_image image, const vx_pixel_value_t *pixel_value)
 {
     vx_status status = VX_SUCCESS;
+
     if (Image::isValidImage(image) == vx_true_e)
     {
-        vx_uint32 x, y, p, width, height;
-        vx_size planes = 0;
-        vx_rectangle_t rect = {0,0,0,0};
-        vxGetValidRegionImage(image, &rect);
-        vx_df_image format = 0;
-        vxQueryImage(image, VX_IMAGE_FORMAT, &format, sizeof(format));
-        vxQueryImage(image, VX_IMAGE_PLANES, &planes, sizeof(planes));
-
-        for (p = 0; p < planes; p++)
-        {
-            vx_imagepatch_addressing_t addr;
-            void *base = nullptr;
-            if (vxAccessImagePatch(image, &rect, p, &addr, &base, VX_WRITE_ONLY) == VX_SUCCESS)
-            {
-                Image::printImageAddressing(&addr);
-                width  = (format == VX_DF_IMAGE_U1) ? addr.dim_x - rect.start_x % 8 : addr.dim_x;
-                height = addr.dim_y;
-                for (y = 0; y < height; y+=addr.step_y)
-                {
-                    for (x = 0; x < width; x+=addr.step_x)
-                    {
-                        if (format == VX_DF_IMAGE_U1)
-                        {
-                            vx_uint32 xShftd = x + rect.start_x % 8;
-                            vx_uint8 *ptr = reinterpret_cast<vx_uint8*>(vxFormatImagePatchAddress2d(base, xShftd, y, &addr));
-                            vx_uint8 offset = xShftd % 8;
-                            vx_uint8 mask = 1 << offset;
-                            *ptr = (*ptr & ~mask) | ((pixel_value->U1 ? 1 : 0) << offset);
-                        }
-                        if (format == VX_DF_IMAGE_U8)
-                        {
-                            vx_uint8 *ptr = reinterpret_cast<vx_uint8*>(vxFormatImagePatchAddress2d(base, x, y, &addr));
-                            *ptr = pixel_value->U8;
-                        }
-                        else if (format == VX_DF_IMAGE_U16)
-                        {
-                            vx_uint16 *ptr = reinterpret_cast<vx_uint16*>(vxFormatImagePatchAddress2d(base, x, y, &addr));
-                            *ptr = pixel_value->U16;
-                        }
-                        else if (format == VX_DF_IMAGE_U32)
-                        {
-                            vx_uint32 *ptr = reinterpret_cast<vx_uint32*>(vxFormatImagePatchAddress2d(base, x, y, &addr));
-                            *ptr = pixel_value->U32;
-                        }
-                        else if (format == VX_DF_IMAGE_S16)
-                        {
-                            vx_int16 *ptr = reinterpret_cast<vx_int16*>(vxFormatImagePatchAddress2d(base, x, y, &addr));
-                            *ptr = pixel_value->S16;
-                        }
-                        else if (format == VX_DF_IMAGE_S32)
-                        {
-                            vx_int32 *ptr = reinterpret_cast<vx_int32*>(vxFormatImagePatchAddress2d(base, x, y, &addr));
-                            *ptr = pixel_value->S32;
-                        }
-                        else if ((format == VX_DF_IMAGE_RGB)  ||
-                                 (format == VX_DF_IMAGE_RGBX))
-                        {
-                            vx_uint8 *ptr = reinterpret_cast<vx_uint8*>(vxFormatImagePatchAddress2d(base, x, y, &addr));
-                            ptr[0] = pixel_value->RGBX[0];
-                            ptr[1] = pixel_value->RGBX[1];
-                            ptr[2] = pixel_value->RGBX[2];
-                            if (format == VX_DF_IMAGE_RGBX)
-                                ptr[3] = pixel_value->RGBX[3];
-                        }
-                        else if ((format == VX_DF_IMAGE_YUV4) ||
-                                 (format == VX_DF_IMAGE_IYUV))
-                        {
-                            vx_uint8 *pixel = (vx_uint8 *)&pixel_value->YUV;
-                            vx_uint8 *ptr = reinterpret_cast<vx_uint8*>(vxFormatImagePatchAddress2d(base, x, y, &addr));
-                            *ptr = pixel[p];
-                        }
-                        else if ((p == 0) &&
-                                 ((format == VX_DF_IMAGE_NV12) ||
-                                  (format == VX_DF_IMAGE_NV21)))
-                        {
-                            vx_uint8 *pixel = (vx_uint8 *)&pixel_value->YUV;
-                            vx_uint8 *ptr = reinterpret_cast<vx_uint8*>(vxFormatImagePatchAddress2d(base, x, y, &addr));
-                            *ptr = pixel[0];
-                        }
-                        else if ((p == 1) && (format == VX_DF_IMAGE_NV12))
-                        {
-                            vx_uint8 *pixel = (vx_uint8 *)&pixel_value->YUV;
-                            vx_uint8 *ptr = reinterpret_cast<vx_uint8*>(vxFormatImagePatchAddress2d(base, x, y, &addr));
-                            ptr[0] = pixel[1];
-                            ptr[1] = pixel[2];
-                        }
-                        else if ((p == 1) && (format == VX_DF_IMAGE_NV21))
-                        {
-                            vx_uint8 *pixel = (vx_uint8 *)&pixel_value->YUV;
-                            vx_uint8 *ptr = reinterpret_cast<vx_uint8*>(vxFormatImagePatchAddress2d(base, x, y, &addr));
-                            ptr[0] = pixel[2];
-                            ptr[1] = pixel[1];
-                        }
-                        else if (format == VX_DF_IMAGE_UYVY)
-                        {
-                            vx_uint8 *pixel = (vx_uint8 *)&pixel_value->YUV;
-                            vx_uint8 *ptr = reinterpret_cast<vx_uint8*>(vxFormatImagePatchAddress2d(base, x, y, &addr));
-                            if (x % 2 == 0)
-                            {
-                                ptr[0] = pixel[1];
-                                ptr[1] = pixel[0];
-                            }
-                            else
-                            {
-                                ptr[0] = pixel[2];
-                                ptr[1] = pixel[0];
-                            }
-                        }
-                        else if (format == VX_DF_IMAGE_YUYV)
-                        {
-                            vx_uint8 *pixel = (vx_uint8 *)&pixel_value->YUV;
-                            vx_uint8 *ptr = reinterpret_cast<vx_uint8*>(vxFormatImagePatchAddress2d(base, x, y, &addr));
-                            if (x % 2 == 0)
-                            {
-                                ptr[0] = pixel[0];
-                                ptr[1] = pixel[1];
-                            }
-                            else
-                            {
-                                ptr[0] = pixel[0];
-                                ptr[1] = pixel[2];
-                            }
-                        }
-                    }
-                }
-                if (vxCommitImagePatch(image, &rect, p, &addr, base) != VX_SUCCESS)
-                {
-                    VX_PRINT(VX_ZONE_ERROR, "Failed to set initial image patch on plane %u on const image!\n", p);
-                    status = VX_FAILURE;
-                    break;
-                }
-            }
-            else
-            {
-                VX_PRINT(VX_ZONE_ERROR, "Failed to get image patch on plane %u in const image!\n",p);
-                status = VX_FAILURE;
-                break;
-            }
-        } /* for loop */
+        status = image->setPixelValues(pixel_value);
     }
     else
     {
         status = VX_ERROR_INVALID_PARAMETERS;
     }
-    return status;
-}
 
-VX_API_ENTRY vx_status VX_API_CALL vxReleaseImage(vx_image* image)
-{
-    vx_status status = VX_FAILURE;
-
-    if (image != nullptr)
-    {
-        vx_image this_image = *image;
-        if (Reference::isValidReference((vx_reference)this_image, VX_TYPE_IMAGE) == vx_true_e)
-        {
-            vx_image parent = this_image->parent;
-
-            /* clear this image from its parent' subimages list */
-            if (parent && Reference::isValidReference((vx_reference)parent, VX_TYPE_IMAGE) == vx_true_e)
-            {
-                vx_uint32 n;
-                for (n = 0; n < VX_INT_MAX_REF; n++)
-                {
-                    if (parent->subimages[n] == this_image)
-                    {
-                        parent->subimages[n] = nullptr;
-                        break;
-                    }
-                }
-            }
-
-            status = Reference::releaseReference((vx_reference*)image, VX_TYPE_IMAGE, VX_EXTERNAL, nullptr);
-        }
-    }
-
-    VX_PRINT(VX_ZONE_API, "%s returned %d\n", __FUNCTION__, status);
     return status;
 }
 
@@ -1506,60 +2966,14 @@ VX_API_ENTRY vx_size VX_API_CALL vxComputeImagePatchSize(vx_image image,
                                        const vx_rectangle_t *rect,
                                        vx_uint32 plane_index)
 {
-    vx_size size = 0ul;
-    vx_uint32 start_x = 0u, start_y = 0u, end_x = 0u, end_y = 0u;
+    vx_size size = 0;
 
-    if ((Image::isValidImage(image) == vx_true_e) && (rect))
+    /* bad references */
+    if (Image::isValidImage(image) == vx_true_e)
     {
-        start_x = rect->start_x;
-        start_y = rect->start_y;
-        end_x = rect->end_x;
-        end_y = rect->end_y;
-
-        if (image->memory.ptrs[0] == nullptr)
-        {
-            if (image->allocateImage() == vx_false_e)
-            {
-                vxAddLogEntry((vx_reference)image, VX_ERROR_NO_MEMORY, "Failed to allocate image!\n");
-                return 0;
-            }
-        }
-        if (plane_index < image->planes)
-        {
-            vx_size pixelSize;
-            vx_size numPixels = ((end_x-start_x)/image->scale[plane_index][VX_DIM_X]) *
-                                ((end_y-start_y)/image->scale[plane_index][VX_DIM_Y]);
-            Image::printImage(image);
-            if (image->memory.strides[plane_index][VX_DIM_X] == 0 && image->memory.stride_x_bits[plane_index] != 0)
-            {
-                /* data type does not have integer byte size, e.g. VX_DF_IMAGE_U1 image */
-                pixelSize = image->memory.stride_x_bits[plane_index];   // bits
-                if (start_x * pixelSize % 8 != 0)   // Handle case where imagepatch doesn't start at byte boundary
-                    start_x -= (start_x * pixelSize % 8) / pixelSize;
-
-                vx_size lineSize = ( (end_x-start_x) / image->scale[plane_index][VX_DIM_X] * pixelSize + 7ul ) / 8ul;
-                VX_PRINT(VX_ZONE_IMAGE, "numPixels = " VX_FMT_SIZE " pixelSize = " VX_FMT_SIZE " bits\n", numPixels, pixelSize);
-                size =  lineSize * ( (end_y-start_y) / image->scale[plane_index][VX_DIM_Y] );
-            }
-            else
-            {
-                pixelSize = image->memory.strides[plane_index][VX_DIM_X];
-                VX_PRINT(VX_ZONE_IMAGE, "numPixels = " VX_FMT_SIZE " pixelSize = " VX_FMT_SIZE "\n", numPixels, pixelSize);
-                size = numPixels * pixelSize;
-            }
-        }
-        else
-        {
-            vxAddLogEntry((vx_reference)image, VX_ERROR_INVALID_PARAMETERS, "Plane index %u is out of bounds!", plane_index);
-        }
-
-        VX_PRINT(VX_ZONE_IMAGE, "image %p for patch {%u,%u to %u,%u} has a byte size of " VX_FMT_SIZE "\n",
-                 image, start_x, start_y, end_x, end_y, size);
+        size = image->computePatchSize(rect, plane_index);
     }
-    else
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Image Reference is invalid!\n");
-    }
+
     return size;
 }
 
@@ -1570,264 +2984,14 @@ VX_API_ENTRY vx_status VX_API_CALL vxAccessImagePatch(vx_image image,
                                     void **ptr,
                                     vx_enum usage)
 {
-    vx_uint8 *p = nullptr;
-    vx_status status = VX_FAILURE;
-    vx_bool mapped = vx_false_e;
-    vx_uint32 start_x = rect ? rect->start_x : 0u;
-    vx_uint32 start_y = rect ? rect->start_y : 0u;
-    vx_uint32 end_x = rect ? rect->end_x : 0u;
-    vx_uint32 end_y = rect ? rect->end_y : 0u;
-    vx_bool zero_area = ((((end_x - start_x) == 0) || ((end_y - start_y) == 0)) ? vx_true_e : vx_false_e);
-
-    /* bad parameters */
-    if ((usage < VX_READ_ONLY) || (VX_READ_AND_WRITE < usage) ||
-        (addr == nullptr) || (ptr == nullptr))
-    {
-        status = VX_ERROR_INVALID_PARAMETERS;
-        goto exit;
-    }
+    vx_status status = VX_ERROR_INVALID_REFERENCE;
 
     /* bad references */
-    if ((!rect) ||
-        (Image::isValidImage(image) == vx_false_e))
+    if (Image::isValidImage(image) == vx_true_e)
     {
-        status = VX_ERROR_INVALID_REFERENCE;
-        goto exit;
+        status = image->accessPatch(rect, plane_index, addr, ptr, usage);
     }
 
-    /* determine if virtual before checking for memory */
-    if (image->is_virtual == vx_true_e)
-    {
-        if (image->is_accessible == vx_false_e)
-        {
-            /* User tried to access a "virtual" image. */
-            VX_PRINT(VX_ZONE_ERROR, "Can not access a virtual image\n");
-            status = VX_ERROR_OPTIMIZED_AWAY;
-            goto exit;
-        }
-        /* framework trying to access a virtual image, this is ok. */
-    }
-
-    /* more bad parameters */
-    if (zero_area == vx_false_e &&
-        ((plane_index >= image->memory.nptrs) ||
-         (plane_index >= image->planes) ||
-         (rect->start_x >= rect->end_x) ||
-         (rect->start_y >= rect->end_y)))
-    {
-        status = VX_ERROR_INVALID_PARAMETERS;
-        goto exit;
-    }
-
-    /* The image needs to be allocated */
-    if ((image->memory.ptrs[0] == nullptr) && (image->allocateImage() == vx_false_e))
-    {
-        VX_PRINT(VX_ZONE_ERROR, "No memory!\n");
-        status = VX_ERROR_NO_MEMORY;
-        goto exit;
-    }
-
-    /* can't write to constant */
-    if ((image->constant == vx_true_e) && ((usage == VX_WRITE_ONLY) ||
-                                           (usage == VX_READ_AND_WRITE)))
-    {
-        status = VX_ERROR_NOT_SUPPORTED;
-        VX_PRINT(VX_ZONE_ERROR, "Can't write to constant data, only read!\n");
-        vxAddLogEntry(reinterpret_cast<vx_reference>(image), status, "Can't write to constant data, only read!\n");
-        goto exit;
-    }
-
-    /*************************************************************************/
-    VX_PRINT(VX_ZONE_IMAGE, "AccessImagePatch from " VX_FMT_REF " to ptr %p from {%u,%u} to {%u,%u} plane %u\n",
-            image, *ptr, rect->start_x, rect->start_y, rect->end_x, rect->end_y, plane_index);
-
-    /* POSSIBILITIES:
-     * 1.) !*ptr && RO == MAP
-     * 2.) !*ptr && WO == MAP
-     * 3.) !*ptr && RW == MAP
-     * 4.)  *ptr && RO||RW == COPY (UNLESS MAP)
-     */
-
-    if ((*ptr == nullptr) && ((usage == VX_READ_ONLY) ||
-                           (usage == VX_WRITE_ONLY) ||
-                           (usage == VX_READ_AND_WRITE)))
-    {
-        mapped = vx_true_e;
-    }
-
-    /* MAP mode */
-    if (mapped == vx_true_e)
-    {
-        vx_uint32 index = 0u;
-
-        /* lock the memory plane for multiple writers*/
-        if (usage != VX_READ_ONLY) {
-            if (Osal::semWait(&image->memory.locks[plane_index]) == vx_false_e)
-            {
-                status = VX_ERROR_NO_RESOURCES;
-                goto exit;
-            }
-        }
-        Memory::printMemory(&image->memory);
-        p = (vx_uint8 *)image->memory.ptrs[plane_index];
-
-        /* use the addressing of the internal format */
-        if (image->format == VX_DF_IMAGE_U1) {
-            addr->dim_x = rect->end_x - rect->start_x + rect->start_x % 8;    // Round start down to byte boundary
-        }
-        else {
-            addr->dim_x = rect->end_x - rect->start_x;
-        }
-        addr->dim_y     = rect->end_y - rect->start_y;
-        addr->stride_x  = image->memory.strides[plane_index][VX_DIM_X];
-        addr->stride_y  = image->memory.strides[plane_index][VX_DIM_Y];
-        addr->stride_x_bits = image->memory.stride_x_bits[plane_index];
-        addr->step_x    = image->scale[plane_index][VX_DIM_X];
-        addr->step_y    = image->scale[plane_index][VX_DIM_Y];
-        addr->scale_x   = VX_SCALE_UNITY / image->scale[plane_index][VX_DIM_X];
-        addr->scale_y   = VX_SCALE_UNITY / image->scale[plane_index][VX_DIM_Y];
-
-        index = Image::computePatchOffset(rect->start_x, rect->start_y, addr);
-        *ptr = &p[index];
-        VX_PRINT(VX_ZONE_IMAGE, "Returning mapped pointer %p which is offset by %lu\n", *ptr, index);
-
-        // ownReadFromReference(&image->base);
-        image->incrementReference(VX_EXTERNAL);
-
-        status = VX_SUCCESS;
-    }
-
-    /* COPY mode */
-    else
-    {
-        /* Inconsistent strides for non-integer byte size data? */
-        if ( (addr->stride_x == 0 || image->memory.strides[plane_index][VX_DIM_X] == 0) &&
-              addr->stride_x_bits != image->memory.stride_x_bits[plane_index] )
-        {
-          VX_PRINT(VX_ZONE_ERROR, "Copying of non-integer byte size data without preserving stride in "
-                   "x-dimension is not supported! Attempted to copy with strides {stride_x, stride_x_bits}:"
-                   " {%d, %u} <- {%d, %u}\n", addr->stride_x, addr->stride_x_bits,
-                   image->memory.strides[plane_index][VX_DIM_X], image->memory.stride_x_bits[plane_index]);
-          status = VX_ERROR_NOT_SUPPORTED;
-          goto exit;
-        }
-
-        vx_size size = vxComputeImagePatchSize(image, rect, plane_index);
-        vx_uint32 a = 0u;
-
-        vx_imagepatch_addressing_t *addr_save = new vx_imagepatch_addressing_t();
-        /* Strides given by the application */
-        addr_save->stride_x = addr->stride_x;
-        addr_save->stride_y = addr->stride_y;
-        addr_save->stride_x_bits = addr->stride_x_bits;
-        /* Computed by the application */
-        if (image->format == VX_DF_IMAGE_U1) {
-            addr->dim_x   = addr_save->dim_x   = rect->end_x - rect->start_x + rect->start_x % 8; // Round start to byte boundary
-        }
-        else {
-            addr->dim_x   = addr_save->dim_x   = rect->end_x - rect->start_x;
-        }
-        addr->dim_y   = addr_save->dim_y   = rect->end_y - rect->start_y;
-        addr->step_x  = addr_save->step_x  = image->scale[plane_index][VX_DIM_X];
-        addr->step_y  = addr_save->step_y  = image->scale[plane_index][VX_DIM_Y];
-        addr->scale_x = addr_save->scale_x = VX_SCALE_UNITY / image->scale[plane_index][VX_DIM_X];
-        addr->scale_y = addr_save->scale_y = VX_SCALE_UNITY / image->scale[plane_index][VX_DIM_Y];
-
-        if (image->context->addAccessor(size, usage, *ptr, image, &a, addr_save) == vx_false_e)
-        {
-            status = VX_ERROR_NO_MEMORY;
-            vxAddLogEntry(reinterpret_cast<vx_reference>(image), status, "Failed to allocate memory for COPY! Size=" VX_FMT_SIZE "\n", size);
-            goto exit;
-        }
-
-        {
-            vx_uint32 x, y;
-            vx_uint8 *tmp = (vx_uint8*)*ptr;
-
-            /*! \todo implement overlapping multi-writers lock, not just single writer lock */
-            if ((usage == VX_WRITE_ONLY) || (usage == VX_READ_AND_WRITE))
-            {
-                if (Osal::semWait(&image->memory.locks[plane_index]) == vx_false_e)
-                {
-                    status = VX_ERROR_NO_RESOURCES;
-                    goto exit;
-                }
-            }
-
-            if ((usage == VX_READ_ONLY) || (usage == VX_READ_AND_WRITE))
-            {
-                /* Copy the patch _from_ the image
-                 * (For non-integer byte size images line-by-line copying only works if the patch starts and ends
-                 *  at byte boundaries) */
-                if ( addr_save->stride_x == image->memory.strides[plane_index][VX_DIM_X] &&
-                    (addr_save->stride_x != 0 ? 1 :
-                        (addr_save->stride_x_bits == image->memory.stride_x_bits[plane_index] &&
-                         rect->start_x * addr_save->stride_x_bits % 8 == 0 &&
-                         rect->end_x   * addr_save->stride_x_bits % 8 == 0)) )
-                {
-                    /* Both have compact lines */
-                    for (y = rect->start_y; y < rect->end_y; y+=addr_save->step_y)
-                    {
-                        vx_uint32 i = Image::computePlaneOffset(image, rect->start_x, y, plane_index);
-                        vx_uint32 j = Image::computePatchOffset(0, (y - rect->start_y), addr_save);
-                        vx_uint32 len = Image::computePlaneRangeSize(image, addr_save->dim_x, plane_index);
-                        VX_PRINT(VX_ZONE_IMAGE, "%p[%u] <= %p[%u] for %u\n", tmp, j, image->memory.ptrs[plane_index], i, len);
-                        memcpy(&tmp[j], &image->memory.ptrs[plane_index][i], len);
-                    }
-                }
-
-                else
-                {
-                    /* The destination is not compact, we need to copy per element */
-                    vx_uint8 *pDestLine = &tmp[0];
-                    for (y = rect->start_y; y < rect->end_y; y+=addr_save->step_y)
-                    {
-                        vx_uint8 *pDest = pDestLine;
-
-                        vx_uint32 offset = Image::computePlaneOffset(image, rect->start_x, y, plane_index);
-                        vx_uint8 *pSrc   = &image->memory.ptrs[plane_index][offset];
-
-                        for (x = rect->start_x; x < rect->end_x; x+=addr_save->step_x)
-                        {
-                            if (image->format == VX_DF_IMAGE_U1)
-                            {
-                                /* U1 patch not starting and ending at byte boundary in image,
-                                 * do pixel-by-pixel copy from the image */
-                                offset = Image::computePlaneOffset(image, x, y, plane_index);
-                                pSrc   = &image->memory.ptrs[plane_index][offset];
-                                pDest  = &pDestLine[Image::computePatchOffset(x - rect->start_x + rect->start_x % 8, 0, addr_save)];
-
-                                vx_uint8 mask = 1 << (x % 8);
-                                *pDest = (*pDest & ~mask) | (*pSrc & mask);
-                            }
-                            else
-                            {
-                                /* One element */
-                                memcpy(pDest, pSrc, image->memory.strides[plane_index][VX_DIM_X]);
-
-                                pSrc  += image->memory.strides[plane_index][VX_DIM_X];
-                                pDest += addr_save->stride_x;
-                            }
-                        }
-                        VX_PRINT(VX_ZONE_IMAGE,
-                            "Copied %u pixels from row %u in image starting at %p to patch starting at %p\n",
-                            end_x - start_x, y, image->memory.ptrs[plane_index], tmp);
-
-                        pDestLine += addr_save->stride_y;
-                    }
-                }
-
-                VX_PRINT(VX_ZONE_IMAGE, "Copied image into %p\n", *ptr);
-                // ownReadFromReference(&image->base);
-            }
-
-            image->incrementReference(VX_EXTERNAL);
-
-            status = VX_SUCCESS;
-        }
-    }
-exit:
-    VX_PRINT(VX_ZONE_API, "returned %d\n", status);
     return status;
 }
 
@@ -1838,286 +3002,13 @@ VX_API_ENTRY vx_status VX_API_CALL vxCommitImagePatch(vx_image image,
                                     const void *ptr)
 {
     vx_status status = VX_ERROR_INVALID_REFERENCE;
-    vx_int32 i = 0;
-    vx_bool external = vx_true_e; // assume that it was an allocated buffer
-    vx_uint32 start_x = rect ? rect->start_x : 0u;
-    vx_uint32 start_y = rect ? rect->start_y : 0u;
-    vx_uint32 end_x = rect ? rect->end_x : 0u;
-    vx_uint32 end_y = rect ? rect->end_y : 0u;
-    vx_uint8 *tmp = (vx_uint8 *)ptr;
-    vx_bool zero_area = ((((end_x - start_x) == 0) || ((end_y - start_y) == 0)) ? vx_true_e : vx_false_e);
-    vx_uint32 index = UINT32_MAX; // out of bounds, if given to remove, won't do anything
 
-    if (Image::isValidImage(image) == vx_false_e)
-        return VX_ERROR_INVALID_REFERENCE;
-
-    VX_PRINT(VX_ZONE_IMAGE, "CommitImagePatch to " VX_FMT_REF " from ptr %p plane %u to {%u,%u},{%u,%u}\n",
-        image, ptr, plane_index, start_x, start_y, end_x, end_y);
-
-    Image::printImage(image);
-    Image::printImageAddressing(addr);
-
-    /* determine if virtual before checking for memory */
-    if (image->is_virtual == vx_true_e && zero_area == vx_false_e)
+    /* bad references */
+    if (Image::isValidImage(image) == vx_true_e)
     {
-        if (image->is_accessible == vx_false_e)
-        {
-            /* User tried to access a "virtual" image. */
-            VX_PRINT(VX_ZONE_ERROR, "Can not access a virtual image\n");
-            status = VX_ERROR_OPTIMIZED_AWAY;
-            goto exit;
-        }
-        /* framework trying to access a virtual image, this is ok. */
+        status = image->commitPatch(rect, plane_index, addr, ptr);
     }
 
-    if (zero_area == vx_false_e &&
-        ((plane_index >= image->planes) ||
-         (plane_index >= image->memory.nptrs) ||
-         (ptr == nullptr) ||
-         (addr == nullptr)))
-    {
-        return VX_ERROR_INVALID_PARAMETERS;
-    }
-
-    /* check the rectangle, it has to be in actual plane space */
-    if (zero_area == vx_false_e &&
-        ((start_x >= end_x) || ((end_x - start_x) > addr->dim_x) ||
-        (start_y >= end_y) || ((end_y - start_y) > addr->dim_y) ||
-        (end_x > (vx_uint32)image->memory.dims[plane_index][VX_DIM_X] * (vx_uint32)image->scale[plane_index][VX_DIM_X]) ||
-        (end_y > (vx_uint32)image->memory.dims[plane_index][VX_DIM_Y] * (vx_uint32)image->scale[plane_index][VX_DIM_X])))
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Invalid start,end coordinates! plane %u {%u,%u},{%u,%u}\n",
-                 plane_index, start_x, start_y, end_x, end_y);
-        Image::printImage(image);
-        DEBUG_BREAK();
-        status = VX_ERROR_INVALID_PARAMETERS;
-        goto exit;
-    }
-
-    /* Inconsistent strides for non-integer byte size data? */
-    if ( (addr->stride_x == 0 || image->memory.strides[plane_index][VX_DIM_X] == 0) &&
-          addr->stride_x_bits != image->memory.stride_x_bits[plane_index] )
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Copying of non-integer byte size data without preserving stride in "
-                 "x-dimension is not supported! Attempted to copy with strides {stride_x, stride_x_bits}:"
-                 " {%u, %u} -> {%u, %u}\n", addr->stride_x, addr->stride_x_bits,
-                 image->memory.strides[plane_index][VX_DIM_X], image->memory.stride_x_bits[plane_index]);
-        status = VX_ERROR_NOT_SUPPORTED;
-        goto exit;
-    }
-
-    {
-        /* VARIABLES:
-         * 1.) ZERO_AREA
-         * 2.) CONSTANT - independant
-         * 3.) INTERNAL - independant of area
-         * 4.) EXTERNAL - dependant on area (do nothing on zero, determine on non-zero)
-         * 5.) !INTERNAL && !EXTERNAL == MAPPED
-         */
-        vx_bool internal = image->context->findAccessor(ptr, &index);
-
-        if ((zero_area == vx_false_e) && (image->constant == vx_true_e))
-        {
-            /* we tried to modify constant data! */
-            VX_PRINT(VX_ZONE_ERROR, "Can't set constant image data!\n");
-            status = VX_ERROR_NOT_SUPPORTED;
-            /* don't modify the accessor here, it's an error case */
-            goto exit;
-        }
-        else if (zero_area == vx_false_e && image->constant == vx_false_e)
-        {
-            /* this could be a write-back */
-            if (internal == vx_true_e && image->context->accessors[index].usage == VX_READ_ONLY)
-            {
-                /* this is a buffer that we allocated on behalf of the user and now they are done. Do nothing else*/
-                image->context->removeAccessor(index);
-            }
-            else
-            {
-                /* determine if this grows the valid region */
-                if (image->region.start_x > start_x)
-                    image->region.start_x = start_x;
-                if (image->region.start_y > start_y)
-                    image->region.start_y = start_y;
-                if (image->region.end_x < end_x)
-                    image->region.end_x = end_x;
-                if (image->region.end_y < end_y)
-                    image->region.end_y = end_y;
-
-                /* index of 1 pixel line past last. */
-                i = (image->memory.dims[plane_index][VX_DIM_Y] * image->memory.strides[plane_index][VX_DIM_Y]);
-
-                VX_PRINT(VX_ZONE_IMAGE, "base:%p tmp:%p end:%p\n",
-                    image->memory.ptrs[plane_index], ptr, &image->memory.ptrs[plane_index][i]);
-
-                if ((image->memory.ptrs[plane_index] <= (vx_uint8 *)ptr) &&
-                    ((vx_uint8 *)ptr < &image->memory.ptrs[plane_index][i]))
-                {
-                    /* corner case for 2d memory */
-                    if (image->memory.strides[plane_index][VX_DIM_X] != 0
-                        ? /* Integer byte size data format */
-                           image->memory.strides[plane_index][VX_DIM_Y] !=
-                         (int)image->memory.dims[plane_index][VX_DIM_X] * image->memory.strides[plane_index][VX_DIM_X]
-                        : /* Non-integer byte size data format */
-                           image->memory.strides[plane_index][VX_DIM_Y] !=
-                        ((int)image->memory.dims[plane_index][VX_DIM_X] * image->memory.stride_x_bits[plane_index] + 7) / 8)
-                    {
-                        /* determine if the pointer is within the image boundary. */
-                        vx_uint8 *base = image->memory.ptrs[plane_index];
-                        vx_size offset = ((vx_size)(tmp - base)) % image->memory.strides[plane_index][VX_DIM_Y];
-                        if (image->memory.strides[plane_index][VX_DIM_X] != 0
-                            ? /* Integer byte size data format */
-                            offset < (vx_size)(image->memory.dims[plane_index][VX_DIM_X] *
-                                               image->memory.strides[plane_index][VX_DIM_X])
-                            : /* Non-integer byte size data format */
-                            offset < (vx_size)(image->memory.dims[plane_index][VX_DIM_X] *
-                                               image->memory.stride_x_bits[plane_index] + 7) / 8ul)
-                        {
-                            VX_PRINT(VX_ZONE_IMAGE, "Pointer is within 2D image\n");
-                            external = vx_false_e;
-                        }
-                    }
-                    else
-                    {
-                        /* the pointer in contained in the image, so it was mapped, thus
-                         * there's nothing else to do. */
-                        external = vx_false_e;
-                        VX_PRINT(VX_ZONE_IMAGE, "Mapped pointer detected!\n");
-                    }
-                }
-                if (external == vx_true_e || internal == vx_true_e)
-                {
-                    if (internal == vx_true_e)
-                    {
-                        /* Copy the patch back _to_ the image
-                         * (For non-integer byte size images line-by-line copying only works if the patch starts
-                         *  and ends at byte boundaries or at the left/right edges of the image's valid region) */
-                        if ( addr->stride_x == image->memory.strides[plane_index][VX_DIM_X] &&
-                            (addr->stride_x != 0 ? 1 :
-                                (addr->stride_x_bits == image->memory.stride_x_bits[plane_index] &&
-                                 (start_x * addr->stride_x_bits % 8 == 0 || start_x == image->region.start_x) &&
-                                 (end_x   * addr->stride_x_bits % 8 == 0 || end_x   == image->region.end_x  ))) )
-                        {
-                            /* Both source and destination have compact lines */
-                            vx_uint32 y;
-                            for (y = start_y; y < end_y; y+=addr->step_y)
-                            {
-                                vx_uint32 i = Image::computePlaneOffset(image, start_x, y, plane_index);
-                                vx_uint32 j = Image::computePatchOffset(0, (y - start_y), addr);
-                                vx_uint32 len = Image::computePatchRangeSize((end_x - start_x), addr);
-                                VX_PRINT(VX_ZONE_IMAGE, "%p[%u] <= %p[%u] for %u\n",
-                                         image->memory.ptrs[plane_index], i, tmp, j, len);
-                                memcpy(&image->memory.ptrs[plane_index][i], &tmp[j], len);
-                            }
-                        }
-
-                        else
-                        {
-                            /* The source is not compact, we need to copy per element */
-                            vx_uint32 x, y;
-                            vx_uint8 *pDestLine = &tmp[0];
-                            for (y = start_y; y < end_y; y+=addr->step_y)
-                            {
-                                vx_uint8 *pSrc = pDestLine;
-
-                                vx_uint32 offset = Image::computePlaneOffset(image, start_x, y, plane_index);
-                                vx_uint8 *pDest  = &image->memory.ptrs[plane_index][offset];
-
-                                for (x = start_x; x < end_x; x+=addr->step_x)
-                                {
-                                    if (image->format == VX_DF_IMAGE_U1)
-                                    {
-                                        /* U1 patch not starting and ending at byte boundary or left/right edges
-                                         * of valid region in image, do pixel-by-pixel copy to the image */
-                                        offset = Image::computePlaneOffset(image, x, y, plane_index);
-                                        pDest  = &image->memory.ptrs[plane_index][offset];
-                                        pSrc   = &pDestLine[Image::computePatchOffset(x - start_x + start_x % 8, 0, addr)];
-
-                                        vx_uint8 mask = 1 << (x % 8);
-                                        *pDest = (*pDest & ~mask) | (*pSrc & mask);
-                                    }
-                                    else
-                                    {
-                                        /* One element */
-                                        memcpy(pDest, pSrc, image->memory.strides[plane_index][VX_DIM_X]);
-
-                                        pDest += image->memory.strides[plane_index][VX_DIM_X];
-                                        pSrc  += addr->stride_x;
-                                    }
-                                }
-                                VX_PRINT(VX_ZONE_IMAGE,
-                                    "Copied %u pixels from row %u in imagepatch starting at %p to image starting "
-                                    "at %p\n", end_x - start_x, y - start_y, tmp, image->memory.ptrs[plane_index]);
-
-                                pDestLine += addr->stride_y;
-                            }
-                        }
-
-                        /* a write only or read/write copy */
-                        image->context->removeAccessor(index);
-                    }
-                    else
-                    {
-                        /* copy the patch back to the image. */
-                        vx_uint32 x, y, i, j, len;
-                        for (y = start_y; y < end_y; y+=addr->step_y)
-                        {
-                            if (image->format == VX_DF_IMAGE_U1)
-                            {
-                                /* U1: Do pixel-by-pixel copy to the image in case patch doesn't start or
-                                 * end at a byte boundary or at the left/right edges of the valid region */
-                                for (x = start_x; x < end_x; x+=addr->step_x)
-                                {
-                                    i = Image::computePlaneOffset(image, x, y, plane_index);
-                                    j = Image::computePatchOffset((x - start_x + start_x % 8), (y - start_y), addr);
-
-                                    vx_uint8 mask = 1 << (x % 8);
-                                    image->memory.ptrs[plane_index][i] =
-                                        (image->memory.ptrs[plane_index][i] & ~mask) | (tmp[j] & mask);
-                                }
-                                VX_PRINT(VX_ZONE_IMAGE,
-                                    "Copied %u pixels from row %u in external patch starting at %p to image starting "
-                                    "at %p\n", end_x - start_x, y - start_y, tmp, image->memory.ptrs[plane_index]);
-                            }
-                            else
-                            {
-                                i = Image::computePlaneOffset(image, start_x, y, plane_index);
-                                j = Image::computePatchOffset(0, (y - start_y), addr);
-                                len = Image::computePatchRangeSize((end_x - start_x), addr);
-                                VX_PRINT(VX_ZONE_IMAGE, "%p[%u] <= %p[%u] for %u\n",
-                                         image->memory.ptrs[plane_index], i, tmp, j, len);
-                                memcpy(&image->memory.ptrs[plane_index][i], &tmp[j], len);
-                            }
-                        }
-
-                    }
-                }
-                // ownWroteToReference(&image->base);
-            }
-            status = VX_SUCCESS;
-            Osal::semPost(&image->memory.locks[plane_index]);
-        }
-        else if (zero_area == vx_true_e)
-        {
-            /* could be RO|WO|RW where they decided not to commit anything. */
-            if (internal == vx_true_e) // RO
-            {
-                image->context->removeAccessor(index);
-            }
-            else // RW|WO
-            {
-                /*! \bug (possible bug, but maybe not) anyone can decrement an
-                 *  image access, should we limit to incrementor? that would be
-                 *  a lot to track */
-                Osal::semPost(&image->memory.locks[plane_index]);
-            }
-            status = VX_SUCCESS;
-        }
-        VX_PRINT(VX_ZONE_IMAGE, "Decrementing Image Reference\n");
-        image->decrementReference(VX_EXTERNAL);
-    }
-exit:
-    VX_PRINT(VX_ZONE_API, "return %d\n", status);
     return status;
 }
 
@@ -2130,330 +3021,16 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyImagePatch(
     vx_enum usage,
     vx_enum mem_type)
 {
-    vx_status status = VX_SUCCESS;
-
-    vx_uint32 start_x = rect ? rect->start_x : 0u;
-    vx_uint32 start_y = rect ? rect->start_y : 0u;
-    vx_uint32 end_x = rect ? rect->end_x : 0u;
-    vx_uint32 end_y = rect ? rect->end_y : 0u;
-    vx_bool zero_area = ((((end_x - start_x) == 0) || ((end_y - start_y) == 0)) ? vx_true_e : vx_false_e);
-
-    /* bad parameters */
-    if ( ((VX_READ_ONLY != usage) && (VX_WRITE_ONLY != usage)) ||
-         (rect == nullptr) || (addr == nullptr) || (ptr == nullptr) )
-    {
-        status = VX_ERROR_INVALID_PARAMETERS;
-    }
+    vx_status status = VX_ERROR_INVALID_REFERENCE;
 
     /* bad references */
-    if (VX_SUCCESS == status &&
-        Image::isValidImage(image) == vx_false_e )
+    if (Image::isValidImage(image) == vx_true_e)
     {
-        status = VX_ERROR_INVALID_REFERENCE;
+        status = image->copyPatch(rect, plane_index, addr, ptr, usage, mem_type);
     }
 
-    /* determine if virtual before checking for memory */
-    if (VX_SUCCESS == status &&
-        image->is_virtual == vx_true_e)
-    {
-        if (image->is_accessible == vx_false_e)
-        {
-            /* User tried to access a "virtual" image. */
-            VX_PRINT(VX_ZONE_ERROR, "Can not access a virtual image\n");
-            status = VX_ERROR_OPTIMIZED_AWAY;
-        }
-        /* framework trying to access a virtual image, this is ok. */
-    }
-
-    /* more bad parameters */
-    if (VX_SUCCESS == status)
-    {
-        if (zero_area == vx_true_e ||
-            ((plane_index >= image->memory.nptrs) ||
-            (plane_index >= image->planes) ||
-            (start_x >= end_x) ||
-            (start_y >= end_y)))
-        {
-            status = VX_ERROR_INVALID_PARAMETERS;
-        }
-    }
-
-    /* The image needs to be allocated */
-    if ((VX_SUCCESS == status) &&
-        (image->memory.ptrs[0] == nullptr) &&
-        (image->allocateImage() == vx_false_e))
-    {
-        VX_PRINT(VX_ZONE_ERROR, "No memory!\n");
-        status = VX_ERROR_NO_MEMORY;
-    }
-
-    /* can't write to constant */
-    if ((VX_SUCCESS == status) &&
-        (image->constant == vx_true_e) &&
-        (usage == VX_WRITE_ONLY))
-    {
-        status = VX_ERROR_NOT_SUPPORTED;
-        VX_PRINT(VX_ZONE_ERROR, "Can't write to constant data, only read!\n");
-        vxAddLogEntry(reinterpret_cast<vx_reference>(image), status, "Can't write to constant data, only read!\n");
-    }
-
-    /* Inconsistent strides for non-integer byte size data? */
-    if ( (VX_SUCCESS == status) &&
-         (addr->stride_x == 0 || image->memory.strides[plane_index][VX_DIM_X] == 0) &&
-         (addr->stride_x_bits != image->memory.stride_x_bits[plane_index]) )
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Copying of non-integer byte size data without preserving stride in "
-               "x-dimension is not supported! Attempted to copy with strides {stride_x, stride_x_bits}:"
-               " {%d, %u} %s {%d, %u}\n", addr->stride_x, addr->stride_x_bits,
-               usage == VX_READ_ONLY ? "<-" : "->",
-               image->memory.strides[plane_index][VX_DIM_X], image->memory.stride_x_bits[plane_index]);
-        status = VX_ERROR_NOT_SUPPORTED;
-    }
-
-    /*************************************************************************/
-    if (VX_SUCCESS == status)
-    {
-        VX_PRINT(VX_ZONE_IMAGE, "CopyImagePatch from " VX_FMT_REF " to ptr %p from {%u,%u} to {%u,%u} plane %u\n",
-            image, ptr, start_x, start_y, end_x, end_y, plane_index);
-
-#ifdef OPENVX_USE_OPENCL_INTEROP
-        void * ptr_given = ptr;
-        vx_enum mem_type_given = mem_type;
-        if (mem_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
-        {
-            // get ptr from OpenCL buffer for HOST
-            size_t size = 0;
-            cl_mem opencl_buf = (cl_mem)ptr;
-            cl_int cerr = clGetMemObjectInfo(opencl_buf, CL_MEM_SIZE, sizeof(size_t), &size, nullptr);
-            VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyImagePatch: clGetMemObjectInfo(%p) => (%d)\n",
-                opencl_buf, cerr);
-            if (cerr != CL_SUCCESS)
-            {
-                return VX_ERROR_INVALID_PARAMETERS;
-            }
-            ptr = clEnqueueMapBuffer(image->context->opencl_command_queue,
-                opencl_buf, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, size,
-                0, nullptr, nullptr, &cerr);
-            VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyImagePatch: clEnqueueMapBuffer(%p,%d) => %p (%d)\n",
-                opencl_buf, (int)size, ptr, cerr);
-            if (cerr != CL_SUCCESS)
-            {
-                return VX_ERROR_INVALID_PARAMETERS;
-            }
-            mem_type = VX_MEMORY_TYPE_HOST;
-        }
-#endif
-
-        if (usage == VX_READ_ONLY)
-        {
-            /* Copy from image (READ) mode */
-
-            vx_uint32 x;
-            vx_uint32 y;
-            vx_uint8* pSrc = image->memory.ptrs[plane_index];
-            vx_uint8* pDst = (vx_uint8*)ptr;
-
-            vx_imagepatch_addressing_t addr_save = VX_IMAGEPATCH_ADDR_INIT;
-
-            /* Strides given by the application */
-            addr_save.dim_x    = addr->dim_x;
-            addr_save.dim_y    = addr->dim_y;
-            addr_save.stride_x = addr->stride_x;
-            addr_save.stride_y = addr->stride_y;
-            addr_save.stride_x_bits = addr->stride_x_bits;
-
-            addr_save.step_x  = image->scale[plane_index][VX_DIM_X];
-            addr_save.step_y  = image->scale[plane_index][VX_DIM_Y];
-            addr_save.scale_x = VX_SCALE_UNITY / image->scale[plane_index][VX_DIM_X];
-            addr_save.scale_y = VX_SCALE_UNITY / image->scale[plane_index][VX_DIM_Y];
-
-            /* Copy the patch _from_ the image
-            * (For non-integer byte size images line-by-line copying only works if the patch starts and ends
-            *  at byte boundaries) */
-            if ( addr_save.stride_x == image->memory.strides[plane_index][VX_DIM_X] &&
-                (addr_save.stride_x != 0 ? 1 :
-                    (addr_save.stride_x_bits == image->memory.stride_x_bits[plane_index] &&
-                    start_x * addr_save.stride_x_bits % 8 == 0 &&
-                    end_x   * addr_save.stride_x_bits % 8 == 0)) )
-            {
-                /* Both have compact lines */
-                for (y = start_y; y < end_y; y += addr_save.step_y)
-                {
-                    vx_uint32 srcOffset = Image::computePlaneOffset(image, start_x, y, plane_index);
-                    vx_uint8* pSrcLine  = &pSrc[srcOffset];
-
-                    vx_uint32 dstOffset = Image::computePatchOffset(0, (y - start_y), &addr_save);
-                    vx_uint8* pDstLine  = &pDst[dstOffset];
-
-                    vx_uint32 len = Image::computePlaneRangeSize(image, end_x - start_x/*image->width*/, plane_index);
-
-                    VX_PRINT(VX_ZONE_IMAGE, "%p[%u] <= %p[%u] for %u\n", pDst, dstOffset, pSrc, srcOffset, len);
-
-                    memcpy(pDstLine, pSrcLine, len);
-                }
-            }
-            else
-            {
-                /* The destination is not compact, we need to copy per element */
-                for (y = start_y; y < end_y; y += addr_save.step_y)
-                {
-                    vx_uint32 srcOffset = Image::computePlaneOffset(image, start_x, y, plane_index);
-                    vx_uint8* pSrcLine  = &pSrc[srcOffset];
-
-                    vx_uint8* pDstLine  = pDst;
-
-                    vx_uint32 bitShiftU1 = start_x % 8;     // U1 start_x pixel bit-shift
-                    vx_uint32 len = image->memory.strides[plane_index][VX_DIM_X];
-
-                    for (x = start_x; x < end_x; x += addr_save.step_x)
-                    {
-                        if (image->format == VX_DF_IMAGE_U1)
-                        {
-                            /* U1 patch not starting and ending at byte boundary in image,
-                            * do pixel-by-pixel copy from the image */
-                            vx_uint8 mask = 1 << (x % 8);
-                            pDstLine[(x - start_x + bitShiftU1) / 8] =
-                                (pDstLine[(x - start_x + bitShiftU1) / 8] & ~mask) |
-                                (pSrcLine[(x - start_x + bitShiftU1) / 8] &  mask);
-                        }
-                        else
-                        {
-                            /* One element */
-                            memcpy(pDstLine, pSrcLine, len);
-
-                            pSrcLine += len;
-                            pDstLine += addr_save.stride_x;
-                        }
-                    }
-                    VX_PRINT(VX_ZONE_IMAGE,
-                        "Copied %u pixels from row %u in image starting at %p to patch starting at %p\n",
-                        end_x - start_x, y, image->memory.ptrs[plane_index], ptr);
-
-                    pDst += addr_save.stride_y;
-                }
-            }
-
-            VX_PRINT(VX_ZONE_IMAGE, "Copied image into %p\n", ptr);
-
-            // ownReadFromReference(&image->base);
-        }
-        else
-        {
-            /* Copy to image (WRITE) mode */
-            vx_uint32 x;
-            vx_uint32 y;
-            vx_uint8* pSrc = (vx_uint8*)ptr;
-            vx_uint8* pDst = image->memory.ptrs[plane_index];
-
-            vx_imagepatch_addressing_t addr_save = VX_IMAGEPATCH_ADDR_INIT;
-
-            /* Strides given by the application */
-            addr_save.dim_x    = addr->dim_x;
-            addr_save.dim_y    = addr->dim_y;
-            addr_save.stride_x = addr->stride_x;
-            addr_save.stride_y = addr->stride_y;
-            addr_save.stride_x_bits = addr->stride_x_bits;
-
-            addr_save.step_x  = image->scale[plane_index][VX_DIM_X];
-            addr_save.step_y  = image->scale[plane_index][VX_DIM_Y];
-            addr_save.scale_x = VX_SCALE_UNITY / image->scale[plane_index][VX_DIM_X];
-            addr_save.scale_y = VX_SCALE_UNITY / image->scale[plane_index][VX_DIM_Y];
-
-            /* lock image plane from multiple writers */
-            if (Osal::semWait(&image->memory.locks[plane_index]) == vx_false_e)
-            {
-                status = VX_ERROR_NO_RESOURCES;
-            }
-
-            /* Copy the patch _to_ the image
-            * (For non-integer byte size images line-by-line copying only works if the patch starts and ends
-            *  at byte boundaries or at the left/right edges of the image's valid region) */
-            if (VX_SUCCESS == status &&
-                addr_save.stride_x == image->memory.strides[plane_index][VX_DIM_X] &&
-                (addr_save.stride_x != 0 ? 1 :
-                    (addr_save.stride_x_bits == image->memory.stride_x_bits[plane_index] &&
-                    (start_x * addr_save.stride_x_bits % 8 == 0 || start_x == image->region.start_x) &&
-                    (end_x   * addr_save.stride_x_bits % 8 == 0 || end_x   == image->region.end_x  ))) )
-            {
-                /* Both source and destination have compact lines */
-                for (y = start_y; y < end_y; y += addr_save.step_y)
-                {
-                    vx_uint32 srcOffset = Image::computePatchOffset(0, (y - start_y), &addr_save);
-                    vx_uint8* pSrcLine = &pSrc[srcOffset];
-
-                    vx_uint32 dstOffset = Image::computePlaneOffset(image, start_x, y, plane_index);
-                    vx_uint8* pDstLine = &pDst[dstOffset];
-
-                    vx_uint32 len = Image::computePatchRangeSize((end_x - start_x), &addr_save);
-
-                    VX_PRINT(VX_ZONE_IMAGE, "%p[%u] <= %p[%u] for %u\n", pDst, dstOffset, pSrc, srcOffset, len);
-
-                    memcpy(pDstLine, pSrcLine, len);
-                }
-            }
-            else
-            {
-                /* The destination is not compact, we need to copy per element */
-                for (y = start_y; y < end_y; y += addr_save.step_y)
-                {
-                    vx_uint8* pSrcLine  = pSrc;
-
-                    vx_uint32 dstOffset = Image::computePlaneOffset(image, start_x, y, plane_index);
-                    vx_uint8* pDstLine  = &pDst[dstOffset];
-
-                    vx_uint32 bitShiftU1 = start_x % 8;     // U1 start_x pixel bit-shift
-                    vx_uint32 len = image->memory.strides[plane_index][VX_DIM_X];
-
-                    for (x = start_x; x < end_x; x += addr_save.step_x)
-                    {
-                        if (image->format == VX_DF_IMAGE_U1)
-                        {
-                            /* U1 patch not starting and ending at byte boundary or left/right edges of
-                            * valid region in image, do pixel-by-pixel copy from the patch */
-                            vx_uint32 xAdjusted = x - start_x + bitShiftU1;
-                            vx_uint8 mask = 1 << (xAdjusted % 8);
-                            pDstLine[xAdjusted / 8] = (pDstLine[xAdjusted / 8] & ~mask) |
-                                                    (pSrcLine[xAdjusted / 8] &  mask);
-                        }
-                        else
-                        {
-                            /* One element */
-                            memcpy(pDstLine, pSrcLine, len);
-
-                            pSrcLine += addr_save.stride_x;
-                            pDstLine += len;
-                        }
-                    }
-                    VX_PRINT(VX_ZONE_IMAGE,
-                        "Copied %u pixels from row %u in %spatch starting at %p to image starting at %p\n",
-                        end_x - start_x, y - start_x, (mem_type == VX_MEMORY_TYPE_NONE) ? "image" : "external ", ptr, image->memory.ptrs[plane_index]);
-
-                    pSrc += addr_save.stride_y;
-                }
-            }
-
-            VX_PRINT(VX_ZONE_IMAGE, "Copied to image from %p\n", ptr);
-
-            // ownWroteToReference(&image->base);
-            /* unlock image plane */
-            Osal::semPost(&image->memory.locks[plane_index]);
-        }
-
-#ifdef OPENVX_USE_OPENCL_INTEROP
-        if (VX_SUCCESS == status &&
-            mem_type_given == VX_MEMORY_TYPE_OPENCL_BUFFER)
-        {
-            clEnqueueUnmapMemObject(image->context->opencl_command_queue,
-                (cl_mem)ptr_given, ptr, 0, nullptr, nullptr);
-            clFinish(image->context->opencl_command_queue);
-        }
-#endif
-    }
-
-    VX_PRINT(VX_ZONE_API, "returned %d\n", status);
     return status;
 } /* vxCopyImagePatch() */
-
 
 VX_API_ENTRY vx_status VX_API_CALL vxMapImagePatch(
     vx_image image,
@@ -2466,369 +3043,26 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapImagePatch(
     vx_enum mem_type,
     vx_uint32 flags)
 {
-#ifdef OPENVX_USE_OPENCL_INTEROP
-    vx_enum mem_type_requested = mem_type;
-    if (mem_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
-    {
-        mem_type = VX_MEMORY_TYPE_HOST;
-    }
-#endif
-    vx_size size = 0;
-    vx_uint32 start_x = rect ? rect->start_x : 0u;
-    vx_uint32 start_y = rect ? rect->start_y : 0u;
-    vx_uint32 end_x   = rect ? rect->end_x : 0u;
-    vx_uint32 end_y   = rect ? rect->end_y : 0u;
-    vx_bool zero_area = ((((end_x - start_x) == 0) || ((end_y - start_y) == 0)) ? vx_true_e : vx_false_e);
-    vx_status status = VX_FAILURE;
-
-    /* bad parameters */
-    if ( (rect == nullptr) || (map_id == nullptr) || (addr == nullptr) || (ptr == nullptr) )
-    {
-        status = VX_ERROR_INVALID_PARAMETERS;
-        goto exit;
-    }
+    vx_status status = VX_ERROR_INVALID_REFERENCE;
 
     /* bad references */
-    if (Image::isValidImage(image) == vx_false_e)
+    if (Image::isValidImage(image) == vx_true_e)
     {
-        status = VX_ERROR_INVALID_REFERENCE;
-        goto exit;
+        status = image->mapPatch(rect, plane_index, map_id, addr, ptr, usage, mem_type, flags);
     }
-
-    /* determine if virtual before checking for memory */
-    if (image->is_virtual == vx_true_e)
-    {
-        if (image->is_accessible == vx_false_e)
-        {
-            /* User tried to access a "virtual" image. */
-            VX_PRINT(VX_ZONE_ERROR, "Can not access a virtual image\n");
-            status = VX_ERROR_OPTIMIZED_AWAY;
-            goto exit;
-        }
-        /* framework trying to access a virtual image, this is ok. */
-    }
-
-    /* more bad parameters */
-    if (zero_area == vx_true_e ||
-        ((plane_index >= image->memory.nptrs) ||
-        (plane_index >= image->planes) ||
-        (start_x >= end_x) ||
-        (start_y >= end_y)))
-    {
-        status = VX_ERROR_INVALID_PARAMETERS;
-        goto exit;
-    }
-
-    /* The image needs to be allocated */
-    if ((image->memory.ptrs[0] == nullptr) && (image->allocateImage() == vx_false_e))
-    {
-        VX_PRINT(VX_ZONE_ERROR, "No memory!\n");
-        status = VX_ERROR_NO_MEMORY;
-        goto exit;
-    }
-
-    /* can't write to constant */
-    if ((image->constant == vx_true_e) &&
-        ((usage == VX_WRITE_ONLY) || (usage == VX_READ_AND_WRITE)))
-    {
-        status = VX_ERROR_NOT_SUPPORTED;
-        VX_PRINT(VX_ZONE_ERROR, "Can't write to constant data, only read!\n");
-        vxAddLogEntry(reinterpret_cast<vx_reference>(image), status, "Can't write to constant data, only read!\n");
-        goto exit;
-    }
-
-    /*************************************************************************/
-    VX_PRINT(VX_ZONE_IMAGE, "MapImagePatch from " VX_FMT_REF " to ptr %p from {%u,%u} to {%u,%u} plane %u\n",
-        image, *ptr, start_x, start_y, end_x, end_y, plane_index);
-
-    /* MAP mode */
-    {
-        vx_memory_map_extra extra;
-        vx_uint8* buf = 0;
-
-        size = vxComputeImagePatchSize(image, rect, plane_index);
-
-        extra.image_data.plane_index = plane_index;
-        extra.image_data.rect        = *rect;
-
-        if (VX_MEMORY_TYPE_NONE != image->memory_type &&
-            vx_true_e == image->context->memoryMap((vx_reference)image, 0, usage, mem_type, flags, &extra, (void**)&buf, map_id))
-        {
-            /* use the addressing of the internal format */
-            if (image->format == VX_DF_IMAGE_U1 && start_x % 8 != 0)
-                addr->dim_x = end_x - start_x + start_x % 8;
-            else
-                addr->dim_x = end_x - start_x;
-            addr->dim_y    = end_y - start_y;
-            addr->stride_x = image->memory.strides[plane_index][VX_DIM_X];
-            addr->stride_y = image->memory.strides[plane_index][VX_DIM_Y];
-            addr->stride_x_bits = image->memory.stride_x_bits[plane_index];
-            addr->step_x   = image->scale[plane_index][VX_DIM_X];
-            addr->step_y   = image->scale[plane_index][VX_DIM_Y];
-            addr->scale_x  = VX_SCALE_UNITY / image->scale[plane_index][VX_DIM_X];
-            addr->scale_y  = VX_SCALE_UNITY / image->scale[plane_index][VX_DIM_Y];
-
-            buf = image->memory.ptrs[plane_index];
-
-            vx_uint32 index = Image::computePatchOffset(rect->start_x, rect->start_y, addr);
-            *ptr = &buf[index];
-            VX_PRINT(VX_ZONE_IMAGE, "Returning mapped pointer %p\n", *ptr);
-
-            image->incrementReference(VX_EXTERNAL);
-
-            status = VX_SUCCESS;
-        }
-        else
-        /* get mapping buffer of sufficient size and map_id */
-        if (vx_true_e == image->context->memoryMap((vx_reference)image, size, usage, mem_type, flags, &extra, (void**)&buf, map_id))
-        {
-            /* use the addressing of the internal format */
-            if (image->format == VX_DF_IMAGE_U1 && start_x % 8 != 0)
-                addr->dim_x = end_x - start_x + start_x % 8;
-            else
-                addr->dim_x = end_x - start_x;
-            addr->dim_y    = end_y - start_y;
-            addr->stride_x = image->memory.strides[plane_index][VX_DIM_X];
-            addr->stride_x_bits = image->memory.stride_x_bits[plane_index];
-            addr->stride_y = addr->stride_x != 0 ?
-                 addr->stride_x      * addr->dim_x / image->scale[plane_index][VX_DIM_Y] :
-                (addr->stride_x_bits * addr->dim_x / image->scale[plane_index][VX_DIM_Y] + 7) / 8;
-            addr->step_x   = image->scale[plane_index][VX_DIM_X];
-            addr->step_y   = image->scale[plane_index][VX_DIM_Y];
-            addr->scale_x  = VX_SCALE_UNITY / image->scale[plane_index][VX_DIM_X];
-            addr->scale_y  = VX_SCALE_UNITY / image->scale[plane_index][VX_DIM_Y];
-
-            /* initialize mapping buffer with image patch data for read/read-modify-write access */
-            if (VX_READ_ONLY == usage || VX_READ_AND_WRITE == usage)
-            {
-                /* lock image plane even for read access to avoid mix of simultaneous read/write */
-                if (vx_true_e == Osal::semWait(&image->memory.locks[plane_index]))
-                {
-                    vx_uint32 y;
-                    vx_uint8* pSrc = image->memory.ptrs[plane_index];
-                    vx_uint8* pDst = buf;
-
-                    Memory::printMemory(&image->memory);
-
-                    /* Both have compact lines */
-                    for (y = start_y; y < end_y; y += addr->step_y)
-                    {
-                        vx_uint32 srcOffset = Image::computePlaneOffset(image, start_x, y, plane_index);
-                        vx_uint8* pSrcLine = &pSrc[srcOffset];
-
-                        vx_uint32 dstOffset = Image::computePatchOffset(0, (y - start_y), addr);
-                        vx_uint8* pDstLine = &pDst[dstOffset];
-
-                        vx_uint32 len = Image::computePlaneRangeSize(image, addr->dim_x, plane_index);
-
-                        VX_PRINT(VX_ZONE_IMAGE, "%p[%u] <= %p[%u] for %u\n", pDst, dstOffset, pSrc, srcOffset, len);
-
-                        memcpy(pDstLine, pSrcLine, len);
-                    }
-
-                    // ownReadFromReference(&image->base);
-
-                    /* we're done, unlock the image plane */
-                    Osal::semPost(&image->memory.locks[plane_index]);
-                }
-                else
-                {
-                    status = VX_FAILURE;
-                    VX_PRINT(VX_ZONE_ERROR, "Can't lock memory plane for mapping\n");
-                    goto exit;
-                }
-            } /* if VX_READ_ONLY or VX_READ_AND_WRITE */
-
-            *ptr = buf;
-            VX_PRINT(VX_ZONE_IMAGE, "Returning mapped pointer %p\n", *ptr);
-
-            image->incrementReference(VX_EXTERNAL);
-
-            status = VX_SUCCESS;
-        }
-        else
-        {
-            status = VX_FAILURE;
-        }
-    }
-
-exit:
-
-#ifdef OPENVX_USE_OPENCL_INTEROP
-    if ((status == VX_SUCCESS) && image->context->opencl_context &&
-        (mem_type_requested == VX_MEMORY_TYPE_OPENCL_BUFFER) &&
-        (size > 0) && ptr && *ptr)
-    {
-        /* create OpenCL buffer using the host allocated pointer */
-        cl_int cerr = 0;
-        cl_mem opencl_buf = clCreateBuffer(image->context->opencl_context,
-            CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-            size, *ptr, &cerr);
-        VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxMapImagePatch: clCreateBuffer(%u) => %p (%d)\n",
-            (vx_uint32)size, opencl_buf, cerr);
-        if (cerr == CL_SUCCESS)
-        {
-            image->context->memory_maps[*map_id].opencl_buf = opencl_buf;
-            *ptr = opencl_buf;
-        }
-        else
-        {
-            status = VX_FAILURE;
-        }
-    }
-#endif
-
-    VX_PRINT(VX_ZONE_API, "return %d\n", status);
 
     return status;
 } /* vxMapImagePatch() */
 
 VX_API_ENTRY vx_status VX_API_CALL vxUnmapImagePatch(vx_image image, vx_map_id map_id)
 {
-    vx_status status = VX_SUCCESS;
+    vx_status status = VX_ERROR_INVALID_REFERENCE;
 
     /* bad references */
-    if (Image::isValidImage(image) == vx_false_e)
+    if (Image::isValidImage(image) == vx_true_e)
     {
-        status = VX_ERROR_INVALID_REFERENCE;
-        goto exit;
+        status = image->unmapPatch(map_id);
     }
-
-    /* bad parameters */
-    if (image->context->findMemoryMap((vx_reference)image, map_id) != vx_true_e)
-    {
-        status = VX_ERROR_INVALID_PARAMETERS;
-        VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to unmap image patch\n");
-        return status;
-    }
-
-#ifdef OPENVX_USE_OPENCL_INTEROP
-    if (image->context->opencl_context &&
-        image->context->memory_maps[map_id].opencl_buf &&
-        image->context->memory_maps[map_id].ptr)
-    {
-        clEnqueueUnmapMemObject(image->context->opencl_command_queue,
-            image->context->memory_maps[map_id].opencl_buf,
-            image->context->memory_maps[map_id].ptr, 0, nullptr, nullptr);
-        clFinish(image->context->opencl_command_queue);
-        cl_int cerr = clReleaseMemObject(image->context->memory_maps[map_id].opencl_buf);
-        VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxUnmapImagePatch: clReleaseMemObject(%p) => (%d)\n",
-            image->context->memory_maps[map_id].opencl_buf, cerr);
-        image->context->memory_maps[map_id].opencl_buf = nullptr;
-    }
-#endif
-
-    {
-        vx_context       context = image->context;
-        vx_memory_map_t* map     = &context->memory_maps[map_id];
-
-        if (map->used &&
-            map->ref == (vx_reference)image)
-        {
-            /* commit changes for write access */
-            if ((VX_WRITE_ONLY == map->usage || VX_READ_AND_WRITE == map->usage) && nullptr != map->ptr)
-            {
-                vx_uint32      plane_index = map->extra.image_data.plane_index;
-                vx_rectangle_t rect        = map->extra.image_data.rect;
-
-                /* lock image plane for simultaneous write */
-                if (vx_true_e == Osal::semWait(&image->memory.locks[plane_index]))
-                {
-                    vx_uint32 x, y;
-                    vx_uint8* pSrc = (vx_uint8*)map->ptr;
-                    vx_uint8* pDst = image->memory.ptrs[plane_index];
-                    vx_imagepatch_addressing_t addr = VX_IMAGEPATCH_ADDR_INIT;
-
-                    /* use the addressing of the internal format */
-                    if (image->format == VX_DF_IMAGE_U1 && rect.start_x % 8 != 0)
-                        addr.dim_x = rect.end_x - rect.start_x + rect.start_x % 8;
-                    else
-                        addr.dim_x = rect.end_x - rect.start_x;
-                    addr.dim_y    = rect.end_y - rect.start_y;
-                    addr.stride_x = image->memory.strides[plane_index][VX_DIM_X];
-                    addr.stride_x_bits = image->memory.stride_x_bits[plane_index];
-                    addr.stride_y = addr.stride_x != 0 ?
-                        addr.stride_x      * addr.dim_x / image->scale[plane_index][VX_DIM_Y] :
-                       (addr.stride_x_bits * addr.dim_x / image->scale[plane_index][VX_DIM_Y] + 7) / 8;
-                    addr.step_x   = image->scale[plane_index][VX_DIM_X];
-                    addr.step_y   = image->scale[plane_index][VX_DIM_Y];
-                    addr.scale_x  = VX_SCALE_UNITY / image->scale[plane_index][VX_DIM_X];
-                    addr.scale_y  = VX_SCALE_UNITY / image->scale[plane_index][VX_DIM_Y];
-
-                    /* Both source and destination have compact lines, begin write-back to image
-                     * (For non-integer byte size images line-by-line write-back only works if the patch starts and
-                     *  ends at byte boundaries or at the left/right edges of the image's valid region) */
-                    if (  (addr.stride_x == 0 && addr.stride_x_bits != 0) &&
-                         !((rect.start_x * addr.stride_x_bits % 8 == 0 || rect.start_x == image->region.start_x) &&
-                           (rect.end_x   * addr.stride_x_bits % 8 == 0 || rect.end_x   == image->region.end_x  ))  )
-                    {
-                        /* Pixel-by-pixel write-back */
-                        for (y = rect.start_y; y < rect.end_y; y += addr.step_y)
-                        {
-                            vx_uint32 srcOffset = Image::computePatchOffset(0, (y - rect.start_y), &addr);
-                            vx_uint8* pSrcLine  = &pSrc[srcOffset];
-
-                            vx_uint32 dstOffset = Image::computePlaneOffset(image, rect.start_x, y, plane_index);
-                            vx_uint8* pDstLine  = &pDst[dstOffset];
-
-                            vx_uint32 bitOffset = rect.start_x % 8; // Respect pixel bit-offsets (cf. vxMapImagePatch)
-
-                            for (x = rect.start_x; x < rect.end_x; x += addr.step_x)
-                            {
-                                vx_uint32 xAdjusted = x - rect.start_x + bitOffset;
-                                vx_uint8  mask      = 1 << (xAdjusted % 8);
-                                pDstLine[xAdjusted / 8] = (pDstLine[xAdjusted / 8] & ~mask) |
-                                                          (pSrcLine[xAdjusted / 8] &  mask);
-                            }
-                            VX_PRINT(VX_ZONE_IMAGE,
-                                "Wrote back %u pixels from row %u in mapped imagepatch: %p[%u] <= %p[%u]\n",
-                                rect.end_x - rect.start_x, y, pDst, dstOffset, pSrc, srcOffset);
-                        }
-                    }
-                    else
-                    {
-                        /* Line-by-line write-back */
-                        for (y = rect.start_y; y < rect.end_y; y += addr.step_y)
-                        {
-                            vx_uint32 srcOffset = Image::computePatchOffset(0, (y - rect.start_y), &addr);
-                            vx_uint8* pSrcLine  = &pSrc[srcOffset];
-
-                            vx_uint32 dstOffset = Image::computePlaneOffset(image, rect.start_x, y, plane_index);
-                            vx_uint8* pDstLine  = &pDst[dstOffset];
-
-                            vx_uint32 len = Image::computePatchRangeSize((rect.end_x - rect.start_x), &addr);
-
-                            VX_PRINT(VX_ZONE_IMAGE, "%p[%u] <= %p[%u] for %u\n", pDst, dstOffset, pSrc, srcOffset, len);
-
-                            memcpy(pDstLine, pSrcLine, len);
-                        }
-                    }
-
-                    /* we're done, unlock the image plane */
-                    Osal::semPost(&image->memory.locks[plane_index]);
-                }
-                else
-                {
-                    status = VX_FAILURE;
-                    VX_PRINT(VX_ZONE_ERROR, "Can't lock memory plane for unmapping\n");
-                    goto exit;
-                }
-            }
-
-            /* freeing mapping buffer */
-            image->context->memoryUnmap((vx_uint32)map_id);
-
-            image->decrementReference(VX_EXTERNAL);
-            status = VX_SUCCESS;
-        }
-        else
-        {
-            status = VX_FAILURE;
-        }
-    }
-
-exit:
-    VX_PRINT(VX_ZONE_API, "return %d\n", status);
 
     return status;
 } /* vxUnmapImagePatch() */
@@ -2862,28 +3096,12 @@ VX_API_ENTRY void* VX_API_CALL vxFormatImagePatchAddress2d(void *ptr, vx_uint32 
 VX_API_ENTRY vx_status VX_API_CALL vxGetValidRegionImage(vx_image image, vx_rectangle_t *rect)
 {
     vx_status status = VX_ERROR_INVALID_REFERENCE;
+
     if (Image::isValidImage(image) == vx_true_e)
     {
-        status = VX_ERROR_INVALID_PARAMETERS;
-        if (rect)
-        {
-            if ((image->region.start_x <= image->region.end_x) && (image->region.start_y <= image->region.end_y))
-            {
-                rect->start_x = image->region.start_x;
-                rect->start_y = image->region.start_y;
-                rect->end_x = image->region.end_x;
-                rect->end_y = image->region.end_y;
-            }
-            else
-            {
-                rect->start_x = 0;
-                rect->start_y = 0;
-                rect->end_x = image->width;
-                rect->end_y = image->height;
-            }
-            status = VX_SUCCESS;
-        }
+        status = image->getValidRegion(rect);
     }
+
     return status;
 }
 
@@ -2893,31 +3111,43 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetImageValidRectangle(vx_image image, cons
 
     if (Image::isValidImage(image) == vx_true_e)
     {
-        if (rect)
+        status = image->setValidRect(rect);
+    }
+
+    return status;
+}
+
+VX_API_ENTRY vx_status VX_API_CALL vxReleaseImage(vx_image *image)
+{
+    vx_status status = VX_FAILURE;
+
+    if (image != nullptr)
+    {
+        vx_image this_image = *image;
+        if (Reference::isValidReference((vx_reference)this_image, VX_TYPE_IMAGE) == vx_true_e)
         {
-            if ((rect->start_x <= rect->end_x) && (rect->start_y <= rect->end_y) &&
-                (rect->end_x <= image->width) && (rect->end_y <= image->height))
+            vx_image parent = this_image->parent;
+
+            /* clear this image from its parent' subimages list */
+            if (parent &&
+                Reference::isValidReference((vx_reference)parent, VX_TYPE_IMAGE) == vx_true_e)
             {
-                image->region.start_x = rect->start_x;
-                image->region.start_y = rect->start_y;
-                image->region.end_x   = rect->end_x;
-                image->region.end_y   = rect->end_y;
-                status = VX_SUCCESS;
+                vx_uint32 n;
+                for (n = 0; n < VX_INT_MAX_REF; n++)
+                {
+                    if (parent->subimages[n] == this_image)
+                    {
+                        parent->subimages[n] = nullptr;
+                        break;
+                    }
+                }
             }
-            else
-            {
-                status = VX_ERROR_INVALID_PARAMETERS;
-            }
-        }
-        else
-        {
-            image->region.start_x = 0;
-            image->region.start_y = 0;
-            image->region.end_x   = image->width;
-            image->region.end_y   = image->height;
-            status = VX_SUCCESS;
+
+            status = Reference::releaseReference((vx_reference *)image, VX_TYPE_IMAGE, VX_EXTERNAL,
+                                                 nullptr);
         }
     }
 
+    VX_PRINT(VX_ZONE_API, "%s returned %d\n", __FUNCTION__, status);
     return status;
 }
