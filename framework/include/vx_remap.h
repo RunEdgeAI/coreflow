@@ -82,6 +82,100 @@ public:
     vx_status getCoordValue(vx_uint32 dst_x, vx_uint32 dst_y, vx_float32 *src_x, vx_float32 *src_y);
 
     /**
+     * @brief Get the source width
+     *
+     * @return vx_uint32 The source width
+     * @ingroup group_int_remap
+     */
+    vx_uint32 srcWidth() const;
+
+    /**
+     * @brief Get the source height
+     *
+     * @return vx_uint32 The source height
+     * @ingroup group_int_remap
+     */
+    vx_uint32 srcHeight() const;
+
+    /**
+     * @brief Get the destination width
+     *
+     * @return vx_uint32 The destination width
+     * @ingroup group_int_remap
+     */
+    vx_uint32 dstWidth() const;
+
+    /**
+     * @brief Get the destination height
+     *
+     * @return vx_uint32 The destination height
+     * @ingroup group_int_remap
+     */
+    vx_uint32 dstHeight() const;
+
+    /**
+     * @brief Set the Remap Point
+     *
+     * @param dst_x     destination x coord
+     * @param dst_y     destination y coord
+     * @param src_x     source x coord
+     * @param src_y     source y coord
+     * @return vx_status
+     * @ingroup group_int_remap
+     */
+    vx_status setRemapPoint(vx_uint32 dst_x, vx_uint32 dst_y, vx_float32 src_x, vx_float32 src_y);
+
+    /**
+     * @brief Get the Remap Point
+     *
+     * @param dst_x     destination x coord
+     * @param dst_y     destination y coord
+     * @param src_x     source x coord
+     * @param src_y     source y coord
+     * @return vx_status
+     * @ingroup group_int_remap
+     */
+    vx_status getRemapPoint(vx_uint32 dst_x, vx_uint32 dst_y, vx_float32 *src_x, vx_float32 *src_y);
+
+    /**
+     * @brief Copy a patch of remap data to/from user memory
+     *
+     * @param rect                  The rectangle to copy
+     * @param user_stride_y         The stride in bytes for the user memory
+     * @param user_ptr              The pointer to the user memory
+     * @param user_coordinate_type  The type of coordinates in the user memory
+     * @param usage                 The usage of the memory (read/write)
+     * @param user_mem_type         The type of memory (host, opencl, etc.)
+     * @return vx_status            VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_remap
+     */
+    vx_status copyPatch(const vx_rectangle_t *rect, vx_size user_stride_y, void *user_ptr,
+                            vx_enum user_coordinate_type, vx_enum usage, vx_enum user_mem_type);
+
+    /**
+     * @brief Map a patch of remap data for reading or writing
+     * @param rect                  The rectangle to map
+     * @param map_id                The ID of the map
+     * @param stride_y              The stride in bytes for the mapped memory
+     * @param ptr                   The pointer to the mapped memory
+     * @param coordinate_type       The type of coordinates in the mapped memory
+     * @param usage                 The usage of the memory (read/write)
+     * @param mem_type              The type of memory (host, opencl, etc.)
+     * @return vx_status            VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_remap
+     */
+    vx_status mapPatch(const vx_rectangle_t *rect, vx_map_id *map_id, vx_size *stride_y,
+                            void **ptr, vx_enum coordinate_type, vx_enum usage, vx_enum mem_type);
+
+    /**
+     * @brief Unmap a previously mapped patch of remap data
+     * @param map_id                The ID of the map to unmap
+     * @return vx_status            VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_remap
+     */
+    vx_status unmapPatch(vx_uint32 map_id);
+
+    /**
      * @brief Function to destroy a remap object
      * @ingroup group_int_remap
      */
