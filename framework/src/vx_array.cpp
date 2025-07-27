@@ -818,6 +818,16 @@ vx_size Array::itemSize() const
     return item_size;
 }
 
+vx_size Array::totalSize() const
+{
+    return itemSize() * numItems();
+}
+
+vx_uint32 Array::offsetVal() const
+{
+    return offset;
+}
+
 vx_status Array::addItems(vx_size count, const void *ptr, vx_size stride)
 {
     vx_status status = VX_ERROR_NO_MEMORY;

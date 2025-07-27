@@ -183,10 +183,26 @@ public:
     /**
      * @brief Get item size in array
      *
-     * @return vx_size
+     * @return vx_size  Item size in bytes
      * @ingroup group_int_array
      */
     vx_size itemSize() const;
+
+    /**
+     * @brief Get total size of array
+     *
+     * @return vx_size   Total size in bytes
+     * @ingroup group_int_array
+     */
+    vx_size totalSize() const;
+
+    /**
+     * @brief Get offset value
+     *
+     * @return vx_uint32 Offset value
+     * @ingroup group_int_array
+     */
+    vx_uint32 offsetVal() const;
 
     /**
      * @brief Access array range in object
