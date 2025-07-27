@@ -279,9 +279,10 @@ typedef struct Delay* vx_delay;
  */
 #ifdef __cplusplus
 class Array;
-using vx_lut = Array*;
+using Lut = Array;
+using vx_lut = Lut *;
 #else
-typedef struct Array* vx_lut;
+typedef struct Lut* vx_lut;
 #endif
 
 /*! \brief The Distribution object. This has a user-defined number of bins over
