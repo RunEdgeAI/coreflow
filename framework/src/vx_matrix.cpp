@@ -42,6 +42,164 @@ pattern()
 
 }
 
+vx_enum Matrix::dataType() const
+{
+    return data_type;
+}
+
+vx_size Matrix::numRows() const
+{
+    return rows;
+}
+
+vx_size Matrix::numCols() const
+{
+    return columns;
+}
+
+vx_coordinates2d_t Matrix::originCoord() const
+{
+    return origin;
+}
+
+vx_enum Matrix::patternType() const
+{
+    return pattern;
+}
+
+vx_status Matrix::read(void *array)
+{
+    vx_status status = VX_SUCCESS;
+
+    if (Memory::allocateMemory(context, &memory) == vx_true_e)
+    {
+        Osal::semWait(&lock);
+        if (array)
+        {
+            vx_size size = memory.strides[0][1] * memory.dims[0][1];
+            memcpy(array, memory.ptrs[0], size);
+        }
+        Osal::semPost(&lock);
+        // ownReadFromReference(&matrix);
+        status = VX_SUCCESS;
+    }
+    else
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Failed to allocate matrix\n");
+        status = VX_ERROR_NO_MEMORY;
+    }
+
+    return status;
+}
+
+vx_status Matrix::write(const void *array)
+{
+    vx_status status = VX_SUCCESS;
+
+    if (Memory::allocateMemory(context, &memory) == vx_true_e)
+    {
+        Osal::semWait(&lock);
+        if (array)
+        {
+            vx_size size = memory.strides[0][1] * memory.dims[0][1];
+            memcpy(memory.ptrs[0], array, size);
+        }
+        Osal::semPost(&lock);
+        // ownWroteToReference(&matrix);
+        status = VX_SUCCESS;
+    }
+    else
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Failed to allocate matrix\n");
+        status = VX_ERROR_NO_MEMORY;
+    }
+
+    return status;
+}
+
+vx_status Matrix::copy(void *ptr, vx_enum usage, vx_enum mem_type)
+{
+    vx_status status = VX_SUCCESS;
+
+    if (Memory::allocateMemory(context, &memory) == vx_true_e)
+    {
+#ifdef OPENVX_USE_OPENCL_INTEROP
+        void *ptr_given = ptr;
+        vx_enum mem_type_given = mem_type;
+        if (mem_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
+        {
+            // get ptr from OpenCL buffer for HOST
+            size_t size = 0;
+            cl_mem opencl_buf = (cl_mem)ptr;
+            cl_int cerr =
+                clGetMemObjectInfo(opencl_buf, CL_MEM_SIZE, sizeof(size_t), &size, nullptr);
+            VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyMatrix: clGetMemObjectInfo(%p) => (%d)\n",
+                     opencl_buf, cerr);
+            if (cerr != CL_SUCCESS)
+            {
+                return VX_ERROR_INVALID_PARAMETERS;
+            }
+            ptr =
+                clEnqueueMapBuffer(context->opencl_command_queue, opencl_buf, CL_TRUE,
+                                   CL_MAP_READ | CL_MAP_WRITE, 0, size, 0, nullptr, nullptr, &cerr);
+            VX_PRINT(VX_ZONE_CONTEXT,
+                     "OPENCL: vxCopyMatrix: clEnqueueMapBuffer(%p,%d) => %p (%d)\n", opencl_buf,
+                     (int)size, ptr, cerr);
+            if (cerr != CL_SUCCESS)
+            {
+                return VX_ERROR_INVALID_PARAMETERS;
+            }
+            mem_type = VX_MEMORY_TYPE_HOST;
+        }
+#endif
+        if (usage == VX_READ_ONLY)
+        {
+            Osal::semWait(&lock);
+            if (ptr)
+            {
+                vx_size size = memory.strides[0][1] * memory.dims[0][1];
+                memcpy(ptr, memory.ptrs[0], size);
+            }
+            Osal::semPost(&lock);
+            // ownReadFromReference(&matrix);
+            status = VX_SUCCESS;
+        }
+        else if (usage == VX_WRITE_ONLY)
+        {
+            Osal::semWait(&lock);
+            if (ptr)
+            {
+                vx_size size = memory.strides[0][1] * memory.dims[0][1];
+                memcpy(memory.ptrs[0], ptr, size);
+            }
+            Osal::semPost(&lock);
+            // ownWroteToReference(&matrix);
+            status = VX_SUCCESS;
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Wrong parameters for matrix\n");
+            status = VX_ERROR_INVALID_PARAMETERS;
+        }
+
+#ifdef OPENVX_USE_OPENCL_INTEROP
+        if (mem_type_given == VX_MEMORY_TYPE_OPENCL_BUFFER)
+        {
+            clEnqueueUnmapMemObject(context->opencl_command_queue, (cl_mem)ptr_given, ptr, 0,
+                                    nullptr, nullptr);
+            clFinish(context->opencl_command_queue);
+        }
+#endif
+    }
+    else
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Failed to allocate matrix\n");
+        status = VX_ERROR_NO_MEMORY;
+    }
+
+    return status;
+}
+
 Matrix::~Matrix()
 {
 
@@ -55,22 +213,6 @@ void Matrix::destruct()
 /******************************************************************************/
 /* PUBLIC INTERFACE                                                           */
 /******************************************************************************/
-VX_API_ENTRY vx_status VX_API_CALL vxReleaseMatrix(vx_matrix* mat)
-{
-    vx_status status = VX_FAILURE;
-
-    if (mat)
-    {
-        vx_matrix matrix = *mat;
-        if (Reference::isValidReference(matrix, VX_TYPE_MATRIX))
-        {
-            status = Reference::releaseReference((vx_reference*)mat, VX_TYPE_MATRIX, VX_EXTERNAL, nullptr);
-        }
-    }
-
-    return status;
-}
-
 VX_API_ENTRY vx_matrix VX_API_CALL vxCreateMatrix(vx_context context, vx_enum data_type, vx_size columns, vx_size rows)
 {
     vx_matrix matrix = nullptr;
@@ -221,6 +363,7 @@ VX_API_ENTRY vx_matrix VX_API_CALL vxCreateMatrixFromPatternAndOrigin(vx_context
     }
     return matrix;
 }
+
 VX_API_ENTRY vx_status VX_API_CALL vxQueryMatrix(vx_matrix matrix, vx_enum attribute, void *ptr, vx_size size)
 {
     vx_status status = VX_SUCCESS;
@@ -233,7 +376,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryMatrix(vx_matrix matrix, vx_enum attri
         case VX_MATRIX_TYPE:
             if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
             {
-                *(vx_enum *)ptr = matrix->data_type;
+                *(vx_enum *)ptr = matrix->dataType();
             }
             else
             {
@@ -243,7 +386,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryMatrix(vx_matrix matrix, vx_enum attri
         case VX_MATRIX_ROWS:
             if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
             {
-                *(vx_size *)ptr = matrix->rows;
+                *(vx_size *)ptr = matrix->numRows();
             }
             else
             {
@@ -253,7 +396,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryMatrix(vx_matrix matrix, vx_enum attri
         case VX_MATRIX_COLUMNS:
             if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
             {
-                *(vx_size *)ptr = matrix->columns;
+                *(vx_size *)ptr = matrix->numCols();
             }
             else
             {
@@ -263,7 +406,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryMatrix(vx_matrix matrix, vx_enum attri
         case VX_MATRIX_SIZE:
             if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
             {
-                *(vx_size *)ptr = matrix->columns * matrix->rows * matrix->memory.dims[0][0];
+                *(vx_size *)ptr = matrix->numCols() * matrix->numRows() * matrix->memory.dims[0][0];
             }
             else
             {
@@ -273,7 +416,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryMatrix(vx_matrix matrix, vx_enum attri
         case VX_MATRIX_ORIGIN:
             if (VX_CHECK_PARAM(ptr, size, vx_coordinates2d_t, 0x3))
             {
-                *(vx_coordinates2d_t*)ptr = matrix->origin;
+                *(vx_coordinates2d_t*)ptr = matrix->originCoord();
             }
             else
             {
@@ -283,7 +426,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryMatrix(vx_matrix matrix, vx_enum attri
         case VX_MATRIX_PATTERN:
             if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
             {
-                *(vx_enum*)ptr = matrix->pattern;
+                *(vx_enum*)ptr = matrix->patternType();
             }
             else
             {
@@ -302,24 +445,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxReadMatrix(vx_matrix matrix, void *array)
     vx_status status = VX_ERROR_INVALID_REFERENCE;
     if (Reference::isValidReference(matrix, VX_TYPE_MATRIX) == vx_true_e)
     {
-        if (Memory::allocateMemory(matrix->context, &matrix->memory) == vx_true_e)
-        {
-            Osal::semWait(&matrix->lock);
-            if (array)
-            {
-                vx_size size = matrix->memory.strides[0][1] *
-                               matrix->memory.dims[0][1];
-                memcpy(array, matrix->memory.ptrs[0], size);
-            }
-            Osal::semPost(&matrix->lock);
-            // ownReadFromReference(&matrix);
-            status = VX_SUCCESS;
-        }
-        else
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Failed to allocate matrix\n");
-            status = VX_ERROR_NO_MEMORY;
-        }
+        status = matrix->read(array);
     }
     else
     {
@@ -333,24 +459,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxWriteMatrix(vx_matrix matrix, const void *a
     vx_status status = VX_ERROR_INVALID_REFERENCE;
     if (Reference::isValidReference(matrix, VX_TYPE_MATRIX) == vx_true_e)
     {
-        if (Memory::allocateMemory(matrix->context, &matrix->memory) == vx_true_e)
-        {
-            Osal::semWait(&matrix->lock);
-            if (array)
-            {
-                vx_size size = matrix->memory.strides[0][1] *
-                               matrix->memory.dims[0][1];
-                memcpy(matrix->memory.ptrs[0], array, size);
-            }
-            Osal::semPost(&matrix->lock);
-            // ownWroteToReference(&matrix);
-            status = VX_SUCCESS;
-        }
-        else
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Failed to allocate matrix\n");
-            status = VX_ERROR_NO_MEMORY;
-        }
+        status = matrix->write(array);
     }
     else
     {
@@ -366,85 +475,28 @@ vx_status VX_API_CALL vxCopyMatrix(vx_matrix matrix, void *ptr, vx_enum usage, v
 
     if (Reference::isValidReference(matrix, VX_TYPE_MATRIX) == vx_true_e)
     {
-        if (Memory::allocateMemory(matrix->context, &matrix->memory) == vx_true_e)
-        {
-#ifdef OPENVX_USE_OPENCL_INTEROP
-            void * ptr_given = ptr;
-            vx_enum mem_type_given = mem_type;
-            if (mem_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
-            {
-                // get ptr from OpenCL buffer for HOST
-                size_t size = 0;
-                cl_mem opencl_buf = (cl_mem)ptr;
-                cl_int cerr = clGetMemObjectInfo(opencl_buf, CL_MEM_SIZE, sizeof(size_t), &size, nullptr);
-                VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyMatrix: clGetMemObjectInfo(%p) => (%d)\n",
-                    opencl_buf, cerr);
-                if (cerr != CL_SUCCESS)
-                {
-                    return VX_ERROR_INVALID_PARAMETERS;
-                }
-                ptr = clEnqueueMapBuffer(matrix->context->opencl_command_queue,
-                    opencl_buf, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, size,
-                    0, nullptr, nullptr, &cerr);
-                VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyMatrix: clEnqueueMapBuffer(%p,%d) => %p (%d)\n",
-                    opencl_buf, (int)size, ptr, cerr);
-                if (cerr != CL_SUCCESS)
-                {
-                    return VX_ERROR_INVALID_PARAMETERS;
-                }
-                mem_type = VX_MEMORY_TYPE_HOST;
-            }
-#endif
-            if (usage == VX_READ_ONLY)
-            {
-                Osal::semWait(&matrix->lock);
-                if (ptr)
-                {
-                    vx_size size = matrix->memory.strides[0][1] *
-                                   matrix->memory.dims[0][1];
-                    memcpy(ptr, matrix->memory.ptrs[0], size);
-                }
-                Osal::semPost(&matrix->lock);
-                // ownReadFromReference(&matrix);
-                status = VX_SUCCESS;
-            }
-            else if (usage == VX_WRITE_ONLY)
-            {
-                Osal::semWait(&matrix->lock);
-                if (ptr)
-                {
-                    vx_size size = matrix->memory.strides[0][1] *
-                                   matrix->memory.dims[0][1];
-                    memcpy(matrix->memory.ptrs[0], ptr, size);
-                }
-                Osal::semPost(&matrix->lock);
-                // ownWroteToReference(&matrix);
-                status = VX_SUCCESS;
-            }
-            else
-            {
-                VX_PRINT(VX_ZONE_ERROR, "Wrong parameters for matrix\n");
-                status = VX_ERROR_INVALID_PARAMETERS;
-            }
-
-#ifdef OPENVX_USE_OPENCL_INTEROP
-            if (mem_type_given == VX_MEMORY_TYPE_OPENCL_BUFFER)
-            {
-                clEnqueueUnmapMemObject(matrix->context->opencl_command_queue,
-                    (cl_mem)ptr_given, ptr, 0, nullptr, nullptr);
-                clFinish(matrix->context->opencl_command_queue);
-            }
-#endif
-        }
-        else
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Failed to allocate matrix\n");
-            status = VX_ERROR_NO_MEMORY;
-        }
+        status = matrix->copy(ptr, usage, mem_type);
     }
     else
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid reference for matrix\n");
     }
+    return status;
+}
+
+VX_API_ENTRY vx_status VX_API_CALL vxReleaseMatrix(vx_matrix *mat)
+{
+    vx_status status = VX_FAILURE;
+
+    if (mat)
+    {
+        vx_matrix matrix = *mat;
+        if (Reference::isValidReference(matrix, VX_TYPE_MATRIX))
+        {
+            status = Reference::releaseReference((vx_reference *)mat, VX_TYPE_MATRIX, VX_EXTERNAL,
+                                                 nullptr);
+        }
+    }
+
     return status;
 }

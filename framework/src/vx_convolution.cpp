@@ -20,14 +20,165 @@
 /******************************************************************************/
 /* INTERNAL INTERFACE                                                         */
 /******************************************************************************/
-Convolution::Convolution(vx_context context, vx_reference scope) : Matrix(context, VX_TYPE_CONVOLUTION, scope),
-scale()
+Convolution::Convolution(vx_context context, vx_reference scope)
+    : Matrix(context, VX_TYPE_CONVOLUTION, scope), scale()
 {
 
 }
 
 Convolution::~Convolution()
 {
+}
+
+vx_uint32 Convolution::scaleFactor() const
+{
+    return scale;
+}
+
+vx_size Convolution::size() const
+{
+    return columns * rows * sizeof(vx_int16);
+}
+
+void Convolution::setScale(vx_uint32 value)
+{
+    if (vxIsPowerOfTwo(scale) == vx_true_e)
+    {
+        VX_PRINT(VX_ZONE_INFO, "Convolution Scale assigned to %u\n", scale);
+        scale = value;
+    }
+    else
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Convolution Scale must be a power of two, got %u\n", value);
+    }
+}
+
+vx_status Convolution::readCoefficients(vx_int16 *array)
+{
+    vx_status status = VX_ERROR_NO_MEMORY;
+
+    if (Memory::allocateMemory(context, &memory) == vx_true_e)
+    {
+        Osal::semWait(&lock);
+        if (array)
+        {
+            vx_size size = memory.strides[0][1] * memory.dims[0][1];
+            memcpy(array, memory.ptrs[0], size);
+        }
+        Osal::semPost(&lock);
+        // ownReadFromReference(&convolution);
+        status = VX_SUCCESS;
+    }
+
+    return status;
+}
+
+vx_status Convolution::writeCoefficients(const vx_int16 *array)
+{
+    vx_status status = VX_ERROR_NO_MEMORY;
+
+    if (Memory::allocateMemory(context, &memory) == vx_true_e)
+    {
+        Osal::semWait(&lock);
+        if (array)
+        {
+            vx_size size = memory.strides[0][1] * memory.dims[0][1];
+
+            memcpy(memory.ptrs[0], array, size);
+        }
+        Osal::semPost(&lock);
+        // ownWroteToReference(&convolution);
+        status = VX_SUCCESS;
+    }
+
+    return status;
+}
+
+vx_status Convolution::copyCoefficients(void *ptr, vx_enum usage, vx_enum mem_type)
+{
+    vx_status status = VX_ERROR_NO_MEMORY;
+
+    if (Memory::allocateMemory(context, &memory) == vx_true_e)
+    {
+#ifdef OPENVX_USE_OPENCL_INTEROP
+        void *ptr_given = ptr;
+        vx_enum mem_type_given = mem_type;
+        if (mem_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
+        {
+            // get ptr from OpenCL buffer for HOST
+            size_t size = 0;
+            cl_mem opencl_buf = (cl_mem)ptr;
+            cl_int cerr =
+                clGetMemObjectInfo(opencl_buf, CL_MEM_SIZE, sizeof(size_t), &size, nullptr);
+            VX_PRINT(VX_ZONE_CONTEXT,
+                     "OPENCL: vxCopyConvolutionCoefficients: clGetMemObjectInfo(%p) => (%d)\n",
+                     opencl_buf, cerr);
+            if (cerr != CL_SUCCESS)
+            {
+                return VX_ERROR_INVALID_PARAMETERS;
+            }
+            ptr =
+                clEnqueueMapBuffer(context->opencl_command_queue, opencl_buf, CL_TRUE,
+                                   CL_MAP_READ | CL_MAP_WRITE, 0, size, 0, nullptr, nullptr, &cerr);
+            VX_PRINT(
+                VX_ZONE_CONTEXT,
+                "OPENCL: vxCopyConvolutionCoefficients: clEnqueueMapBuffer(%p,%d) => %p (%d)\n",
+                opencl_buf, (int)size, ptr, cerr);
+            if (cerr != CL_SUCCESS)
+            {
+                return VX_ERROR_INVALID_PARAMETERS;
+            }
+            mem_type = VX_MEMORY_TYPE_HOST;
+        }
+#endif
+
+        if (usage == VX_READ_ONLY)
+        {
+            Osal::semWait(&lock);
+            if (ptr)
+            {
+                vx_size size = memory.strides[0][1] * memory.dims[0][1];
+                memcpy(ptr, memory.ptrs[0], size);
+            }
+            Osal::semPost(&lock);
+            // ownReadFromReference(&convolution);
+            status = VX_SUCCESS;
+        }
+        else if (usage == VX_WRITE_ONLY)
+        {
+            Osal::semWait(&lock);
+            if (ptr)
+            {
+                vx_size size = memory.strides[0][1] * memory.dims[0][1];
+
+                memcpy(memory.ptrs[0], ptr, size);
+            }
+            Osal::semPost(&lock);
+            // ownWroteToReference(&convolution);
+            status = VX_SUCCESS;
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Wrong parameters for convolution\n");
+            status = VX_ERROR_INVALID_PARAMETERS;
+        }
+
+#ifdef OPENVX_USE_OPENCL_INTEROP
+        if (mem_type_given == VX_MEMORY_TYPE_OPENCL_BUFFER)
+        {
+            clEnqueueUnmapMemObject(context->opencl_command_queue, (cl_mem)ptr_given, ptr, 0,
+                                    nullptr, nullptr);
+            clFinish(context->opencl_command_queue);
+        }
+#endif
+    }
+    else
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Failed to allocate convolution\n");
+        status = VX_ERROR_NO_MEMORY;
+    }
+
+    return status;
 }
 
 void Convolution::destruct()
@@ -38,21 +189,6 @@ void Convolution::destruct()
 /******************************************************************************/
 /* PUBLIC INTERFACE                                                           */
 /******************************************************************************/
-VX_API_ENTRY vx_status VX_API_CALL vxReleaseConvolution(vx_convolution* convolution)
-{
-    vx_status status = VX_FAILURE;
-
-    if (nullptr != convolution)
-    {
-        vx_convolution conv = *convolution;
-        if (vx_true_e == Reference::isValidReference(conv, VX_TYPE_CONVOLUTION))
-        {
-            status = Reference::releaseReference((vx_reference*)convolution, VX_TYPE_CONVOLUTION, VX_EXTERNAL, nullptr);
-        }
-    }
-
-    return status;
-}
 
 VX_API_ENTRY vx_convolution VX_API_CALL vxCreateConvolution(vx_context context, vx_size columns, vx_size rows)
 {
@@ -85,6 +221,25 @@ VX_API_ENTRY vx_convolution VX_API_CALL vxCreateConvolution(vx_context context, 
     return convolution;
 }
 
+VX_API_ENTRY vx_convolution VX_API_CALL vxCreateVirtualConvolution(vx_graph graph, vx_size columns,
+                                                                   vx_size rows)
+{
+    vx_convolution convolution = nullptr;
+
+    if (Reference::isValidReference(graph, VX_TYPE_GRAPH) == vx_true_e)
+    {
+        convolution = vxCreateConvolution(graph->context, columns, rows);
+        if (vxGetStatus((vx_reference)convolution) == VX_SUCCESS &&
+            convolution->type == VX_TYPE_CONVOLUTION)
+        {
+            convolution->scope = (vx_reference)graph;
+            convolution->is_virtual = vx_true_e;
+        }
+    }
+    /* else, the graph is invalid, we can't get any context and then error object */
+    return convolution;
+}
+
 VX_API_ENTRY vx_status VX_API_CALL vxQueryConvolution(vx_convolution convolution, vx_enum attribute, void *ptr, vx_size size)
 {
     vx_status status = VX_SUCCESS;
@@ -97,7 +252,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryConvolution(vx_convolution convolution
         case VX_CONVOLUTION_ROWS:
             if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
             {
-                *(vx_size *)ptr = convolution->rows;
+                *(vx_size *)ptr = convolution->numRows();
             }
             else
             {
@@ -107,7 +262,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryConvolution(vx_convolution convolution
         case VX_CONVOLUTION_COLUMNS:
             if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
             {
-                *(vx_size *)ptr = convolution->columns;
+                *(vx_size *)ptr = convolution->numCols();
             }
             else
             {
@@ -117,7 +272,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryConvolution(vx_convolution convolution
         case VX_CONVOLUTION_SCALE:
             if (VX_CHECK_PARAM(ptr, size, vx_uint32, 0x3))
             {
-                *(vx_uint32 *)ptr = convolution->scale;
+                *(vx_uint32 *)ptr = convolution->scaleFactor();
             }
             else
             {
@@ -127,7 +282,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryConvolution(vx_convolution convolution
         case VX_CONVOLUTION_SIZE:
             if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
             {
-                *(vx_size *)ptr = convolution->columns * convolution->rows * sizeof(vx_int16);
+                *(vx_size *)ptr = convolution->size();
             }
             else
             {
@@ -156,8 +311,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetConvolutionAttribute(vx_convolution conv
                 vx_uint32 scale = *(vx_uint32 *)ptr;
                 if (vxIsPowerOfTwo(scale) == vx_true_e)
                 {
-                    VX_PRINT(VX_ZONE_INFO, "Convolution Scale assigned to %u\n", scale);
-                    convolution->scale = scale;
+                    convolution->setScale(scale);
                 }
                 else
                 {
@@ -183,19 +337,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetConvolutionAttribute(vx_convolution conv
 VX_API_ENTRY vx_status VX_API_CALL vxReadConvolutionCoefficients(vx_convolution convolution, vx_int16 *array)
 {
     vx_status status = VX_ERROR_INVALID_REFERENCE;
-    if ((Reference::isValidReference(convolution, VX_TYPE_CONVOLUTION) == vx_true_e) &&
-        (Memory::allocateMemory(convolution->context, &convolution->memory) == vx_true_e))
+    if (Reference::isValidReference(convolution, VX_TYPE_CONVOLUTION) == vx_true_e)
     {
-        Osal::semWait(&convolution->lock);
-        if (array)
-        {
-            vx_size size = convolution->memory.strides[0][1] *
-                           convolution->memory.dims[0][1];
-            memcpy(array, convolution->memory.ptrs[0], size);
-        }
-        Osal::semPost(&convolution->lock);
-        // ownReadFromReference(&convolution);
-        status = VX_SUCCESS;
+        status = convolution->readCoefficients(array);
     }
     return status;
 }
@@ -203,20 +347,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxReadConvolutionCoefficients(vx_convolution 
 VX_API_ENTRY vx_status VX_API_CALL vxWriteConvolutionCoefficients(vx_convolution convolution, const vx_int16 *array)
 {
     vx_status status = VX_ERROR_INVALID_REFERENCE;
-    if ((Reference::isValidReference(convolution, VX_TYPE_CONVOLUTION) == vx_true_e) &&
-        (Memory::allocateMemory(convolution->context, &convolution->memory) == vx_true_e))
+    if (Reference::isValidReference(convolution, VX_TYPE_CONVOLUTION) == vx_true_e)
     {
-        Osal::semWait(&convolution->lock);
-        if (array)
-        {
-            vx_size size = convolution->memory.strides[0][1] *
-                           convolution->memory.dims[0][1];
-
-            memcpy(convolution->memory.ptrs[0], array, size);
-        }
-        Osal::semPost(&convolution->lock);
-        // ownWroteToReference(&convolution);
-        status = VX_SUCCESS;
+        status = convolution->writeCoefficients(array);
     }
     return status;
 }
@@ -224,87 +357,10 @@ VX_API_ENTRY vx_status VX_API_CALL vxWriteConvolutionCoefficients(vx_convolution
 vx_status VX_API_CALL vxCopyConvolutionCoefficients(vx_convolution convolution, void *ptr, vx_enum usage, vx_enum mem_type)
 {
     vx_status status = VX_ERROR_INVALID_REFERENCE;
-    (void)mem_type;
 
     if (Reference::isValidReference(convolution, VX_TYPE_CONVOLUTION) == vx_true_e)
     {
-        if (Memory::allocateMemory(convolution->context, &convolution->memory) == vx_true_e)
-        {
-#ifdef OPENVX_USE_OPENCL_INTEROP
-            void * ptr_given = ptr;
-            vx_enum mem_type_given = mem_type;
-            if (mem_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
-            {
-                // get ptr from OpenCL buffer for HOST
-                size_t size = 0;
-                cl_mem opencl_buf = (cl_mem)ptr;
-                cl_int cerr = clGetMemObjectInfo(opencl_buf, CL_MEM_SIZE, sizeof(size_t), &size, nullptr);
-                VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyConvolutionCoefficients: clGetMemObjectInfo(%p) => (%d)\n",
-                    opencl_buf, cerr);
-                if (cerr != CL_SUCCESS)
-                {
-                    return VX_ERROR_INVALID_PARAMETERS;
-                }
-                ptr = clEnqueueMapBuffer(convolution->context->opencl_command_queue,
-                    opencl_buf, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, size,
-                    0, nullptr, nullptr, &cerr);
-                VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyConvolutionCoefficients: clEnqueueMapBuffer(%p,%d) => %p (%d)\n",
-                    opencl_buf, (int)size, ptr, cerr);
-                if (cerr != CL_SUCCESS)
-                {
-                    return VX_ERROR_INVALID_PARAMETERS;
-                }
-                mem_type = VX_MEMORY_TYPE_HOST;
-            }
-#endif
-
-            if (usage == VX_READ_ONLY)
-            {
-                Osal::semWait(&convolution->lock);
-                if (ptr)
-                {
-                    vx_size size = convolution->memory.strides[0][1] *
-                                   convolution->memory.dims[0][1];
-                    memcpy(ptr, convolution->memory.ptrs[0], size);
-                }
-                Osal::semPost(&convolution->lock);
-                // ownReadFromReference(&convolution);
-                status = VX_SUCCESS;
-            }
-            else if (usage == VX_WRITE_ONLY)
-            {
-                Osal::semWait(&convolution->lock);
-                if (ptr)
-                {
-                    vx_size size = convolution->memory.strides[0][1] *
-                                   convolution->memory.dims[0][1];
-
-                    memcpy(convolution->memory.ptrs[0], ptr, size);
-                }
-                Osal::semPost(&convolution->lock);
-                // ownWroteToReference(&convolution);
-                status = VX_SUCCESS;
-            }
-            else
-            {
-                VX_PRINT(VX_ZONE_ERROR, "Wrong parameters for convolution\n");
-                status = VX_ERROR_INVALID_PARAMETERS;
-            }
-
-#ifdef OPENVX_USE_OPENCL_INTEROP
-            if (mem_type_given == VX_MEMORY_TYPE_OPENCL_BUFFER)
-            {
-                clEnqueueUnmapMemObject(convolution->context->opencl_command_queue,
-                    (cl_mem)ptr_given, ptr, 0, nullptr, nullptr);
-                clFinish(convolution->context->opencl_command_queue);
-            }
-#endif
-        }
-        else
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Failed to allocate convolution\n");
-            status = VX_ERROR_NO_MEMORY;
-        }
+        status = convolution->copyCoefficients(ptr, usage, mem_type);
     }
     else
     {
@@ -313,19 +369,19 @@ vx_status VX_API_CALL vxCopyConvolutionCoefficients(vx_convolution convolution, 
     return status;
 }
 
-VX_API_ENTRY vx_convolution VX_API_CALL vxCreateVirtualConvolution(vx_graph graph, vx_size columns, vx_size rows)
+VX_API_ENTRY vx_status VX_API_CALL vxReleaseConvolution(vx_convolution *convolution)
 {
-    vx_convolution convolution = nullptr;
+    vx_status status = VX_FAILURE;
 
-    if (Reference::isValidReference(graph, VX_TYPE_GRAPH) == vx_true_e)
+    if (nullptr != convolution)
     {
-        convolution = vxCreateConvolution(graph->context, columns, rows);
-        if (vxGetStatus((vx_reference)convolution) == VX_SUCCESS && convolution->type == VX_TYPE_CONVOLUTION)
+        vx_convolution conv = *convolution;
+        if (vx_true_e == Reference::isValidReference(conv, VX_TYPE_CONVOLUTION))
         {
-            convolution->scope = (vx_reference)graph;
-            convolution->is_virtual = vx_true_e;
+            status = Reference::releaseReference((vx_reference *)convolution, VX_TYPE_CONVOLUTION,
+                                                 VX_EXTERNAL, nullptr);
         }
     }
-    /* else, the graph is invalid, we can't get any context and then error object */
-    return convolution;
+
+    return status;
 }
