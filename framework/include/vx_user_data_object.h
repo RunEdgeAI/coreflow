@@ -44,12 +44,67 @@ public:
     ~UserDataObject();
 
     /**
+     * @brief Get the type name of the user data object
+     *
+     * @return vx_char* The type name
+     * @ingroup group_int_user_data_object
+     */
+    const vx_char *typeName() const;
+
+    /**
+     * @brief Get the size of the user data object
+     *
+     * @return vx_size The size in bytes
+     * @ingroup group_int_user_data_object
+     */
+    vx_size objSize() const;
+
+    /**
      * @brief Allocate user data object
      *
      * @return vx_bool      vx_true_e if allocated | otherwise vx_false_e
      * @ingroup group_int_user_data_object
      */
     vx_bool allocateUserDataObject();
+
+    /**
+     * @brief Copy data to/from user memory
+     *
+     * @param offset       The offset in bytes
+     * @param size         The size in bytes
+     * @param user_ptr     The pointer to the user memory
+     * @param usage        The usage of the memory (read/write)
+     * @param user_mem_type The type of memory (host, opencl, etc.)
+     * @return vx_status   VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_user_data_object
+     */
+    vx_status copy(vx_size offset, vx_size size, void *user_ptr, vx_enum usage,
+                   vx_enum user_mem_type);
+
+    /**
+     * @brief Map the user data object for access
+     *
+     * @param offset       The offset in bytes
+     * @param size         The size in bytes
+     * @param map_id       The map ID to be used
+     * @param ptr          Pointer to the mapped memory
+     * @param usage        Memory usage type (read/write)
+     * @param mem_type     Memory type (host, opencl, etc.)
+     * @param flags        Additional flags for mapping
+     * @return vx_status   VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_user_data_object
+     */
+    vx_status map(vx_size offset, vx_size size, vx_map_id *map_id, void **ptr, vx_enum usage,
+                  vx_enum mem_type, vx_uint32 flags);
+
+    /**
+     * @brief Unmap the user data object from access
+     *
+     * @param map_id       The map ID to be used
+     * @return vx_status   VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_user_data_object
+     */
+    vx_status unmap(vx_map_id map_id);
 
     /*! \brief Memory layout */
     vx_memory_t memory;
