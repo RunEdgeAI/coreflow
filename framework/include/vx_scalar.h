@@ -78,6 +78,55 @@ public:
     static vx_status hostMemToScalar(vx_scalar scalar, void* user_ptr);
 
     /**
+     * @brief Copy scalar value to/from user memory
+     *
+     * @param user_ptr       pointer to user memory
+     * @param usage          usage of the memory (read/write)
+     * @param user_mem_type  type of memory (host, opencl, etc.)
+     * @return vx_status VX_SUCCESS on success
+     * @ingroup group_int_scalar
+     */
+    vx_status copy(void* user_ptr, vx_enum usage, vx_enum user_mem_type);
+
+    /**
+     * @brief Copy scalar value, given size, to/from user memory
+     *
+     * @param size          size of the scalar data
+     * @param user_ptr      pointer to user memory
+     * @param usage         usage of the memory (read/write)
+     * @param user_mem_type type of memory (host, opencl, etc.)
+     * @return vx_status VX_SUCCESS on success
+     * @ingroup group_int_scalar
+     */
+    vx_status copy(vx_size size, void* user_ptr, vx_enum usage, vx_enum user_mem_type);
+
+    /**
+     * @brief Read the scalar value
+     *
+     * @param ptr Pointer to the memory location to read the value into
+     * @return vx_status VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_scalar
+     */
+    vx_status readValue(void* ptr);
+
+    /**
+     * @brief Write the scalar value
+     *
+     * @param ptr Pointer to the memory location containing the value to write
+     * @return vx_status VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_scalar
+     */
+    vx_status writeValue(const void* ptr);
+
+    /**
+     * @brief Get the data type of the scalar
+     *
+     * @return vx_enum The data type of the scalar
+     * @ingroup group_int_scalar
+     */
+    vx_enum dataType() const;
+
+    /**
      * @brief Print scalar object
      *
      * @param scalar scalar obj

@@ -131,6 +131,281 @@ vx_status Scalar::hostMemToScalar(vx_scalar scalar, void* user_ptr)
     return status;
 }
 
+vx_status Scalar::copy(void *user_ptr, vx_enum usage, vx_enum user_mem_type)
+{
+    vx_status status = VX_SUCCESS;
+
+    if (nullptr == user_ptr || VX_MEMORY_TYPE_HOST != user_mem_type)
+        return VX_ERROR_INVALID_PARAMETERS;
+
+#ifdef OPENVX_USE_OPENCL_INTEROP
+    void *user_ptr_given = user_ptr;
+    vx_enum user_mem_type_given = user_mem_type;
+    if (user_mem_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
+    {
+        // get ptr from OpenCL buffer for HOST
+        size_t size = 0;
+        cl_mem opencl_buf = (cl_mem)user_ptr;
+        cl_int cerr = clGetMemObjectInfo(opencl_buf, CL_MEM_SIZE, sizeof(size_t), &size, nullptr);
+        VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyScalar: clGetMemObjectInfo(%p) => (%d)\n",
+                 opencl_buf, cerr);
+        if (cerr != CL_SUCCESS)
+        {
+            return VX_ERROR_INVALID_PARAMETERS;
+        }
+        user_ptr =
+            clEnqueueMapBuffer(context->opencl_command_queue, opencl_buf, CL_TRUE,
+                               CL_MAP_READ | CL_MAP_WRITE, 0, size, 0, nullptr, nullptr, &cerr);
+        VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyScalar: clEnqueueMapBuffer(%p,%d) => %p (%d)\n",
+                 opencl_buf, (int)size, user_ptr, cerr);
+        if (cerr != CL_SUCCESS)
+        {
+            return VX_ERROR_INVALID_PARAMETERS;
+        }
+        user_mem_type = VX_MEMORY_TYPE_HOST;
+    }
+#endif
+
+    switch (usage)
+    {
+        case VX_READ_ONLY:
+            status = Scalar::scalarToHostMem(this, user_ptr);
+            break;
+        case VX_WRITE_ONLY:
+            status = Scalar::hostMemToScalar(this, user_ptr);
+            break;
+
+        default:
+            status = VX_ERROR_INVALID_PARAMETERS;
+            break;
+    }
+
+#ifdef OPENVX_USE_OPENCL_INTEROP
+    if (user_mem_type_given == VX_MEMORY_TYPE_OPENCL_BUFFER)
+    {
+        clEnqueueUnmapMemObject(context->opencl_command_queue, (cl_mem)user_ptr_given, user_ptr, 0,
+                                nullptr, nullptr);
+        clFinish(context->opencl_command_queue);
+    }
+#endif
+
+    return status;
+}
+
+vx_status Scalar::copy(vx_size size, void *user_ptr, vx_enum usage, vx_enum user_mem_type)
+{
+    vx_status status = VX_SUCCESS;
+    vx_size min_size = 0;
+
+    if (nullptr == user_ptr || VX_MEMORY_TYPE_HOST != user_mem_type)
+        return VX_ERROR_INVALID_PARAMETERS;
+
+    switch (usage)
+    {
+        case VX_READ_ONLY:
+            if (data_addr != nullptr && data_len != 0)
+            {
+                min_size = data_len > size ? size : data_len;
+                memcpy(user_ptr, data_addr, min_size);
+            }
+            else
+            {
+                status = VX_ERROR_NO_RESOURCES;
+            }
+            break;
+        case VX_WRITE_ONLY:
+            if (data_addr == nullptr)
+            {
+                if (nullptr == allocateScalarMemory(size))
+                {
+                    status = VX_ERROR_NO_MEMORY;
+                }
+                else
+                {
+                    data_len = size;
+                    memcpy(data_addr, user_ptr, size);
+                }
+            }
+            else
+            {
+                if (data_len < size)
+                {
+                    void *tmp_addr = data_addr;
+                    data_addr = nullptr;
+                    if (nullptr == allocateScalarMemory(size))
+                    {
+                        data_addr = tmp_addr;
+                        status = VX_ERROR_NO_MEMORY;
+                    }
+                    else
+                    {
+                        free(tmp_addr);
+                        data_len = size;
+                        memcpy(data_addr, user_ptr, size);
+                    }
+                }
+                else
+                {
+                    data_len = size;
+                    memcpy(data_addr, user_ptr, size);
+                }
+            }
+            break;
+
+        default:
+            status = VX_ERROR_INVALID_PARAMETERS;
+            break;
+    }
+
+    return status;
+}
+
+vx_status Scalar::readValue(void* ptr)
+{
+    vx_status status = VX_SUCCESS;
+
+    if (ptr == nullptr) return VX_ERROR_INVALID_PARAMETERS;
+
+    Osal::semWait(&lock);
+    Scalar::printScalarValue(this);
+    switch (data_type)
+    {
+        case VX_TYPE_CHAR:
+            *(vx_char *)ptr = data.chr;
+            break;
+        case VX_TYPE_INT8:
+            *(vx_int8 *)ptr = data.s08;
+            break;
+        case VX_TYPE_UINT8:
+            *(vx_uint8 *)ptr = data.u08;
+            break;
+        case VX_TYPE_INT16:
+            *(vx_int16 *)ptr = data.s16;
+            break;
+        case VX_TYPE_UINT16:
+            *(vx_uint16 *)ptr = data.u16;
+            break;
+        case VX_TYPE_INT32:
+            *(vx_int32 *)ptr = data.s32;
+            break;
+        case VX_TYPE_UINT32:
+            *(vx_uint32 *)ptr = data.u32;
+            break;
+        case VX_TYPE_INT64:
+            *(vx_int64 *)ptr = data.s64;
+            break;
+        case VX_TYPE_UINT64:
+            *(vx_uint64 *)ptr = data.u64;
+            break;
+#ifdef EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT
+        case VX_TYPE_FLOAT16:
+            *(vx_float16 *)ptr = data.f16;
+            break;
+#endif
+        case VX_TYPE_FLOAT32:
+            *(vx_float32 *)ptr = data.f32;
+            break;
+        case VX_TYPE_FLOAT64:
+            *(vx_float64 *)ptr = data.f64;
+            break;
+        case VX_TYPE_DF_IMAGE:
+            *(vx_df_image *)ptr = data.fcc;
+            break;
+        case VX_TYPE_ENUM:
+            *(vx_enum *)ptr = data.enm;
+            break;
+        case VX_TYPE_SIZE:
+            *(vx_size *)ptr = data.size;
+            break;
+        case VX_TYPE_BOOL:
+            *(vx_bool *)ptr = data.boolean;
+            break;
+        default:
+            VX_PRINT(VX_ZONE_ERROR, "some case is not covered in %s\n", __FUNCTION__);
+            status = VX_ERROR_NOT_SUPPORTED;
+            break;
+    }
+    Osal::semPost(&lock);
+    // ownReadFromReference(&base);
+
+    return status;
+}
+
+vx_status Scalar::writeValue(const void *ptr)
+{
+    vx_status status = VX_SUCCESS;
+    if (ptr == nullptr) return VX_ERROR_INVALID_PARAMETERS;
+
+    Osal::semWait(&lock);
+    switch (data_type)
+    {
+        case VX_TYPE_CHAR:
+            data.chr = *(vx_char *)ptr;
+            break;
+        case VX_TYPE_INT8:
+            data.s08 = *(vx_int8 *)ptr;
+            break;
+        case VX_TYPE_UINT8:
+            data.u08 = *(vx_uint8 *)ptr;
+            break;
+        case VX_TYPE_INT16:
+            data.s16 = *(vx_int16 *)ptr;
+            break;
+        case VX_TYPE_UINT16:
+            data.u16 = *(vx_uint16 *)ptr;
+            break;
+        case VX_TYPE_INT32:
+            data.s32 = *(vx_int32 *)ptr;
+            break;
+        case VX_TYPE_UINT32:
+            data.u32 = *(vx_uint32 *)ptr;
+            break;
+        case VX_TYPE_INT64:
+            data.s64 = *(vx_int64 *)ptr;
+            break;
+        case VX_TYPE_UINT64:
+            data.u64 = *(vx_uint64 *)ptr;
+            break;
+#ifdef EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT
+        case VX_TYPE_FLOAT16:
+            data.f16 = *(vx_float16 *)ptr;
+            break;
+#endif
+        case VX_TYPE_FLOAT32:
+            data.f32 = *(vx_float32 *)ptr;
+            break;
+        case VX_TYPE_FLOAT64:
+            data.f64 = *(vx_float64 *)ptr;
+            break;
+        case VX_TYPE_DF_IMAGE:
+            data.fcc = *(vx_df_image *)ptr;
+            break;
+        case VX_TYPE_ENUM:
+            data.enm = *(vx_enum *)ptr;
+            break;
+        case VX_TYPE_SIZE:
+            data.size = *(vx_size *)ptr;
+            break;
+        case VX_TYPE_BOOL:
+            data.boolean = *(vx_bool *)ptr;
+            break;
+        default:
+            VX_PRINT(VX_ZONE_ERROR, "some case is not covered in %s\n", __FUNCTION__);
+            status = VX_ERROR_NOT_SUPPORTED;
+            break;
+    }
+    Scalar::printScalarValue(this);
+    Osal::semPost(&lock);
+    // ownWroteToReference(&base);
+
+    return status;
+}
+
+vx_enum Scalar::dataType() const
+{
+    return data_type;
+}
+
 void Scalar::printScalarValue(vx_scalar scalar)
 {
     switch (scalar->data_type)
@@ -288,22 +563,6 @@ VX_API_ENTRY vx_scalar VX_API_CALL vxCreateVirtualScalar(vx_graph graph, vx_enum
     return (vx_scalar)scalar;
 }
 
-VX_API_ENTRY vx_status VX_API_CALL vxReleaseScalar(vx_scalar* s)
-{
-    vx_status status = VX_FAILURE;
-
-    if (nullptr != s)
-    {
-        vx_scalar scalar = *s;
-        if (vx_true_e == Reference::isValidReference(scalar, VX_TYPE_SCALAR))
-        {
-            status = Reference::releaseReference((vx_reference*)s, VX_TYPE_SCALAR, VX_EXTERNAL, nullptr);
-        }
-    }
-
-    return status;
-} /* vxReleaseScalar() */
-
 VX_API_ENTRY vx_status VX_API_CALL vxQueryScalar(vx_scalar scalar, vx_enum attribute, void* ptr, vx_size size)
 {
     vx_status status = VX_SUCCESS;
@@ -316,7 +575,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryScalar(vx_scalar scalar, vx_enum attri
         case VX_SCALAR_TYPE:
             if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
             {
-                *(vx_enum*)ptr = scalar->data_type;
+                *(vx_enum*)ptr = scalar->dataType();
             }
             else
             {
@@ -334,280 +593,49 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryScalar(vx_scalar scalar, vx_enum attri
 
 VX_API_ENTRY vx_status VX_API_CALL vxCopyScalar(vx_scalar scalar, void* user_ptr, vx_enum usage, vx_enum user_mem_type)
 {
-    vx_status status = VX_SUCCESS;
-
     if (vx_false_e == Reference::isValidReference(reinterpret_cast<vx_reference>(scalar), VX_TYPE_SCALAR))
         return VX_ERROR_INVALID_REFERENCE;
 
-    if (nullptr == user_ptr || VX_MEMORY_TYPE_HOST != user_mem_type)
-        return VX_ERROR_INVALID_PARAMETERS;
-
-#ifdef OPENVX_USE_OPENCL_INTEROP
-    void * user_ptr_given = user_ptr;
-    vx_enum user_mem_type_given = user_mem_type;
-    if (user_mem_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
-    {
-        // get ptr from OpenCL buffer for HOST
-        size_t size = 0;
-        cl_mem opencl_buf = (cl_mem)user_ptr;
-        cl_int cerr = clGetMemObjectInfo(opencl_buf, CL_MEM_SIZE, sizeof(size_t), &size, nullptr);
-        VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyScalar: clGetMemObjectInfo(%p) => (%d)\n",
-            opencl_buf, cerr);
-        if (cerr != CL_SUCCESS)
-        {
-            return VX_ERROR_INVALID_PARAMETERS;
-        }
-        user_ptr = clEnqueueMapBuffer(scalar->context->opencl_command_queue,
-            opencl_buf, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, size,
-            0, nullptr, nullptr, &cerr);
-        VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyScalar: clEnqueueMapBuffer(%p,%d) => %p (%d)\n",
-            opencl_buf, (int)size, user_ptr, cerr);
-        if (cerr != CL_SUCCESS)
-        {
-            return VX_ERROR_INVALID_PARAMETERS;
-        }
-        user_mem_type = VX_MEMORY_TYPE_HOST;
-    }
-#endif
-
-    switch (usage)
-    {
-    case VX_READ_ONLY:  status = Scalar::scalarToHostMem(scalar, user_ptr);  break;
-    case VX_WRITE_ONLY: status = Scalar::hostMemToScalar(scalar, user_ptr); break;
-
-    default:
-        status = VX_ERROR_INVALID_PARAMETERS;
-        break;
-    }
-
-#ifdef OPENVX_USE_OPENCL_INTEROP
-    if (user_mem_type_given == VX_MEMORY_TYPE_OPENCL_BUFFER)
-    {
-        clEnqueueUnmapMemObject(scalar->context->opencl_command_queue,
-            (cl_mem)user_ptr_given, user_ptr, 0, nullptr, nullptr);
-        clFinish(scalar->context->opencl_command_queue);
-    }
-#endif
-
-    return status;
+    return scalar->copy(user_ptr, usage, user_mem_type);;
 } /* vxCopyScalar() */
 
 VX_API_ENTRY vx_status VX_API_CALL vxCopyScalarWithSize(vx_scalar scalar, vx_size size, void *user_ptr, vx_enum usage, vx_enum user_mem_type)
 {
-    vx_status status = VX_SUCCESS;
-    vx_size min_size;
-
     if (vx_false_e == Reference::isValidReference(reinterpret_cast<vx_reference>(scalar), VX_TYPE_SCALAR))
         return VX_ERROR_INVALID_REFERENCE;
 
-    if (nullptr == user_ptr || VX_MEMORY_TYPE_HOST != user_mem_type)
-        return VX_ERROR_INVALID_PARAMETERS;
-
-
-    switch (usage)
-    {
-    case VX_READ_ONLY:
-        if (scalar->data_addr != nullptr && scalar->data_len != 0)
-        {
-            min_size = scalar->data_len > size ? size : scalar->data_len;
-            memcpy(user_ptr, scalar->data_addr, min_size);
-        }
-        else
-        {
-            status = VX_ERROR_NO_RESOURCES;
-        }
-        break;
-    case VX_WRITE_ONLY:
-        if (scalar->data_addr == nullptr)
-        {
-            if(nullptr == scalar->allocateScalarMemory(size))
-            {
-                status = VX_ERROR_NO_MEMORY;
-            }
-            else
-            {
-                scalar->data_len = size;
-                memcpy(scalar->data_addr, user_ptr, size);
-            }
-        }
-        else
-        {
-            if (scalar->data_len < size)
-            {
-                void *tmp_addr = scalar->data_addr;
-                scalar->data_addr = nullptr;
-                if(nullptr == scalar->allocateScalarMemory(size))
-                {
-                    scalar->data_addr = tmp_addr;
-                    status = VX_ERROR_NO_MEMORY;
-                }
-                else
-                {
-                    free(tmp_addr);
-                    scalar->data_len = size;
-                    memcpy(scalar->data_addr, user_ptr, size);
-                }
-            }
-            else
-            {
-                scalar->data_len = size;
-                memcpy(scalar->data_addr, user_ptr, size);
-            }
-        }
-        break;
-
-    default:
-        status = VX_ERROR_INVALID_PARAMETERS;
-        break;
-    }
-
-    return status;
+    return scalar->copy(size, user_ptr, usage, user_mem_type);
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxReadScalarValue(vx_scalar scalar, void *ptr)
 {
-    vx_status status = VX_SUCCESS;
-
     if (Reference::isValidReference(reinterpret_cast<vx_reference>(scalar), VX_TYPE_SCALAR) == vx_false_e)
         return VX_ERROR_INVALID_REFERENCE;
 
-    if (ptr == nullptr)
-        return VX_ERROR_INVALID_PARAMETERS;
-
-    Osal::semWait(&scalar->lock);
-    Scalar::printScalarValue(scalar);
-    switch (scalar->data_type)
-    {
-        case VX_TYPE_CHAR:
-            *(vx_char *)ptr = scalar->data.chr;
-            break;
-        case VX_TYPE_INT8:
-            *(vx_int8 *)ptr = scalar->data.s08;
-            break;
-        case VX_TYPE_UINT8:
-            *(vx_uint8 *)ptr = scalar->data.u08;
-            break;
-        case VX_TYPE_INT16:
-            *(vx_int16 *)ptr = scalar->data.s16;
-            break;
-        case VX_TYPE_UINT16:
-            *(vx_uint16 *)ptr = scalar->data.u16;
-            break;
-        case VX_TYPE_INT32:
-            *(vx_int32 *)ptr = scalar->data.s32;
-            break;
-        case VX_TYPE_UINT32:
-            *(vx_uint32 *)ptr = scalar->data.u32;
-            break;
-        case VX_TYPE_INT64:
-            *(vx_int64 *)ptr = scalar->data.s64;
-            break;
-        case VX_TYPE_UINT64:
-            *(vx_uint64 *)ptr = scalar->data.u64;
-            break;
-#ifdef EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT
-        case VX_TYPE_FLOAT16:
-            *(vx_float16 *)ptr = scalar->data.f16;
-            break;
-#endif
-        case VX_TYPE_FLOAT32:
-            *(vx_float32 *)ptr = scalar->data.f32;
-            break;
-        case VX_TYPE_FLOAT64:
-            *(vx_float64 *)ptr = scalar->data.f64;
-            break;
-        case VX_TYPE_DF_IMAGE:
-            *(vx_df_image *)ptr = scalar->data.fcc;
-            break;
-        case VX_TYPE_ENUM:
-            *(vx_enum *)ptr = scalar->data.enm;
-            break;
-        case VX_TYPE_SIZE:
-            *(vx_size *)ptr = scalar->data.size;
-            break;
-        case VX_TYPE_BOOL:
-            *(vx_bool *)ptr = scalar->data.boolean;
-            break;
-        default:
-            VX_PRINT(VX_ZONE_ERROR, "some case is not covered in %s\n", __FUNCTION__);
-            status = VX_ERROR_NOT_SUPPORTED;
-            break;
-    }
-    Osal::semPost(&scalar->lock);
-    // ownReadFromReference(&scalar->base);
-    return status;
+    return scalar->readValue(ptr);;
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxWriteScalarValue(vx_scalar scalar, const void *ptr)
 {
-    vx_status status = VX_SUCCESS;
-
     if (Reference::isValidReference(reinterpret_cast<vx_reference>(scalar), VX_TYPE_SCALAR) == vx_false_e)
         return VX_ERROR_INVALID_REFERENCE;
 
-    if (ptr == nullptr)
-        return VX_ERROR_INVALID_PARAMETERS;
-
-    Osal::semWait(&scalar->lock);
-    switch (scalar->data_type)
-    {
-        case VX_TYPE_CHAR:
-            scalar->data.chr = *(vx_char *)ptr;
-            break;
-        case VX_TYPE_INT8:
-            scalar->data.s08 = *(vx_int8 *)ptr;
-            break;
-        case VX_TYPE_UINT8:
-            scalar->data.u08 = *(vx_uint8 *)ptr;
-            break;
-        case VX_TYPE_INT16:
-            scalar->data.s16 = *(vx_int16 *)ptr;
-            break;
-        case VX_TYPE_UINT16:
-            scalar->data.u16 = *(vx_uint16 *)ptr;
-            break;
-        case VX_TYPE_INT32:
-            scalar->data.s32 = *(vx_int32 *)ptr;
-            break;
-        case VX_TYPE_UINT32:
-            scalar->data.u32 = *(vx_uint32 *)ptr;
-            break;
-        case VX_TYPE_INT64:
-            scalar->data.s64 = *(vx_int64 *)ptr;
-            break;
-        case VX_TYPE_UINT64:
-            scalar->data.u64 = *(vx_uint64 *)ptr;
-            break;
-#ifdef EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT
-        case VX_TYPE_FLOAT16:
-            scalar->data.f16 = *(vx_float16 *)ptr;
-            break;
-#endif
-        case VX_TYPE_FLOAT32:
-            scalar->data.f32 = *(vx_float32 *)ptr;
-            break;
-        case VX_TYPE_FLOAT64:
-            scalar->data.f64 = *(vx_float64 *)ptr;
-            break;
-        case VX_TYPE_DF_IMAGE:
-            scalar->data.fcc = *(vx_df_image *)ptr;
-            break;
-        case VX_TYPE_ENUM:
-            scalar->data.enm = *(vx_enum *)ptr;
-            break;
-        case VX_TYPE_SIZE:
-            scalar->data.size = *(vx_size *)ptr;
-            break;
-        case VX_TYPE_BOOL:
-            scalar->data.boolean = *(vx_bool *)ptr;
-            break;
-        default:
-            VX_PRINT(VX_ZONE_ERROR, "some case is not covered in %s\n", __FUNCTION__);
-            status = VX_ERROR_NOT_SUPPORTED;
-            break;
-    }
-    Scalar::printScalarValue(scalar);
-    Osal::semPost(&scalar->lock);
-    // ownWroteToReference(&scalar->base);
-    return status;
+    return scalar->writeValue(ptr);;
 }
+
+VX_API_ENTRY vx_status VX_API_CALL vxReleaseScalar(vx_scalar *s)
+{
+    vx_status status = VX_FAILURE;
+
+    if (nullptr != s)
+    {
+        vx_scalar scalar = *s;
+        if (vx_true_e == Reference::isValidReference(scalar, VX_TYPE_SCALAR))
+        {
+            status = Reference::releaseReference((vx_reference *)s, VX_TYPE_SCALAR, VX_EXTERNAL,
+                                                 nullptr);
+        }
+    }
+
+    return status;
+} /* vxReleaseScalar() */
