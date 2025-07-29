@@ -21,215 +21,8 @@
 #include "vx_internal.h"
 
 /******************************************************************************/
-/* STATIC FUNCTIONS */
-/******************************************************************************/
-static vx_uint32 vxNextNode(vx_graph graph, vx_uint32 index)
-{
-    return ((index + 1) % graph->numNodes);
-}
-
-static vx_reference vxLocateBaseLocation(vx_reference ref, vx_size* start, vx_size* end)
-{
-    if (ref->type == VX_TYPE_IMAGE)
-    {
-        start[0] = start[1] = 0;
-        end[0] = ((vx_image)ref)->width;
-        end[1] = ((vx_image)ref)->height;
-    }
-    else
-    {
-        for (vx_uint32 i = 0; i < VX_MAX_TENSOR_DIMENSIONS; i++)
-        {
-            start[i] = 0;
-            end[i] = ((vx_tensor)ref)->dimensions[i];
-        }
-    }
-    while ((ref->type == VX_TYPE_IMAGE && ((vx_image)ref)->parent && ((vx_image)ref)->parent != ((vx_image)ref))
-        ||
-        (ref->type == VX_TYPE_TENSOR && ((vx_tensor)ref)->parent && ((vx_tensor)ref)->parent != ((vx_tensor)ref))
-        )
-    {
-        if (ref->type == VX_TYPE_IMAGE)
-        {
-            vx_image img = (vx_image)ref;
-            vx_size plane_offset = img->memory.ptrs[0] - img->parent->memory.ptrs[0];
-            vx_uint32 dy = (vx_uint32)(plane_offset * img->scale[0][VX_DIM_Y] / img->memory.strides[0][VX_DIM_Y]);
-            vx_uint32 dx = (vx_uint32)((plane_offset - (dy * img->memory.strides[0][VX_DIM_Y] / img->scale[0][VX_DIM_Y])) * img->scale[0][VX_DIM_X] / img->memory.strides[0][VX_DIM_X]);
-            start[0] += dx;
-            end[0] += dx;
-            start[1] += dy;
-            end[1] += dy;
-            ref = (vx_reference)img->parent;
-        }
-        else
-        {
-            vx_tensor tensor = (vx_tensor)ref;
-            vx_uint32 offset = 0;
-            for (vx_int32 i = tensor->number_of_dimensions - 1; i >= 0; i--)
-            {
-                start[i] = ((vx_uint8*)tensor->addr - (vx_uint8*)tensor->parent->addr - offset) / tensor->stride[i];
-                end[i] = start[i] + tensor->dimensions[i];
-                offset += (vx_uint32)(start[i] * tensor->stride[i]);
-            }
-            ref = (vx_reference)tensor->parent;
-        }
-    }
-    return ref;
-}
-
-static vx_tensor vxLocateView(vx_tensor mddata, vx_size* start, vx_size* end)
-{
-    for (vx_uint32 i = 0; i < VX_MAX_TENSOR_DIMENSIONS; i++)
-    {
-        start[i] = 0;
-        end[i] = mddata->dimensions[i];
-    }
-    while (mddata->parent && mddata->parent != mddata)
-    {
-        size_t offset = 0;
-        for (vx_int32 i = mddata->number_of_dimensions-1; i >= 0; i--)
-        {
-            start[i] = ((vx_uint8*)mddata->addr - (vx_uint8*)mddata->parent->addr - offset) / mddata->stride[i];
-            end[i] = start[i] + mddata->dimensions[i];
-            offset += start[i] * mddata->stride[i];
-        }
-        mddata = mddata->parent;
-    }
-    return mddata;
-}
-
-static vx_bool vxCheckWriteDependency(vx_reference ref1, vx_reference ref2)
-{
-    if (!ref1 || !ref2) /* garbage input */
-        return vx_false_e;
-
-    if (ref1 == ref2)
-    {
-        VX_PRINT(VX_ZONE_API, "returned true - equal refs\n");
-        return vx_true_e;
-    }
-
-    /* write to layer then read pyramid */
-    if (ref1->type == VX_TYPE_PYRAMID && ref2->type == VX_TYPE_IMAGE)
-    {
-        vx_image img = (vx_image)ref2;
-        while (img->parent && img->parent != img) img = img->parent;
-        if (img->scope == ref1)
-            return vx_true_e;
-    }
-
-    /* write to pyramid then read a layer */
-    if (ref2->type == VX_TYPE_PYRAMID && ref1->type == VX_TYPE_IMAGE)
-    {
-        vx_image img = (vx_image)ref1;
-        while (img->parent && img->parent != img) img = img->parent;
-        if (img->scope == ref2)
-            return vx_true_e;
-    }
-
-    /* two images or ROIs */
-    if (ref1->type == VX_TYPE_IMAGE && ref2->type == VX_TYPE_IMAGE)
-    {
-        vx_size rr_start[VX_MAX_TENSOR_DIMENSIONS], rw_start[VX_MAX_TENSOR_DIMENSIONS], rr_end[VX_MAX_TENSOR_DIMENSIONS], rw_end[VX_MAX_TENSOR_DIMENSIONS];
-        vx_reference refr = vxLocateBaseLocation(ref1, rr_start, rr_end);
-        vx_reference refw = vxLocateBaseLocation(ref2, rw_start, rw_end);
-        if (refr == refw)
-        {
-            if (refr->type == VX_TYPE_IMAGE)
-            {
-                /* check for ROI intersection */
-                if (rr_start[0] < rw_end[0] && rr_end[0] > rw_start[0] && rr_start[1] < rw_end[1] && rr_end[1] > rw_start[1])
-                {
-                    return vx_true_e;
-                }
-            }
-            else
-            {
-                if (refr->type == VX_TYPE_TENSOR)
-                {
-                    for (vx_uint32 i = 0; i < ((vx_tensor)refr)->number_of_dimensions; i++)
-                    {
-                        if ((rr_start[i] >= rw_end[i]) ||
-                            (rw_start[i] >= rr_end[i]))
-                        {
-                            return vx_false_e;
-                        }
-                    }
-                    return vx_true_e;
-                }
-            }
-        }
-    }
-    if (ref1->type == VX_TYPE_TENSOR && ref2->type == VX_TYPE_TENSOR)
-    {
-        vx_size rr_start[VX_MAX_TENSOR_DIMENSIONS], rw_start[VX_MAX_TENSOR_DIMENSIONS], rr_end[VX_MAX_TENSOR_DIMENSIONS], rw_end[VX_MAX_TENSOR_DIMENSIONS];
-        vx_tensor datar = vxLocateView((vx_tensor)ref1, rr_start, rr_end);
-        vx_tensor dataw = vxLocateView((vx_tensor)ref2, rw_start, rw_end);
-        if (datar == dataw)
-        {
-            for (vx_uint32 i = 0; i < datar->number_of_dimensions; i++)
-            {
-                if ((rr_start[i] >= rw_end[i]) ||
-                    (rw_start[i] >= rr_end[i]))
-                {
-                    return vx_false_e;
-                }
-            }
-            return vx_true_e;
-        }
-    }
-
-    return vx_false_e;
-}
-
-void vxContaminateGraphs(vx_reference ref)
-{
-    if (Reference::isValidReference(ref) == vx_true_e)
-    {
-        vx_uint32 r;
-        vx_context context = ref->context;
-        /*! \internal Scan the entire context for graphs which may contain
-         * this reference and mark them as unverified.
-         */
-        Osal::semWait(&context->lock);
-        for (r = 0u; r < context->num_references; r++)
-        {
-            if (context->reftable[r] == nullptr)
-                continue;
-            if (context->reftable[r]->type == VX_TYPE_GRAPH)
-            {
-                vx_uint32 n;
-                vx_bool found = vx_false_e;
-                vx_graph graph = (vx_graph)context->reftable[r];
-                for (n = 0u; n < (graph->numNodes) && (found == vx_false_e); n++)
-                {
-                    vx_uint32 p;
-                    for (p = 0u; p < graph->nodes[n]->kernel->signature.num_parameters; p++)
-                    {
-                        if (graph->nodes[n]->kernel->signature.directions[p] == VX_OUTPUT)
-                        {
-                            continue;
-                        }
-                        if (graph->nodes[n]->parameters[p] == ref)
-                        {
-                            found = vx_true_e;
-                            graph->reverify = graph->verified;
-                            graph->verified = vx_false_e;
-                            graph->state = VX_GRAPH_STATE_UNVERIFIED;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        Osal::semPost(&context->lock);
-    }
-}
-
-/******************************************************************************/
 /* INTERNAL FUNCTIONS */
 /******************************************************************************/
-
 Graph::Graph(vx_context context, vx_reference scope)
     : Reference(context, VX_TYPE_GRAPH, scope),
       nodes(),
@@ -260,8 +53,1508 @@ Graph::Graph(vx_context context, vx_reference scope)
 {
 }
 
-Graph::~Graph()
+Graph::~Graph() {}
+
+vx_uint32 Graph::nextNode(vx_uint32 index)
 {
+    return ((index + 1) % numNodes);
+}
+
+vx_reference Graph::locateBaseLocation(vx_reference ref, vx_size* start, vx_size* end)
+{
+    if (ref->type == VX_TYPE_IMAGE)
+    {
+        start[0] = start[1] = 0;
+        end[0] = ((vx_image)ref)->width;
+        end[1] = ((vx_image)ref)->height;
+    }
+    else
+    {
+        for (vx_uint32 i = 0; i < VX_MAX_TENSOR_DIMENSIONS; i++)
+        {
+            start[i] = 0;
+            end[i] = ((vx_tensor)ref)->dimensions[i];
+        }
+    }
+    while ((ref->type == VX_TYPE_IMAGE && ((vx_image)ref)->parent &&
+            ((vx_image)ref)->parent != ((vx_image)ref)) ||
+           (ref->type == VX_TYPE_TENSOR && ((vx_tensor)ref)->parent &&
+            ((vx_tensor)ref)->parent != ((vx_tensor)ref)))
+    {
+        if (ref->type == VX_TYPE_IMAGE)
+        {
+            vx_image img = (vx_image)ref;
+            vx_size plane_offset = img->memory.ptrs[0] - img->parent->memory.ptrs[0];
+            vx_uint32 dy = (vx_uint32)(plane_offset * img->scale[0][VX_DIM_Y] /
+                                       img->memory.strides[0][VX_DIM_Y]);
+            vx_uint32 dx = (vx_uint32)((plane_offset - (dy * img->memory.strides[0][VX_DIM_Y] /
+                                                        img->scale[0][VX_DIM_Y])) *
+                                       img->scale[0][VX_DIM_X] / img->memory.strides[0][VX_DIM_X]);
+            start[0] += dx;
+            end[0] += dx;
+            start[1] += dy;
+            end[1] += dy;
+            ref = (vx_reference)img->parent;
+        }
+        else
+        {
+            vx_tensor tensor = (vx_tensor)ref;
+            vx_uint32 offset = 0;
+            for (vx_int32 i = tensor->number_of_dimensions - 1; i >= 0; i--)
+            {
+                start[i] = ((vx_uint8*)tensor->addr - (vx_uint8*)tensor->parent->addr - offset) /
+                           tensor->stride[i];
+                end[i] = start[i] + tensor->dimensions[i];
+                offset += (vx_uint32)(start[i] * tensor->stride[i]);
+            }
+            ref = (vx_reference)tensor->parent;
+        }
+    }
+    return ref;
+}
+
+vx_tensor Graph::locateView(vx_tensor mddata, vx_size* start, vx_size* end)
+{
+    for (vx_uint32 i = 0; i < VX_MAX_TENSOR_DIMENSIONS; i++)
+    {
+        start[i] = 0;
+        end[i] = mddata->dimensions[i];
+    }
+    while (mddata->parent && mddata->parent != mddata)
+    {
+        size_t offset = 0;
+        for (vx_int32 i = mddata->number_of_dimensions - 1; i >= 0; i--)
+        {
+            start[i] = ((vx_uint8*)mddata->addr - (vx_uint8*)mddata->parent->addr - offset) /
+                       mddata->stride[i];
+            end[i] = start[i] + mddata->dimensions[i];
+            offset += start[i] * mddata->stride[i];
+        }
+        mddata = mddata->parent;
+    }
+    return mddata;
+}
+
+vx_bool Graph::checkWriteDependency(vx_reference ref1, vx_reference ref2)
+{
+    if (!ref1 || !ref2) /* garbage input */
+        return vx_false_e;
+
+    if (ref1 == ref2)
+    {
+        VX_PRINT(VX_ZONE_API, "returned true - equal refs\n");
+        return vx_true_e;
+    }
+
+    /* write to layer then read pyramid */
+    if (ref1->type == VX_TYPE_PYRAMID && ref2->type == VX_TYPE_IMAGE)
+    {
+        vx_image img = (vx_image)ref2;
+        while (img->parent && img->parent != img) img = img->parent;
+        if (img->scope == ref1) return vx_true_e;
+    }
+
+    /* write to pyramid then read a layer */
+    if (ref2->type == VX_TYPE_PYRAMID && ref1->type == VX_TYPE_IMAGE)
+    {
+        vx_image img = (vx_image)ref1;
+        while (img->parent && img->parent != img) img = img->parent;
+        if (img->scope == ref2) return vx_true_e;
+    }
+
+    /* two images or ROIs */
+    if (ref1->type == VX_TYPE_IMAGE && ref2->type == VX_TYPE_IMAGE)
+    {
+        vx_size rr_start[VX_MAX_TENSOR_DIMENSIONS], rw_start[VX_MAX_TENSOR_DIMENSIONS],
+            rr_end[VX_MAX_TENSOR_DIMENSIONS], rw_end[VX_MAX_TENSOR_DIMENSIONS];
+        vx_reference refr = Graph::locateBaseLocation(ref1, rr_start, rr_end);
+        vx_reference refw = Graph::locateBaseLocation(ref2, rw_start, rw_end);
+        if (refr == refw)
+        {
+            if (refr->type == VX_TYPE_IMAGE)
+            {
+                /* check for ROI intersection */
+                if (rr_start[0] < rw_end[0] && rr_end[0] > rw_start[0] && rr_start[1] < rw_end[1] &&
+                    rr_end[1] > rw_start[1])
+                {
+                    return vx_true_e;
+                }
+            }
+            else
+            {
+                if (refr->type == VX_TYPE_TENSOR)
+                {
+                    for (vx_uint32 i = 0; i < ((vx_tensor)refr)->number_of_dimensions; i++)
+                    {
+                        if ((rr_start[i] >= rw_end[i]) || (rw_start[i] >= rr_end[i]))
+                        {
+                            return vx_false_e;
+                        }
+                    }
+                    return vx_true_e;
+                }
+            }
+        }
+    }
+    if (ref1->type == VX_TYPE_TENSOR && ref2->type == VX_TYPE_TENSOR)
+    {
+        vx_size rr_start[VX_MAX_TENSOR_DIMENSIONS], rw_start[VX_MAX_TENSOR_DIMENSIONS],
+            rr_end[VX_MAX_TENSOR_DIMENSIONS], rw_end[VX_MAX_TENSOR_DIMENSIONS];
+        vx_tensor datar = Graph::locateView((vx_tensor)ref1, rr_start, rr_end);
+        vx_tensor dataw = Graph::locateView((vx_tensor)ref2, rw_start, rw_end);
+        if (datar == dataw)
+        {
+            for (vx_uint32 i = 0; i < datar->number_of_dimensions; i++)
+            {
+                if ((rr_start[i] >= rw_end[i]) || (rw_start[i] >= rr_end[i]))
+                {
+                    return vx_false_e;
+                }
+            }
+            return vx_true_e;
+        }
+    }
+
+    return vx_false_e;
+}
+
+void Graph::contaminateGraphs(vx_reference ref)
+{
+    if (Reference::isValidReference(ref) == vx_true_e)
+    {
+        vx_uint32 r;
+        vx_context context = ref->context;
+        /*! \internal Scan the entire context for graphs which may contain
+         * this reference and mark them as unverified.
+         */
+        Osal::semWait(&context->lock);
+        for (r = 0u; r < context->num_references; r++)
+        {
+            if (context->reftable[r] == nullptr) continue;
+            if (context->reftable[r]->type == VX_TYPE_GRAPH)
+            {
+                vx_uint32 n;
+                vx_bool found = vx_false_e;
+                vx_graph graph = (vx_graph)context->reftable[r];
+                for (n = 0u; n < (graph->numNodes) && (found == vx_false_e); n++)
+                {
+                    vx_uint32 p;
+                    for (p = 0u; p < graph->nodes[n]->kernel->signature.num_parameters; p++)
+                    {
+                        if (graph->nodes[n]->kernel->signature.directions[p] == VX_OUTPUT)
+                        {
+                            continue;
+                        }
+                        if (graph->nodes[n]->parameters[p] == ref)
+                        {
+                            found = vx_true_e;
+                            graph->reverify = graph->verified;
+                            graph->verified = vx_false_e;
+                            graph->state = VX_GRAPH_STATE_UNVERIFIED;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        Osal::semPost(&context->lock);
+    }
+}
+
+vx_perf_t Graph::performance() const
+{
+    return perf;
+}
+
+vx_enum Graph::getState() const
+{
+    return state;
+}
+
+vx_uint32 Graph::getNumNodes() const
+{
+    return numNodes;
+}
+
+vx_uint32 Graph::getNumParams() const
+{
+    return numParams;
+}
+
+vx_bool Graph::isVerified()
+{
+    VX_PRINT(VX_ZONE_GRAPH, "Graph is %sverified\n", (verified == vx_true_e ? "" : "NOT "));
+    return verified;
+}
+
+vx_status Graph::verify()
+{
+    vx_status status = VX_SUCCESS;
+    vx_uint32 num_errors = 0u;
+    vx_bool first_time_verify =
+        ((this->verified == vx_false_e) && (this->reverify == vx_false_e)) ? vx_true_e : vx_false_e;
+
+    this->verified = vx_false_e;
+
+    vx_uint32 h, n, p;
+    vx_bool hasACycle = vx_false_e;
+
+    /* lock the graph */
+    Osal::semWait(&this->lock);
+
+    /* To properly deal with parameter dependence in the graph, the
+        nodes have to be in topological order when their parameters
+        are inspected and their dependent attributes -such as geometry
+        and type- are propagated. */
+    VX_PRINT(VX_ZONE_GRAPH, "###########################\n");
+    VX_PRINT(VX_ZONE_GRAPH, "Topological Sort Phase\n");
+    VX_PRINT(VX_ZONE_GRAPH, "###########################\n");
+    this->topologicalSort(this->nodes, this->numNodes);
+
+    VX_PRINT(VX_ZONE_GRAPH, "###########################\n");
+    VX_PRINT(VX_ZONE_GRAPH, "User Kernel Preprocess Phase! (%d)\n", status);
+    VX_PRINT(VX_ZONE_GRAPH, "###########################\n");
+
+    for (n = 0; n < this->numNodes; n++)
+    {
+        vx_node node = this->nodes[n];
+        if (node->kernel->user_kernel)
+        {
+            if (!first_time_verify)  // re-verify
+            {
+                if (node->kernel->deinitialize)
+                {
+                    vx_status status;
+                    if (node->local_data_set_by_implementation == vx_false_e)
+                        node->local_data_change_is_enabled = vx_true_e;
+                    status =
+                        node->kernel->deinitialize((vx_node)node, (vx_reference*)node->parameters,
+                                                   node->kernel->signature.num_parameters);
+                    node->local_data_change_is_enabled = vx_false_e;
+                    if (status != VX_SUCCESS)
+                    {
+                        VX_PRINT(VX_ZONE_ERROR, "Failed to de-initialize kernel %s!\n",
+                                 node->kernel->name);
+                        goto exit;
+                    }
+                }
+
+                if (node->kernel->attributes.localDataSize == 0)
+                {
+                    if (node->attributes.localDataPtr)
+                    {
+                        if (!first_time_verify && node->attributes.localDataPtr)
+                        {
+                            ::operator delete(node->attributes.localDataPtr);
+                        }
+                        node->attributes.localDataSize = 0;
+                        node->attributes.localDataPtr = nullptr;
+                    }
+                }
+                node->local_data_set_by_implementation = vx_false_e;
+            }
+        }
+    }
+
+    VX_PRINT(VX_ZONE_GRAPH, "###########################\n");
+    VX_PRINT(VX_ZONE_GRAPH, "Parameter Validation Phase! (%d)\n", status);
+    VX_PRINT(VX_ZONE_GRAPH, "###########################\n");
+
+    for (n = 0; n < this->numNodes; n++)
+    {
+        /* check to make sure that a node has all required parameters */
+        for (p = 0; p < this->nodes[n]->kernel->signature.num_parameters; p++)
+        {
+            if (this->nodes[n]->kernel->signature.states[p] == VX_PARAMETER_STATE_REQUIRED)
+            {
+                if (this->nodes[n]->parameters[p] == nullptr)
+                {
+                    vxAddLogEntry(reinterpret_cast<vx_reference>(this), VX_ERROR_INVALID_PARAMETERS,
+                                  "Node %s: Some parameters were not supplied!\n",
+                                  this->nodes[n]->kernel->name);
+                    VX_PRINT(VX_ZONE_ERROR,
+                             "Node " VX_FMT_REF
+                             " (%s) Parameter[%u] was required and not supplied!\n",
+                             this->nodes[n], this->nodes[n]->kernel->name, p);
+                    status = VX_ERROR_INVALID_PARAMETERS;
+                    num_errors++;
+                }
+                else if (this->nodes[n]->parameters[p]->internal_count == 0)
+                {
+                    VX_PRINT(VX_ZONE_ERROR, "Internal reference counts are wrong!\n");
+                    DEBUG_BREAK();
+                    num_errors++;
+                }
+            }
+        }
+        if (status != VX_SUCCESS)
+        {
+            goto exit;
+        }
+
+        /* debugging, show that we can detect "constant" data or "unreferenced data" */
+        for (p = 0; p < this->nodes[n]->kernel->signature.num_parameters; p++)
+        {
+            vx_reference ref = (vx_reference)this->nodes[n]->parameters[p];
+            if (ref)
+            {
+                if (ref->external_count == 0)
+                {
+                    VX_PRINT(VX_ZONE_INFO, "%s[%u] = " VX_FMT_REF " (CONSTANT) type:%08x\n",
+                             this->nodes[n]->kernel->name, p, ref, ref->type);
+                }
+                else
+                {
+                    VX_PRINT(VX_ZONE_INFO, "%s[%u] = " VX_FMT_REF " (MUTABLE) type:%08x count:%d\n",
+                             this->nodes[n]->kernel->name, p, ref, ref->type, ref->external_count);
+                }
+            }
+        }
+
+        /* check if new style validators are provided (see bug14654) */
+        if (this->nodes[n]->kernel->validate != nullptr)
+        {
+            VX_PRINT(VX_ZONE_GRAPH, "Using new style validators\n");
+
+            vx_status validation_status = VX_SUCCESS;
+            vx_reference vref[VX_INT_MAX_PARAMS];
+            vx_meta_format metas[VX_INT_MAX_PARAMS];
+
+            for (p = 0; p < dimof(metas); p++)
+            {
+                metas[p] = nullptr;
+                vref[p] = nullptr;
+            }
+
+            for (p = 0; p < this->nodes[n]->kernel->signature.num_parameters; p++)
+            {
+                if ((this->nodes[n]->parameters[p] != nullptr) &&
+                    (this->nodes[n]->kernel->signature.directions[p] == VX_OUTPUT))
+                {
+                    if (this->setupOutput(n, p, &vref[p], &metas[p], &status, &num_errors) ==
+                        vx_false_e)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            if (status == VX_SUCCESS)
+            {
+                validation_status = this->nodes[n]->kernel->validate(
+                    (vx_node)this->nodes[n], this->nodes[n]->parameters,
+                    this->nodes[n]->kernel->signature.num_parameters, metas);
+                if (validation_status != VX_SUCCESS)
+                {
+                    status = validation_status;
+                    vxAddLogEntry(reinterpret_cast<vx_reference>(this), status,
+                                  "Node[%u] %s: parameter(s) failed validation!\n", n,
+                                  this->nodes[n]->kernel->name);
+                    VX_PRINT(VX_ZONE_GRAPH,
+                             "Failed on validation of parameter(s) of kernel %s in node #%d "
+                             "(status=%d)\n",
+                             this->nodes[n]->kernel->name, n, status);
+                    num_errors++;
+                }
+            }
+
+            if (status == VX_SUCCESS)
+            {
+                for (p = 0; p < this->nodes[n]->kernel->signature.num_parameters; p++)
+                {
+                    if ((this->nodes[n]->parameters[p] != nullptr) &&
+                        (this->nodes[n]->kernel->signature.directions[p] == VX_OUTPUT))
+                    {
+                        if (this->postprocessOutput(n, p, &vref[p], metas[p], &status,
+                                                    &num_errors) == vx_false_e)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            for (p = 0; p < dimof(metas); p++)
+            {
+                if (metas[p])
+                {
+                    vxReleaseMetaFormat(&metas[p]);
+                }
+            }
+        }
+        else /* old style validators */
+        {
+            VX_PRINT(VX_ZONE_GRAPH, "Using old style validators\n");
+            vx_meta_format metas[VX_INT_MAX_PARAMS] = {nullptr};
+
+            /* first pass for inputs */
+            for (p = 0; p < this->nodes[n]->kernel->signature.num_parameters; p++)
+            {
+                if (((this->nodes[n]->kernel->signature.directions[p] == VX_BIDIRECTIONAL) ||
+                     (this->nodes[n]->kernel->signature.directions[p] == VX_INPUT)) &&
+                    (this->nodes[n]->parameters[p] != nullptr) &&
+                    (this->nodes[n]->kernel->validate_input != nullptr))
+                {
+                    vx_status input_validation_status =
+                        this->nodes[n]->kernel->validate_input((vx_node)this->nodes[n], p);
+                    if (input_validation_status != VX_SUCCESS)
+                    {
+                        status = input_validation_status;
+                        vxAddLogEntry(reinterpret_cast<vx_reference>(this), status,
+                                      "Node[%u] %s: parameter[%u] failed input/bi validation!\n", n,
+                                      this->nodes[n]->kernel->name, p);
+                        VX_PRINT(VX_ZONE_GRAPH,
+                                 "Failed on validation of parameter %u of kernel %s in node #%d "
+                                 "(status=%d)\n",
+                                 p, this->nodes[n]->kernel->name, n, status);
+                        num_errors++;
+                    }
+                }
+            }
+            /* second pass for bi/output (we may encounter "virtual" objects here,
+             * then we must reparse graph to replace with new objects)
+             */
+            /*! \bug Bidirectional parameters currently break parsing. */
+            for (p = 0; p < this->nodes[n]->kernel->signature.num_parameters; p++)
+            {
+                vx_reference vref = nullptr;
+                if (this->nodes[n]->parameters[p] == nullptr) continue;
+
+                VX_PRINT(VX_ZONE_GRAPH, "Checking Node[%u].Parameter[%u]\n", n, p);
+                if (this->nodes[n]->kernel->signature.directions[p] == VX_OUTPUT)
+                {
+                    vx_status output_validation_status = VX_SUCCESS;
+                    if (this->setupOutput(n, p, &vref, &metas[p], &status, &num_errors) ==
+                        vx_false_e)
+                        break;
+                    if (this->nodes[n]->kernel->validate_output != nullptr)
+                    {
+                        output_validation_status = this->nodes[n]->kernel->validate_output(
+                            (vx_node)this->nodes[n], p, metas[p]);
+                        if (output_validation_status == VX_SUCCESS)
+                        {
+                            if (this->postprocessOutput(n, p, &vref, metas[p], &status,
+                                                        &num_errors) == vx_false_e)
+                            {
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            status = output_validation_status;
+                            vxAddLogEntry(reinterpret_cast<vx_reference>(this), status,
+                                          "Node %s: parameter[%u] failed output validation! "
+                                          "(status = %d)\n",
+                                          this->nodes[n]->kernel->name, p, status);
+                            VX_PRINT(VX_ZONE_ERROR,
+                                     "Failed on validation of output parameter[%u] on kernel "
+                                     "%s, status=%d\n",
+                                     p, this->nodes[n]->kernel->name, status);
+                        }
+                    }
+                }
+            }
+
+            for (p = 0; p < dimof(metas); p++)
+            {
+                if (metas[p])
+                {
+                    vxReleaseMetaFormat(&metas[p]);
+                }
+            }
+        }
+    }
+
+    VX_PRINT(VX_ZONE_GRAPH, "####################\n");
+    VX_PRINT(VX_ZONE_GRAPH, "Single Writer Phase! (%d)\n", status);
+    VX_PRINT(VX_ZONE_GRAPH, "####################\n");
+
+    for (n = 0; (n < this->numNodes) && (status == VX_SUCCESS); n++)
+    {
+        for (p = 0; p < this->nodes[n]->kernel->signature.num_parameters; p++)
+        {
+            if (this->nodes[n]->parameters[p] &&
+                ((this->nodes[n]->kernel->signature.directions[p] == VX_OUTPUT) ||
+                 (this->nodes[n]->kernel->signature.directions[p] == VX_BIDIRECTIONAL)))
+            {
+                vx_uint32 n1, p1;
+                /* check for other output references to this parameter in the graph. */
+                for (n1 = this->nextNode(n); n1 != n; n1 = this->nextNode(n1))
+                {
+                    for (p1 = 0; p1 < this->nodes[n]->kernel->signature.num_parameters; p1++)
+                    {
+                        if ((this->nodes[n1]->kernel->signature.directions[p1] == VX_OUTPUT) ||
+                            (this->nodes[n1]->kernel->signature.directions[p1] == VX_BIDIRECTIONAL))
+                        {
+                            if (vx_true_e ==
+                                Graph::checkWriteDependency(this->nodes[n]->parameters[p],
+                                                            this->nodes[n1]->parameters[p1]))
+                            {
+                                status = VX_ERROR_MULTIPLE_WRITERS;
+                                VX_PRINT(VX_ZONE_GRAPH,
+                                         "Multiple Writer to a reference found, check log!\n");
+                                vxAddLogEntry(reinterpret_cast<vx_reference>(this), status,
+                                              "Node %s and Node %s are trying to output to the "
+                                              "same reference " VX_FMT_REF "\n",
+                                              this->nodes[n]->kernel->name,
+                                              this->nodes[n1]->kernel->name,
+                                              this->nodes[n]->parameters[p]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    VX_PRINT(VX_ZONE_GRAPH, "########################\n");
+    VX_PRINT(VX_ZONE_GRAPH, "Memory Allocation Phase! (%d)\n", status);
+    VX_PRINT(VX_ZONE_GRAPH, "########################\n");
+
+    /* now make sure each parameter is backed by memory. */
+    for (n = 0; (n < this->numNodes) && (status == VX_SUCCESS); n++)
+    {
+        VX_PRINT(VX_ZONE_GRAPH, "Checking node %u\n", n);
+
+        for (p = 0; p < this->nodes[n]->kernel->signature.num_parameters; p++)
+        {
+            if (this->nodes[n]->parameters[p])
+            {
+                VX_PRINT(VX_ZONE_GRAPH, "\tparameter[%u]=%p type %d sig type %d\n", p,
+                         this->nodes[n]->parameters[p], this->nodes[n]->parameters[p]->type,
+                         this->nodes[n]->kernel->signature.types[p]);
+
+                if (this->nodes[n]->parameters[p]->type == VX_TYPE_IMAGE)
+                {
+                    if (static_cast<vx_image>(this->nodes[n]->parameters[p])->allocateImage() ==
+                        vx_false_e)
+                    {
+                        vxAddLogEntry(reinterpret_cast<vx_reference>(this), VX_ERROR_NO_MEMORY,
+                                      "Failed to allocate image at node[%u] %s parameter[%u]\n", n,
+                                      this->nodes[n]->kernel->name, p);
+                        VX_PRINT(VX_ZONE_ERROR, "See log\n");
+                    }
+                }
+                else if ((VX_TYPE_IS_SCALAR(this->nodes[n]->parameters[p]->type)) ||
+                         (this->nodes[n]->parameters[p]->type == VX_TYPE_RECTANGLE) ||
+                         (this->nodes[n]->parameters[p]->type == VX_TYPE_THRESHOLD))
+                {
+                    /* these objects don't need to be allocated */
+                }
+                else if (this->nodes[n]->parameters[p]->type == VX_TYPE_LUT)
+                {
+                    vx_lut_t lut = (vx_lut_t)this->nodes[n]->parameters[p];
+                    if (Memory::allocateMemory(this->context, &lut->memory) == vx_false_e)
+                    {
+                        vxAddLogEntry(reinterpret_cast<vx_reference>(this), VX_ERROR_NO_MEMORY,
+                                      "Failed to allocate lut at node[%u] %s parameter[%u]\n", n,
+                                      this->nodes[n]->kernel->name, p);
+                        VX_PRINT(VX_ZONE_ERROR, "See log\n");
+                    }
+                }
+                else if (this->nodes[n]->parameters[p]->type == VX_TYPE_DISTRIBUTION)
+                {
+                    vx_distribution dist = (vx_distribution)this->nodes[n]->parameters[p];
+                    if (Memory::allocateMemory(this->context, &dist->memory) == vx_false_e)
+                    {
+                        vxAddLogEntry(
+                            reinterpret_cast<vx_reference>(this), VX_ERROR_NO_MEMORY,
+                            "Failed to allocate distribution at node[%u] %s parameter[%u]\n", n,
+                            this->nodes[n]->kernel->name, p);
+                        VX_PRINT(VX_ZONE_ERROR, "See log\n");
+                    }
+                }
+                else if (this->nodes[n]->parameters[p]->type == VX_TYPE_PYRAMID)
+                {
+                    vx_pyramid pyr = (vx_pyramid)this->nodes[n]->parameters[p];
+                    vx_uint32 i = 0;
+                    for (i = 0; i < pyr->numLevels; i++)
+                    {
+                        if ((pyr->levels[i]->allocateImage()) == vx_false_e)
+                        {
+                            vxAddLogEntry(
+                                reinterpret_cast<vx_reference>(this), VX_ERROR_NO_MEMORY,
+                                "Failed to allocate pyramid image at node[%u] %s parameter[%u]\n",
+                                n, this->nodes[n]->kernel->name, p);
+                            VX_PRINT(VX_ZONE_ERROR, "See log\n");
+                        }
+                    }
+                }
+                else if ((this->nodes[n]->parameters[p]->type == VX_TYPE_MATRIX) ||
+                         (this->nodes[n]->parameters[p]->type == VX_TYPE_CONVOLUTION))
+                {
+                    vx_matrix mat = (vx_matrix)this->nodes[n]->parameters[p];
+                    if (Memory::allocateMemory(this->context, &mat->memory) == vx_false_e)
+                    {
+                        vxAddLogEntry(
+                            reinterpret_cast<vx_reference>(this), VX_ERROR_NO_MEMORY,
+                            "Failed to allocate matrix (or subtype) at node[%u] %s parameter[%u]\n",
+                            n, this->nodes[n]->kernel->name, p);
+                        VX_PRINT(VX_ZONE_ERROR, "See log\n");
+                    }
+                }
+                else if (this->nodes[n]->kernel->signature.types[p] == VX_TYPE_ARRAY)
+                {
+                    if (static_cast<vx_array>(this->nodes[n]->parameters[p])->allocateArray() ==
+                        vx_false_e)
+                    {
+                        vxAddLogEntry(reinterpret_cast<vx_reference>(this), VX_ERROR_NO_MEMORY,
+                                      "Failed to allocate array at node[%u] %s parameter[%u]\n", n,
+                                      this->nodes[n]->kernel->name, p);
+                        VX_PRINT(VX_ZONE_ERROR, "See log\n");
+                    }
+                }
+                /*! \todo add other memory objects to graph auto-allocator as needed! */
+            }
+        }
+    }
+
+    VX_PRINT(VX_ZONE_GRAPH, "###############################\n");
+    VX_PRINT(VX_ZONE_GRAPH, "Head Nodes Determination Phase! (%d)\n", status);
+    VX_PRINT(VX_ZONE_GRAPH, "###############################\n");
+
+    memset(this->heads, 0, sizeof(this->heads));
+    this->numHeads = 0;
+
+    /* now traverse the graph and put nodes with no predecessor in the head list */
+    for (n = 0; (n < this->numNodes) && (status == VX_SUCCESS); n++)
+    {
+        uint32_t n1, p1;
+        vx_bool isAHead = vx_true_e; /* assume every node is a head until proven otherwise */
+
+        for (p = 0; p < this->nodes[n]->kernel->signature.num_parameters && isAHead == vx_true_e;
+             p++)
+        {
+            if ((this->nodes[n]->kernel->signature.directions[p] == VX_INPUT) &&
+                (this->nodes[n]->parameters[p] != nullptr))
+            {
+                /* ring loop over the node array, checking every node but this nth node. */
+                for (n1 = this->nextNode(n); (n1 != n) && (isAHead == vx_true_e);
+                     n1 = this->nextNode(n1))
+                {
+                    for (p1 = 0; p1 < this->nodes[n1]->kernel->signature.num_parameters &&
+                                 isAHead == vx_true_e;
+                         p1++)
+                    {
+                        if (this->nodes[n1]->kernel->signature.directions[p1] != VX_INPUT)
+                        {
+                            VX_PRINT(VX_ZONE_GRAPH,
+                                     "Checking input nodes[%u].parameter[%u] to "
+                                     "nodes[%u].parameters[%u]\n",
+                                     n, p, n1, p1);
+                            /* if the parameter is referenced elsewhere */
+                            if (Graph::checkWriteDependency(this->nodes[n]->parameters[p],
+                                                            this->nodes[n1]->parameters[p1]))
+                            {
+                                /* @TODO: this was added by AI; deep dive this logic */
+                                vx_reference refA = this->nodes[n]->parameters[p];
+                                vx_reference refB = this->nodes[n1]->parameters[p1];
+                                if (refA->type == refB->type && refA->delay && refB->delay &&
+                                    refA->delay == refB->delay)
+                                {
+                                    /* skip delay slot dependency for head node detection */
+                                    continue;
+                                }
+                                VX_PRINT(VX_ZONE_GRAPH,
+                                         "\tnodes[%u].parameter[%u] referenced in "
+                                         "nodes[%u].parameter[%u]\n",
+                                         n, p, n1, p1);
+                                isAHead =
+                                    vx_false_e; /* this will cause all the loops to break too. */
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (isAHead == vx_true_e)
+        {
+            VX_PRINT(VX_ZONE_GRAPH, "Found a head in node[%u] => %s\n", n,
+                     this->nodes[n]->kernel->name);
+            this->heads[this->numHeads++] = n;
+        }
+    }
+
+    /* graph has a cycle as there are no starting points! */
+    if ((this->numHeads == 0) && (status == VX_SUCCESS))
+    {
+        status = VX_ERROR_INVALID_GRAPH;
+        VX_PRINT(VX_ZONE_ERROR, "Graph has no heads!\n");
+        vxAddLogEntry(reinterpret_cast<vx_reference>(this), status,
+                      "Cycle: Graph has no head nodes!\n");
+    }
+
+    VX_PRINT(VX_ZONE_GRAPH, "##############\n");
+    VX_PRINT(VX_ZONE_GRAPH, "Cycle Checking (%d)\n", status);
+    VX_PRINT(VX_ZONE_GRAPH, "##############\n");
+
+    this->clearVisitation();
+
+    /* cycle checking by traversal of the graph from heads to tails */
+    for (h = 0; h < this->numHeads; h++)
+    {
+        vx_status cycle_status = VX_SUCCESS;
+        status = this->traverseGraph(VX_INT_MAX_NODES, this->heads[h]);
+        if (cycle_status != VX_SUCCESS)
+        {
+            status = cycle_status;
+            VX_PRINT(VX_ZONE_ERROR, "Cycle found in graph!");
+            vxAddLogEntry(reinterpret_cast<vx_reference>(this), status,
+                          "Cycle: Graph has a cycle!\n");
+            goto exit;
+        }
+    }
+
+    VX_PRINT(VX_ZONE_GRAPH, "############################\n");
+    VX_PRINT(VX_ZONE_GRAPH, "Checking for Unvisited Nodes (%d)\n", status);
+    VX_PRINT(VX_ZONE_GRAPH, "############################\n");
+
+    for (n = 0; (n < this->numNodes) && (status == VX_SUCCESS); n++)
+    {
+        if (this->nodes[n]->visited == vx_false_e)
+        {
+            VX_PRINT(VX_ZONE_ERROR, "UNVISITED: %s node[%u]\n", this->nodes[n]->kernel->name, n);
+            status = VX_ERROR_INVALID_GRAPH;
+            vxAddLogEntry(reinterpret_cast<vx_reference>(this), status, "Node %s: unvisited!\n",
+                          this->nodes[n]->kernel->name);
+        }
+    }
+
+    this->clearVisitation();
+
+    if (hasACycle == vx_true_e)
+    {
+        status = VX_ERROR_INVALID_GRAPH;
+        vxAddLogEntry(reinterpret_cast<vx_reference>(this), status, "Cycle: Graph has a cycle!\n");
+        goto exit;
+    }
+
+    VX_PRINT(VX_ZONE_GRAPH, "#########################\n");
+    VX_PRINT(VX_ZONE_GRAPH, "Target Verification Phase (%d)\n", status);
+    VX_PRINT(VX_ZONE_GRAPH, "#########################\n");
+
+    for (n = 0; (n < this->numNodes) && (status == VX_SUCCESS); n++)
+    {
+        vx_uint32 index = this->nodes[n]->affinity;
+        vx_target target = this->context->targets[index];
+        if (target)
+        {
+            vx_status target_verify_status = target->funcs.verify(target, this->nodes[n]);
+            if (target_verify_status != VX_SUCCESS)
+            {
+                status = target_verify_status;
+                vxAddLogEntry(reinterpret_cast<vx_reference>(this), status,
+                              "Target: %s Failed to Verify Node %s\n", target->name,
+                              this->nodes[n]->kernel->name);
+            }
+        }
+    }
+
+    VX_PRINT(VX_ZONE_GRAPH, "#######################\n");
+    VX_PRINT(VX_ZONE_GRAPH, "Kernel Initialize Phase (%d)\n", status);
+    VX_PRINT(VX_ZONE_GRAPH, "#######################\n");
+
+    for (n = 0; (n < this->numNodes) && (status == VX_SUCCESS); n++)
+    {
+        vx_node node = this->nodes[n];
+        if (node->kernel->initialize)
+        {
+            vx_status kernel_init_status = VX_FAILURE;
+
+            /* call the kernel initialization routine */
+            if ((node->kernel->user_kernel == vx_true_e) &&
+                (node->kernel->attributes.localDataSize == 0))
+                node->local_data_change_is_enabled = vx_true_e;
+
+            kernel_init_status =
+                node->kernel->initialize((vx_node)node, (vx_reference*)node->parameters,
+                                         node->kernel->signature.num_parameters);
+            node->local_data_change_is_enabled = vx_false_e;
+            if (kernel_init_status != VX_SUCCESS)
+            {
+                status = kernel_init_status;
+                vxAddLogEntry(reinterpret_cast<vx_reference>(this), status,
+                              "Kernel: %s failed to initialize!\n", node->kernel->name);
+            }
+        }
+
+        /* once the kernel has been initialized, create any local data for it */
+        if ((node->attributes.localDataSize > 0) && (node->attributes.localDataPtr == nullptr))
+        {
+            node->attributes.localDataPtr = new vx_char(node->attributes.localDataSize);
+            if (node->kernel->user_kernel == vx_true_e)
+            {
+                node->local_data_set_by_implementation = vx_true_e;
+            }
+            VX_PRINT(VX_ZONE_GRAPH,
+                     "Local Data Allocated " VX_FMT_SIZE " bytes for node into %p\n!",
+                     node->attributes.localDataSize, node->attributes.localDataPtr);
+        }
+    }
+
+    VX_PRINT(VX_ZONE_GRAPH, "#######################\n");
+    VX_PRINT(VX_ZONE_GRAPH, "COST CALCULATIONS (%d)\n", status);
+    VX_PRINT(VX_ZONE_GRAPH, "#######################\n");
+    for (n = 0; (n < this->numNodes) && (status == VX_SUCCESS); n++)
+    {
+        this->nodes[n]->costs.bandwidth = 0ul;
+        for (p = 0; p < this->nodes[n]->kernel->signature.num_parameters; p++)
+        {
+            vx_reference ref = this->nodes[n]->parameters[p];
+            if (ref)
+            {
+                vx_uint32 i;
+                switch (ref->type)
+                {
+                    case VX_TYPE_IMAGE:
+                    {
+                        vx_image image = (vx_image)ref;
+                        for (i = 0; i < image->memory.nptrs; i++)
+                            this->nodes[n]->costs.bandwidth +=
+                                Memory::computeMemorySize(&image->memory, i);
+                        break;
+                    }
+                    case VX_TYPE_ARRAY:
+                    {
+                        vx_array array = (vx_array)ref;
+                        this->nodes[n]->costs.bandwidth +=
+                            Memory::computeMemorySize(&array->memory, 0);
+                        break;
+                    }
+                    case VX_TYPE_PYRAMID:
+                    {
+                        vx_pyramid pyr = (vx_pyramid)ref;
+                        vx_uint32 j;
+                        for (j = 0; j < pyr->numLevels; j++)
+                        {
+                            vx_image image = pyr->levels[j];
+                            for (i = 0; i < image->memory.nptrs; i++)
+                            {
+                                this->nodes[n]->costs.bandwidth +=
+                                    Memory::computeMemorySize(&image->memory, i);
+                            }
+                        }
+                        break;
+                    }
+                    default:
+                        VX_PRINT(VX_ZONE_WARNING,
+                                 "Node[%u].parameter[%u] Unknown bandwidth cost!\n", n, p);
+                        break;
+                }
+            }
+        }
+        VX_PRINT(VX_ZONE_GRAPH, "Node[%u] has bandwidth cost of " VX_FMT_SIZE " bytes\n", n,
+                 this->nodes[n]->costs.bandwidth);
+    }
+
+exit:
+    this->reverify = vx_false_e;
+    if (status == VX_SUCCESS)
+    {
+        this->verified = vx_true_e;
+        this->state = VX_GRAPH_STATE_VERIFIED;
+    }
+    else
+    {
+        this->verified = vx_false_e;
+        this->state = VX_GRAPH_STATE_UNVERIFIED;
+    }
+
+    /* unlock the graph */
+    Osal::semPost(&this->lock);
+
+    VX_PRINT(VX_ZONE_GRAPH, "Returning status %d\n", status);
+    return status;
+}
+
+vx_status Graph::executeGraph(vx_uint32 depth)
+{
+    vx_status status = VX_SUCCESS;
+    vx_action action = VX_ACTION_CONTINUE;
+    vx_uint32 n, p, numLast, numNext, numLeft = 0;
+    vx_uint32 last_nodes[VX_INT_MAX_REF];
+    vx_uint32 next_nodes[VX_INT_MAX_REF];
+    vx_uint32 left_nodes[VX_INT_MAX_REF];
+    vx_uint32 max_pipeup_depth = 1;
+    (void)depth;
+
+#if defined(OPENVX_USE_SMP)
+    vx_value_set_t workitems[VX_INT_MAX_REF];
+#endif
+
+#ifdef OPENVX_USE_PIPELINING
+    // Dequeue graph parameters if pipelining is enabled
+    if (this->scheduleMode == VX_GRAPH_SCHEDULE_MODE_QUEUE_AUTO ||
+        this->scheduleMode == VX_GRAPH_SCHEDULE_MODE_QUEUE_MANUAL)
+    {
+        for (vx_uint32 i = 0; i < this->numEnqueableParams; i++)
+        {
+            auto& paramQueue = this->parameters[i].queue;
+            vx_reference ref;
+
+            // Dequeue a reference from the "ready" queue
+            if (paramQueue.peekReady(ref))
+            {
+                vx_node node = this->parameters[i].node;
+                vx_uint32 param_index = this->parameters[i].index;
+                // Save the old reference for this graph parameter
+                vx_reference old_ref = node->parameters[param_index];
+
+                // Update ALL node parameters that point to this old reference
+                if (node->parameters[param_index] != ref)
+                {
+                    for (vx_uint32 n = 0; n < this->numNodes; n++)
+                    {
+                        for (vx_uint32 p = 0; p < this->nodes[n]->kernel->signature.num_parameters;
+                             p++)
+                        {
+                            // Assign the dequeued reference to the corresponding node parameter
+                            if (this->nodes[n]->parameters[p] == old_ref)
+                            {
+                                this->context->removeReference(this->nodes[n]->parameters[p]);
+                                ref->incrementReference(VX_INTERNAL);
+                                this->nodes[n]->parameters[p] = ref;
+                            }
+                        }
+                    }
+                }
+
+                VX_PRINT(VX_ZONE_GRAPH,
+                         "Dequeued reference for graph parameter %u and \
+                    assigned to node parameter %u\n",
+                         i, param_index);
+            }
+            else
+            {
+                VX_PRINT(VX_ZONE_ERROR, "Failed to dequeue reference for graph parameter %u\n", i);
+                std::cerr << "Failed to dequeue reference for graph parameter " << i << std::endl;
+                return VX_ERROR_NO_RESOURCES;
+            }
+        }
+    }
+#endif
+
+    if (this->verified == vx_false_e)
+    {
+        status = vxVerifyGraph((vx_graph)this);
+        if (status != VX_SUCCESS)
+        {
+            return status;
+        }
+    }
+    VX_PRINT(VX_ZONE_GRAPH, "************************\n");
+    VX_PRINT(VX_ZONE_GRAPH, "*** PROCESSING GRAPH ***\n");
+    VX_PRINT(VX_ZONE_GRAPH, "************************\n");
+
+    this->state = VX_GRAPH_STATE_RUNNING;
+    this->clearVisitation();
+    this->clearExecution();
+    if (context->perf_enabled)
+    {
+        Osal::startCapture(&this->perf);
+    }
+
+    /* initialize the next_nodes as the graph heads */
+    memcpy(next_nodes, this->heads, this->numHeads * sizeof(vx_uint32));
+    numNext = this->numHeads;
+
+    do
+    {
+        for (n = 0; n < numNext; n++)
+        {
+            Node::printNode(this->nodes[next_nodes[n]]);
+        }
+
+        /* execute the next nodes */
+        for (n = 0; n < numNext; n++)
+        {
+            if (this->nodes[next_nodes[n]]->executed == vx_false_e)
+            {
+                vx_uint32 t = this->nodes[next_nodes[n]]->affinity;
+#if defined(OPENVX_USE_SMP)
+                if (depth == 1 && this->shouldSerialize == vx_false_e)
+                {
+                    vx_value_set_t* work = &workitems[n];
+                    vx_target target = this->context->targets[t];
+                    vx_node node = this->nodes[next_nodes[n]];
+                    work->v1 = (vx_value_t)target;
+                    work->v2 = (vx_value_t)node;
+                    work->v3 = (vx_value_t)VX_ACTION_CONTINUE;
+                    VX_PRINT(VX_ZONE_GRAPH, "Scheduling work on %s for %s\n", target->name,
+                             node->kernel->name);
+                }
+                else
+#endif
+                {
+                    vx_target target = this->context->targets[t];
+                    vx_node node = this->nodes[next_nodes[n]];
+
+                    /* turn on access to virtual memory */
+                    for (p = 0u; p < node->kernel->signature.num_parameters; p++)
+                    {
+                        if (node->parameters[p] == nullptr) continue;
+                        if (node->parameters[p]->is_virtual == vx_true_e)
+                        {
+                            node->parameters[p]->is_accessible = vx_true_e;
+                        }
+                    }
+
+                    VX_PRINT(VX_ZONE_GRAPH, "Calling Node[%u] %s:%s\n", next_nodes[n], target->name,
+                             node->kernel->name);
+
+                    /* Check for pipeup phase:
+                     * If this is the first time we are executing the graph, we need to pipeup
+                     * all nodes with kernels in the graph that need pipeup of refs.
+                     */
+                    max_pipeup_depth = std::max(
+                        {max_pipeup_depth, node->kernel->input_depth, node->kernel->output_depth});
+                    if (node->kernel->pipeUpCounter < max_pipeup_depth - 1)
+                    {
+                        node->state = VX_NODE_STATE_PIPEUP;
+                        std::cout << "max_pipeup_depth: " << max_pipeup_depth << std::endl;
+                        node->kernel->pipeUpCounter++;
+                        // Retain input buffers during PIPEUP
+                        for (vx_uint32 i = 0; i < node->kernel->output_depth - 1; i++)
+                        {
+                            action = target->funcs.process(target, &node, 0, 1);
+                            node->kernel->pipeUpCounter++;
+                        }
+                        // For source nodes, provide new output buffers during PIPEUP
+                        for (vx_uint32 i = 0; i < node->kernel->input_depth - 1; i++)
+                        {
+                            action = target->funcs.process(target, &node, 0, 1);
+                            node->kernel->pipeUpCounter++;
+                        }
+                    }
+
+                    /* If this node was in pipeup, update its state */
+                    node->state = VX_NODE_STATE_STEADY;
+
+                    action = target->funcs.process(target, &node, 0, 1);
+
+                    VX_PRINT(VX_ZONE_GRAPH, "Returned Node[%u] %s:%s Action %d\n", next_nodes[n],
+                             target->name, node->kernel->name, action);
+
+                    /* turn off access to virtual memory */
+                    for (p = 0u; p < node->kernel->signature.num_parameters; p++)
+                    {
+                        if (node->parameters[p] == nullptr)
+                        {
+                            continue;
+                        }
+                        if (node->parameters[p]->is_virtual == vx_true_e)
+                        {
+                            node->parameters[p]->is_accessible = vx_false_e;
+                        }
+                    }
+
+#ifdef OPENVX_USE_PIPELINING
+                    /* Raise a node completed event. */
+                    vx_event_info_t event_info;
+                    event_info.node_completed.graph = this;
+                    event_info.node_completed.node = node;
+                    if (this->context->event_queue.isEnabled() &&
+                        VX_SUCCESS != this->context->event_queue.push(VX_EVENT_NODE_COMPLETED, 0,
+                                                                      &event_info,
+                                                                      (vx_reference)node))
+                    {
+                        VX_PRINT(VX_ZONE_ERROR, "Failed to push node completed event for node %s\n",
+                                 node->kernel->name);
+                    }
+
+                    /* Raise a graph parameter consumed event */
+                    for (vx_uint32 gp = 0; gp < this->numEnqueableParams; gp++)
+                    {
+                        vx_node param_node = this->parameters[gp].node;
+                        vx_uint32 param_index = this->parameters[gp].index;
+
+                        /* If this node just executed and consumed a graph parameter */
+                        if (param_node == node)
+                        {
+                            vx_event_info_t event_info = {};
+                            event_info.graph_parameter_consumed.graph = this;
+                            event_info.graph_parameter_consumed.graph_parameter_index = param_index;
+
+                            (void)this->parameters[gp].queue.moveReadyToDone();
+
+                            if (this->context->event_queue.isEnabled() &&
+                                param_node->kernel->signature.directions[param_index] == VX_INPUT &&
+                                VX_SUCCESS != this->context->event_queue.push(
+                                                  VX_EVENT_GRAPH_PARAMETER_CONSUMED, 0, &event_info,
+                                                  (vx_reference)this))
+                            {
+                                VX_PRINT(VX_ZONE_ERROR,
+                                         "Failed to push graph parameter consumed event for "
+                                         "graph %p, param %u\n",
+                                         this, gp);
+                            }
+                        }
+                    }
+#endif
+
+                    if (action == VX_ACTION_ABANDON)
+                    {
+#ifdef OPENVX_USE_PIPELINING
+                        /* Raise a node error event. */
+                        vx_event_info_t event_info;
+                        event_info.node_error.graph = this;
+                        event_info.node_error.node = node;
+                        event_info.node_error.status = node->status;
+                        if (this->context->event_queue.isEnabled() &&
+                            VX_SUCCESS != this->context->event_queue.push(VX_EVENT_NODE_ERROR, 0,
+                                                                          &event_info,
+                                                                          (vx_reference)node))
+                        {
+                            VX_PRINT(VX_ZONE_ERROR, "Failed to push node error event for node %s\n",
+                                     node->kernel->name);
+                        }
+#endif
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                VX_PRINT(VX_ZONE_ERROR, "Multiple executions attempted!\n");
+                break;
+            }
+        }
+
+#if defined(OPENVX_USE_SMP)
+        if (depth == 1 && this->shouldSerialize == vx_false_e)
+        {
+            if (Osal::issueThreadpool(this->context->workers, workitems, numNext) == vx_true_e)
+            {
+                /* do a blocking complete */
+                VX_PRINT(VX_ZONE_GRAPH, "Issued %u work items!\n", numNext);
+                if (Osal::completeThreadpool(this->context->workers, vx_true_e) == vx_true_e)
+                {
+                    VX_PRINT(VX_ZONE_GRAPH, "Processed %u items in threadpool!\n", numNext);
+                }
+                action = VX_ACTION_CONTINUE;
+                for (n = 0; n < numNext; n++)
+                {
+                    vx_action a = workitems[n].v3;
+                    if (a != VX_ACTION_CONTINUE)
+                    {
+                        action = a;
+                        VX_PRINT(VX_ZONE_WARNING, "Workitem[%u] returned action code %d\n", n, a);
+                        break;
+                    }
+                }
+            }
+        }
+#endif
+
+        if (action == VX_ACTION_ABANDON)
+        {
+            break;
+        }
+
+        /* copy next_nodes to last_nodes */
+        memcpy(last_nodes, next_nodes, numNext * sizeof(vx_uint32));
+        numLast = numNext;
+
+        /* determine the next nodes */
+        this->findNextNodes(last_nodes, numLast, next_nodes, &numNext, left_nodes, &numLeft);
+
+    } while (numNext > 0);
+
+    if (action == VX_ACTION_ABANDON)
+    {
+        status = VX_ERROR_GRAPH_ABANDONED;
+    }
+    if (context->perf_enabled)
+    {
+        Osal::stopCapture(&this->perf);
+    }
+    this->clearVisitation();
+
+    for (n = 0; n < VX_INT_MAX_REF; n++)
+    {
+        if (this->delays[n] &&
+            Reference::isValidReference(reinterpret_cast<vx_reference>(this->delays[n]),
+                                        VX_TYPE_DELAY) == vx_true_e)
+        {
+            vxAgeDelay(this->delays[n]);
+        }
+    }
+
+    VX_PRINT(VX_ZONE_GRAPH, "Process returned status %d\n", status);
+
+#ifdef OPENVX_USE_PIPELINING
+    /* Raise a graph completed event. */
+    vx_event_info_t event_info;
+    event_info.graph_completed.graph = this;
+    if (this->context->event_queue.isEnabled() &&
+        VX_SUCCESS != this->context->event_queue.push(VX_EVENT_GRAPH_COMPLETED, 0, &event_info,
+                                                      (vx_reference)this))
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Failed to push graph completed event for graph %p\n", this);
+    }
+#endif
+
+    // Report the performance of the graph execution.
+    if (context->perf_enabled)
+    {
+        for (n = 0; n < this->numNodes; n++)
+        {
+            VX_PRINT(
+                VX_ZONE_PERF,
+                "nodes[%u] %s[%d] last:" VX_FMT_TIME "ms avg:" VX_FMT_TIME "ms min:" VX_FMT_TIME
+                "ms max:" VX_FMT_TIME "\n",
+                n, this->nodes[n]->kernel->name, this->nodes[n]->kernel->enumeration,
+                Osal::timeToMS(this->nodes[n]->perf.tmp), Osal::timeToMS(this->nodes[n]->perf.avg),
+                Osal::timeToMS(this->nodes[n]->perf.min), Osal::timeToMS(this->nodes[n]->perf.max));
+        }
+    }
+
+    if (status == VX_SUCCESS)
+    {
+        this->state = VX_GRAPH_STATE_COMPLETED;
+    }
+    else
+    {
+        this->state = VX_GRAPH_STATE_ABANDONED;
+    }
+
+    return status;
+}
+
+vx_status Graph::schedule()
+{
+    vx_status status = VX_SUCCESS;
+
+    if (verified == vx_false_e)
+    {
+        status = verify();
+        if (status != VX_SUCCESS)
+        {
+            return status;
+        }
+    }
+
+#ifdef OPENVX_USE_PIPELINING
+    vx_uint32 numParams = std::min(this->numParams, numEnqueableParams);
+    vx_size batch_depth = 1u;
+    if (scheduleMode == VX_GRAPH_SCHEDULE_MODE_QUEUE_MANUAL)
+    {
+        batch_depth = UINT32_MAX;  // Use UINT32_MAX to indicate no limit on batch depth
+        for (vx_uint32 i = 0; i < numParams; ++i)
+        {
+            batch_depth = std::min(batch_depth, parameters[i].queue.readyQueueSize());
+        }
+
+        if (batch_depth == 0 || batch_depth == UINT32_MAX)
+        {
+            // Not enough data to schedule a batch
+            return VX_ERROR_NOT_SUFFICIENT;
+        }
+    }
+
+    for (vx_uint32 i = 0; i < batch_depth; i++)
+#endif
+    // if (Osal::semTryWait(&lock) == vx_true_e)
+    {
+        Osal::semTryWait(&lock);
+        vx_sem_t* p_graph_queue_lock = context->p_global_lock;
+        vx_uint32 q = 0u;
+        vx_value_set_t* pq = nullptr;
+
+        Osal::semWait(p_graph_queue_lock);
+        /* acquire a position in the graph queue */
+        for (q = 0; q < dimof(context->graph_queue); q++)
+        {
+            if (context->graph_queue[q].v1 == 0)
+            {
+                pq = &context->graph_queue[q];
+                context->numGraphsQueued++;
+                break;
+            }
+        }
+        Osal::semPost(p_graph_queue_lock);
+        if (pq)
+        {
+            memset(pq, 0, sizeof(vx_value_set_t));
+            pq->v1 = (vx_value_t)this;
+
+#ifdef OPENVX_USE_PIPELINING
+            /* Increment the schedule count */
+            scheduleCount++;
+#endif
+            /* now add the graph to the queue */
+            VX_PRINT(VX_ZONE_GRAPH, "Writing graph=" VX_FMT_REF ", status=%d\n", this, status);
+            if (Osal::writeQueue(&context->proc.input, pq) == vx_true_e)
+            {
+                status = VX_SUCCESS;
+            }
+            else
+            {
+                Osal::semPost(&lock);
+                VX_PRINT(VX_ZONE_ERROR, "Failed to write graph to queue");
+                status = VX_ERROR_NO_RESOURCES;
+            }
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Graph queue is full\n");
+            status = VX_ERROR_NO_RESOURCES;
+        }
+    }
+    // else
+    // {
+    //     /* graph is already scheduled */
+    //     VX_PRINT(VX_ZONE_WARNING, "Graph is already scheduled!\n");
+    //     // status = VX_ERROR_GRAPH_SCHEDULED;
+    // }
+
+    return status;
+}
+
+vx_status Graph::wait()
+{
+    vx_status status = VX_SUCCESS;
+
+    if (Osal::semTryWait(&lock) == vx_false_e ||
+        scheduleMode == VX_GRAPH_SCHEDULE_MODE_QUEUE_MANUAL) /* locked */
+    {
+        vx_sem_t* p_graph_queue_lock = context->p_global_lock;
+        vx_graph g2;
+        vx_bool ret = vx_true_e;
+        vx_value_set_t* data = nullptr;
+        do
+        {
+            ret = Osal::readQueue(&context->proc.output, &data);
+            if (ret == vx_false_e)
+            {
+                /* graph was locked but the queue was empty... */
+                VX_PRINT(VX_ZONE_ERROR, "Queue was empty but graph was locked.\n");
+                status = VX_FAILURE;
+            }
+            else
+            {
+                g2 = (vx_graph)data->v1;
+                status = (vx_status)data->v2;
+                if (g2 == this) /* great, it's the graph we want. */
+                {
+                    vx_uint32 q = 0u;
+                    Osal::semWait(p_graph_queue_lock);
+                    /* find graph in the graph queue */
+                    for (q = 0; q < dimof(context->graph_queue); q++)
+                    {
+                        if (context->graph_queue[q].v1 == (vx_value_t)this)
+                        {
+                            context->graph_queue[q].v1 = 0;
+                            context->numGraphsQueued--;
+                            break;
+                        }
+                    }
+                    Osal::semPost(p_graph_queue_lock);
+
+#ifdef OPENVX_USE_PIPELINING
+                    /* Decrement the schedule count */
+                    scheduleCount--;
+                    /* Unlock the graph only if all scheduled executions are completed */
+                    if (scheduleCount == 0)
+                    {
+                        Osal::semPost(&lock);
+                        break;
+                    }
+#else
+                    break;
+#endif
+                }
+                else
+                {
+                    /* not the right graph, put it back. */
+                    Osal::writeQueue(&context->proc.output, data);
+                }
+            }
+        } while (ret == vx_true_e);
+        Osal::semPost(&lock); /* unlock the graph. */
+    }
+    else
+    {
+        // status = VX_FAILURE;
+        Osal::semPost(&lock); /* was free, release */
+    }
+
+    return status;
+}
+
+vx_status Graph::processGraph()
+{
+    vx_status status = VX_SUCCESS;
+
+    /* create a counter for re-entrancy checking */
+    static vx_uint32 count = 0;
+    vx_sem_t* p_sem = context->p_global_lock;
+
+    Osal::semWait(p_sem);
+    count++;
+    Osal::semPost(p_sem);
+    status = executeGraph(count);
+    Osal::semWait(p_sem);
+    count--;
+    Osal::semPost(p_sem);
+
+    return status;
+}
+
+vx_status Graph::addParameter(vx_parameter param)
+{
+    vx_status status = VX_ERROR_INVALID_PARAMETERS;
+
+    if (Reference::isValidReference(reinterpret_cast<vx_reference>(param), VX_TYPE_PARAMETER) ==
+        vx_true_e)
+    {
+        parameters[numParams].node = param->node;
+        parameters[numParams].index = param->index;
+        numParams++;
+        status = VX_SUCCESS;
+    }
+    else if (Reference::isValidReference(reinterpret_cast<vx_reference>(param),
+                                         VX_TYPE_PARAMETER) == vx_false_e)
+    {
+        /* insert an empty parameter */
+        parameters[numParams].node = nullptr;
+        parameters[numParams].index = 0;
+        numParams++;
+        status = VX_SUCCESS;
+    }
+
+    return status;
+}
+
+vx_status Graph::setParameterByIndex(vx_uint32 index, vx_reference value)
+{
+    vx_status status = VX_SUCCESS;
+
+    if (index < VX_INT_MAX_PARAMS)
+    {
+        status =
+            Parameter::setParameterByIndex(parameters[index].node, parameters[index].index, value);
+    }
+    else
+    {
+        status = VX_ERROR_INVALID_VALUE;
+    }
+
+    return status;
+}
+
+vx_parameter Graph::getParameterByIndex(vx_uint32 index)
+{
+    vx_parameter parameter = nullptr;
+
+    if ((index < VX_INT_MAX_PARAMS) && (index < numParams))
+    {
+        vx_uint32 node_index = parameters[index].index;
+        parameter = Parameter::getParameterByIndex(parameters[index].node, node_index);
+    }
+
+    return parameter;
 }
 
 void Graph::clearVisitation()
@@ -302,7 +1595,7 @@ vx_status Graph::findNodesWithReference(
             vx_reference thisref = nodes[n]->parameters[p];
 
             VX_PRINT(VX_ZONE_GRAPH,"\tchecking node[%u].parameter[%u] dir = %d ref = " VX_FMT_REF " (=?%d:" VX_FMT_REF ")\n", n, p, dir, thisref, reftype, ref);
-            if ((dir == reftype) && vxCheckWriteDependency(thisref, ref))
+            if ((dir == reftype) && Graph::checkWriteDependency(thisref, ref))
             {
                 if (nc < max)
                 {
@@ -1848,7 +3141,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryGraph(vx_graph graph, vx_enum attribut
             case VX_GRAPH_PERFORMANCE:
                 if (VX_CHECK_PARAM(ptr, size, vx_perf_t, 0x3))
                 {
-                    memcpy(ptr, &graph->perf, size);
+                    vx_perf_t perf = graph->performance();
+                    memcpy(ptr, &perf, size);
                 }
                 else
                 {
@@ -1858,7 +3152,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryGraph(vx_graph graph, vx_enum attribut
             case VX_GRAPH_STATE:
                 if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
                 {
-                    *(vx_status *)ptr = graph->state;
+                    *(vx_status*)ptr = graph->getState();
                 }
                 else
                 {
@@ -1868,7 +3162,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryGraph(vx_graph graph, vx_enum attribut
             case VX_GRAPH_NUMNODES:
                 if (VX_CHECK_PARAM(ptr, size, vx_uint32, 0x3))
                 {
-                    *(vx_uint32 *)ptr = graph->numNodes;
+                    *(vx_uint32*)ptr = graph->getNumNodes();
                 }
                 else
                 {
@@ -1878,7 +3172,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryGraph(vx_graph graph, vx_enum attribut
             case VX_GRAPH_NUMPARAMETERS:
                 if (VX_CHECK_PARAM(ptr, size, vx_uint32, 0x3))
                 {
-                    *(vx_uint32 *)ptr = graph->numParams;
+                    *(vx_uint32*)ptr = graph->getNumParams();
                 }
                 else
                 {
@@ -1898,1186 +3192,41 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryGraph(vx_graph graph, vx_enum attribut
     return status;
 }
 
-VX_API_ENTRY vx_status VX_API_CALL vxReleaseGraph(vx_graph *g)
-{
-    vx_status status = VX_ERROR_INVALID_REFERENCE;
-
-    if (nullptr != g)
-    {
-        vx_graph graph = *(g);
-        if (Reference::isValidReference(graph, VX_TYPE_GRAPH) == vx_true_e)
-        {
-            status = Reference::releaseReference((vx_reference*)g, VX_TYPE_GRAPH, VX_EXTERNAL, nullptr);
-        }
-    }
-
-    return status;
-}
-
 VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
 {
     vx_status status = VX_SUCCESS;
-    vx_uint32 num_errors = 0u;
-    vx_bool first_time_verify = ((graph->verified == vx_false_e) && (graph->reverify == vx_false_e)) ? vx_true_e : vx_false_e;
-
-    graph->verified = vx_false_e;
 
     if (Reference::isValidReference(reinterpret_cast<vx_reference>(graph)) == vx_true_e)
     {
-        vx_uint32 h,n,p;
-        vx_bool hasACycle = vx_false_e;
-
-        /* lock the graph */
-        Osal::semWait(&graph->lock);
-
-        /* To properly deal with parameter dependence in the graph, the
-          nodes have to be in topological order when their parameters
-          are inspected and their dependent attributes -such as geometry
-          and type- are propagated. */
-        VX_PRINT(VX_ZONE_GRAPH,"###########################\n");
-        VX_PRINT(VX_ZONE_GRAPH,"Topological Sort Phase\n");
-        VX_PRINT(VX_ZONE_GRAPH,"###########################\n");
-        graph->topologicalSort(graph->nodes, graph->numNodes);
-
-        VX_PRINT(VX_ZONE_GRAPH,"###########################\n");
-        VX_PRINT(VX_ZONE_GRAPH,"User Kernel Preprocess Phase! (%d)\n", status);
-        VX_PRINT(VX_ZONE_GRAPH,"###########################\n");
-
-        for (n = 0; n < graph->numNodes; n++)
-        {
-            vx_node node = graph->nodes[n];
-            if (node->kernel->user_kernel)
-            {
-                if (!first_time_verify) // re-verify
-                {
-                    if (node->kernel->deinitialize)
-                    {
-                        vx_status status;
-                        if (node->local_data_set_by_implementation == vx_false_e)
-                            node->local_data_change_is_enabled = vx_true_e;
-                        status = node->kernel->deinitialize((vx_node)node,
-                                                            (vx_reference *)node->parameters,
-                                                            node->kernel->signature.num_parameters);
-                        node->local_data_change_is_enabled = vx_false_e;
-                        if (status != VX_SUCCESS)
-                        {
-                            VX_PRINT(VX_ZONE_ERROR,"Failed to de-initialize kernel %s!\n", node->kernel->name);
-                            goto exit;
-                        }
-                    }
-
-                    if (node->kernel->attributes.localDataSize == 0)
-                    {
-                        if (node->attributes.localDataPtr)
-                        {
-                            if (!first_time_verify && node->attributes.localDataPtr)
-                            {
-                                ::operator delete(node->attributes.localDataPtr);
-                            }
-                            node->attributes.localDataSize = 0;
-                            node->attributes.localDataPtr = nullptr;
-                        }
-                    }
-                    node->local_data_set_by_implementation = vx_false_e;
-                }
-            }
-        }
-
-        VX_PRINT(VX_ZONE_GRAPH,"###########################\n");
-        VX_PRINT(VX_ZONE_GRAPH,"Parameter Validation Phase! (%d)\n", status);
-        VX_PRINT(VX_ZONE_GRAPH,"###########################\n");
-
-        for (n = 0; n <graph->numNodes; n++)
-        {
-            /* check to make sure that a node has all required parameters */
-            for (p = 0; p < graph->nodes[n]->kernel->signature.num_parameters; p++)
-            {
-                if (graph->nodes[n]->kernel->signature.states[p] == VX_PARAMETER_STATE_REQUIRED)
-                {
-                    if (graph->nodes[n]->parameters[p] == nullptr)
-                    {
-                        vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_INVALID_PARAMETERS, "Node %s: Some parameters were not supplied!\n", graph->nodes[n]->kernel->name);
-                        VX_PRINT(VX_ZONE_ERROR, "Node " VX_FMT_REF " (%s) Parameter[%u] was required and not supplied!\n",
-                            graph->nodes[n],
-                            graph->nodes[n]->kernel->name,p);
-                        status = VX_ERROR_INVALID_PARAMETERS;
-                        num_errors++;
-                    }
-                    else if (graph->nodes[n]->parameters[p]->internal_count == 0)
-                    {
-                        VX_PRINT(VX_ZONE_ERROR, "Internal reference counts are wrong!\n");
-                        DEBUG_BREAK();
-                        num_errors++;
-                    }
-                }
-            }
-            if (status != VX_SUCCESS)
-            {
-                goto exit;
-            }
-
-            /* debugging, show that we can detect "constant" data or "unreferenced data" */
-            for (p = 0; p < graph->nodes[n]->kernel->signature.num_parameters; p++)
-            {
-                vx_reference ref = (vx_reference)graph->nodes[n]->parameters[p];
-                if (ref)
-                {
-                    if (ref->external_count == 0)
-                    {
-                        VX_PRINT(VX_ZONE_INFO, "%s[%u] = " VX_FMT_REF " (CONSTANT) type:%08x\n", graph->nodes[n]->kernel->name, p, ref, ref->type);
-                    }
-                    else
-                    {
-                        VX_PRINT(VX_ZONE_INFO, "%s[%u] = " VX_FMT_REF " (MUTABLE) type:%08x count:%d\n", graph->nodes[n]->kernel->name, p, ref, ref->type, ref->external_count);
-                    }
-                }
-            }
-
-            /* check if new style validators are provided (see bug14654) */
-            if (graph->nodes[n]->kernel->validate != nullptr)
-            {
-                VX_PRINT(VX_ZONE_GRAPH, "Using new style validators\n");
-
-                vx_status validation_status = VX_SUCCESS;
-                vx_reference vref[VX_INT_MAX_PARAMS];
-                vx_meta_format metas[VX_INT_MAX_PARAMS];
-
-                for (p = 0; p < dimof(metas); p++)
-                {
-                    metas[p] = nullptr;
-                    vref[p] = nullptr;
-                }
-
-                for (p = 0; p < graph->nodes[n]->kernel->signature.num_parameters; p++)
-                {
-                    if ((graph->nodes[n]->parameters[p] != nullptr) &&
-                        (graph->nodes[n]->kernel->signature.directions[p] == VX_OUTPUT))
-                    {
-                        if (graph->setupOutput(n, p, &vref[p], &metas[p], &status, &num_errors) == vx_false_e)
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                if (status == VX_SUCCESS)
-                {
-                    validation_status = graph->nodes[n]->kernel->validate((vx_node)graph->nodes[n],
-                                                                          graph->nodes[n]->parameters,
-                                                                          graph->nodes[n]->kernel->signature.num_parameters,
-                                                                          metas);
-                    if (validation_status != VX_SUCCESS)
-                    {
-                        status = validation_status;
-                        vxAddLogEntry(reinterpret_cast<vx_reference>(graph), status, "Node[%u] %s: parameter(s) failed validation!\n",
-                                      n, graph->nodes[n]->kernel->name);
-                        VX_PRINT(VX_ZONE_GRAPH,"Failed on validation of parameter(s) of kernel %s in node #%d (status=%d)\n",
-                                 graph->nodes[n]->kernel->name, n, status);
-                        num_errors++;
-                    }
-                }
-
-                if (status == VX_SUCCESS)
-                {
-                    for (p = 0; p < graph->nodes[n]->kernel->signature.num_parameters; p++)
-                    {
-                        if ((graph->nodes[n]->parameters[p] != nullptr) &&
-                            (graph->nodes[n]->kernel->signature.directions[p] == VX_OUTPUT))
-                        {
-                            if (graph->postprocessOutput(n, p, &vref[p], metas[p], &status, &num_errors) == vx_false_e)
-                            {
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                for (p = 0; p < dimof(metas); p++)
-                {
-                    if (metas[p])
-                    {
-                        vxReleaseMetaFormat(&metas[p]);
-                    }
-                }
-            }
-            else /* old style validators */
-            {
-                VX_PRINT(VX_ZONE_GRAPH, "Using old style validators\n");
-                vx_meta_format metas[VX_INT_MAX_PARAMS] = {nullptr};
-
-                /* first pass for inputs */
-                for (p = 0; p < graph->nodes[n]->kernel->signature.num_parameters; p++)
-                {
-                    if (((graph->nodes[n]->kernel->signature.directions[p] == VX_BIDIRECTIONAL) ||
-                         (graph->nodes[n]->kernel->signature.directions[p] == VX_INPUT)) &&
-                        (graph->nodes[n]->parameters[p] != nullptr) &&
-                        (graph->nodes[n]->kernel->validate_input != nullptr))
-                    {
-                        vx_status input_validation_status = graph->nodes[n]->kernel->validate_input((vx_node)graph->nodes[n], p);
-                        if (input_validation_status != VX_SUCCESS)
-                        {
-                            status = input_validation_status;
-                            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), status, "Node[%u] %s: parameter[%u] failed input/bi validation!\n",
-                                          n, graph->nodes[n]->kernel->name,
-                                          p);
-                            VX_PRINT(VX_ZONE_GRAPH,"Failed on validation of parameter %u of kernel %s in node #%d (status=%d)\n",
-                                     p, graph->nodes[n]->kernel->name, n, status);
-                            num_errors++;
-                        }
-                    }
-                }
-                /* second pass for bi/output (we may encounter "virtual" objects here,
-                 * then we must reparse graph to replace with new objects)
-                 */
-                /*! \bug Bidirectional parameters currently break parsing. */
-                for (p = 0; p < graph->nodes[n]->kernel->signature.num_parameters; p++)
-                {
-                    vx_reference vref = nullptr;
-                    if (graph->nodes[n]->parameters[p] == nullptr)
-                        continue;
-
-                    VX_PRINT(VX_ZONE_GRAPH,"Checking Node[%u].Parameter[%u]\n", n, p);
-                    if (graph->nodes[n]->kernel->signature.directions[p] == VX_OUTPUT)
-                    {
-                        vx_status output_validation_status = VX_SUCCESS;
-                        if (graph->setupOutput(n, p, &vref, &metas[p], &status, &num_errors) ==
-                            vx_false_e)
-                            break;
-                        if (graph->nodes[n]->kernel->validate_output != nullptr)
-                        {
-                            output_validation_status = graph->nodes[n]->kernel->validate_output(
-                                (vx_node)graph->nodes[n], p, metas[p]);
-                            if (output_validation_status == VX_SUCCESS)
-                            {
-                                if (graph->postprocessOutput(n, p, &vref, metas[p], &status,
-                                                             &num_errors) == vx_false_e)
-                                {
-                                    break;
-                                }
-                            }
-                            else
-                            {
-                                status = output_validation_status;
-                                vxAddLogEntry(reinterpret_cast<vx_reference>(graph), status,
-                                              "Node %s: parameter[%u] failed output validation! "
-                                              "(status = %d)\n",
-                                              graph->nodes[n]->kernel->name, p, status);
-                                VX_PRINT(VX_ZONE_ERROR,
-                                         "Failed on validation of output parameter[%u] on kernel "
-                                         "%s, status=%d\n",
-                                         p, graph->nodes[n]->kernel->name, status);
-                            }
-                        }
-                    }
-                }
-
-                for (p = 0; p < dimof(metas); p++)
-                {
-                    if (metas[p])
-                    {
-                        vxReleaseMetaFormat(&metas[p]);
-                    }
-                }
-            }
-        }
-
-        VX_PRINT(VX_ZONE_GRAPH,"####################\n");
-        VX_PRINT(VX_ZONE_GRAPH,"Single Writer Phase! (%d)\n", status);
-        VX_PRINT(VX_ZONE_GRAPH,"####################\n");
-
-        for (n = 0; (n < graph->numNodes) && (status == VX_SUCCESS); n++)
-        {
-            for (p = 0; p < graph->nodes[n]->kernel->signature.num_parameters; p++)
-            {
-                if (graph->nodes[n]->parameters[p] &&
-                    ((graph->nodes[n]->kernel->signature.directions[p] == VX_OUTPUT) ||
-                     (graph->nodes[n]->kernel->signature.directions[p] == VX_BIDIRECTIONAL)))
-                {
-                    vx_uint32 n1, p1;
-                    /* check for other output references to this parameter in the graph. */
-                    for (n1 = vxNextNode(graph, n); n1 != n; n1=vxNextNode(graph, n1))
-                    {
-                        for (p1 = 0; p1 < graph->nodes[n]->kernel->signature.num_parameters; p1++)
-                        {
-                            if ((graph->nodes[n1]->kernel->signature.directions[p1] == VX_OUTPUT) ||
-                                (graph->nodes[n1]->kernel->signature.directions[p1] == VX_BIDIRECTIONAL))
-                            {
-                                if (vx_true_e == vxCheckWriteDependency(graph->nodes[n]->parameters[p], graph->nodes[n1]->parameters[p1]))
-                                {
-                                    status = VX_ERROR_MULTIPLE_WRITERS;
-                                    VX_PRINT(VX_ZONE_GRAPH, "Multiple Writer to a reference found, check log!\n");
-                                    vxAddLogEntry(reinterpret_cast<vx_reference>(graph), status, "Node %s and Node %s are trying to output to the same reference " VX_FMT_REF "\n", graph->nodes[n]->kernel->name, graph->nodes[n1]->kernel->name, graph->nodes[n]->parameters[p]);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        VX_PRINT(VX_ZONE_GRAPH,"########################\n");
-        VX_PRINT(VX_ZONE_GRAPH,"Memory Allocation Phase! (%d)\n", status);
-        VX_PRINT(VX_ZONE_GRAPH,"########################\n");
-
-        /* now make sure each parameter is backed by memory. */
-        for (n = 0; (n < graph->numNodes) && (status == VX_SUCCESS); n++)
-        {
-            VX_PRINT(VX_ZONE_GRAPH,"Checking node %u\n",n);
-
-            for (p = 0; p < graph->nodes[n]->kernel->signature.num_parameters; p++)
-            {
-                if (graph->nodes[n]->parameters[p])
-                {
-                    VX_PRINT(VX_ZONE_GRAPH,"\tparameter[%u]=%p type %d sig type %d\n", p,
-                                 graph->nodes[n]->parameters[p],
-                                 graph->nodes[n]->parameters[p]->type,
-                                 graph->nodes[n]->kernel->signature.types[p]);
-
-                    if (graph->nodes[n]->parameters[p]->type == VX_TYPE_IMAGE)
-                    {
-                        if (static_cast<vx_image>(graph->nodes[n]->parameters[p])->allocateImage() == vx_false_e)
-                        {
-                            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate image at node[%u] %s parameter[%u]\n",
-                                n, graph->nodes[n]->kernel->name, p);
-                            VX_PRINT(VX_ZONE_ERROR, "See log\n");
-                        }
-                    }
-                    else if ((VX_TYPE_IS_SCALAR(graph->nodes[n]->parameters[p]->type)) ||
-                             (graph->nodes[n]->parameters[p]->type == VX_TYPE_RECTANGLE) ||
-                             (graph->nodes[n]->parameters[p]->type == VX_TYPE_THRESHOLD))
-                    {
-                        /* these objects don't need to be allocated */
-                    }
-                    else if (graph->nodes[n]->parameters[p]->type == VX_TYPE_LUT)
-                    {
-                        vx_lut_t lut = (vx_lut_t)graph->nodes[n]->parameters[p];
-                        if (Memory::allocateMemory(graph->context, &lut->memory) == vx_false_e)
-                        {
-                            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate lut at node[%u] %s parameter[%u]\n",
-                                n, graph->nodes[n]->kernel->name, p);
-                            VX_PRINT(VX_ZONE_ERROR, "See log\n");
-                        }
-                    }
-                    else if (graph->nodes[n]->parameters[p]->type == VX_TYPE_DISTRIBUTION)
-                    {
-                        vx_distribution dist = (vx_distribution)graph->nodes[n]->parameters[p];
-                        if (Memory::allocateMemory(graph->context, &dist->memory) == vx_false_e)
-                        {
-                            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate distribution at node[%u] %s parameter[%u]\n",
-                                n, graph->nodes[n]->kernel->name, p);
-                            VX_PRINT(VX_ZONE_ERROR, "See log\n");
-                        }
-                    }
-                    else if (graph->nodes[n]->parameters[p]->type == VX_TYPE_PYRAMID)
-                    {
-                        vx_pyramid pyr = (vx_pyramid)graph->nodes[n]->parameters[p];
-                        vx_uint32 i = 0;
-                        for (i = 0; i < pyr->numLevels; i++)
-                        {
-                            if ((pyr->levels[i]->allocateImage()) == vx_false_e)
-                            {
-                                vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate pyramid image at node[%u] %s parameter[%u]\n",
-                                    n, graph->nodes[n]->kernel->name, p);
-                                VX_PRINT(VX_ZONE_ERROR, "See log\n");
-                            }
-                        }
-                    }
-                    else if ((graph->nodes[n]->parameters[p]->type == VX_TYPE_MATRIX) ||
-                              (graph->nodes[n]->parameters[p]->type == VX_TYPE_CONVOLUTION))
-                    {
-                        vx_matrix mat = (vx_matrix)graph->nodes[n]->parameters[p];
-                        if (Memory::allocateMemory(graph->context, &mat->memory) == vx_false_e)
-                        {
-                            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate matrix (or subtype) at node[%u] %s parameter[%u]\n",
-                                n, graph->nodes[n]->kernel->name, p);
-                            VX_PRINT(VX_ZONE_ERROR, "See log\n");
-                        }
-                    }
-                    else if (graph->nodes[n]->kernel->signature.types[p] == VX_TYPE_ARRAY)
-                    {
-                        if (static_cast<vx_array>(graph->nodes[n]->parameters[p])->allocateArray() == vx_false_e)
-                        {
-                            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), VX_ERROR_NO_MEMORY, "Failed to allocate array at node[%u] %s parameter[%u]\n",
-                                n, graph->nodes[n]->kernel->name, p);
-                            VX_PRINT(VX_ZONE_ERROR, "See log\n");
-                        }
-                    }
-                    /*! \todo add other memory objects to graph auto-allocator as needed! */
-                }
-            }
-        }
-
-        VX_PRINT(VX_ZONE_GRAPH,"###############################\n");
-        VX_PRINT(VX_ZONE_GRAPH,"Head Nodes Determination Phase! (%d)\n", status);
-        VX_PRINT(VX_ZONE_GRAPH,"###############################\n");
-
-        memset(graph->heads, 0, sizeof(graph->heads));
-        graph->numHeads = 0;
-
-        /* now traverse the graph and put nodes with no predecessor in the head list */
-        for (n = 0; (n < graph->numNodes) && (status == VX_SUCCESS); n++)
-        {
-            uint32_t n1,p1;
-            vx_bool isAHead = vx_true_e; /* assume every node is a head until proven otherwise */
-
-            for (p = 0; p < graph->nodes[n]->kernel->signature.num_parameters && isAHead == vx_true_e; p++)
-            {
-                if ((graph->nodes[n]->kernel->signature.directions[p] == VX_INPUT) &&
-                    (graph->nodes[n]->parameters[p] != nullptr))
-                {
-                    /* ring loop over the node array, checking every node but this nth node. */
-                    for (n1 = vxNextNode(graph, n);
-                        (n1 != n) && (isAHead == vx_true_e);
-                        n1 = vxNextNode(graph, n1))
-                    {
-                        for (p1 = 0; p1 < graph->nodes[n1]->kernel->signature.num_parameters && isAHead == vx_true_e; p1++)
-                        {
-                            if (graph->nodes[n1]->kernel->signature.directions[p1] != VX_INPUT)
-                            {
-                                VX_PRINT(VX_ZONE_GRAPH,"Checking input nodes[%u].parameter[%u] to nodes[%u].parameters[%u]\n", n, p, n1, p1);
-                                /* if the parameter is referenced elsewhere */
-                                if (vxCheckWriteDependency(graph->nodes[n]->parameters[p], graph->nodes[n1]->parameters[p1]))
-                                {
-                                    /* @TODO: this was added by AI; deep dive this logic */
-                                    vx_reference refA = graph->nodes[n]->parameters[p];
-                                    vx_reference refB = graph->nodes[n1]->parameters[p1];
-                                    if (refA->type == refB->type && refA->delay && refB->delay &&
-                                        refA->delay == refB->delay)
-                                    {
-                                        /* skip delay slot dependency for head node detection */
-                                        continue;
-                                    }
-                                    VX_PRINT(VX_ZONE_GRAPH,"\tnodes[%u].parameter[%u] referenced in nodes[%u].parameter[%u]\n", n,p,n1,p1);
-                                    isAHead = vx_false_e; /* this will cause all the loops to break too. */
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (isAHead == vx_true_e)
-            {
-                VX_PRINT(VX_ZONE_GRAPH,"Found a head in node[%u] => %s\n", n, graph->nodes[n]->kernel->name);
-                graph->heads[graph->numHeads++] = n;
-            }
-        }
-
-        /* graph has a cycle as there are no starting points! */
-        if ((graph->numHeads == 0) && (status == VX_SUCCESS))
-        {
-            status = VX_ERROR_INVALID_GRAPH;
-            VX_PRINT(VX_ZONE_ERROR,"Graph has no heads!\n");
-            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), status, "Cycle: Graph has no head nodes!\n");
-        }
-
-        VX_PRINT(VX_ZONE_GRAPH,"##############\n");
-        VX_PRINT(VX_ZONE_GRAPH,"Cycle Checking (%d)\n", status);
-        VX_PRINT(VX_ZONE_GRAPH,"##############\n");
-
-        graph->clearVisitation();
-
-        /* cycle checking by traversal of the graph from heads to tails */
-        for (h = 0; h < graph->numHeads; h++)
-        {
-            vx_status cycle_status = VX_SUCCESS;
-            status = graph->traverseGraph(VX_INT_MAX_NODES, graph->heads[h]);
-            if (cycle_status != VX_SUCCESS)
-            {
-                status = cycle_status;
-                VX_PRINT(VX_ZONE_ERROR,"Cycle found in graph!");
-                vxAddLogEntry(reinterpret_cast<vx_reference>(graph), status, "Cycle: Graph has a cycle!\n");
-                goto exit;
-            }
-        }
-
-        VX_PRINT(VX_ZONE_GRAPH,"############################\n");
-        VX_PRINT(VX_ZONE_GRAPH,"Checking for Unvisited Nodes (%d)\n", status);
-        VX_PRINT(VX_ZONE_GRAPH,"############################\n");
-
-        for (n = 0; (n < graph->numNodes) && (status == VX_SUCCESS); n++)
-        {
-            if (graph->nodes[n]->visited == vx_false_e)
-            {
-                VX_PRINT(VX_ZONE_ERROR, "UNVISITED: %s node[%u]\n", graph->nodes[n]->kernel->name, n);
-                status = VX_ERROR_INVALID_GRAPH;
-                vxAddLogEntry(reinterpret_cast<vx_reference>(graph), status, "Node %s: unvisited!\n", graph->nodes[n]->kernel->name);
-            }
-        }
-
-        graph->clearVisitation();
-
-        if (hasACycle == vx_true_e)
-        {
-            status = VX_ERROR_INVALID_GRAPH;
-            vxAddLogEntry(reinterpret_cast<vx_reference>(graph), status, "Cycle: Graph has a cycle!\n");
-            goto exit;
-        }
-
-        VX_PRINT(VX_ZONE_GRAPH,"#########################\n");
-        VX_PRINT(VX_ZONE_GRAPH,"Target Verification Phase (%d)\n", status);
-        VX_PRINT(VX_ZONE_GRAPH,"#########################\n");
-
-        for (n = 0; (n < graph->numNodes) && (status == VX_SUCCESS); n++)
-        {
-            vx_uint32 index = graph->nodes[n]->affinity;
-            vx_target target = graph->context->targets[index];
-            if (target)
-            {
-                vx_status target_verify_status = target->funcs.verify(target, graph->nodes[n]);
-                if (target_verify_status != VX_SUCCESS)
-                {
-                    status = target_verify_status;
-                    vxAddLogEntry(reinterpret_cast<vx_reference>(graph), status, "Target: %s Failed to Verify Node %s\n", target->name, graph->nodes[n]->kernel->name);
-                }
-            }
-        }
-
-        VX_PRINT(VX_ZONE_GRAPH,"#######################\n");
-        VX_PRINT(VX_ZONE_GRAPH,"Kernel Initialize Phase (%d)\n", status);
-        VX_PRINT(VX_ZONE_GRAPH,"#######################\n");
-
-        for (n = 0; (n < graph->numNodes) && (status == VX_SUCCESS); n++)
-        {
-            vx_node node = graph->nodes[n];
-            if (node->kernel->initialize)
-            {
-                vx_status kernel_init_status = VX_FAILURE;
-
-                /* call the kernel initialization routine */
-                if ((node->kernel->user_kernel == vx_true_e) &&
-                    (node->kernel->attributes.localDataSize == 0))
-                    node->local_data_change_is_enabled = vx_true_e;
-
-                kernel_init_status = node->kernel->initialize((vx_node)node,
-                                                  (vx_reference *)node->parameters,
-                                                  node->kernel->signature.num_parameters);
-                node->local_data_change_is_enabled = vx_false_e;
-                if (kernel_init_status != VX_SUCCESS)
-                {
-                    status = kernel_init_status;
-                    vxAddLogEntry(reinterpret_cast<vx_reference>(graph), status, "Kernel: %s failed to initialize!\n", node->kernel->name);
-                }
-            }
-
-            /* once the kernel has been initialized, create any local data for it */
-            if ((node->attributes.localDataSize > 0) &&
-                (node->attributes.localDataPtr == nullptr))
-            {
-                node->attributes.localDataPtr = new vx_char(node->attributes.localDataSize);
-                if (node->kernel->user_kernel == vx_true_e)
-                {
-                    node->local_data_set_by_implementation = vx_true_e;
-                }
-                VX_PRINT(VX_ZONE_GRAPH, "Local Data Allocated " VX_FMT_SIZE " bytes for node into %p\n!",
-                        node->attributes.localDataSize,
-                        node->attributes.localDataPtr);
-            }
-        }
-
-        VX_PRINT(VX_ZONE_GRAPH,"#######################\n");
-        VX_PRINT(VX_ZONE_GRAPH,"COST CALCULATIONS (%d)\n", status);
-        VX_PRINT(VX_ZONE_GRAPH,"#######################\n");
-        for (n = 0; (n < graph->numNodes) && (status == VX_SUCCESS); n++)
-        {
-            graph->nodes[n]->costs.bandwidth = 0ul;
-            for (p = 0; p < graph->nodes[n]->kernel->signature.num_parameters; p++)
-            {
-                vx_reference ref = graph->nodes[n]->parameters[p];
-                if (ref)
-                {
-                    vx_uint32 i;
-                    switch (ref->type)
-                    {
-                        case VX_TYPE_IMAGE:
-                        {
-                            vx_image image = (vx_image)ref;
-                            for (i = 0; i < image->memory.nptrs; i++)
-                                graph->nodes[n]->costs.bandwidth += Memory::computeMemorySize(&image->memory, i);
-                            break;
-                        }
-                        case VX_TYPE_ARRAY:
-                        {
-                            vx_array array = (vx_array)ref;
-                            graph->nodes[n]->costs.bandwidth += Memory::computeMemorySize(&array->memory, 0);
-                            break;
-                        }
-                        case VX_TYPE_PYRAMID:
-                        {
-                            vx_pyramid pyr = (vx_pyramid)ref;
-                            vx_uint32 j;
-                            for (j = 0; j < pyr->numLevels; j++)
-                            {
-                                vx_image image = pyr->levels[j];
-                                for (i = 0; i < image->memory.nptrs; i++)
-                                {
-                                    graph->nodes[n]->costs.bandwidth += Memory::computeMemorySize(&image->memory, i);
-                                }
-                            }
-                            break;
-                        }
-                        default:
-                            VX_PRINT(VX_ZONE_WARNING, "Node[%u].parameter[%u] Unknown bandwidth cost!\n", n, p);
-                            break;
-                    }
-                }
-            }
-            VX_PRINT(VX_ZONE_GRAPH, "Node[%u] has bandwidth cost of " VX_FMT_SIZE " bytes\n", n, graph->nodes[n]->costs.bandwidth);
-        }
-
-exit:
-        graph->reverify = vx_false_e;
-        if (status == VX_SUCCESS)
-        {
-            graph->verified = vx_true_e;
-            graph->state = VX_GRAPH_STATE_VERIFIED;
-        }
-        else
-        {
-            graph->verified = vx_false_e;
-            graph->state = VX_GRAPH_STATE_UNVERIFIED;
-        }
-
-        /* unlock the graph */
-        Osal::semPost(&graph->lock);
+        status = graph->verify();
     }
     else
     {
         status = VX_ERROR_INVALID_REFERENCE;
     }
-    VX_PRINT(VX_ZONE_GRAPH,"Returning status %d\n", status);
 
-    return status;
-}
-
-static vx_status vxExecuteGraph(vx_graph graph, vx_uint32 depth)
-{
-    vx_status status = VX_SUCCESS;
-    vx_action action = VX_ACTION_CONTINUE;
-    vx_uint32 n, p, numLast, numNext, numLeft = 0;
-    vx_uint32 last_nodes[VX_INT_MAX_REF];
-    vx_uint32 next_nodes[VX_INT_MAX_REF];
-    vx_uint32 left_nodes[VX_INT_MAX_REF];
-    vx_context context = vxGetContext((vx_reference)graph);
-    vx_uint32 max_pipeup_depth = 1;
-    (void)depth;
-
-#if defined(OPENVX_USE_SMP)
-    vx_value_set_t workitems[VX_INT_MAX_REF];
-#endif
-    if (Reference::isValidReference(reinterpret_cast<vx_reference>(graph)) == vx_false_e)
-    {
-        return VX_ERROR_INVALID_REFERENCE;
-    }
-
-#ifdef OPENVX_USE_PIPELINING
-    // Dequeue graph parameters if pipelining is enabled
-    if (graph->scheduleMode == VX_GRAPH_SCHEDULE_MODE_QUEUE_AUTO ||
-        graph->scheduleMode == VX_GRAPH_SCHEDULE_MODE_QUEUE_MANUAL)
-    {
-        for (vx_uint32 i = 0; i < graph->numEnqueableParams; i++)
-        {
-            auto& paramQueue = graph->parameters[i].queue;
-            vx_reference ref;
-
-            // Dequeue a reference from the "ready" queue
-            if (paramQueue.peekReady(ref))
-            {
-                vx_node node = graph->parameters[i].node;
-                vx_uint32 param_index = graph->parameters[i].index;
-                // Save the old reference for this graph parameter
-                vx_reference old_ref = node->parameters[param_index];
-
-                // Update ALL node parameters that point to this old reference
-                if (node->parameters[param_index] != ref)
-                {
-                    for (vx_uint32 n = 0; n < graph->numNodes; n++)
-                    {
-                        for (vx_uint32 p = 0; p < graph->nodes[n]->kernel->signature.num_parameters;
-                             p++)
-                        {
-                            // Assign the dequeued reference to the corresponding node parameter
-                            if (graph->nodes[n]->parameters[p] == old_ref)
-                            {
-                                graph->context->removeReference(graph->nodes[n]->parameters[p]);
-                                ref->incrementReference(VX_INTERNAL);
-                                graph->nodes[n]->parameters[p] = ref;
-                            }
-                        }
-                    }
-                }
-
-                VX_PRINT(VX_ZONE_GRAPH,
-                         "Dequeued reference for graph parameter %u and \
-                    assigned to node parameter %u\n",
-                         i, param_index);
-            }
-            else
-            {
-                VX_PRINT(VX_ZONE_ERROR, "Failed to dequeue reference for graph parameter %u\n", i);
-                std::cerr << "Failed to dequeue reference for graph parameter " << i << std::endl;
-                return VX_ERROR_NO_RESOURCES;
-            }
-        }
-    }
-#endif
-
-    if (graph->verified == vx_false_e)
-    {
-        status = vxVerifyGraph((vx_graph)graph);
-        if (status != VX_SUCCESS)
-        {
-            return status;
-        }
-    }
-    VX_PRINT(VX_ZONE_GRAPH,"************************\n");
-    VX_PRINT(VX_ZONE_GRAPH,"*** PROCESSING GRAPH ***\n");
-    VX_PRINT(VX_ZONE_GRAPH,"************************\n");
-
-    graph->state = VX_GRAPH_STATE_RUNNING;
-    graph->clearVisitation();
-    graph->clearExecution();
-    if (context->perf_enabled)
-    {
-        Osal::startCapture(&graph->perf);
-    }
-
-    /* initialize the next_nodes as the graph heads */
-    memcpy(next_nodes, graph->heads, graph->numHeads * sizeof(vx_uint32));
-    numNext = graph->numHeads;
-
-    do {
-        for (n = 0; n < numNext; n++)
-        {
-            Node::printNode(graph->nodes[next_nodes[n]]);
-        }
-
-        /* execute the next nodes */
-        for (n = 0; n < numNext; n++)
-        {
-            if (graph->nodes[next_nodes[n]]->executed == vx_false_e)
-            {
-                vx_uint32 t = graph->nodes[next_nodes[n]]->affinity;
-#if defined(OPENVX_USE_SMP)
-                if (depth == 1 && graph->shouldSerialize == vx_false_e)
-                {
-                    vx_value_set_t *work = &workitems[n];
-                    vx_target target = graph->context->targets[t];
-                    vx_node node = graph->nodes[next_nodes[n]];
-                    work->v1 = (vx_value_t)target;
-                    work->v2 = (vx_value_t)node;
-                    work->v3 = (vx_value_t)VX_ACTION_CONTINUE;
-                    VX_PRINT(VX_ZONE_GRAPH, "Scheduling work on %s for %s\n", target->name, node->kernel->name);
-                }
-                else
-#endif
-                {
-                    vx_target target = graph->context->targets[t];
-                    vx_node node = graph->nodes[next_nodes[n]];
-
-                    /* turn on access to virtual memory */
-                    for (p = 0u; p < node->kernel->signature.num_parameters; p++)
-                    {
-                        if (node->parameters[p] == nullptr) continue;
-                        if (node->parameters[p]->is_virtual == vx_true_e)
-                        {
-                            node->parameters[p]->is_accessible = vx_true_e;
-                        }
-                    }
-
-                    VX_PRINT(VX_ZONE_GRAPH, "Calling Node[%u] %s:%s\n",
-                             next_nodes[n],
-                             target->name, node->kernel->name);
-
-                    /* Check for pipeup phase:
-                     * If this is the first time we are executing the graph, we need to pipeup
-                     * all nodes with kernels in the graph that need pipeup of refs.
-                     */
-                    max_pipeup_depth = std::max(
-                        {max_pipeup_depth, node->kernel->input_depth, node->kernel->output_depth});
-                    if (node->kernel->pipeUpCounter < max_pipeup_depth - 1)
-                    {
-                        node->state = VX_NODE_STATE_PIPEUP;
-                        std::cout << "max_pipeup_depth: " << max_pipeup_depth << std::endl;
-                        node->kernel->pipeUpCounter++;
-                        // Retain input buffers during PIPEUP
-                        for (vx_uint32 i = 0; i < node->kernel->output_depth - 1; i++)
-                        {
-                            action = target->funcs.process(target, &node, 0, 1);
-                            node->kernel->pipeUpCounter++;
-                        }
-                        // For source nodes, provide new output buffers during PIPEUP
-                        for (vx_uint32 i = 0; i < node->kernel->input_depth - 1; i++)
-                        {
-                            action = target->funcs.process(target, &node, 0, 1);
-                            node->kernel->pipeUpCounter++;
-                        }
-                    }
-
-                    /* If this node was in pipeup, update its state */
-                    node->state = VX_NODE_STATE_STEADY;
-
-                    action = target->funcs.process(target, &node, 0, 1);
-
-                    VX_PRINT(VX_ZONE_GRAPH, "Returned Node[%u] %s:%s Action %d\n",
-                             next_nodes[n],
-                             target->name, node->kernel->name,
-                             action);
-
-                    /* turn off access to virtual memory */
-                    for (p = 0u; p < node->kernel->signature.num_parameters; p++)
-                    {
-                        if (node->parameters[p] == nullptr)
-                        {
-                            continue;
-                        }
-                        if (node->parameters[p]->is_virtual == vx_true_e)
-                        {
-                            node->parameters[p]->is_accessible = vx_false_e;
-                        }
-                    }
-
-#ifdef OPENVX_USE_PIPELINING
-                    /* Raise a node completed event. */
-                    vx_event_info_t event_info;
-                    event_info.node_completed.graph = graph;
-                    event_info.node_completed.node = node;
-                    if (graph->context->event_queue.isEnabled() &&
-                        VX_SUCCESS != graph->context->event_queue.push(VX_EVENT_NODE_COMPLETED, 0,
-                                                                       &event_info,
-                                                                       (vx_reference)node))
-                    {
-                        VX_PRINT(VX_ZONE_ERROR, "Failed to push node completed event for node %s\n",
-                                 node->kernel->name);
-                    }
-
-                    /* Raise a graph parameter consumed event */
-                    for (vx_uint32 gp = 0; gp < graph->numEnqueableParams; gp++)
-                    {
-                        vx_node param_node = graph->parameters[gp].node;
-                        vx_uint32 param_index = graph->parameters[gp].index;
-
-                        /* If this node just executed and consumed a graph parameter */
-                        if (param_node == node)
-                        {
-                            vx_event_info_t event_info = {};
-                            event_info.graph_parameter_consumed.graph = graph;
-                            event_info.graph_parameter_consumed.graph_parameter_index = param_index;
-
-                            (void)graph->parameters[gp].queue.moveReadyToDone();
-
-                            if (graph->context->event_queue.isEnabled() &&
-                                param_node->kernel->signature.directions[param_index] == VX_INPUT &&
-                                VX_SUCCESS != graph->context->event_queue.push(
-                                                  VX_EVENT_GRAPH_PARAMETER_CONSUMED, 0, &event_info,
-                                                  (vx_reference)graph))
-                            {
-                                VX_PRINT(VX_ZONE_ERROR,
-                                         "Failed to push graph parameter consumed event for "
-                                         "graph %p, param %u\n",
-                                         graph, gp);
-                            }
-                        }
-                    }
-#endif
-
-                    if (action == VX_ACTION_ABANDON)
-                    {
-#ifdef OPENVX_USE_PIPELINING
-                        /* Raise a node error event. */
-                        vx_event_info_t event_info;
-                        event_info.node_error.graph = graph;
-                        event_info.node_error.node = node;
-                        event_info.node_error.status = node->status;
-                        if (graph->context->event_queue.isEnabled() &&
-                            VX_SUCCESS != graph->context->event_queue.push(VX_EVENT_NODE_ERROR, 0,
-                                                                           &event_info,
-                                                                           (vx_reference)node))
-                        {
-                            VX_PRINT(VX_ZONE_ERROR, "Failed to push node error event for node %s\n",
-                                     node->kernel->name);
-                        }
-#endif
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                VX_PRINT(VX_ZONE_ERROR, "Multiple executions attempted!\n");
-                break;
-            }
-        }
-
-#if defined(OPENVX_USE_SMP)
-        if (depth == 1 && graph->shouldSerialize == vx_false_e)
-        {
-            if (Osal::issueThreadpool(graph->context->workers, workitems, numNext) == vx_true_e)
-            {
-                /* do a blocking complete */
-                VX_PRINT(VX_ZONE_GRAPH, "Issued %u work items!\n", numNext);
-                if (Osal::completeThreadpool(graph->context->workers, vx_true_e) == vx_true_e)
-                {
-                    VX_PRINT(VX_ZONE_GRAPH, "Processed %u items in threadpool!\n", numNext);
-                }
-                action = VX_ACTION_CONTINUE;
-                for (n = 0; n < numNext; n++)
-                {
-                    vx_action a = workitems[n].v3;
-                    if (a != VX_ACTION_CONTINUE)
-                    {
-                        action = a;
-                        VX_PRINT(VX_ZONE_WARNING, "Workitem[%u] returned action code %d\n", n, a);
-                        break;
-                    }
-                }
-            }
-        }
-#endif
-
-        if (action == VX_ACTION_ABANDON)
-        {
-            break;
-        }
-
-        /* copy next_nodes to last_nodes */
-        memcpy(last_nodes, next_nodes, numNext * sizeof(vx_uint32));
-        numLast = numNext;
-
-        /* determine the next nodes */
-        graph->findNextNodes(last_nodes, numLast, next_nodes, &numNext, left_nodes, &numLeft);
-
-    } while (numNext > 0);
-
-    if (action == VX_ACTION_ABANDON)
-    {
-        status = VX_ERROR_GRAPH_ABANDONED;
-    }
-    if (context->perf_enabled)
-    {
-        Osal::stopCapture(&graph->perf);
-    }
-    graph->clearVisitation();
-
-    for (n = 0; n < VX_INT_MAX_REF; n++)
-    {
-        if (graph->delays[n] && Reference::isValidReference(reinterpret_cast<vx_reference>(graph->delays[n]), VX_TYPE_DELAY) == vx_true_e)
-        {
-            vxAgeDelay(graph->delays[n]);
-        }
-    }
-
-    VX_PRINT(VX_ZONE_GRAPH,"Process returned status %d\n", status);
-
-#ifdef OPENVX_USE_PIPELINING
-    /* Raise a graph completed event. */
-    vx_event_info_t event_info;
-    event_info.graph_completed.graph = graph;
-    if (graph->context->event_queue.isEnabled() &&
-        VX_SUCCESS != graph->context->event_queue.push(VX_EVENT_GRAPH_COMPLETED, 0, &event_info,
-                                                       (vx_reference)graph))
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Failed to push graph completed event for graph %p\n", graph);
-    }
-#endif
-
-    // Report the performance of the graph execution.
-    if (context->perf_enabled)
-    {
-        for (n = 0; n < graph->numNodes; n++)
-        {
-            VX_PRINT(VX_ZONE_PERF,"nodes[%u] %s[%d] last:" VX_FMT_TIME "ms avg:" VX_FMT_TIME "ms min:" VX_FMT_TIME "ms max:" VX_FMT_TIME "\n",
-                     n,
-                     graph->nodes[n]->kernel->name,
-                     graph->nodes[n]->kernel->enumeration,
-                     Osal::timeToMS(graph->nodes[n]->perf.tmp),
-                     Osal::timeToMS(graph->nodes[n]->perf.avg),
-                     Osal::timeToMS(graph->nodes[n]->perf.min),
-                     Osal::timeToMS(graph->nodes[n]->perf.max)
-            );
-        }
-    }
-
-    if (status == VX_SUCCESS)
-    {
-        graph->state = VX_GRAPH_STATE_COMPLETED;
-    }
-    else
-    {
-        graph->state = VX_GRAPH_STATE_ABANDONED;
-    }
-
+    VX_PRINT(VX_ZONE_GRAPH, "Returning status %d\n", status);
     return status;
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxScheduleGraph(vx_graph graph)
 {
-    vx_status status = VX_SUCCESS;
     if (Reference::isValidReference(reinterpret_cast<vx_reference>(graph)) == vx_false_e)
     {
         return VX_ERROR_INVALID_REFERENCE;
     }
 
-    if (graph->verified == vx_false_e)
-    {
-        status = vxVerifyGraph((vx_graph)graph);
-        if (status != VX_SUCCESS)
-        {
-            return status;
-        }
-    }
-
-#ifdef OPENVX_USE_PIPELINING
-    vx_uint32 numParams = std::min(graph->numParams, graph->numEnqueableParams);
-    vx_size batch_depth = 1u;
-    if (graph->scheduleMode == VX_GRAPH_SCHEDULE_MODE_QUEUE_MANUAL)
-    {
-        batch_depth = UINT32_MAX;  // Use UINT32_MAX to indicate no limit on batch depth
-        for (vx_uint32 i = 0; i < numParams; ++i)
-        {
-            batch_depth = std::min(batch_depth, graph->parameters[i].queue.readyQueueSize());
-        }
-
-        if (batch_depth == 0 || batch_depth == UINT32_MAX)
-        {
-            // Not enough data to schedule a batch
-            return VX_ERROR_NOT_SUFFICIENT;
-        }
-    }
-
-    for (vx_uint32 i = 0; i < batch_depth; i++)
-#endif
-    // if (Osal::semTryWait(&graph->lock) == vx_true_e)
-    {
-        Osal::semTryWait(&graph->lock);
-        vx_sem_t* p_graph_queue_lock = graph->context->p_global_lock;
-        vx_uint32 q = 0u;
-        vx_value_set_t *pq = nullptr;
-
-        Osal::semWait(p_graph_queue_lock);
-        /* acquire a position in the graph queue */
-        for (q = 0; q < dimof(graph->context->graph_queue); q++)
-        {
-            if (graph->context->graph_queue[q].v1 == 0)
-            {
-                pq = &graph->context->graph_queue[q];
-                graph->context->numGraphsQueued++;
-                break;
-            }
-        }
-        Osal::semPost(p_graph_queue_lock);
-        if (pq)
-        {
-            memset(pq, 0, sizeof(vx_value_set_t));
-            pq->v1 = (vx_value_t)graph;
-
-#ifdef OPENVX_USE_PIPELINING
-            /* Increment the schedule count */
-            graph->scheduleCount++;
-#endif
-            /* now add the graph to the queue */
-            VX_PRINT(VX_ZONE_GRAPH,"Writing graph=" VX_FMT_REF ", status=%d\n",graph, status);
-            if (Osal::writeQueue(&graph->context->proc.input, pq) == vx_true_e)
-            {
-                status = VX_SUCCESS;
-            }
-            else
-            {
-                Osal::semPost(&graph->lock);
-                VX_PRINT(VX_ZONE_ERROR, "Failed to write graph to queue");
-                status = VX_ERROR_NO_RESOURCES;
-            }
-        }
-        else
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Graph queue is full\n");
-            status = VX_ERROR_NO_RESOURCES;
-        }
-    }
-    // else
-    // {
-    //     /* graph is already scheduled */
-    //     VX_PRINT(VX_ZONE_WARNING, "Graph is already scheduled!\n");
-    //     // status = VX_ERROR_GRAPH_SCHEDULED;
-    // }
-
-    return status;
+    return graph->schedule();
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxWaitGraph(vx_graph graph)
 {
-    vx_status status = VX_SUCCESS;
-
     if (Reference::isValidReference(reinterpret_cast<vx_reference>(graph)) == vx_false_e)
     {
         return VX_ERROR_INVALID_REFERENCE;
     }
 
-    if (Osal::semTryWait(&graph->lock) == vx_false_e ||
-        graph->scheduleMode == VX_GRAPH_SCHEDULE_MODE_QUEUE_MANUAL) /* locked */
-    {
-        vx_sem_t* p_graph_queue_lock = graph->context->p_global_lock;
-        vx_graph g2;
-        vx_bool ret = vx_true_e;
-        vx_value_set_t *data = nullptr;
-        do
-        {
-            ret = Osal::readQueue(&graph->context->proc.output, &data);
-            if (ret == vx_false_e)
-            {
-                /* graph was locked but the queue was empty... */
-                VX_PRINT(VX_ZONE_ERROR, "Queue was empty but graph was locked.\n");
-                status = VX_FAILURE;
-            }
-            else
-            {
-                g2 = (vx_graph)data->v1;
-                status = (vx_status)data->v2;
-                if (g2 == graph) /* great, it's the graph we want. */
-                {
-                    vx_uint32 q = 0u;
-                    Osal::semWait(p_graph_queue_lock);
-                    /* find graph in the graph queue */
-                    for (q = 0; q < dimof(graph->context->graph_queue); q++)
-                    {
-                        if (graph->context->graph_queue[q].v1 == (vx_value_t)graph)
-                        {
-                            graph->context->graph_queue[q].v1 = 0;
-                            graph->context->numGraphsQueued--;
-                            break;
-                        }
-                    }
-                    Osal::semPost(p_graph_queue_lock);
-
-#ifdef OPENVX_USE_PIPELINING
-                    /* Decrement the schedule count */
-                    graph->scheduleCount--;
-                    /* Unlock the graph only if all scheduled executions are completed */
-                    if (graph->scheduleCount == 0)
-                    {
-                        Osal::semPost(&graph->lock);
-                        break;
-                    }
-#else
-                    break;
-#endif
-                }
-                else
-                {
-                    /* not the right graph, put it back. */
-                    Osal::writeQueue(&graph->context->proc.output, data);
-                }
-            }
-        } while (ret == vx_true_e);
-        Osal::semPost(&graph->lock); /* unlock the graph. */
-    }
-    else
-    {
-        // status = VX_FAILURE;
-        Osal::semPost(&graph->lock); /* was free, release */
-    }
-
-    return status;
+    return graph->wait();
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxProcessGraph(vx_graph graph)
@@ -3091,17 +3240,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxProcessGraph(vx_graph graph)
 
     if (VX_SUCCESS == status)
     {
-        /* create a counter for re-entrancy checking */
-        static vx_uint32 count = 0;
-        vx_sem_t* p_sem = graph->context->p_global_lock;
-
-        Osal::semWait(p_sem);
-        count++;
-        Osal::semPost(p_sem);
-        status = vxExecuteGraph(graph, count);
-        Osal::semWait(p_sem);
-        count--;
-        Osal::semPost(p_sem);
+        status = graph->processGraph();
     }
 
     VX_PRINT(VX_ZONE_GRAPH, "%s returned %d\n", __func__, status );
@@ -3112,22 +3251,10 @@ VX_API_ENTRY vx_status VX_API_CALL vxAddParameterToGraph(vx_graph graph, vx_para
 {
     vx_status status = VX_ERROR_INVALID_REFERENCE;
 
-    if ((Reference::isValidReference(reinterpret_cast<vx_reference>(graph), VX_TYPE_GRAPH) == vx_true_e) &&
-        (Reference::isValidReference(reinterpret_cast<vx_reference>(param), VX_TYPE_PARAMETER) == vx_true_e))
+    if (Reference::isValidReference(reinterpret_cast<vx_reference>(graph), VX_TYPE_GRAPH) ==
+        vx_true_e)
     {
-        graph->parameters[graph->numParams].node = param->node;
-        graph->parameters[graph->numParams].index = param->index;
-        graph->numParams++;
-        status = VX_SUCCESS;
-    }
-    else if ((Reference::isValidReference(reinterpret_cast<vx_reference>(graph), VX_TYPE_GRAPH) == vx_true_e) &&
-             (Reference::isValidReference(reinterpret_cast<vx_reference>(param), VX_TYPE_PARAMETER) == vx_false_e))
-    {
-        /* insert an empty parameter */
-        graph->parameters[graph->numParams].node = nullptr;
-        graph->parameters[graph->numParams].index = 0;
-        graph->numParams++;
-        status = VX_SUCCESS;
+        status = graph->addParameter(param);
     }
     else
     {
@@ -3143,16 +3270,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetGraphParameterByIndex(vx_graph graph, vx
 
     if (Reference::isValidReference(reinterpret_cast<vx_reference>(graph), VX_TYPE_GRAPH) == vx_true_e)
     {
-        if (index < VX_INT_MAX_PARAMS)
-        {
-            status = vxSetParameterByIndex((vx_node)graph->parameters[index].node,
-                                           graph->parameters[index].index,
-                                           value);
-        }
-        else
-        {
-            status = VX_ERROR_INVALID_VALUE;
-        }
+        status = graph->setParameterByIndex(index, value);
     }
 
     return status;
@@ -3164,11 +3282,7 @@ VX_API_ENTRY vx_parameter VX_API_CALL vxGetGraphParameterByIndex(vx_graph graph,
 
     if (Reference::isValidReference(reinterpret_cast<vx_reference>(graph), VX_TYPE_GRAPH) == vx_true_e)
     {
-        if ((index < VX_INT_MAX_PARAMS) && (index < graph->numParams))
-        {
-            vx_uint32 node_index = graph->parameters[index].index;
-            parameter = vxGetParameterByIndex((vx_node)graph->parameters[index].node, node_index);
-        }
+        parameter = graph->getParameterByIndex(index);
     }
     else
     {
@@ -3184,9 +3298,25 @@ VX_API_ENTRY vx_bool VX_API_CALL vxIsGraphVerified(vx_graph graph)
     vx_bool verified = vx_false_e;
     if (Reference::isValidReference(reinterpret_cast<vx_reference>(graph), VX_TYPE_GRAPH) == vx_true_e)
     {
-        VX_PRINT(VX_ZONE_GRAPH, "Graph is %sverified\n", (graph->verified == vx_true_e?"":"NOT "));
-        verified = graph->verified;
+        graph->isVerified();
     }
 
     return verified;
+}
+
+VX_API_ENTRY vx_status VX_API_CALL vxReleaseGraph(vx_graph* g)
+{
+    vx_status status = VX_ERROR_INVALID_REFERENCE;
+
+    if (nullptr != g)
+    {
+        vx_graph graph = *(g);
+        if (Reference::isValidReference(graph, VX_TYPE_GRAPH) == vx_true_e)
+        {
+            status =
+                Reference::releaseReference((vx_reference*)g, VX_TYPE_GRAPH, VX_EXTERNAL, nullptr);
+        }
+    }
+
+    return status;
 }

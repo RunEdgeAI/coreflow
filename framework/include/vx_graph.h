@@ -36,6 +36,57 @@
  */
 class Graph : public Reference
 {
+private:
+
+    /**
+     * @brief Get the next node index given current node index
+     *
+     * @param index      The current node index .
+     * @return vx_uint32 The next node index
+     * @ingroup group_int_graph
+     */
+    vx_uint32 nextNode(vx_uint32 index);
+
+    /**
+     * @brief Locate reference given base location
+     *
+     * @param ref               Start reference.
+     * @param start             Start location.
+     * @param end               End location.
+     * @return vx_reference     vx_reference if found, otherwise nullptr
+     * @ingroup group_int_graph
+     */
+    static vx_reference locateBaseLocation(vx_reference ref, vx_size* start, vx_size* end);
+
+    /**
+     * @brief Locate tensor within view
+     *
+     * @param mddata      Tensor metadata.
+     * @param start       Start view.
+     * @param end         End view.
+     * @return vx_tensor  vx_tensor if found, othewise nullptr
+     * @ingroup group_int_graph
+     */
+    static vx_tensor locateView(vx_tensor mddata, vx_size* start, vx_size* end);
+
+    /**
+     * @brief Check write dependency between two references
+     *
+     * @param ref1      First reference to compare.
+     * @param ref2      Second reference to compare.
+     * @return vx_bool  vx_true_e if write dependency exists, otherwise vx_false_e
+     * @ingroup group_int_graph
+     */
+    static vx_bool checkWriteDependency(vx_reference ref1, vx_reference ref2);
+
+    /**
+     * @brief Scan the entire context for graphs which may contain
+     * this reference and mark them as unverified.
+     *
+     * @param ref   The reference to scan for.
+     * @ingroup group_int_graph
+     */
+    static void contaminateGraphs(vx_reference ref);
 public:
     /**
      * @brief Construct a new Graph object
@@ -160,6 +211,115 @@ public:
      */
     vx_status traverseGraph(vx_uint32 parentIndex,
                             vx_uint32 childIndex);
+
+    /**
+     * @brief Get the graph performance
+     *
+     * @return vx_perf_t The performance structure
+     * @ingroup group_int_graph
+     */
+    vx_perf_t performance() const;
+
+    /**
+     * @brief Get the Graph state
+     *
+     * @return vx_enum The graph state
+     * @ingroup group_int_graph
+     */
+    vx_enum getState() const;
+
+    /**
+     * @brief Get the number of nodes in the graph
+     *
+     * @return vx_uint32 The number of nodes in the graph
+     * @ingroup group_int_graph
+     */
+    vx_uint32 getNumNodes() const;
+
+    /**
+     * @brief Get the number of parameters of the graph
+     *
+     * @return vx_uint32 The number of graph parameters
+     * @ingroup group_int_graph
+     */
+    vx_uint32 getNumParams() const;
+
+    /**
+     * @brief Is graph verified
+     *
+     * @return vx_bool true if verified, false otherwise
+     * @ingroup group_int_graph
+     */
+    vx_bool isVerified();
+
+    /**
+     * @brief Verify the graph
+     *
+     * @return vx_status VX_SUCCESS if successful, otherwise an return status with error code.
+     * @ingroup group_int_graph
+     */
+    vx_status verify();
+
+    /**
+     * @brief Execute the graph
+     *
+     * @param depth      Optional count of executions
+     * @return vx_status VX_SUCCESS if successful, otherwise return status with error code.
+     * @ingroup group_int_graph
+     */
+    vx_status executeGraph(vx_uint32 depth);
+
+    /**
+     * @brief Schedule the graph
+     *
+     * @return vx_status VX_SUCCESS if successful, otherwise return status with error code.
+     * @ingroup group_int_graph
+     */
+    vx_status schedule();
+
+    /**
+     * @brief Wait on the graph to complete
+     *
+     * @return vx_status VX_SUCCESS if successful, otherwise return status with error code.
+     * @ingroup group_int_graph
+     */
+    vx_status wait();
+
+    /**
+     * @brief Process the graph
+     *
+     * @return vx_status VX_SUCCESS if successful, otherwise return status with error code.
+     * @ingroup group_int_graph
+     */
+    vx_status processGraph();
+
+    /**
+     * @brief Add a graph paramter
+     *
+     * @param param      The parameter to add to the graph.
+     * @return vx_status VX_SUCCESS if successful, otherwise a status with error code.
+     * @ingroup group_int_graph
+     */
+    vx_status addParameter(vx_parameter param);
+
+    /**
+     * @brief Set the graph parameter by index
+     *
+     * @param index      The graph parameter index
+     * @param value      The reference to set
+     * @return vx_status VX_SUCCESS on success, otherwise an error
+     * @ingroup group_int_graph
+     */
+    vx_status setParameterByIndex(vx_uint32 index, vx_reference value);
+
+    /**
+     * @brief Get the parameter object by index
+     *
+     * @param index         The graph parameter index
+     * @return vx_parameter A valid parameter object on success
+     * @ingroup group_int_graph
+     */
+    vx_parameter getParameterByIndex(vx_uint32 index);
 
     /**
      * @brief Validate the graph parameters queue references list
