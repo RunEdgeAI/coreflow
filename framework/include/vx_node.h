@@ -78,6 +78,150 @@ public:
      */
     void setParameter(vx_uint32 index, vx_reference value);
 
+    /**
+     * @brief Set the target for the node
+     *
+     * @param target_enum The target enum to set
+     * @param target_string The target string to set
+     * @return vx_status VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_node
+     */
+    vx_status setTarget(vx_enum target_enum, const char *target_string);
+
+    /**
+     * @brief Get the local data size of the node
+     *
+     * @return vx_size The local data size
+     * @ingroup group_int_node
+     */
+    vx_size localDataSize() const;
+
+    /**
+     * @brief Get the local data pointer of the node
+     *
+     * @return vx_ptr_t The local data pointer
+     * @ingroup group_int_node
+     */
+    vx_ptr_t localDataPtr() const;
+
+    /**
+     * @brief Get the global data size of the node
+     *
+     * @return vx_size The global data size
+     * @ingroup group_int_node
+     */
+    vx_size globalDataSize() const;
+
+    /**
+     * @brief Get the global data pointer of the node
+     *
+     * @return vx_ptr_t The global data pointer
+     * @ingroup group_int_node
+     */
+    vx_ptr_t globalDataPtr() const;
+
+    /**
+     * @brief Get the border mode of the node
+     *
+     * @return vx_border_t The border mode
+     * @ingroup group_int_node
+     */
+    vx_border_t border() const;
+
+    /**
+     * @brief Get the number of parameters of the node
+     *
+     * @return vx_uint32 The number of parameters
+     * @ingroup group_int_node
+     */
+    vx_uint32 numParams() const;
+
+    /**
+     * @brief Get the performance of the node
+     *
+     * @return vx_perf_t The performance metrics
+     * @ingroup group_int_node
+     */
+    vx_perf_t performance() const;
+
+    /**
+     * @brief Get the status of the node
+     *
+     * @return vx_status The status of the node
+     * @ingroup group_int_node
+     */
+    vx_status getStatus() const;
+
+    /**
+     * @brief Set the Node Callback Fn object
+     *
+     * @param callback   The callback function to set
+     * @return vx_status VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_node
+     */
+    vx_status setCallbackFn(vx_nodecomplete_f callback);
+
+    /**
+     * @brief Is the node replicated?
+     *
+     * @return vx_bool True if the node is replicated, false otherwise
+     * @ingroup group_int_node
+     */
+    vx_bool isReplicated() const;
+
+    /**
+     * @brief Get the replicated parameters flags
+     *
+     * @return const vx_bool* The array of flags indicating which parameters are replicated
+     * @ingroup group_int_node
+     */
+    const vx_bool *replicatedFlags() const;
+
+    /**
+     * @brief Get the state of the node
+     *
+     * @return vx_enum The state of the node
+     * @ingroup group_int_node
+     */
+    vx_enum getState() const;
+
+    /**
+     * @brief Get the valid rectangle reset flag
+     *
+     * @return vx_bool The valid rectangle reset flag
+     * @ingroup group_int_node
+     */
+    vx_bool validRectReset() const;
+
+    /**
+     * @brief Get the OpenCL command queue for the node
+     *
+     * @return cl_command_queue The OpenCL command queue
+     * @ingroup group_int_node
+     */
+    cl_command_queue clCommandQueue() const;
+
+    /**
+     * @brief Get the callback function for the node
+     *
+     * @return vx_nodecomplete_f The callback function
+     * @ingroup group_int_node
+     */
+    vx_nodecomplete_f callbackFn() const;
+
+    /**
+     * @brief Replicate the node in the graph
+     *
+     * @param graph                The graph to replicate the node in
+     * @param first_node           The first node to replicate
+     * @param replicate            The array of flags indicating which parameters to replicate
+     * @param number_of_parameters The number of parameters to replicate
+     * @return vx_status           VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_node
+     */
+    static vx_status replicateNode(vx_graph graph, vx_node first_node, vx_bool *replicate,
+                                   vx_uint32 number_of_parameters);
+
     /*! \brief Used to completely destroy a node.
      * \ingroup group_int_node
      */
