@@ -239,7 +239,7 @@ static vx_status VX_CALLBACK vxHalfscaleGaussianKernel(vx_node node, const vx_re
 
     if (num == dimof(scale_kernel_params))
     {
-        vx_graph subgraph = ownGetChildGraphOfNode(node);
+        vx_graph subgraph = vxGetChildGraphOfNode(node);
         status = vxProcessGraph(subgraph);
     }
 
@@ -388,7 +388,7 @@ static vx_status VX_CALLBACK vxHalfscaleGaussianInitializer(vx_node node, const 
             if (VX_SUCCESS != status)
                 return status;
 
-            status = ownSetChildGraphOfNode(node, 0);
+            status = vxSetChildGraphOfNode(node, 0);
             if (VX_SUCCESS != status)
                 return status;
         }
@@ -436,7 +436,7 @@ static vx_status VX_CALLBACK vxHalfscaleGaussianInitializer(vx_node node, const 
                         status |= vxReleaseNode(&nodes[i]);
                     }
 
-                    status |= ownSetChildGraphOfNode(node, subgraph);
+                    status |= vxSetChildGraphOfNode(node, subgraph);
             }
             else if (kernel_size == 3 || kernel_size == 5)
             {
@@ -477,7 +477,7 @@ static vx_status VX_CALLBACK vxHalfscaleGaussianInitializer(vx_node node, const 
 
                     status |= vxReleaseImage(&virt);
 
-                    status |= ownSetChildGraphOfNode(node, subgraph);
+                    status |= vxSetChildGraphOfNode(node, subgraph);
                 }
             }
         }
@@ -492,14 +492,14 @@ static vx_status VX_CALLBACK vxHalfscaleGaussianDeinitializer(vx_node node, cons
 
     if (num == dimof(scale_kernel_params))
     {
-        vx_graph subgraph = ownGetChildGraphOfNode(node);
+        vx_graph subgraph = vxGetChildGraphOfNode(node);
 
         status = VX_SUCCESS;
 
         status |= vxReleaseGraph(&subgraph);
 
         /* set subgraph to "null" */
-        status |= ownSetChildGraphOfNode(node, 0);
+        status |= vxSetChildGraphOfNode(node, 0);
     }
 
     return status;

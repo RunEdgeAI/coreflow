@@ -43,14 +43,14 @@ enum vx_node_attribute_internal_e {
  * parameters.
  * \ingroup group_int_node
  */
-vx_status ownSetChildGraphOfNode(vx_node node, vx_graph graph);
+vx_status vxSetChildGraphOfNode(vx_node node, vx_graph graph);
 
 /*! \brief Retrieves the handle of the child graph, if it exists.
  * \param [in] node The node.
  * \return Returns the handle of the child graph or zero if it doesn't have one.
  * \ingroup group_int_node
  */
-vx_graph ownGetChildGraphOfNode(vx_node node);
+vx_graph vxGetChildGraphOfNode(vx_node node);
 
 /*! \brief The internal representation of a node.
  * \ingroup group_int_node
@@ -221,6 +221,22 @@ public:
      */
     static vx_status replicateNode(vx_graph graph, vx_node first_node, vx_bool *replicate,
                                    vx_uint32 number_of_parameters);
+
+    /*! \brief Used to set the graph as a child of the node within another graph.
+     * \param [in] node The node.
+     * \param [in] graph The child graph.
+     * \retval VX_ERROR_INVALID_GRAPH The Graph's parameters do not match the Node's
+     * parameters.
+     * \ingroup group_int_node
+     */
+    static vx_status setChildGraphOfNode(vx_node node, vx_graph graph);
+
+    /*! \brief Retrieves the handle of the child graph, if it exists.
+     * \param [in] node The node.
+     * \return Returns the handle of the child graph or zero if it doesn't have one.
+     * \ingroup group_int_node
+     */
+    static vx_graph getChildGraphOfNode(vx_node node);
 
     /*! \brief Used to completely destroy a node.
      * \ingroup group_int_node

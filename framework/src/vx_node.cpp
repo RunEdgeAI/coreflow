@@ -458,7 +458,7 @@ void Node::printNode(vx_node node)
 }
 
 /* ![FROM SAMPLE EXTENSION] */
-vx_status ownSetChildGraphOfNode(vx_node node, vx_graph graph)
+vx_status Node::setChildGraphOfNode(vx_node node, vx_graph graph)
 {
     vx_status status = VX_ERROR_INVALID_GRAPH;
 
@@ -527,7 +527,7 @@ vx_status ownSetChildGraphOfNode(vx_node node, vx_graph graph)
     return status;
 }
 
-vx_graph ownGetChildGraphOfNode(vx_node node)
+vx_graph Node::getChildGraphOfNode(vx_node node)
 {
     vx_graph graph = nullptr;
 
@@ -898,6 +898,16 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetNodeTarget(vx_node node, vx_enum target_
         status = node->setTarget(target_enum, target_string);
     }
     return status;
+}
+
+VX_API_ENTRY vx_status VX_API_CALL vxSetChildGraphOfNode(vx_node node, vx_graph graph)
+{
+    return Node::setChildGraphOfNode(node, graph);
+}
+
+VX_API_ENTRY vx_graph VX_API_CALL vxGetChildGraphOfNode(vx_node node)
+{
+    return Node::getChildGraphOfNode(node);
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxReleaseNode(vx_node *node)

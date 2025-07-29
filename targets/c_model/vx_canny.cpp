@@ -47,7 +47,7 @@ static vx_status VX_CALLBACK vxCannyEdgeKernel(vx_node node, const vx_reference 
 
     if (num == dimof(canny_kernel_params))
     {
-        vx_graph subgraph = ownGetChildGraphOfNode(node);
+        vx_graph subgraph = vxGetChildGraphOfNode(node);
         status = vxProcessGraph(subgraph);
     }
 
@@ -218,7 +218,7 @@ static vx_status VX_CALLBACK vxCannyEdgeInitializer(vx_node node, const vx_refer
             if (VX_SUCCESS != status)
                 return status;
 
-            status = ownSetChildGraphOfNode(node, 0);
+            status = vxSetChildGraphOfNode(node, 0);
             if (VX_SUCCESS != status)
                 return status;
 
@@ -322,7 +322,7 @@ static vx_status VX_CALLBACK vxCannyEdgeInitializer(vx_node node, const vx_refer
 
             status |= vxReleaseScalar(&sshift);
 
-            status |= ownSetChildGraphOfNode(node, subgraph);
+            status |= vxSetChildGraphOfNode(node, subgraph);
         }
     }
 
@@ -337,7 +337,7 @@ static vx_status VX_CALLBACK vxCannyEdgeDeinitializer(vx_node node, const vx_ref
 
     if (num == dimof(canny_kernel_params))
     {
-        vx_graph subgraph = ownGetChildGraphOfNode(node);
+        vx_graph subgraph = vxGetChildGraphOfNode(node);
         vx_context context = vxGetContext((vx_reference)node);
 
         status = VX_SUCCESS;
@@ -345,7 +345,7 @@ static vx_status VX_CALLBACK vxCannyEdgeDeinitializer(vx_node node, const vx_ref
         status |= vxReleaseGraph(&subgraph);
 
         /* set subgraph to "null" */
-        status |= ownSetChildGraphOfNode(node, 0);
+        status |= vxSetChildGraphOfNode(node, 0);
 
         status |= vxUnloadKernels(context, "openvx-extras");
     }

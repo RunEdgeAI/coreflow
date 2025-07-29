@@ -44,7 +44,7 @@ static vx_status VX_CALLBACK vxHarrisCornersKernel(vx_node node, const vx_refere
 
     if (num == dimof(harris_kernel_params))
     {
-        vx_graph subgraph = ownGetChildGraphOfNode(node);
+        vx_graph subgraph = vxGetChildGraphOfNode(node);
         status = vxProcessGraph(subgraph);
     }
 
@@ -236,7 +236,7 @@ static vx_status VX_CALLBACK vxHarrisInitializer(vx_node node, const vx_referenc
             if (VX_SUCCESS != status)
                 return status;
 
-            status = ownSetChildGraphOfNode(node, 0);
+            status = vxSetChildGraphOfNode(node, 0);
             if (VX_SUCCESS != status)
                 return status;
 
@@ -334,7 +334,7 @@ static vx_status VX_CALLBACK vxHarrisInitializer(vx_node node, const vx_referenc
             status |= vxVerifyGraph(subgraph);
             VX_PRINT(VX_ZONE_INFO, "Status from Child Graph = %d\n", status);
 
-            status |= ownSetChildGraphOfNode(node, subgraph);
+            status |= vxSetChildGraphOfNode(node, subgraph);
         }
     }
     return status;
@@ -346,7 +346,7 @@ static vx_status VX_CALLBACK vxHarrisDeinitializer(vx_node node, const vx_refere
 
     if (num == dimof(harris_kernel_params))
     {
-        vx_graph subgraph = ownGetChildGraphOfNode(node);
+        vx_graph subgraph = vxGetChildGraphOfNode(node);
         vx_context context = vxGetContext((vx_reference)node);
 
         status = VX_SUCCESS;
@@ -354,7 +354,7 @@ static vx_status VX_CALLBACK vxHarrisDeinitializer(vx_node node, const vx_refere
         status |= vxReleaseGraph(&subgraph);
 
         /* set subgraph to "null" */
-        status |= ownSetChildGraphOfNode(node, 0);
+        status |= vxSetChildGraphOfNode(node, 0);
         /*status |= */vxUnloadKernels(context, "openvx-extras");
         /*status |= */vxUnloadKernels(context, "openvx-debug");
     }

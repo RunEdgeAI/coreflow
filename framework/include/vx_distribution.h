@@ -50,7 +50,7 @@ public:
      * @ingroup group_int_distribution
      */
     vx_size dims() const;
-    
+
     /**
      * @brief Get the range of the distribution
      *

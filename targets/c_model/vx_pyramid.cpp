@@ -466,7 +466,7 @@ static vx_status VX_CALLBACK vxGaussianPyramidKernel(vx_node node, const vx_refe
 
     if (num == dimof(gaussian_pyramid_kernel_params))
     {
-        vx_graph subgraph = ownGetChildGraphOfNode(node);
+        vx_graph subgraph = vxGetChildGraphOfNode(node);
         status = vxProcessGraph(subgraph);
     }
 
@@ -562,7 +562,7 @@ static vx_status VX_CALLBACK vxGaussianPyramidInitializer(vx_node node, const vx
             if (VX_SUCCESS != status)
                 return status;
 
-            status = ownSetChildGraphOfNode(node, 0);
+            status = vxSetChildGraphOfNode(node, 0);
             if (VX_SUCCESS != status)
                 return status;
 
@@ -630,7 +630,7 @@ static vx_status VX_CALLBACK vxGaussianPyramidInitializer(vx_node node, const vx
             status |= vxReleaseConvolution(&conv);
 
             status |= vxVerifyGraph(subgraph);
-            status |= ownSetChildGraphOfNode(node, subgraph);
+            status |= vxSetChildGraphOfNode(node, subgraph);
         }
     }
 
@@ -645,7 +645,7 @@ static vx_status VX_CALLBACK vxGaussianPyramidDeinitializer(vx_node node, const 
 
     if (num == dimof(gaussian_pyramid_kernel_params))
     {
-        vx_graph subgraph = ownGetChildGraphOfNode(node);
+        vx_graph subgraph = vxGetChildGraphOfNode(node);
         vx_context context = vxGetContext((vx_reference)node);
 
         status = VX_SUCCESS;
@@ -653,7 +653,7 @@ static vx_status VX_CALLBACK vxGaussianPyramidDeinitializer(vx_node node, const 
         status |= vxReleaseGraph(&subgraph);
 
         /* set subgraph to "null" */
-        status |= ownSetChildGraphOfNode(node, 0);
+        status |= vxSetChildGraphOfNode(node, 0);
 
         status |= vxUnloadKernels(context, "openvx-debug");
     }
