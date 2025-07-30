@@ -61,19 +61,14 @@ vx_bool Error::createConstErrors(vx_context context)
     return ret;
 }
 
-/******************************************************************************/
-/* PUBLIC INTERFACE                                                           */
-/******************************************************************************/
-
-VX_API_ENTRY vx_error vxGetErrorObject(vx_context context, vx_status status)
+vx_error Error::getError(vx_context context, vx_status status)
 {
     vx_error error = nullptr;
     vx_size i = 0ul;
     Osal::semWait(&context->lock);
     for (i = 0ul; i < context->num_references; i++)
     {
-        if (context->reftable[i] == nullptr)
-            continue;
+        if (context->reftable[i] == nullptr) continue;
 
         if (context->reftable[i]->type == VX_TYPE_ERROR)
         {
@@ -89,7 +84,7 @@ VX_API_ENTRY vx_error vxGetErrorObject(vx_context context, vx_status status)
     return error;
 }
 
-VX_API_ENTRY vx_status VX_API_CALL vxGetStatus(vx_reference ref)
+vx_status Error::getStatus(vx_reference ref)
 {
     if (ref == nullptr)
     {
@@ -119,4 +114,18 @@ VX_API_ENTRY vx_status VX_API_CALL vxGetStatus(vx_reference ref)
 
     VX_PRINT(VX_ZONE_ERROR, "returning fail\n");
     return VX_FAILURE;
+}
+
+/******************************************************************************/
+/* PUBLIC INTERFACE                                                           */
+/******************************************************************************/
+
+VX_API_ENTRY vx_error vxGetErrorObject(vx_context context, vx_status status)
+{
+    return Error::getError(context, status);
+}
+
+VX_API_ENTRY vx_status VX_API_CALL vxGetStatus(vx_reference ref)
+{
+    return Error::getStatus(ref);
 }
