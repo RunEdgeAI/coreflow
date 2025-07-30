@@ -17,6 +17,7 @@
 #define VX_CONTEXT_H
 
 #include <memory>
+#include <vector>
 
 #include "vx_event_queue.hpp"
 #include "vx_internal.h"
@@ -51,6 +52,150 @@ public:
      * @ingroup group_int_context
      */
     ~Context();
+
+    /**
+     * @brief Get vendor id
+     *
+     * @return vx_uint16 The vendor id.
+     * @ingroup group_int_context
+     */
+    vx_uint16 vendorId() const;
+
+    /**
+     * @brief Get version number
+     *
+     * @return vx_uint16 The version number.
+     * @ingroup group_int_context
+     */
+    vx_uint16 version() const;
+
+    /**
+     * @brief Get number of loaded modules
+     *
+     * @return vx_uint32 The number of loaded modules.
+     * @ingroup group_int_context
+     */
+    vx_uint32 numModules() const;
+
+    /**
+     * @brief Get number of references
+     *
+     * @return vx_uint32 The number of tracked references.
+     * @ingroup group_int_context
+     */
+    vx_uint32 numReferences() const;
+
+    /**
+     * @brief Get the implementation name
+     *
+     * @return const vx_char* The implementation name.
+     * @ingroup group_int_context
+     */
+    const vx_char* implName() const;
+
+    /**
+     * @brief Get the names of the extensions supported
+     *
+     * @return const vx_char* The names of the extensions supported
+     * @ingroup group_int_context
+     */
+    const vx_char* extensions() const;
+
+    /**
+     * @brief Get the max dimensions of a convolution supported
+     *
+     * @return vx_size The max dimensions of a convolution supported.
+     * @ingroup group_int_context
+     */
+    vx_size convolutionMaxDim() const;
+
+    /**
+     * @brief Get the max dimensions of a non linear supported
+     *
+     * @return vx_size The max dimensions of a non linear supported.
+     * @ingroup group_int_context
+     */
+    vx_size nonLinearMaxDim() const;
+
+    /**
+     * @brief Get the optical flow max window dimension supported
+     *
+     * @return vx_size The optical flow max window dimension supported.
+     * @ingroup group_int_context
+     */
+    vx_size opticalFlowMaxWindowDim() const;
+
+    /**
+     * @brief Get the immediate border
+     *
+     * @return vx_border_t The immediate border.
+     * @ingroup group_int_context
+     */
+    vx_border_t immediateBorder() const;
+
+    /**
+     * @brief Get the immediate border policy
+     *
+     * @return vx_enum The immediate border policy.
+     * @ingroup group_int_context
+     */
+    vx_enum immediateBorderPolicy() const;
+
+    /**
+     * @brief Get the number of unique kernels
+     *
+     * @return vx_uint32 The number of unique kernels.
+     * @ingroup group_int_context
+     */
+    vx_uint32 numUniqueKernels() const;
+
+    /**
+     * @brief Get the max tensor dimensions supported
+     *
+     * @return vx_size The max tensor dimensions supported.
+     * @ingroup group_int_context
+     */
+    vx_size maxTensorDims() const;
+
+    /**
+     * @brief Get the unique kernel information
+     *
+     * @return std::vector<vx_kernel_info_t> The unique kernel information table.
+     * @ingroup group_int_context
+     */
+    std::vector<vx_kernel_info_t> uniqueKernelTable();
+
+    /**
+     * @brief Get the OpenCL context
+     *
+     * @return cl_context The OpenCL context.
+     * @ingroup group_int_context
+     */
+    cl_context clContext() const;
+
+    /**
+     * @brief Get the OpenCL command queue
+     *
+     * @return cl_command_queue The OpenCL command queue.
+     * @ingroup group_int_context
+     */
+    cl_command_queue clCommandQueue() const;
+
+    /**
+     * @brief Set the logging enabled state
+     *
+     * @param flag  vx_bool indicating whether to enable or disable logging
+     * @ingroup group_int_context
+     */
+    void setLoggingEnabled(vx_bool flag);
+
+    /**
+     * @brief Set the perf enabled state
+     *
+     * @param flag vx_bool indicating whether to enable or disable performance tracking
+     * @ingroup group_int_context
+     */
+    void setPerfEnabled(vx_bool flag);
 
     /*! \brief This determines if a context is valid.
      * \param [in] context The pointer to the context to test.
@@ -105,12 +250,8 @@ public:
      * will allocate memory if needed.
      * \ingroup group_int_context
      */
-    vx_bool addAccessor(vx_size size,
-                        vx_enum usage,
-                        void*& ptr,
-                        vx_reference ref,
-                        vx_uint32 *pIndex,
-                        void *extra_data);
+    vx_bool addAccessor(vx_size size, vx_enum usage, void*& ptr, vx_reference ref,
+                        vx_uint32* pIndex, void* extra_data);
 
     /*! \brief Finds and removes an accessor from the list.
      * \ingroup group_int_context
@@ -173,20 +314,100 @@ public:
     /**
      * @brief Launch worker graph thread
      *
-     * @param arg
-     * @return vx_value_t
+     * @param arg         Optional argument to pass as parameter.
+     * @return vx_value_t Thread return value.
      * @ingroup group_int_context
      */
     static vx_value_t workerGraph(void *arg);
 
     /**
-     * @brief Launch worker node thread
+     * @brief Launch worker node
      *
-     * @param worker
-     * @return vx_bool
+     * @param worker   The threadpool of the worker.
+     * @return vx_bool vx_true_e if ran successful, vx_false_e otherwise
      * @ingroup group_int_context
      */
     static vx_bool workerNode(vx_threadpool_worker_t *worker);
+
+    /**
+     * @brief Register a user struct with a certain number of bytes
+     *
+     * @param size     The size in bytes of the user struct.
+     * @return vx_enum The user struct enumeration.
+     * @ingroup group_int_context
+     */
+    vx_enum registerUserStruct(vx_size size);
+
+    /**
+     * @brief Get the User Struct By Name object
+     *
+     * @param name     The user struct name.
+     * @return vx_enum The user struct enumeration.
+     * @ingroup group_int_context
+     */
+    vx_enum getUserStructByName(const vx_char* name);
+
+    /**
+     * @brief Get the User Struct Name By Enum object
+     *
+     * @param user_struct_type Enumeration for user struct type.
+     * @param type_name        Name of user struct type.
+     * @param name_size        Size of user struct name.
+     * @return vx_status       VX_SUCCESS if successful, otherwise a return status with an error
+     * code.
+     * @ingroup group_int_context
+     */
+    vx_status getUserStructNameByEnum(vx_enum user_struct_type, vx_char* type_name,
+                                      vx_size name_size);
+
+    /**
+     * @brief Get the User Struct Enum By Name object
+     *
+     * @param type_name        The user struct name.
+     * @param user_struct_type The user struct type enumeration.
+     * @return vx_status       VX_SUCCESS if successful, otherwise a return status with an error
+     * code.
+     * @ingroup group_int_context
+     */
+    vx_status getUserStructEnumByName(const vx_char* type_name, vx_enum* user_struct_type);
+
+    /**
+     * @brief Register user struct with name
+     *
+     * @param size      Size of user struct name.
+     * @param type_name The user struct name.
+     * @return vx_enum  Enumeration of registered user struct
+     * @ingroup group_int_context
+     */
+    vx_enum registerUserStructWithName(vx_size size, const vx_char* type_name);
+
+    /**
+     * @brief Allocate a unique kernel id
+     *
+     * @param pKernelEnumId Pointer to allocated kernel id by the framework.
+     * @return vx_status    VX_SUCCESS if successful, otherwise a return status with an error code.
+     * @ingroup group_int_context
+     */
+    vx_status allocateKernelId(vx_enum* pKernelEnumId);
+
+    /**
+     * @brief Allocate a unique library id
+     *
+     * @param pLibraryId Pointer to allocated library id by the framework.
+     * @return vx_status VX_SUCCESS if successful, otherwise a return status with an error code.
+     * @ingroup group_int_context
+     */
+    vx_status allocateLibraryId(vx_enum* pLibraryId);
+
+    /**
+     * @brief Set the Immediate Mode Target
+     *
+     * @param target_enum   The target enumeration.
+     * @param target_string The target string.
+     * @return vx_status    VX_SUCCESS if successful, otherwise a return status with an error code.
+     * @ingroup group_int_context
+     */
+    vx_status setImmediateModeTarget(vx_enum target_enum, const char* target_string);
 
     /*! \brief The pointer to process global lock */
     vx_sem_t*           p_global_lock;
@@ -274,6 +495,14 @@ public:
     vx_value_set_t graph_queue[VX_INT_MAX_QUEUE_DEPTH];
     /*! \brief The number of graphs in the queue */
     vx_size numGraphsQueued;
+    /*! \brief The vendor id */
+    const vx_uint16 vendor_id;
+    /*! \brief The version number this implements */
+    const vx_uint16 version_number;
+    /*! \brief The name of this impleemntation */
+    const vx_char implementation[VX_MAX_IMPLEMENTATION_NAME];
+    /*! \brief The name of additional extensions in this impleemntation */
+    const vx_char* extension;
 };
 
 #endif /* VX_CONTEXT_H */
