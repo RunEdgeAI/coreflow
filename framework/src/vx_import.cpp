@@ -31,6 +31,39 @@ Import::~Import()
 
 }
 
+#if defined(OPENVX_USE_XML)
+
+vx_uint32 Import::numRefs() const
+{
+    return count;
+}
+
+vx_enum Import::importType() const
+{
+    return import_type;
+}
+
+vx_reference Import::getReferenceByIndex(vx_uint32 index)
+{
+    vx_reference ref = nullptr;
+
+    if (index < this->count)
+    {
+        ref = (vx_reference)this->refs[index];
+        ref->incrementReference(VX_EXTERNAL);
+    }
+    else
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Incorrect index value\n");
+        vxAddLogEntry(this->context, VX_ERROR_INVALID_PARAMETERS, "Incorrect index value\n");
+        ref = (vx_reference)vxGetErrorObject(this->context, VX_ERROR_INVALID_PARAMETERS);
+    }
+
+    return ref;
+}
+
+#endif /* defined(OPENVX_USE_XML) */
+
 #if defined(OPENVX_USE_XML) || defined(OPENVX_USE_IX)
 
 vx_import Import::createImportInt(vx_context context,
@@ -53,6 +86,24 @@ vx_import Import::createImportInt(vx_context context,
     return import;
 }
 
+vx_reference Import::getReferenceByName(const vx_char *name)
+{
+    vx_reference ref = nullptr;
+    vx_uint32 index = 0;
+
+    for (index = 0; index < this->count; index++)
+    {
+        if (strncmp(name, this->refs[index]->name, VX_MAX_REFERENCE_NAME) == 0)
+        {
+            ref = (vx_reference)this->refs[index];
+            ref->incrementReference(VX_EXTERNAL);
+            break;
+        }
+    }
+
+    return ref;
+}
+
 void Import::destruct()
 {
     vx_uint32 i = 0;
@@ -73,33 +124,9 @@ void Import::destruct()
 #endif /* defined(OPENVX_USE_XML) || defined(OPENVX_USE_IX) */
 
 /******************************************************************************/
-/* PUBLIC API */
+/* PUBLIC API                                                                 */
 /******************************************************************************/
 #if defined(OPENVX_USE_XML)
-VX_API_ENTRY vx_reference VX_API_CALL vxGetImportReferenceByIndex(vx_import import, vx_uint32 index)
-{
-    vx_reference ref = nullptr;
-    if (import && import->type == VX_TYPE_IMPORT)
-    {
-        if (index < import->count)
-        {
-            ref = (vx_reference)import->refs[index];
-            ref->incrementReference(VX_EXTERNAL);
-        }
-        else
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Incorrect index value\n");
-            vxAddLogEntry(import->context, VX_ERROR_INVALID_PARAMETERS, "Incorrect index value\n");
-            ref = (vx_reference)vxGetErrorObject(import->context, VX_ERROR_INVALID_PARAMETERS);
-        }
-    }
-    else
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Invalid import reference!\n");
-    }
-    return ref;
-}
-
 VX_API_ENTRY vx_status VX_API_CALL vxQueryImport(vx_import import, vx_enum attribute, void *ptr, vx_size size)
 {
     vx_status status = VX_SUCCESS;
@@ -110,7 +137,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryImport(vx_import import, vx_enum attri
             case VX_IMPORT_ATTRIBUTE_COUNT:
                 if (VX_CHECK_PARAM(ptr, size, vx_uint32, 0x3))
                 {
-                    *(vx_uint32 *)ptr = import->count;
+                    *(vx_uint32 *)ptr = import->numRefs();
                 }
                 else
                 {
@@ -118,9 +145,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryImport(vx_import import, vx_enum attri
                 }
                 break;
             case VX_IMPORT_ATTRIBUTE_TYPE:
-                if ((size <= VX_MAX_TARGET_NAME) && (ptr != nullptr))
+                if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
                 {
-                    *(vx_uint32 *)ptr = import->import_type;
+                    *(vx_uint32 *)ptr = import->importType();
                 }
                 else
                 {
@@ -136,6 +163,20 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryImport(vx_import import, vx_enum attri
         status = VX_ERROR_INVALID_REFERENCE;
     return status;
 }
+
+VX_API_ENTRY vx_reference VX_API_CALL vxGetImportReferenceByIndex(vx_import import, vx_uint32 index)
+{
+    vx_reference ref = nullptr;
+    if (import && import->type == VX_TYPE_IMPORT)
+    {
+        ref = import->getReferenceByIndex(index);
+    }
+    else
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid import reference!\n");
+    }
+    return ref;
+}
 #endif /* defined(OPENVX_USE_XML) */
 
 #if defined(OPENVX_USE_IX) || defined(OPENVX_USE_XML)
@@ -145,16 +186,7 @@ VX_API_ENTRY vx_reference VX_API_CALL vxGetImportReferenceByName(vx_import impor
     vx_reference ref = nullptr;
     if (import && import->type == VX_TYPE_IMPORT)
     {
-        vx_uint32 index = 0;
-        for (index = 0; index < import->count; index++)
-        {
-            if (strncmp(name, import->refs[index]->name, VX_MAX_REFERENCE_NAME) == 0)
-            {
-                ref = (vx_reference)import->refs[index];
-                ref->incrementReference(VX_EXTERNAL);
-                break;
-            }
-        }
+        ref = import->getReferenceByName(name);
     }
     return ref;
 }
