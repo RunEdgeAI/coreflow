@@ -44,6 +44,31 @@ public:
      */
     ~Delay();
 
+    /**
+     * @brief Get data type of references associated with this delay object
+     *
+     * @return vx_enum The data type of references.
+     * @ingroup group_int_delay
+     */
+    vx_enum dataType() const;
+
+    /**
+     * @brief Get the number of objects in this delay object
+     *
+     * @return vx_size The number of objects in this delay object
+     * @ingroup group_int_delay
+     */
+    vx_size numObjects() const;
+
+    /**
+     * @brief Retrieves a reference to a delay slot object.
+     *
+     * @param [in] index    The index of the delay slot from which to extract the object reference.
+     * @return vx_reference The vx_reference at the index specified if found, otherwise an error object
+     * @ingroup group_int_delay
+     */
+    vx_reference getReference(vx_int32 index);
+
     /*! \brief Removes an association to a node from a delay slot object reference.
      * \param [in] value The delay slot object reference.
      * \param [in] n The node reference.
@@ -59,6 +84,39 @@ public:
      * \ingroup group_int_delay
      */
     static vx_bool addAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i);
+
+    /**
+     * @brief Shifts the internal delay ring by one.
+     *
+     * This function performs a shift of the internal delay ring by one. This means that,
+     * the data originally at index 0 move to index -1 and so forth until index
+     * \f$ -count+1 \f$. The data originally at index \f$ -count+1 \f$ move to index 0.
+     *  Here \f$ count \f$ is the number of slots in delay ring.
+     * When a delay is aged, any graph making use of this delay (delay object itself or data
+     * objects in delay slots) gets its data automatically updated accordingly.
+     *
+     * @return vx_status VX_SUCCESS if successful, any other value indicates failure.
+     * @ingroup group_int_delay
+     */
+    vx_status age();
+
+    /**
+     * @brief Register a delay for auto-aging.
+     *
+     * This function registers a delay object to be auto-aged by the graph.
+     * This delay object will be automatically aged after each successful completion of
+     * this graph. Aging of a delay object cannot be called during graph execution.
+     * A graph abandoned due to a node callback will trigger an auto-aging.
+     *
+     * If a delay is registered for auto-aging multiple times in a same graph,
+     * the delay will be only aged a single time at each graph completion.
+     * If a delay is registered for auto-aging in multiple graphs, this delay will
+     * aged automatically after each successful completion of any of these graphs.
+     *
+     * @param [in] graph      The graph to which the delay is registered for auto-aging.
+     * @return vx_status VX_SUCCESS if successful, any other value indicates failure.
+     */
+    vx_status registerAutoAging(vx_graph graph);
 
     /**
      * @brief Destruct function for delay objects
