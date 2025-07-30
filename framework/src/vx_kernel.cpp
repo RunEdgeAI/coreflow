@@ -88,6 +88,106 @@ void Kernel::printKernel(vx_kernel kernel)
             kernel->name);
 }
 
+vx_uint32 Kernel::numParameters() const
+{
+    return signature.num_parameters;
+}
+
+const vx_char *Kernel::kernelName() const
+{
+    vx_char kname[VX_MAX_KERNEL_NAME];
+    vx_char *k, *v;
+    strncpy(kname, this->name, VX_MAX_KERNEL_NAME);
+    k = strtok(kname, ":");
+    v = strtok(nullptr, ":");
+    (void)v; /* need this variable in the future for variant searches */
+
+    return k;
+}
+
+vx_enum Kernel::kernelEnum() const
+{
+    return enumeration;
+}
+
+vx_size Kernel::localDataSize() const
+{
+    return attributes.localDataSize;
+}
+
+#ifdef OPENVX_KHR_TILING
+vx_neighborhood_size_t Kernel::inputNeighborhood() const
+{
+    return attributes.nhbdinfo;
+}
+
+vx_tile_block_size_t Kernel::outputTileBlockSize() const
+{
+    return attributes.blockinfo;
+}
+
+vx_border_t Kernel::border() const
+{
+    return attributes.borders;
+}
+#endif /* OPENVX_KHR_TILING */
+
+#ifdef OPENVX_USE_OPENCL_INTEROP
+vx_bool Kernel::useOpencl() const
+{
+    return attributes.opencl_access;
+}
+#endif /* OPENVX_USE_OPENCL_INTEROP */
+
+vx_uint32 Kernel::pipeupInputDepth() const
+{
+    return input_depth;
+}
+
+vx_uint32 Kernel::pipeupOutputDepth() const
+{
+    return output_depth;
+}
+
+void Kernel::setLocalDataSize(vx_size size)
+{
+    attributes.localDataSize = size;
+}
+
+#ifdef OPENVX_KHR_TILING
+void Kernel::setInputNeighborhood(vx_neighborhood_size_t input)
+{
+    memcpy(&attributes.nhbdinfo, &input, sizeof(vx_neighborhood_size_t));
+}
+
+void Kernel::setOutputTileBlockSize(vx_tile_block_size_t tile_size)
+{
+    memcpy(&attributes.blockinfo, &tile_size, sizeof(vx_tile_block_size_t));
+}
+
+void Kernel::setBorder(vx_border_t border)
+{
+    memcpy(&attributes.borders, &border, sizeof(vx_border_t));
+}
+#endif /* OPENVX_KHR_TILING */
+
+#ifdef OPENVX_USE_OPENCL_INTEROP
+void Kernel::setOpenclAccess(vx_bool flag)
+{
+    attributes.opencl_access = flag;
+}
+#endif /* OPENVX_USE_OPENCL_INTEROP */
+
+void Kernel::setInputDepth(vx_uint32 depth)
+{
+    input_depth = depth;
+}
+
+void Kernel::setOutputDepth(vx_uint32 depth)
+{
+    output_depth = depth;
+}
+
 vx_bool Kernel::isKernelUnique(vx_kernel kernel)
 {
     vx_uint32 t = 0u, k = 0u;
@@ -272,32 +372,263 @@ vx_kernel Kernel::addkernel(vx_context context,
     return kernel;
 }
 
-vx_status Kernel::deinitializeKernel()
+#ifdef OPENVX_KHR_TILING
+vx_kernel Kernel::addTilingKernel(vx_context context, vx_char name[VX_MAX_KERNEL_NAME],
+                                  vx_enum enumeration, vx_tiling_kernel_f flexible_func_ptr,
+                                  vx_tiling_kernel_f fast_func_ptr, vx_uint32 num_params,
+                                  vx_kernel_input_validate_f input,
+                                  vx_kernel_output_validate_f output)
+{
+    vx_kernel kernel = 0;
+    vx_uint32 t = 0;
+    vx_size index = 0;
+    vx_target target = nullptr;
+    vx_char targetName[VX_MAX_TARGET_NAME];
+
+    if (Context::isValidContext(context) == vx_false_e)
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid Context\n");
+        return (vx_kernel) nullptr;
+    }
+    if ((flexible_func_ptr == nullptr && fast_func_ptr == nullptr) || input == nullptr ||
+        output == nullptr || num_params > VX_INT_MAX_PARAMS || num_params == 0 || name == nullptr ||
+        strncmp(name, "", VX_MAX_KERNEL_NAME) == 0)
+    /* initialize and de-initialize can be nullptr */
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid Parameters!\n");
+        vxAddLogEntry((vx_reference)context, VX_ERROR_INVALID_PARAMETERS,
+                      "Invalid Parameters supplied to vxAddKernel\n");
+        return (vx_kernel) nullptr;
+    }
+
+    /* find target to assign this to */
+    index = strnindex(name, ':', VX_MAX_TARGET_NAME);
+    if (index == VX_MAX_TARGET_NAME)
+    {
+        strcpy(targetName, "khronos.tiling");
+    }
+    else
+    {
+        strncpy(targetName, name, index);
+    }
+    VX_PRINT(VX_ZONE_KERNEL, "Deduced Name as %s\n", targetName);
+    for (t = 0u; t < context->num_targets; t++)
+    {
+        target = context->targets[t];
+        if (strncmp(targetName, target->name, VX_MAX_TARGET_NAME) == 0)
+        {
+            break;
+        }
+        target = nullptr;
+    }
+    if (target && target->funcs.addtilingkernel)
+    {
+        kernel = target->funcs.addtilingkernel(target, name, enumeration, nullptr,
+                                               flexible_func_ptr, fast_func_ptr, num_params,
+                                               nullptr, input, output, nullptr, nullptr);
+        VX_PRINT(VX_ZONE_KERNEL, "Added Kernel %s to Target %s (" VX_FMT_REF ")\n", name,
+                 target->name, kernel);
+    }
+    else
+    {
+        vxAddLogEntry((vx_reference)context, VX_ERROR_NO_RESOURCES, "No target named %s exists!\n",
+                      targetName);
+    }
+    return (vx_kernel)kernel;
+}
+#endif /* OPENVX_KHR_TILING */
+
+vx_status Kernel::finalize()
 {
     vx_status status = VX_SUCCESS;
-    vx_reference ref = (vx_reference)this;
+    vx_uint32 p = 0;
 
-    if (internal_count)
+    for (p = 0; p < VX_INT_MAX_PARAMS; p++)
     {
-        VX_PRINT(VX_ZONE_KERNEL, "Deinit and Releasing kernel " VX_FMT_REF "\n", (void *)ref);
-        status = Reference::releaseReference(&ref, VX_TYPE_KERNEL, VX_INTERNAL, nullptr);
+        if (p >= this->signature.num_parameters)
+        {
+            break;
+        }
+        if ((this->signature.directions[p] < VX_INPUT) ||
+            (this->signature.directions[p] > VX_BIDIRECTIONAL))
+        {
+            status = VX_ERROR_INVALID_PARAMETERS;
+            break;
+        }
+        if (Context::isValidType(this->signature.types[p]) == vx_false_e)
+        {
+            status = VX_ERROR_INVALID_PARAMETERS;
+            break;
+        }
+    }
+    if (p == this->signature.num_parameters)
+    {
+        this->context->num_kernels++;
+        if (Kernel::isKernelUnique(this) == vx_true_e)
+        {
+            VX_PRINT(VX_ZONE_KERNEL, "Kernel %s (%x) is unique!\n", this->name, this->enumeration);
+            this->context->num_unique_kernels++;
+        }
+        this->enabled = vx_true_e;
     }
 
     return status;
 }
 
-/******************************************************************************/
-/* PUBLIC FUNCTIONS                                                           */
-/******************************************************************************/
+vx_status Kernel::addParameter(vx_uint32 index,
+                               vx_enum dir,
+                               vx_enum data_type,
+                               vx_enum state)
+{
+    vx_status status = VX_SUCCESS;
 
-VX_API_ENTRY vx_status VX_API_CALL vxLoadKernels(vx_context context, const vx_char *name)
+    if (index < this->signature.num_parameters)
+    {
+#ifdef OPENVX_KHR_TILING
+        if (this->tilingfast_function)
+        {
+            if (((data_type != VX_TYPE_IMAGE) && (data_type != VX_TYPE_SCALAR) &&
+                 (data_type != VX_TYPE_THRESHOLD) && (data_type != VX_TYPE_REMAP) &&
+                 (data_type != VX_TYPE_CONVOLUTION) && (data_type != VX_TYPE_TENSOR) &&
+                 (data_type != VX_TYPE_ARRAY) && (data_type != VX_TYPE_LUT) &&
+                 (data_type != VX_TYPE_MATRIX)) ||
+                (Parameter::isValidDirection(dir) == vx_false_e) ||
+                (Parameter::isValidState(state) == vx_false_e))
+            {
+                VX_PRINT(VX_ZONE_ERROR, "Invalid data type, param direction, or param state!\n");
+                status = VX_ERROR_INVALID_PARAMETERS;
+            }
+            else
+            {
+                this->signature.directions[index] = dir;
+                this->signature.types[index] = data_type;
+                this->signature.states[index] = state;
+                status = VX_SUCCESS;
+            }
+        }
+        else
+#endif /* OPENVX_KHR_TILING */
+        {
+            if (((Context::isValidType(data_type) == vx_false_e) ||
+                 (Parameter::isValidDirection(dir) == vx_false_e) ||
+                 (Parameter::isValidState(state) == vx_false_e)) ||
+                (data_type == VX_TYPE_DELAY && dir != VX_INPUT))
+            {
+                VX_PRINT(VX_ZONE_ERROR, "Invalid data type, param direction, or param state!\n");
+                status = VX_ERROR_INVALID_PARAMETERS;
+            }
+            else
+            {
+                this->signature.directions[index] = dir;
+                this->signature.types[index] = data_type;
+                this->signature.states[index] = state;
+                status = VX_SUCCESS;
+            }
+        }
+    }
+    else
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid number of parameters associated!\n");
+        status = VX_ERROR_INVALID_PARAMETERS;
+    }
+
+    return status;
+}
+
+vx_status Kernel::removeKernel(vx_kernel kernel)
+{
+    vx_status status = VX_ERROR_INVALID_PARAMETERS;
+
+    if (kernel &&
+        Reference::isValidReference(reinterpret_cast<vx_reference>(kernel), VX_TYPE_KERNEL) ==
+            vx_true_e &&
+        kernel->user_kernel)
+    {
+        vx_target target = nullptr;
+        vx_char targetName[VX_MAX_TARGET_NAME];
+        vx_uint32 kernelIdx = 0u;
+        vx_context context = kernel->context;
+
+        /* Remove the reference from the context */
+        vx_reference ref = reinterpret_cast<vx_reference>(kernel);
+        context->removeReference(ref);
+
+        /* find back references to kernel's target and kernel in target->kernels array */
+        vx_uint32 index = (vx_uint32)(strnindex(kernel->name, ':', VX_MAX_TARGET_NAME));
+        if (index == VX_MAX_TARGET_NAME)
+        {
+            strcpy(targetName, "khronos.any");
+        }
+        else
+        {
+            strncpy(targetName, kernel->name, index);
+        }
+
+        for (vx_uint32 t = 0u; t < context->num_targets; t++)
+        {
+            target = context->targets[t];
+            if (strncmp(targetName, target->name, VX_MAX_TARGET_NAME) == 0)
+            {
+                break;
+            }
+            target = nullptr;
+        }
+
+        if (target)
+        {
+            for (vx_uint32 k = 0u; k < VX_INT_MAX_KERNELS; k++)
+            {
+                if (kernel == target->kernels[k])
+                {
+                    kernelIdx = k;
+                    break;
+                }
+            }
+        }
+
+        if (target && kernelIdx < VX_INT_MAX_KERNELS)
+        {
+            if (kernel->enabled)
+            {
+                kernel->enabled = vx_false_e;
+                context->num_kernels--;
+                if (Kernel::isKernelUnique(kernel) == vx_true_e)
+                {
+                    context->num_unique_kernels--;
+                }
+            }
+            target->num_kernels--;
+
+            status = kernel->deinitializeKernel();
+
+            if (status == VX_SUCCESS)
+            {
+                target->kernels[kernelIdx]->enumeration = VX_KERNEL_INVALID;
+                target->kernels[kernelIdx]->user_kernel = vx_false_e;
+                target->kernels[kernelIdx] = nullptr;
+            }
+            else
+            {
+                VX_PRINT(VX_ZONE_ERROR, "Can't deinitialize kernel properly\n");
+            }
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Can't locate kernel in its context\n");
+        }
+    }
+
+    return status;
+}
+
+vx_status Kernel::loadKernels(vx_context context, const vx_char *name)
 {
     vx_status status = VX_FAILURE;
     vx_char module[VX_INT_MAX_PATH];
     vx_uint32 m = 0;
     vx_publish_kernels_f publish = nullptr;
 
-    snprintf(module, VX_INT_MAX_PATH, VX_MODULE_NAME("%s"), (name?name:"openvx-ext"));
+    snprintf(module, VX_INT_MAX_PATH, VX_MODULE_NAME("%s"), (name ? name : "openvx-ext"));
     VX_PRINT(VX_ZONE_INFO, "Attempting to load module: %s\n", module);
 
     if (Context::isValidContext(context) == vx_false_e)
@@ -309,7 +640,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxLoadKernels(vx_context context, const vx_ch
     for (m = 0; m < VX_INT_MAX_MODULES; m++)
     {
         Osal::semWait(&context->modules[m].lock);
-        if (context->modules[m].handle != nullptr && strncmp(name, context->modules[m].name, VX_INT_MAX_PATH) == 0)
+        if (context->modules[m].handle != nullptr &&
+            strncmp(name, context->modules[m].name, VX_INT_MAX_PATH) == 0)
         {
             context->modules[m].ref_count++;
             Osal::semPost(&context->modules[m].lock);
@@ -381,14 +713,14 @@ VX_API_ENTRY vx_status VX_API_CALL vxLoadKernels(vx_context context, const vx_ch
     return status;
 }
 
-VX_API_ENTRY vx_status VX_API_CALL vxUnloadKernels(vx_context context, const vx_char *name)
+vx_status Kernel::unloadKernels(vx_context context, const vx_char *name)
 {
     vx_status status = VX_FAILURE;
     vx_char module[VX_INT_MAX_PATH];
     vx_uint32 m = 0;
     vx_unpublish_kernels_f unpublish = nullptr;
 
-    snprintf(module, VX_INT_MAX_PATH, VX_MODULE_NAME("%s"), (name?name:"openvx-ext"));
+    snprintf(module, VX_INT_MAX_PATH, VX_MODULE_NAME("%s"), (name ? name : "openvx-ext"));
 
     if (Context::isValidContext(context) == vx_false_e)
     {
@@ -399,7 +731,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnloadKernels(vx_context context, const vx_
     for (m = 0; m < VX_INT_MAX_MODULES; m++)
     {
         Osal::semWait(&context->modules[m].lock);
-        if (context->modules[m].handle != nullptr && strncmp(name, context->modules[m].name, VX_INT_MAX_PATH) == 0)
+        if (context->modules[m].handle != nullptr &&
+            strncmp(name, context->modules[m].name, VX_INT_MAX_PATH) == 0)
         {
             context->modules[m].ref_count--;
             if (context->modules[m].ref_count != 0)
@@ -441,7 +774,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnloadKernels(vx_context context, const vx_
     return status;
 }
 
-VX_API_ENTRY vx_kernel VX_API_CALL vxGetKernelByName(vx_context context, const vx_char string[VX_MAX_KERNEL_NAME])
+vx_kernel Kernel::getKernelByName(vx_context context, const vx_char string[VX_MAX_KERNEL_NAME])
 {
     vx_kernel kern = nullptr;
     if (Context::isValidContext(context) == vx_true_e)
@@ -464,7 +797,8 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxGetKernelByName(vx_context context, const v
         {
             /* There should be no colon */
             /* Doing nothing will leave kern = nullptr, causing error condition below */
-            VX_PRINT(VX_ZONE_ERROR, "Kernel name should not contain any ':' in this implementation\n");
+            VX_PRINT(VX_ZONE_ERROR,
+                     "Kernel name should not contain any ':' in this implementation\n");
         }
 
         free(nameBuffer);
@@ -493,15 +827,14 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxGetKernelByName(vx_context context, const v
         if (kern == nullptr)
         {
             VX_PRINT(VX_ZONE_ERROR, "Failed to find kernel %s\n", string);
-            vxAddLogEntry(reinterpret_cast<vx_reference>(context), VX_ERROR_INVALID_PARAMETERS, "Failed to find kernel %s\n", string);
+            vxAddLogEntry(reinterpret_cast<vx_reference>(context), VX_ERROR_INVALID_PARAMETERS,
+                          "Failed to find kernel %s\n", string);
             kern = (vx_kernel)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
         }
         else
         {
-            VX_PRINT(VX_ZONE_KERNEL,"Found Kernel enum %d, name %s on target %s\n",
-                kern->enumeration,
-                kern->name,
-                context->targets[kern->affinity]->name);
+            VX_PRINT(VX_ZONE_KERNEL, "Found Kernel enum %d, name %s on target %s\n",
+                     kern->enumeration, kern->name, context->targets[kern->affinity]->name);
         }
     }
     else
@@ -511,13 +844,14 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxGetKernelByName(vx_context context, const v
     return (vx_kernel)kern;
 }
 
-VX_API_ENTRY vx_kernel VX_API_CALL vxGetKernelByEnum(vx_context context, vx_enum kernelenum)
+vx_kernel Kernel::getKernelByEnum(vx_context context, vx_enum kernelenum)
 {
     vx_kernel kernel = nullptr;
     if (Context::isValidContext(context) == vx_true_e)
     {
         vx_uint32 k = 0u, t = 0u;
-        VX_PRINT(VX_ZONE_KERNEL,"Scanning for kernel enum %d out of %d kernels\n", kernelenum, context->num_kernels);
+        VX_PRINT(VX_ZONE_KERNEL, "Scanning for kernel enum %d out of %d kernels\n", kernelenum,
+                 context->num_kernels);
         for (t = 0; t < context->num_targets; t++)
         {
             vx_target target = context->targets[context->priority_targets[t]];
@@ -526,7 +860,8 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxGetKernelByEnum(vx_context context, vx_enum
                 VX_PRINT(VX_ZONE_KERNEL, "Target[%u] is not valid!\n", t);
                 continue;
             }
-            VX_PRINT(VX_ZONE_KERNEL, "Checking Target[%u]=%s for %u kernels\n", context->priority_targets[t], target->name, target->num_kernels);
+            VX_PRINT(VX_ZONE_KERNEL, "Checking Target[%u]=%s for %u kernels\n",
+                     context->priority_targets[t], target->name, target->num_kernels);
             for (k = 0; k < VX_INT_MAX_KERNELS; k++)
             {
                 if (target->kernels[k] && target->kernels[k]->enumeration == kernelenum)
@@ -534,22 +869,23 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxGetKernelByEnum(vx_context context, vx_enum
                     kernel = target->kernels[k];
                     kernel->affinity = context->priority_targets[t];
                     kernel->incrementReference(VX_EXTERNAL);
-                    VX_PRINT(VX_ZONE_KERNEL,"Found Kernel[%u] enum:%d name:%s in target[%u]=%s\n", k, kernelenum, kernel->name, context->priority_targets[t], target->name);
+                    VX_PRINT(VX_ZONE_KERNEL, "Found Kernel[%u] enum:%d name:%s in target[%u]=%s\n",
+                             k, kernelenum, kernel->name, context->priority_targets[t],
+                             target->name);
                     break;
                 }
             }
             /* Acquire the highest priority target */
-            if (kernel != nullptr)
-                break;
+            if (kernel != nullptr) break;
         }
 
         if (kernel == nullptr)
         {
             VX_PRINT(VX_ZONE_ERROR, "Kernel enum %x not found.\n", kernelenum);
-            vxAddLogEntry(reinterpret_cast<vx_reference>(context), VX_ERROR_INVALID_PARAMETERS, "Kernel enum %x not found.\n", kernelenum);
+            vxAddLogEntry(reinterpret_cast<vx_reference>(context), VX_ERROR_INVALID_PARAMETERS,
+                          "Kernel enum %x not found.\n", kernelenum);
             kernel = (vx_kernel)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
         }
-
     }
     else
     {
@@ -558,26 +894,43 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxGetKernelByEnum(vx_context context, vx_enum
     return kernel;
 }
 
-VX_API_ENTRY vx_status VX_API_CALL vxReleaseKernel(vx_kernel *kernel)
+vx_status Kernel::deinitializeKernel()
 {
-    vx_status status = VX_ERROR_INVALID_REFERENCE;
-    if (nullptr != kernel)
+    vx_status status = VX_SUCCESS;
+    vx_reference ref = (vx_reference)this;
+
+    if (internal_count)
     {
-        vx_kernel ref = *kernel;
-        if (vx_true_e == Reference::isValidReference(ref, VX_TYPE_KERNEL))
-        {
-            VX_PRINT(VX_ZONE_KERNEL, "Releasing kernel " VX_FMT_REF "\n", (void *)ref);
-
-            /* deinitialize kernel object */
-            if (ref->kernel_object_deinitialize != nullptr)
-            {
-                ref->kernel_object_deinitialize(ref);
-            }
-
-            status = Reference::releaseReference((vx_reference*)kernel, VX_TYPE_KERNEL, VX_EXTERNAL, nullptr);
-        }
+        VX_PRINT(VX_ZONE_KERNEL, "Deinit and Releasing kernel " VX_FMT_REF "\n", (void *)ref);
+        status = Reference::releaseReference(&ref, VX_TYPE_KERNEL, VX_INTERNAL, nullptr);
     }
+
     return status;
+}
+
+/******************************************************************************/
+/* PUBLIC FUNCTIONS                                                           */
+/******************************************************************************/
+
+VX_API_ENTRY vx_status VX_API_CALL vxLoadKernels(vx_context context, const vx_char *name)
+{
+    return Kernel::loadKernels(context, name);
+}
+
+VX_API_ENTRY vx_status VX_API_CALL vxUnloadKernels(vx_context context, const vx_char *name)
+{
+    return Kernel::unloadKernels(context, name);
+}
+
+VX_API_ENTRY vx_kernel VX_API_CALL vxGetKernelByName(vx_context context,
+                                                     const vx_char string[VX_MAX_KERNEL_NAME])
+{
+    return Kernel::getKernelByName(context, string);
+}
+
+VX_API_ENTRY vx_kernel VX_API_CALL vxGetKernelByEnum(vx_context context, vx_enum kernelenum)
+{
+    return Kernel::getKernelByEnum(context, kernelenum);
 }
 
 /*
@@ -625,62 +978,8 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxAddTilingKernel(vx_context context,
                             vx_kernel_input_validate_f input,
                             vx_kernel_output_validate_f output)
 {
-    vx_kernel kernel = 0;
-    vx_uint32 t = 0;
-    vx_size index = 0;
-    vx_target target = nullptr;
-    vx_char targetName[VX_MAX_TARGET_NAME];
-
-    if (Context::isValidContext(context) == vx_false_e)
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Invalid Context\n");
-        return (vx_kernel)nullptr;
-    }
-    if ((flexible_func_ptr == nullptr && fast_func_ptr == nullptr) ||
-        input == nullptr ||
-        output == nullptr ||
-        num_params > VX_INT_MAX_PARAMS || num_params == 0 ||
-        name == nullptr ||
-        strncmp(name, "",  VX_MAX_KERNEL_NAME) == 0)
-        /* initialize and de-initialize can be nullptr */
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Invalid Parameters!\n");
-        vxAddLogEntry((vx_reference)context, VX_ERROR_INVALID_PARAMETERS, "Invalid Parameters supplied to vxAddKernel\n");
-        return (vx_kernel)nullptr;
-    }
-
-    /* find target to assign this to */
-    index = strnindex(name, ':', VX_MAX_TARGET_NAME);
-    if (index == VX_MAX_TARGET_NAME)
-    {
-        strcpy(targetName,"khronos.tiling");
-    }
-    else
-    {
-        strncpy(targetName, name, index);
-    }
-    VX_PRINT(VX_ZONE_KERNEL, "Deduced Name as %s\n", targetName);
-    for (t = 0u; t < context->num_targets; t++)
-    {
-        target = context->targets[t];
-        if (strncmp(targetName,target->name, VX_MAX_TARGET_NAME) == 0)
-        {
-            break;
-        }
-        target = nullptr;
-    }
-    if (target && target->funcs.addtilingkernel)
-    {
-        kernel = target->funcs.addtilingkernel(target, name, enumeration, nullptr,
-                                         flexible_func_ptr, fast_func_ptr, num_params, nullptr,
-                                         input, output, nullptr, nullptr);
-        VX_PRINT(VX_ZONE_KERNEL,"Added Kernel %s to Target %s (" VX_FMT_REF ")\n", name, target->name, kernel);
-    }
-    else
-    {
-        vxAddLogEntry((vx_reference)context, VX_ERROR_NO_RESOURCES, "No target named %s exists!\n", targetName);
-    }
-    return (vx_kernel)kernel;
+    return Kernel::addTilingKernel(context, name, enumeration, flexible_func_ptr, fast_func_ptr,
+                                   num_params, input, output);
 }
 #endif /* OPENVX_KHR_TILING */
 
@@ -689,35 +988,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxFinalizeKernel(vx_kernel kernel)
     vx_status status = VX_SUCCESS;
     if (kernel && Reference::isValidReference(reinterpret_cast<vx_reference>(kernel), VX_TYPE_KERNEL) == vx_true_e)
     {
-        vx_uint32 p = 0;
-        for (p = 0; p < VX_INT_MAX_PARAMS; p++)
-        {
-            if (p >= kernel->signature.num_parameters)
-            {
-                break;
-            }
-            if ((kernel->signature.directions[p] < VX_INPUT) ||
-                (kernel->signature.directions[p] > VX_BIDIRECTIONAL))
-            {
-                status = VX_ERROR_INVALID_PARAMETERS;
-                break;
-            }
-            if (Context::isValidType(kernel->signature.types[p]) == vx_false_e)
-            {
-                status = VX_ERROR_INVALID_PARAMETERS;
-                break;
-            }
-        }
-        if (p == kernel->signature.num_parameters)
-        {
-            kernel->context->num_kernels++;
-            if (Kernel::isKernelUnique(kernel) == vx_true_e)
-            {
-                VX_PRINT(VX_ZONE_KERNEL, "Kernel %s (%x) is unique!\n", kernel->name, kernel->enumeration);
-                kernel->context->num_unique_kernels++;
-            }
-            kernel->enabled = vx_true_e;
-        }
+        status = kernel->finalize();
     }
     else
     {
@@ -737,7 +1008,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryKernel(vx_kernel kernel, vx_enum attri
             case VX_KERNEL_PARAMETERS:
                 if (VX_CHECK_PARAM(ptr, size, vx_uint32, 0x3))
                 {
-                    *(vx_uint32 *)ptr = kernel->signature.num_parameters;
+                    *(vx_uint32 *)ptr = kernel->numParameters();
                 }
                 else
                 {
@@ -747,13 +1018,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryKernel(vx_kernel kernel, vx_enum attri
             case VX_KERNEL_NAME:
                 if (ptr != nullptr && size <= VX_MAX_KERNEL_NAME)
                 {
-                    vx_char kname[VX_MAX_KERNEL_NAME];
-                    vx_char *k, *v;
-                    strncpy(kname, kernel->name, VX_MAX_KERNEL_NAME);
-                    k = strtok(kname, ":");
-                    v = strtok(nullptr, ":");
-                    (void)v; /* need this variable in the future for variant searches */
-                    strncpy(reinterpret_cast<char*>(ptr), k, VX_MAX_KERNEL_NAME);
+                    strncpy(reinterpret_cast<vx_char *>(ptr), kernel->kernelName(), VX_MAX_KERNEL_NAME);
                 }
                 else
                 {
@@ -763,7 +1028,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryKernel(vx_kernel kernel, vx_enum attri
             case VX_KERNEL_ENUM:
                 if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
                 {
-                    *(vx_enum *)ptr = kernel->enumeration;
+                    *(vx_enum *)ptr = kernel->kernelEnum();
                 }
                 else
                 {
@@ -773,7 +1038,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryKernel(vx_kernel kernel, vx_enum attri
             case VX_KERNEL_LOCAL_DATA_SIZE:
                 if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
                 {
-                    *(vx_size *)ptr = kernel->attributes.localDataSize;
+                    *(vx_size *)ptr = kernel->localDataSize();
                 }
                 else
                 {
@@ -784,7 +1049,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryKernel(vx_kernel kernel, vx_enum attri
             case VX_KERNEL_INPUT_NEIGHBORHOOD:
                 if (VX_CHECK_PARAM(ptr, size, vx_neighborhood_size_t, 0x3))
                 {
-                    memcpy(ptr, &kernel->attributes.nhbdinfo, size);
+                    vx_neighborhood_size_t nhbd = kernel->inputNeighborhood();
+                    memcpy(ptr, &nhbd, size);
                 }
                 else
                 {
@@ -795,7 +1061,19 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryKernel(vx_kernel kernel, vx_enum attri
             case VX_KERNEL_OUTPUT_TILE_BLOCK_SIZE:
                 if (VX_CHECK_PARAM(ptr, size, vx_tile_block_size_t, 0x3))
                 {
-                    memcpy(ptr, &kernel->attributes.blockinfo, size);
+                    vx_tile_block_size_t blockinfo = kernel->outputTileBlockSize();
+                    memcpy(ptr, &blockinfo, size);
+                }
+                else
+                {
+                    status = VX_ERROR_INVALID_PARAMETERS;
+                }
+                break;
+            case VX_KERNEL_BORDER:
+                if (VX_CHECK_PARAM(ptr, size, vx_border_t, 0x3))
+                {
+                    vx_border_t border = kernel->border();
+                    memcpy(ptr, &border, size);
                 }
                 else
                 {
@@ -807,7 +1085,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryKernel(vx_kernel kernel, vx_enum attri
             case VX_KERNEL_USE_OPENCL:
                 if (VX_CHECK_PARAM(ptr, size, vx_bool, 0x3))
                 {
-                    *(vx_bool *)ptr = kernel->attributes.opencl_access;
+                    *(vx_bool *)ptr = kernel->useOpencl();
                 }
                 else
                 {
@@ -818,7 +1096,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryKernel(vx_kernel kernel, vx_enum attri
             case VX_KERNEL_PIPEUP_INPUT_DEPTH:
                 if (VX_CHECK_PARAM(ptr, size, vx_uint32, 0x3) && *(vx_uint32 *)ptr > 0)
                 {
-                    *(vx_uint32 *)ptr = kernel->input_depth;
+                    *(vx_uint32 *)ptr = kernel->pipeupInputDepth();
                 }
                 else
                 {
@@ -828,7 +1106,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryKernel(vx_kernel kernel, vx_enum attri
             case VX_KERNEL_PIPEUP_OUTPUT_DEPTH:
                 if (VX_CHECK_PARAM(ptr, size, vx_uint32, 0x3) && *(vx_uint32 *)ptr > 0)
                 {
-                    *(vx_uint32 *)ptr = kernel->output_depth;
+                    *(vx_uint32 *)ptr = kernel->pipeupOutputDepth();
                 }
                 else
                 {
@@ -859,61 +1137,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxAddParameterToKernel(vx_kernel kernel,
 
     if (kernel && Reference::isValidReference(reinterpret_cast<vx_reference>(kernel), VX_TYPE_KERNEL) == vx_true_e)
     {
-        if (index < kernel->signature.num_parameters)
-        {
-#ifdef OPENVX_KHR_TILING
-            if (kernel->tilingfast_function)
-            {
-                if (((data_type != VX_TYPE_IMAGE) &&
-                     (data_type != VX_TYPE_SCALAR) &&
-                     (data_type != VX_TYPE_THRESHOLD) &&
-                     (data_type != VX_TYPE_REMAP) &&
-                     (data_type != VX_TYPE_CONVOLUTION) &&
-                     (data_type != VX_TYPE_TENSOR) &&
-                     (data_type != VX_TYPE_ARRAY) &&
-                     (data_type != VX_TYPE_LUT) &&
-                     (data_type != VX_TYPE_MATRIX)) ||
-                    (Parameter::isValidDirection(dir) == vx_false_e) ||
-                    (Parameter::isValidState(state) == vx_false_e))
-                {
-                    VX_PRINT(VX_ZONE_ERROR,
-                             "Invalid data type, param direction, or param state!\n");
-                    status = VX_ERROR_INVALID_PARAMETERS;
-                }
-                else
-                {
-                    kernel->signature.directions[index] = dir;
-                    kernel->signature.types[index] = data_type;
-                    kernel->signature.states[index] = state;
-                    status = VX_SUCCESS;
-                }
-            }
-            else
-#endif /* OPENVX_KHR_TILING */
-            {
-                if (((Context::isValidType(data_type) == vx_false_e) ||
-                     (Parameter::isValidDirection(dir) == vx_false_e) ||
-                     (Parameter::isValidState(state) == vx_false_e)) ||
-                     (data_type == VX_TYPE_DELAY && dir != VX_INPUT))
-                {
-                    VX_PRINT(VX_ZONE_ERROR,
-                             "Invalid data type, param direction, or param state!\n");
-                    status = VX_ERROR_INVALID_PARAMETERS;
-                }
-                else
-                {
-                    kernel->signature.directions[index] = dir;
-                    kernel->signature.types[index] = data_type;
-                    kernel->signature.states[index] = state;
-                    status = VX_SUCCESS;
-                }
-            }
-        }
-        else
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Invalid number of parameters associated!\n");
-            status = VX_ERROR_INVALID_PARAMETERS;
-        }
+        status = kernel->addParameter(index, dir, data_type, state);
     }
     else
     {
@@ -925,87 +1149,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxAddParameterToKernel(vx_kernel kernel,
 
 VX_API_ENTRY vx_status VX_API_CALL vxRemoveKernel(vx_kernel kernel)
 {
-    vx_status status = VX_ERROR_INVALID_PARAMETERS;
-
-    if (kernel &&
-        Reference::isValidReference(reinterpret_cast<vx_reference>(kernel), VX_TYPE_KERNEL) == vx_true_e &&
-        kernel->user_kernel)
-    {
-        vx_target target = nullptr;
-        vx_char targetName[VX_MAX_TARGET_NAME];
-        vx_uint32 kernelIdx = 0u;
-        vx_context context = kernel->context;
-
-        /* Remove the reference from the context */
-        vx_reference ref = reinterpret_cast<vx_reference>(kernel);
-        context->removeReference(ref);
-
-        /* find back references to kernel's target and kernel in target->kernels array */
-        vx_uint32 index = (vx_uint32)(strnindex(kernel->name, ':', VX_MAX_TARGET_NAME));
-        if (index == VX_MAX_TARGET_NAME)
-        {
-            strcpy(targetName, "khronos.any");
-        }
-        else
-        {
-            strncpy(targetName, kernel->name, index);
-        }
-
-        for (vx_uint32 t = 0u; t < context->num_targets; t++)
-        {
-            target = context->targets[t];
-            if (strncmp(targetName,target->name, VX_MAX_TARGET_NAME) == 0)
-            {
-                break;
-            }
-            target = nullptr;
-        }
-
-        if (target)
-        {
-            for (vx_uint32 k = 0u; k < VX_INT_MAX_KERNELS; k++)
-            {
-                if (kernel == target->kernels[k])
-                {
-                    kernelIdx = k;
-                    break;
-                }
-            }
-        }
-
-        if (target && kernelIdx < VX_INT_MAX_KERNELS)
-        {
-            if (kernel->enabled)
-            {
-                kernel->enabled = vx_false_e;
-                context->num_kernels--;
-                if (Kernel::isKernelUnique(kernel) == vx_true_e)
-                {
-                    context->num_unique_kernels--;
-                }
-            }
-            target->num_kernels--;
-
-            status = kernel->deinitializeKernel();
-
-            if (status == VX_SUCCESS)
-            {
-                target->kernels[kernelIdx]->enumeration = VX_KERNEL_INVALID;
-                target->kernels[kernelIdx]->user_kernel = vx_false_e;
-                target->kernels[kernelIdx] = nullptr;
-            }
-            else
-            {
-                VX_PRINT(VX_ZONE_ERROR, "Can't deinitialize kernel properly\n");
-            }
-        }
-        else
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Can't locate kernel in its context\n");
-        }
-    }
-
-    return status;
+    return Kernel::removeKernel(kernel);
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxSetKernelAttribute(vx_kernel kernel, vx_enum attribute, const void * ptr, vx_size size)
@@ -1016,16 +1160,18 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetKernelAttribute(vx_kernel kernel, vx_enu
     {
         return VX_ERROR_INVALID_REFERENCE;
     }
+
     if (kernel->enabled == vx_true_e)
     {
         return VX_ERROR_NOT_SUPPORTED;
     }
+
     switch (attribute)
     {
         case VX_KERNEL_LOCAL_DATA_SIZE:
             if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
             {
-                kernel->attributes.localDataSize = *(vx_size *)ptr;
+                kernel->setLocalDataSize(*(vx_size *)ptr);
                 VX_PRINT(VX_ZONE_KERNEL, "Set Local Data Size to " VX_FMT_SIZE " bytes\n", kernel->attributes.localDataSize);
             }
             else
@@ -1037,7 +1183,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetKernelAttribute(vx_kernel kernel, vx_enu
         case VX_KERNEL_INPUT_NEIGHBORHOOD:
             if (VX_CHECK_PARAM(ptr, size, vx_neighborhood_size_t, 0x3))
             {
-                memcpy(&kernel->attributes.nhbdinfo, ptr, size);
+                kernel->setInputNeighborhood(*(vx_neighborhood_size_t *)ptr);
             }
             else
             {
@@ -1047,7 +1193,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetKernelAttribute(vx_kernel kernel, vx_enu
         case VX_KERNEL_OUTPUT_TILE_BLOCK_SIZE:
             if (VX_CHECK_PARAM(ptr, size, vx_tile_block_size_t, 0x3))
             {
-                memcpy(&kernel->attributes.blockinfo, ptr, size);
+                kernel->setOutputTileBlockSize(*(vx_tile_block_size_t *)ptr);
             }
             else
             {
@@ -1061,7 +1207,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetKernelAttribute(vx_kernel kernel, vx_enu
                 if ((border->mode == VX_BORDER_MODE_SELF) ||
                     (border->mode == VX_BORDER_UNDEFINED))
                 {
-                    memcpy(&kernel->attributes.borders, border, sizeof(vx_border_t));
+                    kernel->setBorder(*border);
                 }
                 else
                 {
@@ -1078,7 +1224,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetKernelAttribute(vx_kernel kernel, vx_enu
         case VX_KERNEL_USE_OPENCL:
             if (VX_CHECK_PARAM(ptr, size, vx_bool, 0x3))
             {
-                kernel->attributes.opencl_access = *(vx_bool *)ptr;
+                kernel->setOpenclAccess(*(vx_bool *)ptr);
             }
             else
             {
@@ -1089,7 +1235,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetKernelAttribute(vx_kernel kernel, vx_enu
         case VX_KERNEL_PIPEUP_INPUT_DEPTH:
             if (VX_CHECK_PARAM(ptr, size, vx_uint32, 0x3))
             {
-                kernel->input_depth = *(vx_uint32 *)ptr;
+                kernel->setInputDepth(*(vx_uint32 *)ptr);
             }
             else
             {
@@ -1099,7 +1245,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetKernelAttribute(vx_kernel kernel, vx_enu
         case VX_KERNEL_PIPEUP_OUTPUT_DEPTH:
             if (VX_CHECK_PARAM(ptr, size, vx_uint32, 0x3))
             {
-                kernel->output_depth = *(vx_uint32 *)ptr;
+                kernel->setOutputDepth(*(vx_uint32 *)ptr);
             }
             else
             {
@@ -1110,5 +1256,31 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetKernelAttribute(vx_kernel kernel, vx_enu
             status = VX_ERROR_NOT_SUPPORTED;
             break;
     }
+
+    return status;
+}
+
+VX_API_ENTRY vx_status VX_API_CALL vxReleaseKernel(vx_kernel *kernel)
+{
+    vx_status status = VX_ERROR_INVALID_REFERENCE;
+
+    if (nullptr != kernel)
+    {
+        vx_kernel ref = *kernel;
+        if (vx_true_e == Reference::isValidReference(ref, VX_TYPE_KERNEL))
+        {
+            VX_PRINT(VX_ZONE_KERNEL, "Releasing kernel " VX_FMT_REF "\n", (void *)ref);
+
+            /* deinitialize kernel object */
+            if (ref->kernel_object_deinitialize != nullptr)
+            {
+                ref->kernel_object_deinitialize(ref);
+            }
+
+            status = Reference::releaseReference((vx_reference *)kernel, VX_TYPE_KERNEL,
+                                                 VX_EXTERNAL, nullptr);
+        }
+    }
+
     return status;
 }
