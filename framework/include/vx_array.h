@@ -159,7 +159,7 @@ public:
     /**
      * @brief Get item type of the array
      *
-     * @return vx_enum
+     * @return vx_enum The item type of the array.
      * @ingroup group_int_array
      */
     vx_enum itemType() const;
