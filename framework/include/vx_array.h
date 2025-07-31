@@ -142,7 +142,7 @@ public:
      * @param count     number of items to add
      * @param ptr       pointer to data
      * @param stride    size of stride
-     * @return vx_status
+     * @return vx_status VX_SUCCESS if successful, any other value indicates failure.
      * @ingroup group_int_array
      */
     vx_status addItems(vx_size count, const void *ptr, vx_size stride);
