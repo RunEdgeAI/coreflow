@@ -157,7 +157,7 @@ public:
     vx_status truncate(vx_size new_num_items);
 
     /**
-     * @brief Get item type of array
+     * @brief Get item type of the array
      *
      * @return vx_enum
      * @ingroup group_int_array
