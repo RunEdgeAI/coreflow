@@ -151,7 +151,7 @@ public:
      * @brief Truncate array to new number of items
      *
      * @param new_num_items   new number of items
-     * @return vx_status
+     * @return vx_status  VX_SUCCESS if successful, any other value indicates failure.
      * @ingroup group_int_array
      */
     vx_status truncate(vx_size new_num_items);
