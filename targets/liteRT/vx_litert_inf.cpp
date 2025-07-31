@@ -45,7 +45,7 @@ public:
             nullptr == parameters ||
             num != dimof(kernelParams))
         {
-            status = VX_FAILURE;
+            status = VX_ERROR_INVALID_PARAMETERS;
         }
 
         if (VX_SUCCESS == status)
@@ -81,7 +81,7 @@ public:
             // Get the input tensor dimensions from the tensors
             status = processTensorDims(reinterpret_cast<vx_object_array>(parameters[1]), inputDims);
             // Get the output tensor dimensions from the tensors
-            status = processTensorDims(reinterpret_cast<vx_object_array>(parameters[2]), outputDims);
+            status |= processTensorDims(reinterpret_cast<vx_object_array>(parameters[2]), outputDims);
         }
 
         if (VX_SUCCESS == status)
@@ -232,7 +232,7 @@ private:
     {
         vx_status status = VX_SUCCESS;
         vx_size numItems = 0;
-        vxQueryObjectArray(objArr, VX_OBJECT_ARRAY_NUMITEMS, &numItems, sizeof(numItems));
+        status = vxQueryObjectArray(objArr, VX_OBJECT_ARRAY_NUMITEMS, &numItems, sizeof(numItems));
 
         for (vx_uint32 i = 0; i < numItems && status == VX_SUCCESS; ++i)
         {
@@ -252,13 +252,15 @@ private:
 
             if (VX_SUCCESS != status)
             {
-                std::cerr << "Error: Unable to prep tensor in " << __func__ << ", status: " << status << std::endl;
+                std::cerr << "Error: Unable to prep tensor in " << __func__
+                          << ", status: " << status << std::endl;
                 break;
             }
 
             tensors.emplace_back((float *)ptr, size);
             status |= vxUnmapTensorPatch(tensor, map_id);
         }
+
         return status;
     }
 };

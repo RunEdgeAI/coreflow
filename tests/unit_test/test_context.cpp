@@ -48,7 +48,7 @@ TEST_F(ContextTest, QueryContext)
     vx_uint16 vendor_id;
     vx_status status = vxQueryContext(context, VX_CONTEXT_VENDOR_ID, &vendor_id, sizeof(vendor_id));
     EXPECT_EQ(status, VX_SUCCESS);
-    EXPECT_EQ(vendor_id, VX_ID_KHRONOS);
+    EXPECT_EQ(vendor_id, VX_ID_EDGE_AI);
 
     vx_uint16 version;
     status = vxQueryContext(context, VX_CONTEXT_VERSION, &version, sizeof(version));

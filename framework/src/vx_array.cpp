@@ -727,6 +727,7 @@ vx_status Array::unmapArrayRange(vx_map_id map_id)
             }
             else
             {
+                VX_PRINT(VX_ZONE_ERROR, "Unable to acquire semaphore resource\n");
                 status = VX_ERROR_NO_RESOURCES;
             }
         }
@@ -740,6 +741,7 @@ vx_status Array::unmapArrayRange(vx_map_id map_id)
     }
     else
     {
+        VX_PRINT(VX_ZONE_ERROR, "Internal memory map issue\n");
         status = VX_FAILURE;
     }
 

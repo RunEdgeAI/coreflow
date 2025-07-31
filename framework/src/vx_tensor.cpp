@@ -389,55 +389,55 @@ vx_status Tensor::unmapPatch(vx_map_id map_id)
         return status;
     }
 
+    vx_memory_map_t *map = &context->memory_maps[map_id];
+
+    if (map->used && map->ref == (vx_reference)this)
     {
-        vx_memory_map_t *map = &context->memory_maps[map_id];
-
-        if (map->used && map->ref == (vx_reference)this)
+        /* commit changes for write access */
+        if ((VX_WRITE_ONLY == map->usage || VX_READ_AND_WRITE == map->usage) && nullptr != map->ptr)
         {
-            /* commit changes for write access */
-            if ((VX_WRITE_ONLY == map->usage || VX_READ_AND_WRITE == map->usage) &&
-                nullptr != map->ptr)
+            if (vx_true_e == Osal::semWait(&lock))
             {
-                if (vx_true_e == Osal::semWait(&lock))
-                {
-                    vx_uint32 size = Tensor::computePatchSize(
-                        map->extra.tensor_data.start, map->extra.tensor_data.end,
-                        map->extra.tensor_data.number_of_dims);
-                    vx_uint8 *pSrc = (vx_uint8 *)map->ptr;
-                    vx_uint8 *pDst = (vx_uint8 *)addr;
+                vx_uint32 size = Tensor::computePatchSize(map->extra.tensor_data.start,
+                                                          map->extra.tensor_data.end,
+                                                          map->extra.tensor_data.number_of_dims);
+                vx_uint8 *pSrc = (vx_uint8 *)map->ptr;
+                vx_uint8 *pDst = (vx_uint8 *)addr;
 
-                    for (vx_size i = 0; i < size; i++)
-                    {
-                        vx_size patch_pos = 0;
-                        vx_size tensor_pos = 0;
-                        Tensor::computePositionsFromIndex(
-                            i, map->extra.tensor_data.start, map->extra.tensor_data.end, stride,
-                            map->extra.tensor_data.stride, map->extra.tensor_data.number_of_dims,
-                            &tensor_pos, &patch_pos);
-                        memcpy(pDst + patch_pos, pSrc + tensor_pos, stride[0]);
-                    }
-
-                    Osal::semPost(&lock);
-                }
-                else
+                for (vx_size i = 0; i < size; i++)
                 {
-                    status = VX_FAILURE;
-                    VX_PRINT(VX_ZONE_ERROR, "Can't lock memory plane for unmapping\n");
-                    goto exit;
+                    vx_size patch_pos = 0;
+                    vx_size tensor_pos = 0;
+                    Tensor::computePositionsFromIndex(
+                        i, map->extra.tensor_data.start, map->extra.tensor_data.end, stride,
+                        map->extra.tensor_data.stride, map->extra.tensor_data.number_of_dims,
+                        &tensor_pos, &patch_pos);
+                    memcpy(pDst + patch_pos, pSrc + tensor_pos, stride[0]);
                 }
+
+                Osal::semPost(&lock);
             }
-
-            /* freeing mapping buffer */
-            context->memoryUnmap((vx_uint32)map_id);
-            decrementReference(VX_EXTERNAL);
-            status = VX_SUCCESS;
+            else
+            {
+                status = VX_ERROR_NO_RESOURCES;
+                VX_PRINT(VX_ZONE_ERROR, "Can't lock memory plane for unmapping\n");
+                goto exit;
+            }
         }
-        else
-            status = VX_FAILURE;
+
+        /* freeing mapping buffer */
+        context->memoryUnmap((vx_uint32)map_id);
+        decrementReference(VX_EXTERNAL);
+        status = VX_SUCCESS;
+    }
+    else
+    {
+        status = VX_FAILURE;
+        VX_PRINT(VX_ZONE_ERROR, "Internal memory mapping failure\n");
     }
 
 exit:
-    VX_PRINT(VX_ZONE_API, "return %d\n", status);
+    VX_PRINT(VX_ZONE_API, "returned %d\n", status);
     return status;
 }
 
@@ -945,7 +945,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapTensorPatch(vx_tensor tensor, vx_size nu
 
 VX_API_ENTRY vx_status VX_API_CALL vxUnmapTensorPatch(vx_tensor tensor, vx_map_id map_id)
 {
-    vx_status status = VX_FAILURE;
+    vx_status status = VX_SUCCESS;
 
     /* bad references */
     if (Tensor::isValidTensor(tensor) == vx_false_e)

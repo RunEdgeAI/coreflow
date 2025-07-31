@@ -814,8 +814,8 @@ vx_status Graph::verify()
     {
         if (this->nodes[n]->visited == vx_false_e)
         {
-            VX_PRINT(VX_ZONE_ERROR, "UNVISITED: %s node[%u]\n", this->nodes[n]->kernel->name, n);
             status = VX_ERROR_INVALID_GRAPH;
+            VX_PRINT(VX_ZONE_ERROR, "UNVISITED: %s node[%u]\n", this->nodes[n]->kernel->name, n);
             vxAddLogEntry(reinterpret_cast<vx_reference>(this), status, "Node %s: unvisited!\n",
                           this->nodes[n]->kernel->name);
         }
@@ -826,6 +826,7 @@ vx_status Graph::verify()
     if (hasACycle == vx_true_e)
     {
         status = VX_ERROR_INVALID_GRAPH;
+        VX_PRINT(VX_ZONE_ERROR, "Cycle: Graph has a cycle!\n");
         vxAddLogEntry(reinterpret_cast<vx_reference>(this), status, "Cycle: Graph has a cycle!\n");
         goto exit;
     }
@@ -844,6 +845,8 @@ vx_status Graph::verify()
             if (target_verify_status != VX_SUCCESS)
             {
                 status = target_verify_status;
+                VX_PRINT(VX_ZONE_ERROR, "Target: %s Failed to Verify Node %s\n", target->name,
+                         this->nodes[n]->kernel->name);
                 vxAddLogEntry(reinterpret_cast<vx_reference>(this), status,
                               "Target: %s Failed to Verify Node %s\n", target->name,
                               this->nodes[n]->kernel->name);
@@ -874,6 +877,7 @@ vx_status Graph::verify()
             if (kernel_init_status != VX_SUCCESS)
             {
                 status = kernel_init_status;
+                VX_PRINT(VX_ZONE_ERROR, "Kernel: %s failed to initialize!\n", node->kernel->name);
                 vxAddLogEntry(reinterpret_cast<vx_reference>(this), status,
                               "Kernel: %s failed to initialize!\n", node->kernel->name);
             }

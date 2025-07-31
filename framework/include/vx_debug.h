@@ -61,7 +61,8 @@ enum vx_debug_zone_e {
     VX_ZONE_DELAY       = 16,   /*!< Used to show only delay logs */
 
     VX_ZONE_TARGET      = 17,   /*!< Used to show only target logs */
-    VX_ZONE_LOG         = 18,   /*!< Used to show only log logs */
+    VX_ZONE_TENSOR      = 18,   /*!< Used to show only tensor logs */
+    VX_ZONE_LOG         = 19,   /*!< Used to show only logs */
 
     VX_ZONE_MAX         = 32    /*!< The maximum number of zones */
 };
