@@ -175,7 +175,7 @@ public:
     /**
      * @brief Get capacity of array
      *
-     * @return vx_size
+     * @return vx_size The capacity of the array.
      * @ingroup group_int_array
      */
     vx_size totalCapacity() const;
