@@ -167,7 +167,7 @@ public:
     /**
      * @brief Get number of items in array
      *
-     * @return vx_size
+     * @return vx_size The number of items in the array.
      * @ingroup group_int_array
      */
     vx_size numItems() const;
