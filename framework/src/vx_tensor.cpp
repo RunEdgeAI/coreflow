@@ -130,6 +130,317 @@ void Tensor::computePositionsFromIndex(vx_size index, const vx_size * start, con
     }
 }
 
+const vx_size *Tensor::dims() const
+{
+    return dimensions;
+}
+
+vx_size Tensor::numDims() const
+{
+    return number_of_dimensions;
+}
+
+vx_enum Tensor::dataType() const
+{
+    return data_type;
+}
+
+vx_int8 Tensor::fixedPointPosition() const
+{
+    return fixed_point_position;
+}
+
+const vx_size *Tensor::strides() const
+{
+    return stride;
+}
+
+vx_size Tensor::size() const
+{
+    vx_size total_size = Reference::sizeOfType(data_type);
+    for (vx_uint32 i = 0; i < number_of_dimensions; i++)
+    {
+        total_size *= dimensions[i];
+    }
+    return total_size;
+}
+
+vx_status Tensor::copyPatch(vx_size number_of_dimensions, const vx_size *view_start,
+                            const vx_size *view_end, const vx_size *user_stride, void *user_ptr,
+                            vx_enum usage, vx_enum user_memory_type)
+{
+    vx_status status = VX_SUCCESS;
+    (void)user_memory_type;
+
+    /* bad parameters */
+    if ((view_start == nullptr) || (view_end == nullptr) || (user_stride == nullptr) ||
+        (user_ptr == nullptr))
+    {
+        status = VX_ERROR_INVALID_PARAMETERS;
+    }
+
+    /* determine if virtual before checking for memory */
+    if (VX_SUCCESS == status && is_virtual == vx_true_e && is_accessible == vx_false_e)
+    {
+        /* User tried to access a "virtual" tensor. */
+        VX_PRINT(VX_ZONE_ERROR, "Can not access a virtual tensor\n");
+        status = VX_ERROR_OPTIMIZED_AWAY;
+    }
+
+    if (VX_SUCCESS == status && addr == nullptr)
+    {
+        if (  // usage != VX_WRITE_ONLY ||
+            allocateTensorMemory() == nullptr)
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Tensor memory was not allocated!\n");
+            status = VX_ERROR_NOT_ALLOCATED;
+        }
+    }
+
+    if ((VX_SUCCESS == status) &&
+        ((this->number_of_dimensions < number_of_dimensions) || (number_of_dimensions == 0)))
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid number of patch dimensions\n");
+        status = VX_ERROR_INVALID_PARAMETERS;
+    }
+    if (VX_SUCCESS == status &&
+        Tensor::checkSizes(dimensions, view_start, view_end, number_of_dimensions) != 0)
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid view\n");
+        status = VX_ERROR_INVALID_PARAMETERS;
+    }
+
+    if (VX_SUCCESS == status)
+    {
+#ifdef OPENVX_USE_OPENCL_INTEROP
+        void *user_ptr_given = user_ptr;
+        vx_enum user_memory_type_given = user_memory_type;
+        if (user_memory_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
+        {
+            /* get user_ptr from OpenCL buffer for HOST */
+            size_t size = 0;
+            cl_mem opencl_buf = (cl_mem)user_ptr;
+            cl_int cerr =
+                clGetMemObjectInfo(opencl_buf, CL_MEM_SIZE, sizeof(size_t), &size, nullptr);
+            VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyTensorPatch: clGetMemObjectInfo(%p) => (%d)\n",
+                     opencl_buf, cerr);
+            if (cerr != CL_SUCCESS)
+            {
+                return VX_ERROR_INVALID_PARAMETERS;
+            }
+            user_ptr =
+                clEnqueueMapBuffer(context->opencl_command_queue, opencl_buf, CL_TRUE,
+                                   CL_MAP_READ | CL_MAP_WRITE, 0, size, 0, nullptr, nullptr, &cerr);
+            VX_PRINT(VX_ZONE_CONTEXT,
+                     "OPENCL: vxCopyTensorPatch: clEnqueueMapBuffer(%p,%d) => %p (%d)\n",
+                     opencl_buf, (int)size, user_ptr, cerr);
+            if (cerr != CL_SUCCESS)
+            {
+                return VX_ERROR_INVALID_PARAMETERS;
+            }
+            user_memory_type = VX_MEMORY_TYPE_HOST;
+        }
+#endif
+
+        // element_size = Reference::sizeOfType(data_type);
+        vx_uint8 *user_curr_ptr = (vx_uint8 *)user_ptr;
+        vx_uint8 *tensor_ptr = (vx_uint8 *)addr;
+        vx_size patch_size = Tensor::computePatchSize(view_start, view_end, number_of_dimensions);
+        for (vx_size i = 0; i < patch_size; i++)
+        {
+            vx_size patch_pos = 0;
+            vx_size tensor_pos = 0;
+            Tensor::computePositionsFromIndex(i, view_start, view_end, stride, user_stride,
+                                              number_of_dimensions, &tensor_pos, &patch_pos);
+            if (usage == VX_READ_ONLY)
+                memcpy(user_curr_ptr + patch_pos, tensor_ptr + tensor_pos, stride[0]);
+            else
+                memcpy(tensor_ptr + tensor_pos, user_curr_ptr + patch_pos, stride[0]);
+        }
+        status = VX_SUCCESS;
+
+#ifdef OPENVX_USE_OPENCL_INTEROP
+        if (user_memory_type_given == VX_MEMORY_TYPE_OPENCL_BUFFER)
+        {
+            clEnqueueUnmapMemObject(context->opencl_command_queue, (cl_mem)user_ptr_given, user_ptr,
+                                    0, nullptr, nullptr);
+            clFinish(context->opencl_command_queue);
+        }
+#endif
+    }
+
+    VX_PRINT(VX_ZONE_API, "returned %d\n", status);
+    return status;
+}
+
+vx_status Tensor::mapPatch(vx_size number_of_dims, const vx_size *view_start,
+                           const vx_size *view_end, vx_map_id *map_id, vx_size *stride, void **ptr,
+                           vx_enum usage, vx_enum mem_type)
+{
+    vx_status status = VX_SUCCESS;
+    vx_uint8 *buf = nullptr;
+    vx_size size;
+    vx_memory_map_extra extra;
+
+    /* bad parameters */
+    if ((view_start == nullptr) || (view_end == nullptr) || (map_id == nullptr) ||
+        (ptr == nullptr) || (stride == nullptr))
+    {
+        status = VX_ERROR_INVALID_PARAMETERS;
+        goto exit;
+    }
+
+    /* determine if virtual before checking for memory */
+    if (is_virtual == vx_true_e)
+    {
+        if (is_accessible == vx_false_e)
+        {
+            /* User tried to access a "virtual" tensor. */
+            VX_PRINT(VX_ZONE_ERROR, "Can not access a virtual tensor\n");
+            status = VX_ERROR_OPTIMIZED_AWAY;
+            goto exit;
+        }
+    }
+    if (addr == nullptr)
+    {
+        if (  // usage != VX_WRITE_ONLY ||
+            allocateTensorMemory() == nullptr)
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Tensor memory was allocated failed!\n");
+            status = VX_ERROR_NO_MEMORY;
+            goto exit;
+        }
+    }
+
+    if (number_of_dimensions < number_of_dims || number_of_dims == 0)
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid number of patch dimensions\n");
+        status = VX_ERROR_INVALID_PARAMETERS;
+        goto exit;
+    }
+    if (Tensor::checkSizes(dimensions, view_start, view_end, number_of_dims) != 0)
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid view\n");
+        status = VX_ERROR_INVALID_PARAMETERS;
+        goto exit;
+    }
+
+    stride[0] = Reference::sizeOfType(data_type);
+    for (vx_uint32 i = 1; i < number_of_dims; i++)
+    {
+        stride[i] = stride[i - 1] * (view_end[i] - view_start[i]);
+    }
+    // vx_map_id * map_id, vx_size * stride, void ** ptr
+    size = Tensor::computePatchSize(view_start, view_end, number_of_dims);
+
+    memcpy(extra.tensor_data.start, view_start, sizeof(vx_size) * number_of_dims);
+    memcpy(extra.tensor_data.end, view_end, sizeof(vx_size) * number_of_dims);
+    memcpy(extra.tensor_data.stride, stride, sizeof(vx_size) * number_of_dims);
+    extra.tensor_data.number_of_dims = number_of_dims;
+
+    if (VX_MEMORY_TYPE_HOST == mem_type &&
+        vx_true_e == context->memoryMap((vx_reference)this, 0, usage, mem_type, 0, (void *)&extra,
+                                        (void **)&buf, map_id))
+    {
+        *ptr = addr;
+
+        incrementReference(VX_EXTERNAL);
+
+        status = VX_SUCCESS;
+    }
+    else if (vx_true_e == context->memoryMap((vx_reference)this, size, usage, mem_type, 0,
+                                             (void *)&extra, (void **)&buf, map_id))
+    {
+        vx_uint8 *user_curr_ptr = buf;
+        vx_uint8 *tensor_ptr = (vx_uint8 *)addr;
+        if (usage == VX_READ_ONLY || usage == VX_READ_AND_WRITE)
+        {
+            for (vx_size i = 0; i < size; i++)
+            {
+                vx_size patch_pos = 0;
+                vx_size tensor_pos = 0;
+                Tensor::computePositionsFromIndex(i, view_start, view_end, this->stride, stride,
+                                                  number_of_dims, &tensor_pos, &patch_pos);
+                memcpy(user_curr_ptr + patch_pos, tensor_ptr + tensor_pos, this->stride[0]);
+            }
+
+            // ownReadFromReference(&base);
+        }
+        *ptr = buf;
+        incrementReference(VX_EXTERNAL);
+
+        status = VX_SUCCESS;
+    }
+
+exit:
+    VX_PRINT(VX_ZONE_API, "returned %d\n", status);
+    return status;
+}
+
+vx_status Tensor::unmapPatch(vx_map_id map_id)
+{
+    vx_status status = VX_SUCCESS;
+
+    /* bad parameters */
+    if (context->findMemoryMap((vx_reference)this, map_id) != vx_true_e)
+    {
+        status = VX_ERROR_INVALID_PARAMETERS;
+        VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to unmap tensor patch\n");
+        return status;
+    }
+
+    vx_memory_map_t *map = &context->memory_maps[map_id];
+
+    if (map->used && map->ref == (vx_reference)this)
+    {
+        /* commit changes for write access */
+        if ((VX_WRITE_ONLY == map->usage || VX_READ_AND_WRITE == map->usage) && nullptr != map->ptr)
+        {
+            if (vx_true_e == Osal::semWait(&lock))
+            {
+                vx_uint32 size = Tensor::computePatchSize(map->extra.tensor_data.start,
+                                                          map->extra.tensor_data.end,
+                                                          map->extra.tensor_data.number_of_dims);
+                vx_uint8 *pSrc = (vx_uint8 *)map->ptr;
+                vx_uint8 *pDst = (vx_uint8 *)addr;
+
+                for (vx_size i = 0; i < size; i++)
+                {
+                    vx_size patch_pos = 0;
+                    vx_size tensor_pos = 0;
+                    Tensor::computePositionsFromIndex(
+                        i, map->extra.tensor_data.start, map->extra.tensor_data.end, stride,
+                        map->extra.tensor_data.stride, map->extra.tensor_data.number_of_dims,
+                        &tensor_pos, &patch_pos);
+                    memcpy(pDst + patch_pos, pSrc + tensor_pos, stride[0]);
+                }
+
+                Osal::semPost(&lock);
+            }
+            else
+            {
+                status = VX_ERROR_NO_RESOURCES;
+                VX_PRINT(VX_ZONE_ERROR, "Can't lock memory plane for unmapping\n");
+                goto exit;
+            }
+        }
+
+        /* freeing mapping buffer */
+        context->memoryUnmap((vx_uint32)map_id);
+        decrementReference(VX_EXTERNAL);
+        status = VX_SUCCESS;
+    }
+    else
+    {
+        status = VX_FAILURE;
+        VX_PRINT(VX_ZONE_ERROR, "Internal memory mapping failure\n");
+    }
+
+exit:
+    VX_PRINT(VX_ZONE_API, "returned %d\n", status);
+    return status;
+}
+
 void Tensor::destruct()
 {
     /* if it's not imported and does not have a parent, free it */
@@ -514,22 +825,6 @@ VX_API_ENTRY vx_tensor VX_API_CALL vxCreateVirtualTensor(
     return tensor;
 }
 
-VX_API_ENTRY vx_status VX_API_CALL vxReleaseTensor(vx_tensor* tensor)
-{
-    vx_status status = VX_FAILURE;
-
-    if (nullptr != tensor)
-    {
-        vx_tensor this_tensor = *tensor;
-        if (vx_true_e == Reference::isValidReference(this_tensor, VX_TYPE_TENSOR))
-        {
-            status = Reference::releaseReference((vx_reference*)tensor, VX_TYPE_TENSOR, VX_EXTERNAL, nullptr);
-        }
-    }
-
-    return status;
-}
-
 VX_API_ENTRY vx_status VX_API_CALL vxQueryTensor(vx_tensor tensor, vx_enum attribute, void *ptr, vx_size size)
 {
     vx_status status = VX_SUCCESS;
@@ -540,7 +835,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryTensor(vx_tensor tensor, vx_enum attri
         case VX_TENSOR_NUMBER_OF_DIMS:
             if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
             {
-                *(vx_size *)ptr = tensor->number_of_dimensions;
+                *(vx_size *)ptr = tensor->numDims();
             }
             else
             {
@@ -550,7 +845,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryTensor(vx_tensor tensor, vx_enum attri
         case VX_TENSOR_DIMS:
             if (size >= (sizeof(vx_size)*tensor->number_of_dimensions) && ((vx_size)ptr & 0x3) == 0)
             {
-                memcpy(ptr, tensor->dimensions, sizeof(vx_size)*tensor->number_of_dimensions);
+                memcpy(ptr, tensor->dims(), sizeof(vx_size) * tensor->numDims());
             }
             else
             {
@@ -560,19 +855,19 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryTensor(vx_tensor tensor, vx_enum attri
         case VX_TENSOR_DATA_TYPE:
             if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
             {
-                *(vx_enum *)ptr = tensor->data_type;
+                *(vx_enum *)ptr = tensor->dataType();
             }
             break;
         case VX_TENSOR_FIXED_POINT_POSITION:
             if (VX_CHECK_PARAM(ptr, size, vx_int8, 0x0)) //??
             {
-                *(vx_int8 *)ptr = tensor->fixed_point_position;
+                *(vx_int8 *)ptr = tensor->fixedPointPosition();
             }
             break;
         case VX_TENSOR_STRIDE:
             if (size >= (sizeof(vx_size)*tensor->number_of_dimensions) && ((vx_size)ptr & 0x3) == 0)
             {
-                memcpy(ptr, tensor->stride, sizeof(vx_size)*tensor->number_of_dimensions);
+                memcpy(ptr, tensor->strides(), sizeof(vx_size) * tensor->numDims());
             }
             else
             {
@@ -582,12 +877,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryTensor(vx_tensor tensor, vx_enum attri
         case VX_TENSOR_TOTAL_SIZE:
             if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
             {
-                vx_size total_size = Reference::sizeOfType(tensor->data_type);
-                for (vx_uint32 i = 0; i < tensor->number_of_dimensions; i++)
-                {
-                    total_size *= tensor->dimensions[i];
-                }
-                *(vx_size *)ptr = total_size;
+                *(vx_size *)ptr = tensor->size();
             }
             else
             {
@@ -607,298 +897,84 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryTensor(vx_tensor tensor, vx_enum attri
     return status;
 }
 
-VX_API_ENTRY vx_status VX_API_CALL vxMapTensorPatch(vx_tensor tensor, vx_size number_of_dims,
-    const vx_size * view_start, const vx_size * view_end,
-    vx_map_id * map_id, vx_size * stride, void ** ptr, vx_enum usage, vx_enum mem_type)
+VX_API_ENTRY vx_status VX_API_CALL vxCopyTensorPatch(vx_tensor tensor, vx_size number_of_dimensions,
+                                                     const vx_size *view_start,
+                                                     const vx_size *view_end,
+                                                     const vx_size *user_stride, void *user_ptr,
+                                                     vx_enum usage, vx_enum user_memory_type)
 {
-    vx_status status = VX_FAILURE;
-    vx_uint8 *buf = nullptr;
-    vx_size size;
-    vx_memory_map_extra extra;
-
-    /* bad parameters */
-    if ((view_start == nullptr) || (view_end == nullptr) || (map_id == nullptr) || (ptr == nullptr) ||
-        (stride == nullptr))
-    {
-        status = VX_ERROR_INVALID_PARAMETERS;
-        goto exit;
-    }
+    vx_status status = VX_SUCCESS;
 
     /* bad references */
     if (Tensor::isValidTensor(tensor) == vx_false_e)
     {
         status = VX_ERROR_INVALID_REFERENCE;
-        goto exit;
     }
 
-    /* determine if virtual before checking for memory */
-    if (tensor->is_virtual == vx_true_e)
+    if (VX_SUCCESS == status)
     {
-        if (tensor->is_accessible == vx_false_e)
-        {
-            /* User tried to access a "virtual" tensor. */
-            VX_PRINT(VX_ZONE_ERROR, "Can not access a virtual tensor\n");
-            status = VX_ERROR_OPTIMIZED_AWAY;
-            goto exit;
-        }
+        status = tensor->copyPatch(number_of_dimensions, view_start, view_end, user_stride,
+                                   user_ptr, usage, user_memory_type);
     }
-    if (tensor->addr == nullptr)
+
+    return status;
+}
+
+VX_API_ENTRY vx_status VX_API_CALL vxMapTensorPatch(vx_tensor tensor, vx_size number_of_dims,
+                                                    const vx_size *view_start,
+                                                    const vx_size *view_end, vx_map_id *map_id,
+                                                    vx_size *stride, void **ptr, vx_enum usage,
+                                                    vx_enum mem_type)
+{
+    vx_status status = VX_SUCCESS;
+
+    /* bad references */
+    if (Tensor::isValidTensor(tensor) == vx_false_e)
     {
-        if ( // usage != VX_WRITE_ONLY ||
-            tensor->allocateTensorMemory() == nullptr)
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Tensor memory was allocated failed!\n");
-            status = VX_ERROR_NO_MEMORY;
-            goto exit;
-        }
+        status = VX_ERROR_INVALID_REFERENCE;
     }
 
-    if (tensor->number_of_dimensions < number_of_dims || number_of_dims == 0)
+    if (VX_SUCCESS == status)
     {
-        VX_PRINT(VX_ZONE_ERROR, "Invalid number of patch dimensions\n");
-        status = VX_ERROR_INVALID_PARAMETERS;
-        goto exit;
-
-    }
-    if (Tensor::checkSizes(tensor->dimensions, view_start, view_end, number_of_dims) != 0)
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Invalid view\n");
-        status = VX_ERROR_INVALID_PARAMETERS;
-        goto exit;
-
+        status = tensor->mapPatch(number_of_dims, view_start, view_end, map_id, stride, ptr, usage,
+                                  mem_type);
     }
 
-    stride[0] = Reference::sizeOfType(tensor->data_type);
-    for (vx_uint32 i = 1; i < number_of_dims; i++)
-    {
-        stride[i] = stride[i - 1] * (view_end[i] - view_start[i]);
-    }
-    //vx_map_id * map_id, vx_size * stride, void ** ptr
-    size = Tensor::computePatchSize(view_start, view_end, number_of_dims);
-
-    memcpy(extra.tensor_data.start, view_start, sizeof(vx_size) * number_of_dims);
-    memcpy(extra.tensor_data.end, view_end, sizeof(vx_size) * number_of_dims);
-    memcpy(extra.tensor_data.stride, stride, sizeof(vx_size) * number_of_dims);
-    extra.tensor_data.number_of_dims = number_of_dims;
-
-    if (VX_MEMORY_TYPE_HOST  == mem_type &&
-        vx_true_e == tensor->context->memoryMap((vx_reference)tensor, 0, usage, mem_type, 0, (void *)&extra, (void **)&buf, map_id))
-    {
-        *ptr = tensor->addr;
-
-        tensor->incrementReference(VX_EXTERNAL);
-
-        status = VX_SUCCESS;
-    }
-    else if (vx_true_e == tensor->context->memoryMap((vx_reference)tensor, size, usage, mem_type, 0, (void *)&extra, (void **)&buf, map_id))
-    {
-        vx_uint8* user_curr_ptr = buf;
-        vx_uint8* tensor_ptr = (vx_uint8*)tensor->addr;
-        if (usage == VX_READ_ONLY || usage == VX_READ_AND_WRITE)
-        {
-            for (vx_size i = 0; i < size; i++)
-            {
-                vx_size patch_pos = 0;
-                vx_size tensor_pos = 0;
-                Tensor::computePositionsFromIndex(i,view_start, view_end, tensor->stride, stride, number_of_dims, &tensor_pos, &patch_pos);
-                memcpy (user_curr_ptr + patch_pos, tensor_ptr + tensor_pos, tensor->stride[0]);
-            }
-
-            // ownReadFromReference(&tensor->base);
-        }
-        *ptr = buf;
-        tensor->incrementReference(VX_EXTERNAL);
-
-        status = VX_SUCCESS;
-    }
-
-exit:
-    VX_PRINT(VX_ZONE_API, "returned %d\n", status);
     return status;
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxUnmapTensorPatch(vx_tensor tensor, vx_map_id map_id)
 {
-    vx_status status = VX_FAILURE;
+    vx_status status = VX_SUCCESS;
 
     /* bad references */
     if (Tensor::isValidTensor(tensor) == vx_false_e)
     {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid tensor reference!\n");
         status = VX_ERROR_INVALID_REFERENCE;
-        goto exit;
-    }
-
-    /* bad parameters */
-    if (tensor->context->findMemoryMap((vx_reference)tensor, map_id) != vx_true_e)
-    {
-        status = VX_ERROR_INVALID_PARAMETERS;
-        VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to unmap tensor patch\n");
-        return status;
-    }
-
-    {
-        vx_context       context = tensor->context;
-        vx_memory_map_t* map = &context->memory_maps[map_id];
-
-        if (map->used && map->ref == (vx_reference)tensor)
-        {
-            /* commit changes for write access */
-            if ((VX_WRITE_ONLY == map->usage || VX_READ_AND_WRITE == map->usage) && nullptr != map->ptr)
-            {
-                if (vx_true_e == Osal::semWait(&tensor->lock))
-                {
-                    vx_uint32 size = Tensor::computePatchSize(map->extra.tensor_data.start,
-                                                      map->extra.tensor_data.end,
-                                                      map->extra.tensor_data.number_of_dims);
-                    vx_uint8* pSrc = (vx_uint8*)map->ptr;
-                    vx_uint8* pDst = (vx_uint8*)tensor->addr;
-
-                    for (vx_size i = 0; i < size; i++)
-                    {
-                        vx_size patch_pos = 0;
-                        vx_size tensor_pos = 0;
-                        Tensor::computePositionsFromIndex(i,map->extra.tensor_data.start,
-                                                  map->extra.tensor_data.end,
-                                                  tensor->stride,
-                                                  map->extra.tensor_data.stride,
-                                                  map->extra.tensor_data.number_of_dims,
-                                                  &tensor_pos,
-                                                  &patch_pos);
-                        memcpy (pDst + patch_pos, pSrc + tensor_pos, tensor->stride[0]);
-                    }
-
-                    Osal::semPost(&tensor->lock);
-                }
-                else
-                {
-                    status = VX_FAILURE;
-                    VX_PRINT(VX_ZONE_ERROR, "Can't lock memory plane for unmapping\n");
-                    goto exit;
-                }
-            }
-
-            /* freeing mapping buffer */
-            context->memoryUnmap((vx_uint32)map_id);
-
-            tensor->decrementReference(VX_EXTERNAL);
-
-            status = VX_SUCCESS;
-        }
-        else
-            status = VX_FAILURE;
-    }
-
-exit:
-    VX_PRINT(VX_ZONE_API, "return %d\n", status);
-
-    return status;
-}
-
-VX_API_ENTRY vx_status VX_API_CALL vxCopyTensorPatch(vx_tensor tensor, vx_size number_of_dimensions, const vx_size * view_start, const vx_size * view_end,
-        const vx_size * user_stride, void * user_ptr, vx_enum usage, vx_enum user_memory_type)
-{
-    vx_status status = VX_SUCCESS;
-    (void)user_memory_type;
-
-    /* bad parameters */
-    if ((view_start == nullptr) || (view_end == nullptr) || (user_stride == nullptr) || (user_ptr == nullptr))
-    {
-        status = VX_ERROR_INVALID_PARAMETERS;
-    }
-
-    /* bad references */
-    if (VX_SUCCESS == status && Tensor::isValidTensor(tensor) == vx_false_e)
-    {
-        status = VX_ERROR_INVALID_REFERENCE;
-    }
-
-    /* determine if virtual before checking for memory */
-    if (VX_SUCCESS == status && tensor->is_virtual == vx_true_e && tensor->is_accessible == vx_false_e)
-    {
-        /* User tried to access a "virtual" tensor. */
-        VX_PRINT(VX_ZONE_ERROR, "Can not access a virtual tensor\n");
-        status = VX_ERROR_OPTIMIZED_AWAY;
-    }
-
-    if (VX_SUCCESS == status && tensor->addr == nullptr)
-    {
-        if ( // usage != VX_WRITE_ONLY ||
-            tensor->allocateTensorMemory() == nullptr)
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Tensor memory was not allocated!\n");
-            status = VX_ERROR_NOT_ALLOCATED;
-        }
-    }
-
-    if ((VX_SUCCESS == status) &&
-        ((tensor->number_of_dimensions < number_of_dimensions) || (number_of_dimensions == 0)))
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Invalid number of patch dimensions\n");
-        status = VX_ERROR_INVALID_PARAMETERS;
-
-    }
-    if (VX_SUCCESS == status && Tensor::checkSizes(tensor->dimensions, view_start, view_end, number_of_dimensions) != 0)
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Invalid view\n");
-        status = VX_ERROR_INVALID_PARAMETERS;
     }
 
     if (VX_SUCCESS == status)
     {
-#ifdef OPENVX_USE_OPENCL_INTEROP
-    void * user_ptr_given = user_ptr;
-    vx_enum user_memory_type_given = user_memory_type;
-    if (user_memory_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
+        status = tensor->unmapPatch(map_id);
+    }
+
+    return status;
+}
+
+VX_API_ENTRY vx_status VX_API_CALL vxReleaseTensor(vx_tensor *tensor)
+{
+    vx_status status = VX_FAILURE;
+
+    if (nullptr != tensor)
     {
-        /* get user_ptr from OpenCL buffer for HOST */
-        size_t size = 0;
-        cl_mem opencl_buf = (cl_mem)user_ptr;
-        cl_int cerr = clGetMemObjectInfo(opencl_buf, CL_MEM_SIZE, sizeof(size_t), &size, nullptr);
-        VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyTensorPatch: clGetMemObjectInfo(%p) => (%d)\n",
-            opencl_buf, cerr);
-        if (cerr != CL_SUCCESS)
+        vx_tensor this_tensor = *tensor;
+        if (vx_true_e == Reference::isValidReference(this_tensor, VX_TYPE_TENSOR))
         {
-            return VX_ERROR_INVALID_PARAMETERS;
+            status = Reference::releaseReference((vx_reference *)tensor, VX_TYPE_TENSOR,
+                                                 VX_EXTERNAL, nullptr);
         }
-        user_ptr = clEnqueueMapBuffer(tensor->context->opencl_command_queue,
-            opencl_buf, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, size,
-            0, nullptr, nullptr, &cerr);
-        VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyTensorPatch: clEnqueueMapBuffer(%p,%d) => %p (%d)\n",
-            opencl_buf, (int)size, user_ptr, cerr);
-        if (cerr != CL_SUCCESS)
-        {
-            return VX_ERROR_INVALID_PARAMETERS;
-        }
-        user_memory_type = VX_MEMORY_TYPE_HOST;
-    }
-#endif
-
-    //element_size = Reference::sizeOfType(tensor->data_type);
-    vx_uint8* user_curr_ptr = (vx_uint8*)user_ptr;
-    vx_uint8* tensor_ptr = (vx_uint8*)tensor->addr;
-    vx_size patch_size = Tensor::computePatchSize (view_start, view_end, number_of_dimensions);
-    for (vx_size i = 0; i < patch_size; i++)
-    {
-        vx_size patch_pos = 0;
-        vx_size tensor_pos = 0;
-        Tensor::computePositionsFromIndex(i,view_start, view_end, tensor->stride, user_stride, number_of_dimensions, &tensor_pos, &patch_pos);
-        if (usage == VX_READ_ONLY)
-            memcpy (user_curr_ptr + patch_pos, tensor_ptr + tensor_pos, tensor->stride[0]);
-        else
-            memcpy (tensor_ptr + tensor_pos, user_curr_ptr + patch_pos, tensor->stride[0]);
-    }
-    status = VX_SUCCESS;
-
-#ifdef OPENVX_USE_OPENCL_INTEROP
-    if (user_memory_type_given == VX_MEMORY_TYPE_OPENCL_BUFFER)
-    {
-        clEnqueueUnmapMemObject(tensor->context->opencl_command_queue,
-            (cl_mem)user_ptr_given, user_ptr, 0, nullptr, nullptr);
-        clFinish(tensor->context->opencl_command_queue);
-    }
-#endif
     }
 
-    VX_PRINT(VX_ZONE_API, "returned %d\n", status);
     return status;
 }

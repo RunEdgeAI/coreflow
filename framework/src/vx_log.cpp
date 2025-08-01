@@ -17,7 +17,11 @@
 #include "vx_internal.h"
 #include "vx_log.h"
 
-VX_API_ENTRY void VX_API_CALL vxRegisterLogCallback(vx_context context, vx_log_callback_f callback, vx_bool reentrant)
+/******************************************************************************/
+/* INTERNAL INTERFACE                                                         */
+/******************************************************************************/
+
+void Logger::registerLogCallback(vx_context context, vx_log_callback_f callback, vx_bool reentrant)
 {
     if (Context::isValidContext(context) == vx_true_e)
     {
@@ -39,7 +43,8 @@ VX_API_ENTRY void VX_API_CALL vxRegisterLogCallback(vx_context context, vx_log_c
             }
             context->log_enabled = vx_false_e;
         }
-        if ((context->log_callback != nullptr) && (callback != nullptr) && (context->log_callback != callback))
+        if ((context->log_callback != nullptr) && (callback != nullptr) &&
+            (context->log_callback != callback))
         {
             if (context->log_reentrant == vx_false_e)
             {
@@ -56,9 +61,8 @@ VX_API_ENTRY void VX_API_CALL vxRegisterLogCallback(vx_context context, vx_log_c
     }
 }
 
-VX_API_ENTRY void VX_API_CALL vxAddLogEntry(vx_reference ref, vx_status status, const char *message, ...)
+void Logger::addLogEntry(vx_reference ref, vx_status status, const char *message, va_list ap)
 {
-    va_list ap;
     vx_context context = nullptr;
     vx_char string[VX_MAX_LOG_MESSAGE_LEN];
 
@@ -92,10 +96,8 @@ VX_API_ENTRY void VX_API_CALL vxAddLogEntry(vx_reference ref, vx_status status, 
         context = ref->context;
     }
 
-    va_start(ap, message);
     vsnprintf(string, VX_MAX_LOG_MESSAGE_LEN, message, ap);
-    string[VX_MAX_LOG_MESSAGE_LEN-1] = 0; /* for MSVC which is not C99 compliant */
-    va_end(ap);
+    string[VX_MAX_LOG_MESSAGE_LEN - 1] = 0; /* for MSVC which is not C99 compliant */
 
     if (context->log_callback == nullptr)
     {
@@ -119,4 +121,23 @@ VX_API_ENTRY void VX_API_CALL vxAddLogEntry(vx_reference ref, vx_status status, 
         Osal::semPost(&context->log_lock);
     }
     return;
+}
+
+/******************************************************************************/
+/* PUBLIC FUNCTIONS                                                           */
+/******************************************************************************/
+
+VX_API_ENTRY void VX_API_CALL vxRegisterLogCallback(vx_context context, vx_log_callback_f callback,
+                                                    vx_bool reentrant)
+{
+    Logger::registerLogCallback(context, callback, reentrant);
+}
+
+VX_API_ENTRY void VX_API_CALL vxAddLogEntry(vx_reference ref, vx_status status, const char *message,
+                                            ...)
+{
+    va_list ap;
+    va_start(ap, message);
+    Logger::addLogEntry(ref, status, message, ap);
+    va_end(ap);
 }

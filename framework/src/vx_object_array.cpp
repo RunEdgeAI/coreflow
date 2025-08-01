@@ -306,9 +306,46 @@ vx_status ObjectArray::initObjectArray(vx_reference exemplar, vx_size num_items)
     return VX_SUCCESS;
 }
 
-/*==============================================================================
- INTERNAL INTERFACE
- =============================================================================*/
+vx_reference ObjectArray::getItem(vx_size index) const
+{
+    vx_reference item = nullptr;
+
+    if (index < num_items)
+    {
+        item = items[index];
+        item->incrementReference(VX_EXTERNAL);
+    }
+    else
+    {
+        item = (vx_reference)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+    }
+
+    return item;
+}
+
+vx_status ObjectArray::setItem(vx_size index, vx_reference ref)
+{
+    if (index >= VX_INT_MAX_REF)
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Index out of bounds: %zu >= %zu\n", index, VX_INT_MAX_REF);
+        return VX_ERROR_INVALID_PARAMETERS;
+    }
+
+    items[index] = ref;
+    num_items++;
+
+    return VX_SUCCESS;
+}
+
+vx_enum ObjectArray::itemType() const
+{
+    return item_type;
+}
+
+vx_size ObjectArray::numItems() const
+{
+    return num_items;
+}
 
 vx_object_array ObjectArray::createObjectArray(vx_reference scope, vx_reference exemplar, vx_size count, vx_bool is_virtual)
 {
@@ -450,21 +487,6 @@ VX_API_ENTRY vx_object_array VX_API_CALL vxCreateVirtualObjectArray(vx_graph gra
     return arr;
 }
 
-VX_API_ENTRY vx_status VX_API_CALL vxReleaseObjectArray(vx_object_array* arr)
-{
-    vx_status status = VX_FAILURE;
-
-    if (nullptr != arr)
-    {
-        vx_object_array object_array = *arr;
-        if (vx_true_e == Reference::isValidReference(object_array, VX_TYPE_OBJECT_ARRAY))
-        {
-            status = Reference::releaseReference((vx_reference*)arr, VX_TYPE_OBJECT_ARRAY, VX_EXTERNAL, nullptr);
-        }
-    }
-    return status;
-}
-
 VX_API_ENTRY vx_status VX_API_CALL vxQueryObjectArray(vx_object_array arr, vx_enum attribute, void *ptr, vx_size size)
 {
     vx_status status = VX_ERROR_INVALID_REFERENCE;
@@ -477,7 +499,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryObjectArray(vx_object_array arr, vx_en
             case VX_OBJECT_ARRAY_ITEMTYPE:
                 if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
                 {
-                    *(vx_enum *)ptr = arr->item_type;
+                    *(vx_enum *)ptr = arr->itemType();
                 }
                 else
                 {
@@ -488,7 +510,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryObjectArray(vx_object_array arr, vx_en
             case VX_OBJECT_ARRAY_NUMITEMS:
                 if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
                 {
-                    *(vx_size *)ptr = arr->num_items;
+                    *(vx_size *)ptr = arr->numItems();
                 }
                 else
                 {
@@ -511,15 +533,7 @@ VX_API_ENTRY vx_reference VX_API_CALL vxGetObjectArrayItem(vx_object_array arr, 
 
     if (ObjectArray::isValidObjectArray(arr) == vx_true_e)
     {
-        if (index < arr->num_items)
-        {
-            item = arr->items[index];
-            item->incrementReference(VX_EXTERNAL);
-        }
-        else
-        {
-            item = (vx_reference)vxGetErrorObject(arr->context, VX_ERROR_INVALID_PARAMETERS);
-        }
+        item = arr->getItem(index);
     }
 
     return item;
@@ -529,18 +543,31 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetObjectArrayItem(vx_object_array arr, vx_
 {
     vx_status status = VX_SUCCESS;
 
-    if (ObjectArray::isValidObjectArray(arr) != vx_true_e ||
-        Reference::isValidReference(ref) != vx_true_e ||
-        index >= VX_INT_MAX_REF)
+    if (ObjectArray::isValidObjectArray(arr) != vx_true_e)
     {
         status = VX_ERROR_INVALID_PARAMETERS;
     }
 
     if (VX_SUCCESS == status)
     {
-        arr->items[index] = ref;
-        arr->num_items++;
+        status = arr->setItem(index, ref);
     }
 
+    return status;
+}
+
+VX_API_ENTRY vx_status VX_API_CALL vxReleaseObjectArray(vx_object_array *arr)
+{
+    vx_status status = VX_FAILURE;
+
+    if (nullptr != arr)
+    {
+        vx_object_array object_array = *arr;
+        if (vx_true_e == Reference::isValidReference(object_array, VX_TYPE_OBJECT_ARRAY))
+        {
+            status = Reference::releaseReference((vx_reference *)arr, VX_TYPE_OBJECT_ARRAY,
+                                                 VX_EXTERNAL, nullptr);
+        }
+    }
     return status;
 }

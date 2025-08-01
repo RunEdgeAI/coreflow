@@ -1051,12 +1051,12 @@ static vx_status VX_CALLBACK vxLaplacianReconstructDeinitializer(vx_node node, c
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
     if (num == dimof(laplacian_reconstruct_kernel_params))
     {
-        vx_graph subgraph = ownGetChildGraphOfNode(node);
+        vx_graph subgraph = vxGetChildGraphOfNode(node);
         vx_context context = vxGetContext((vx_reference)node);
         status = VX_SUCCESS;
         status |= vxReleaseGraph(&subgraph);
         /* set subgraph to "null" */
-        status |= ownSetChildGraphOfNode(node, 0);
+        status |= vxSetChildGraphOfNode(node, 0);
         status |= vxUnloadKernels(context, "openvx-debug");
     }
     return status;

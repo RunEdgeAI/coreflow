@@ -92,6 +92,41 @@ public:
     static vx_bool isValidObjectArray(vx_object_array objarr, vx_enum item_type, vx_size num_items);
 
     /**
+     * @brief Get the item at the specified index
+     *
+     * @param index The index of the item to get
+     * @return vx_reference The reference to the item
+     * @ingroup group_int_object_array
+     */
+    vx_reference getItem(vx_size index) const;
+
+    /**
+     * @brief Set the item at the specified index
+     *
+     * @param index The index of the item to set
+     * @param ref   The reference to set at the index
+     * @return vx_status VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_object_array
+     */
+    vx_status setItem(vx_size index, vx_reference ref);
+
+    /**
+     * @brief Get the item type of the object array
+     *
+     * @return vx_enum The item type of the object array
+     * @ingroup group_int_object_array
+     */
+    vx_enum itemType() const;
+
+    /**
+     * @brief Get the number of items in the object array
+     *
+     * @return vx_size The number of items in the object array
+     * @ingroup group_int_object_array
+     */
+    vx_size numItems() const;
+
+    /**
      * @brief Function to destroy the object array
      * @ingroup group_int_object_array
      */

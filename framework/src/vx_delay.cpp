@@ -37,6 +37,37 @@ Delay::~Delay()
 {
 }
 
+vx_enum Delay::dataType() const
+{
+    return type;
+}
+
+vx_size Delay::numObjects() const
+{
+    return count;
+}
+
+vx_reference Delay::getReference(vx_int32 index)
+{
+    vx_reference ref = nullptr;
+
+    if ((vx_uint32)abs(index) < this->count)
+    {
+        vx_int32 i = (this->index + abs(index)) % (vx_int32)this->count;
+        ref = this->refs[i];
+        VX_PRINT(VX_ZONE_DELAY, "Retrieving relative index %d => " VX_FMT_REF " from Delay (%d)\n",
+                 index, ref, i);
+    }
+    else
+    {
+        vxAddLogEntry((vx_reference)this, VX_ERROR_INVALID_PARAMETERS,
+                      "Failed to retrieve reference from delay by index %d\n", index);
+        ref = (vx_reference)vxGetErrorObject(this->context, VX_ERROR_INVALID_PARAMETERS);
+    }
+
+    return ref;
+}
+
 vx_bool Delay::addAssociationToDelay(vx_reference value, vx_node n, vx_uint32 i)
 {
 
@@ -129,6 +160,82 @@ vx_bool Delay::removeAssociationToDelay(vx_reference value, vx_node n, vx_uint32
     return vx_true_e;
 }
 
+vx_status Delay::age()
+{
+    vx_status status = VX_SUCCESS;
+    vx_int32 i, j;
+
+    /* increment the index */
+    this->index = (this->index + (vx_uint32)this->count - 1) % (vx_uint32)this->count;
+
+    VX_PRINT(VX_ZONE_DELAY, "Delay has shifted by 1, base index is now %d\n", this->index);
+
+    /* then reassign the parameters */
+    for (i = 0; i < (vx_int32)this->count; i++)
+    {
+        vx_delay_param_t *param = nullptr;
+
+        j = (this->index + i) % (vx_int32)this->count;
+        param = &this->set[i];
+        do
+        {
+            if (param->node != 0)
+            {
+                param->node->setParameter(param->index, this->refs[j]);
+            }
+            param = param->next;
+        } while (param != nullptr);
+    }
+
+    if (this->type == VX_TYPE_PYRAMID && this->pyr != nullptr)
+    {
+        /* age pyramid levels */
+        vx_int32 numLevels = (vx_int32)(((vx_pyramid)this->refs[0])->numLevels);
+        for (i = 0; i < numLevels; ++i) status |= this->pyr[i]->age();
+    }
+
+    return status;
+}
+
+vx_status Delay::registerAutoAging(vx_graph graph)
+{
+    vx_uint32 i;
+    vx_status status = VX_SUCCESS;
+    vx_bool isAlreadyRegistered = vx_false_e;
+    vx_bool isRegisteredDelaysListFull = vx_true_e;
+
+    if (vxIsValidGraph(graph) == vx_false_e) return VX_ERROR_INVALID_REFERENCE;
+
+    /* check if this particular delay is already registered in the graph */
+    for (i = 0; i < VX_INT_MAX_REF; i++)
+    {
+        if (graph->delays[i] && vxIsValidDelay(graph->delays[i]) && graph->delays[i] == this)
+        {
+            isAlreadyRegistered = vx_true_e;
+            break;
+        }
+    }
+
+    /* if not regisered yet, find the first empty slot and register delay */
+    if (isAlreadyRegistered == vx_false_e)
+    {
+        for (i = 0; i < VX_INT_MAX_REF; i++)
+        {
+            if (vxIsValidDelay(graph->delays[i]) == vx_false_e)
+            {
+                isRegisteredDelaysListFull = vx_false_e;
+                graph->delays[i] = this;
+                break;
+            }
+        }
+
+        /* report error if there is no empty slots to register delay */
+        if (isRegisteredDelaysListFull == vx_true_e) status = VX_ERROR_INVALID_REFERENCE;
+    }
+
+    return status;
+}
+
 void Delay::destruct()
 {
     vx_uint32 i = 0;
@@ -180,75 +287,6 @@ void Delay::destruct()
 /******************************************************************************/
 /* PUBLIC INTERFACE                                                           */
 /******************************************************************************/
-
-VX_API_ENTRY vx_reference VX_API_CALL vxGetReferenceFromDelay(vx_delay delay, vx_int32 index)
-{
-    vx_reference ref = nullptr;
-
-    if (vxIsValidDelay(delay) == vx_true_e)
-    {
-        if ((vx_uint32)abs(index) < delay->count)
-        {
-            vx_int32 i = (delay->index + abs(index)) % (vx_int32)delay->count;
-            ref = delay->refs[i];
-            VX_PRINT(VX_ZONE_DELAY, "Retrieving relative index %d => " VX_FMT_REF  " from Delay (%d)\n", index, ref, i);
-        }
-        else
-        {
-            vxAddLogEntry((vx_reference)delay, VX_ERROR_INVALID_PARAMETERS, "Failed to retrieve reference from delay by index %d\n", index);
-            ref = (vx_reference)vxGetErrorObject(delay->context, VX_ERROR_INVALID_PARAMETERS);
-        }
-    }
-    return ref;
-}
-
-VX_API_ENTRY vx_status VX_API_CALL vxQueryDelay(vx_delay delay, vx_enum attribute, void *ptr, vx_size size)
-{
-    vx_status status = VX_SUCCESS;
-    if (vxIsValidDelay(delay) == vx_true_e)
-    {
-        switch (attribute)
-        {
-            case VX_DELAY_TYPE:
-                if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
-                    *(vx_enum *)ptr = delay->type;
-                else
-                    status = VX_ERROR_INVALID_PARAMETERS;
-                break;
-            case VX_DELAY_SLOTS:
-                if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
-                    *(vx_size *)ptr = (vx_size)delay->count;
-                else
-                    status = VX_ERROR_INVALID_PARAMETERS;
-                break;
-            default:
-                status = VX_ERROR_NOT_SUPPORTED;
-                break;
-        }
-    }
-    else
-    {
-        status = VX_ERROR_INVALID_REFERENCE;
-    }
-    VX_PRINT(VX_ZONE_API, "%s returned %d\n",__FUNCTION__, status);
-    return status;
-}
-
-VX_API_ENTRY vx_status VX_API_CALL vxReleaseDelay(vx_delay* d)
-{
-    vx_status status = VX_FAILURE;
-
-    if (nullptr != d)
-    {
-        vx_delay delay = *d;
-        if (vx_true_e == Reference::isValidReference(delay, VX_TYPE_DELAY))
-        {
-            status = Reference::releaseReference((vx_reference*)d, VX_TYPE_DELAY, VX_EXTERNAL, nullptr);
-        }
-    }
-
-    return status;
-}
 
 VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
                                                 vx_reference exemplar,
@@ -455,42 +493,56 @@ VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
     return (vx_delay)delay;
 }
 
+VX_API_ENTRY vx_reference VX_API_CALL vxGetReferenceFromDelay(vx_delay delay, vx_int32 index)
+{
+    vx_reference ref = nullptr;
+
+    if (vxIsValidDelay(delay) == vx_true_e)
+    {
+        ref = delay->getReference(index);
+    }
+    return ref;
+}
+
+VX_API_ENTRY vx_status VX_API_CALL vxQueryDelay(vx_delay delay, vx_enum attribute, void *ptr,
+                                                vx_size size)
+{
+    vx_status status = VX_SUCCESS;
+    if (vxIsValidDelay(delay) == vx_true_e)
+    {
+        switch (attribute)
+        {
+            case VX_DELAY_TYPE:
+                if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
+                    *(vx_enum *)ptr = delay->dataType();
+                else
+                    status = VX_ERROR_INVALID_PARAMETERS;
+                break;
+            case VX_DELAY_SLOTS:
+                if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
+                    *(vx_size *)ptr = (vx_size)delay->numObjects();
+                else
+                    status = VX_ERROR_INVALID_PARAMETERS;
+                break;
+            default:
+                status = VX_ERROR_NOT_SUPPORTED;
+                break;
+        }
+    }
+    else
+    {
+        status = VX_ERROR_INVALID_REFERENCE;
+    }
+    VX_PRINT(VX_ZONE_API, "%s returned %d\n", __FUNCTION__, status);
+    return status;
+}
+
 VX_API_ENTRY vx_status VX_API_CALL vxAgeDelay(vx_delay delay)
 {
     vx_status status = VX_SUCCESS;
     if (vxIsValidDelay(delay) == vx_true_e)
     {
-        vx_int32 i,j;
-
-        /* increment the index */
-        delay->index = (delay->index + (vx_uint32)delay->count - 1) % (vx_uint32)delay->count;
-
-        VX_PRINT(VX_ZONE_DELAY, "Delay has shifted by 1, base index is now %d\n", delay->index);
-
-        /* then reassign the parameters */
-        for (i = 0; i < (vx_int32)delay->count; i++)
-        {
-            vx_delay_param_t *param = nullptr;
-
-            j = (delay->index + i) % (vx_int32)delay->count;
-            param = &delay->set[i];
-            do {
-                if (param->node != 0)
-                {
-                    param->node->setParameter(param->index,
-                                              delay->refs[j]);
-                }
-                param = param->next;
-            } while (param != nullptr);
-        }
-
-        if (delay->type == VX_TYPE_PYRAMID && delay->pyr != nullptr)
-        {
-            /* age pyramid levels */
-            vx_int32 numLevels = (vx_int32)(((vx_pyramid)delay->refs[0])->numLevels);
-            for (i = 0; i < numLevels; ++i)
-                vxAgeDelay(delay->pyr[i]);
-        }
+        status = delay->age();
     }
     else
     {
@@ -501,43 +553,24 @@ VX_API_ENTRY vx_status VX_API_CALL vxAgeDelay(vx_delay delay)
 
 VX_API_ENTRY vx_status VX_API_CALL vxRegisterAutoAging(vx_graph graph, vx_delay delay)
 {
-    unsigned int i;
-    vx_status status = VX_SUCCESS;
-    vx_bool isAlreadyRegistered = vx_false_e;
-    vx_bool isRegisteredDelaysListFull = vx_true_e;
-
-    if (vxIsValidGraph(graph) == vx_false_e)
-        return VX_ERROR_INVALID_REFERENCE;
-
     if (vxIsValidDelay(delay) == vx_false_e)
         return VX_ERROR_INVALID_REFERENCE;
 
-    /* check if this particular delay is already registered in the graph */
-    for (i = 0; i < VX_INT_MAX_REF; i++)
-    {
-        if (graph->delays[i] && vxIsValidDelay(graph->delays[i]) && graph->delays[i] == delay)
-        {
-            isAlreadyRegistered = vx_true_e;
-            break;
-        }
-    }
+    return delay->registerAutoAging(graph);
+}
 
-    /* if not regisered yet, find the first empty slot and register delay */
-    if (isAlreadyRegistered == vx_false_e)
-    {
-        for (i = 0; i < VX_INT_MAX_REF; i++)
-        {
-            if (vxIsValidDelay(graph->delays[i]) == vx_false_e)
-            {
-                isRegisteredDelaysListFull = vx_false_e;
-                graph->delays[i] = delay;
-                break;
-            }
-        }
+VX_API_ENTRY vx_status VX_API_CALL vxReleaseDelay(vx_delay *d)
+{
+    vx_status status = VX_FAILURE;
 
-        /* report error if there is no empty slots to register delay */
-        if (isRegisteredDelaysListFull == vx_true_e)
-            status = VX_ERROR_INVALID_REFERENCE;
+    if (nullptr != d)
+    {
+        vx_delay delay = *d;
+        if (vx_true_e == Reference::isValidReference(delay, VX_TYPE_DELAY))
+        {
+            status =
+                Reference::releaseReference((vx_reference *)d, VX_TYPE_DELAY, VX_EXTERNAL, nullptr);
+        }
     }
 
     return status;

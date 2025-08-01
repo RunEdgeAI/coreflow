@@ -21,13 +21,11 @@
 /*!
  * \file
  * \brief The internal error implementation
- * \author Erik Rainey <erik.rainey@gmail.com>
  *
  * \defgroup group_int_error Internal Error API
  * \ingroup group_internal
  * \brief The Internal Error API.
  */
-
 
 /*! \brief The internal representation of the error object.
  * \ingroup group_int_error
@@ -63,6 +61,25 @@ public:
      * \ingroup group_int_error
      */
     static void releaseError(vx_error* error);
+
+    /*! \brief Matches the status code against all known error objects in the
+     * context.
+     * \param [in] context The pointer to the overall context.
+     * \param [in] status The status code to find.
+     * \return Returns a matching error object.
+     * \ingroup group_int_error
+     */
+    static vx_error getError(vx_context context, vx_status status);
+
+    /**
+     * @brief Provides a generic API to return status values from Object constructors if they
+     * fail.
+     *
+     * @param [in] ref        The reference to check for construction errors.
+     * @return vx_status VX_SUCCESS if successful, any other value indicates failure.
+     * @ingroup group_int_error
+     */
+    static vx_status getStatus(vx_reference ref);
 
     /*! \brief The specific error code contained in this object. */
     vx_status status;

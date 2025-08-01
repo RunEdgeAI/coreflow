@@ -137,6 +137,74 @@ public:
     vx_bool initVirtualArray(vx_enum item_type, vx_size capacity);
 
     /**
+     * @brief Add items to array
+     *
+     * @param count     number of items to add
+     * @param ptr       pointer to data
+     * @param stride    size of stride
+     * @return vx_status VX_SUCCESS if successful, any other value indicates failure.
+     * @ingroup group_int_array
+     */
+    vx_status addItems(vx_size count, const void *ptr, vx_size stride);
+
+    /**
+     * @brief Truncate array to new number of items
+     *
+     * @param new_num_items   new number of items
+     * @return vx_status  VX_SUCCESS if successful, any other value indicates failure.
+     * @ingroup group_int_array
+     */
+    vx_status truncate(vx_size new_num_items);
+
+    /**
+     * @brief Get item type of the array
+     *
+     * @return vx_enum The item type of the array.
+     * @ingroup group_int_array
+     */
+    vx_enum itemType() const;
+
+    /**
+     * @brief Get number of items in array
+     *
+     * @return vx_size The number of items in the array.
+     * @ingroup group_int_array
+     */
+    vx_size numItems() const;
+
+    /**
+     * @brief Get capacity of array
+     *
+     * @return vx_size The capacity of the array.
+     * @ingroup group_int_array
+     */
+    vx_size totalCapacity() const;
+
+    /**
+     * @brief Get item size in array
+     *
+     * @return vx_size  Item size in bytes
+     * @ingroup group_int_array
+     */
+    vx_size itemSize() const;
+
+    /**
+     * @brief Get total size of array
+     *
+     * @return vx_size   Total size in bytes
+     * @ingroup group_int_array
+     */
+    vx_size totalSize() const;
+
+    /**
+     * @brief Get offset value
+     *
+     * @return vx_uint32 Offset value
+     * @ingroup group_int_array
+     */
+    vx_uint32 offsetVal() const;
+
+    /**
      * @brief Access array range in object
      *
      * @param start     start index

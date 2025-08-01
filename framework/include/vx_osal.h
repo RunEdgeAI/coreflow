@@ -23,7 +23,6 @@
 /*!
  * \file
  * \brief The internal operating system abstraction layer.
- * \author Erik Rainey <erik.rainey@gmail.com>
  *
  * \defgroup group_int_osal Internal OSAL API
  * \ingroup group_internal

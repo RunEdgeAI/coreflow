@@ -23,7 +23,6 @@
 /*!
  * \file
  * \brief The internal meta format implementation
- * \author Erik Rainey <erik.rainey@gmail.com>
  *
  * \defgroup group_int_meta_format Internal Meta-Format API
  * \ingroup group_internal

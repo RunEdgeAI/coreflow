@@ -23,7 +23,6 @@
 /*!
  * \file
  * \brief The internal convolution implementation
- * \author Erik Rainey <erik.rainey@gmail.com>
  *
  * \defgroup group_int_convolution Internal Convolution API
  * \ingroup group_internal
@@ -46,6 +45,59 @@ public:
     Convolution(vx_context context, vx_reference scope);
 
     /**
+     * @brief Get the scale factor of the convolution
+     *
+     * @return vx_uint32 The scale factor
+     * @ingroup group_int_convolution
+     */
+    vx_uint32 scaleFactor() const;
+
+    /**
+     * @brief Get the size of the convolution in bytes
+     *
+     * @return vx_size The size in bytes
+     * @ingroup group_int_convolution
+     */
+    vx_size size() const;
+
+    /**
+     * @brief Set the scale factor of the convolution
+     *
+     * @param value The scale factor to set
+     * @ingroup group_int_convolution
+     */
+    void setScale(vx_uint32 value);
+
+    /**
+     * @brief Read the coefficients of the convolution
+     *
+     * @param array      The array to read coefficients into
+     * @return vx_status The status of the operation
+     * @ingroup group_int_convolution
+     */
+    vx_status readCoefficients(vx_int16 *array);
+
+    /**
+     * @brief Write the coefficients of the convolution
+     *
+     * @param array      The array containing coefficients to write
+     * @return vx_status The status of the operation
+     * @ingroup group_int_convolution
+     */
+    vx_status writeCoefficients(const vx_int16 *array);
+
+    /**
+     * @brief Copy the coefficients to a specified memory location
+     *
+     * @param ptr        Pointer to the memory location
+     * @param usage      Memory usage type
+     * @param mem_type   Memory type (e.g., host, device)
+     * @return vx_status The status of the operation
+     * @ingroup group_int_convolution
+     */
+    vx_status copyCoefficients(void *ptr, vx_enum usage, vx_enum mem_type);
+
+    /**
      * @brief Destroy the Convolution object
      * @ingroup group_int_convolution
      */
@@ -56,7 +108,9 @@ public:
      */
     void destruct() override final;
 
-    /*! \brief The Scale Factor. */
+    /*! \brief The Scale Factor.
+     * \ingroup group_int_convolution
+     */
     vx_uint32 scale;
 };
 

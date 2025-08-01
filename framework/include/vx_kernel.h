@@ -16,13 +16,16 @@
 #ifndef VX_KERNEL_H
 #define VX_KERNEL_H
 
+#ifdef OPENVX_KHR_TILING
+#include <VX/vx_khr_tiling.h>
+#endif /* OPENVX_KHR_TILING */
+
 #include "vx_internal.h"
 #include "vx_reference.h"
 
 /*!
  * \file
  * \brief The internal kernel implementation.
- * \author Erik Rainey <erik.rainey@gmail.com>
  *
  * \defgroup group_int_kernel Internal Kernel API
  * \ingroup group_internal
@@ -69,6 +72,150 @@ public:
      * @ingroup group_int_kernel
      */
     ~Kernel() = default;
+
+    /**
+     * @brief Get the number of kernel parameters
+     *
+     * @return vx_uint32 The number of kernel parameters.
+     * @ingroup group_int_kernel
+     */
+    vx_uint32 numParameters() const;
+
+    /**
+     * @brief Get the kernel name
+     *
+     * @return const vx_char* The kernel name.
+     * @ingroup group_int_kernel
+     */
+    const vx_char *kernelName() const;
+
+    /**
+     * @brief Get the kernel enuemration
+     *
+     * @return vx_enum The kernel enuemration.
+     * @ingroup group_int_kernel
+     */
+    vx_enum kernelEnum() const;
+
+    /**
+     * @brief Get the local data size
+     *
+     * @return vx_size The local data size.
+     * @ingroup group_int_kernel
+     */
+    vx_size localDataSize() const;
+
+#ifdef OPENVX_KHR_TILING
+    /**
+     * @brief Get the input neighborhood size
+     *
+     * @return vx_neighborhood_size_t The input neighborhood size.
+     * @ingroup group_int_kernel
+     */
+    vx_neighborhood_size_t inputNeighborhood() const;
+
+    /**
+     * @brief Get the output tile block size
+     *
+     * @return vx_tile_block_size_t The output tile block size.
+     * @ingroup group_int_kernel
+     */
+    vx_tile_block_size_t outputTileBlockSize() const;
+
+    /**
+     * @brief Get the kernel border object
+     *
+     * @return vx_border_t The kernel border object.
+     * @ingroup group_int_kernel
+     */
+    vx_border_t border() const;
+#endif /* OPENVX_KHR_TILING */
+
+#ifdef OPENVX_USE_OPENCL_INTEROP
+    /**
+     * @brief Is Opencl in use
+     *
+     * @return vx_bool vx_true_e if used, otherwise vx_false_e.
+     * @ingroup group_int_kernel
+     */
+    vx_bool useOpencl() const;
+#endif /* OPENVX_USE_OPENCL_INTEROP */
+
+    /**
+     * @brief Get the pipeup input depth
+     *
+     * @return vx_uint32 The pipeup input depth.
+     * @ingroup group_int_kernel
+     */
+    vx_uint32 pipeupInputDepth() const;
+
+    /**
+     * @brief Get the pipeup output depth
+     *
+     * @return vx_uint32 The pipeup output depth.
+     * @ingroup group_int_kernel
+     */
+    vx_uint32 pipeupOutputDepth() const;
+
+    /**
+     * @brief Set the local data size
+     *
+     * @param size The local data size.
+     * @ingroup group_int_kernel
+     */
+    void setLocalDataSize(vx_size size);
+
+#ifdef OPENVX_KHR_TILING
+    /**
+     * @brief Set the input neighborhood size
+     *
+     * @param input The input neighborhood size.
+     * @ingroup group_int_kernel
+     */
+    void setInputNeighborhood(vx_neighborhood_size_t input);
+
+    /**
+     * @brief Set the output tile block size
+     *
+     * @param tile_size The output tile block size.
+     * @ingroup group_int_kernel
+     */
+    void setOutputTileBlockSize(vx_tile_block_size_t tile_size);
+
+    /**
+     * @brief Set the kernel border object
+     *
+     * @param border The kernel border object.
+     * @ingroup group_int_kernel
+     */
+    void setBorder(vx_border_t border);
+#endif /* OPENVX_KHR_TILING */
+
+#ifdef OPENVX_USE_OPENCL_INTEROP
+    /**
+     * @brief Set Opencl access
+     *
+     * @param flag Opencl access flag.
+     * @ingroup group_int_kernel
+     */
+    void setOpenclAccess(vx_bool flag);
+#endif /* OPENVX_USE_OPENCL_INTEROP */
+
+    /**
+     * @brief Set the pipeup input depth
+     *
+     * @param depth The pipeup input depth.
+     * @ingroup group_int_kernel
+     */
+    void setInputDepth(vx_uint32 depth);
+
+    /**
+     * @brief Set the pipeup output depth
+     *
+     * @param depth The pipeup output depth.
+     * @ingroup group_int_kernel
+     */
+    void setOutputDepth(vx_uint32 depth);
 
     /*! \brief Determines if a kernel is unique in the system.
      * \param kernel The handle to the kernel.
@@ -129,7 +276,135 @@ public:
                            vx_kernel_deinitialize_f deinitialize,
                            vx_bool valid_rect_reset);
 
+#ifdef OPENVX_KHR_TILING
+    /**
+     * @brief Allows a user to add a tile-able kernel to the framework.
+     *
+     * @param [in] context The handle to the implementation context.
+     * @param [in] name The string to be used to match the kernel.
+     * @param [in] enumeration The enumerated value of the kernel to be used by clients.
+     * @param [in] flexible_func_ptr The process-local flexible function pointer to be invoked.
+     * @param [in] fast_func_ptr The process-local fast function pointer to be invoked.
+     * @param [in] num_params The number of parameters for this kernel.
+     * @param [in] input The pointer to a function which will validate the
+     * input parameters to this kernel.
+     * @param [in] output The pointer to a function which will validate the
+     * output parameters to this kernel.
+     * @note Tiling Kernels do not have access to any of the normal node attributes listed
+     * in @ref vx_node_attribute_e.
+     * @post Call <tt>\ref addParameter</tt> for as many parameters as the function has,
+     * then call <tt>\ref finalize</tt>.
+     * @return vx_kernel Nullptr indicates that an error occurred when adding the kernel.
+     * Note that the fast or flexible formula, but not both, can be NULL.
+     * @ingroup group_int_kernel
+     */
+    static vx_kernel addTilingKernel(vx_context context, vx_char name[VX_MAX_KERNEL_NAME],
+                                     vx_enum enumeration, vx_tiling_kernel_f flexible_func_ptr,
+                                     vx_tiling_kernel_f fast_func_ptr, vx_uint32 num_params,
+                                     vx_kernel_input_validate_f input,
+                                     vx_kernel_output_validate_f output);
+#endif /* OPENVX_KHR_TILING */
+
+    /**
+     * @brief This API is called after all parameters have been added to the
+     * kernel and the kernel is \e ready to be used. Notice that the reference to the kernel created
+     * by addKernel is still valid after the call to finalize.
+     * If an error occurs, the kernel is not available for usage by the clients of the framework.
+     * Typically this is due to a mismatch between the number of parameters requested and given.
+     *
+     * @return vx_status VX_SUCCESS if successful, any other value indicates failure.
+     * @ingroup group_int_kernel
+     */
+    vx_status finalize();
+
+    /**
+     * @brief Allows users to set the signatures of the custom kernel.
+     *
+     * @param [in] index The index of the parameter to add.
+     * @param [in] dir The direction of the parameter. This must be either <tt>\ref VX_INPUT</tt> or
+     * <tt>\ref VX_OUTPUT</tt>.
+     * @param [in] data_type The type of parameter. This must be a value from <tt>\ref
+     * vx_type_e</tt>.
+     * @param [in] state The state of the parameter (required or not). This must be a value from
+     * <tt>\ref vx_parameter_state_e</tt>.
+     *
+     * @return vx_status VX_SUCCESS if successful, any other value indicates failure.
+     * @ingroup group_int_kernel
+     */
+    vx_status addParameter(vx_uint32 index, vx_enum dir, vx_enum data_type, vx_enum state);
+
+    /**
+     * @brief Removes a custom kernel from its context and releases it.
+     *
+     * @param [in] kernel The reference to the kernel to remove. Returned from <tt>\ref
+     * addKernel</tt>.
+     * @note Any kernel enumerated in the base standard
+     * cannot be removed; only kernels added through <tt>\ref vxAddUserKernel</tt> can
+     * be removed.
+     *
+     * @return vx_status VX_SUCCESS if successful, any other value indicates failure.
+     * @ingroup group_int_kernel
+     */
+    static vx_status removeKernel(vx_kernel kernel);
+
+    /**
+     * @brief Loads a library of kernels, called module, into the context.
+     *
+     * @note When all references to loaded kernels are released, the module
+     * may be automatically unloaded.
+     * @param [in] context The reference to the context the kernels must be added to.
+     * @param [in] module The short name of the module to load. On systems where
+     * there are specific naming conventions for modules, the name passed
+     * should ignore such conventions. For example: \c libxyz.so should be
+     * passed as just \c xyz and the implementation will <i>do the right thing</i> that
+     * the platform requires.
+     *
+     * @return vx_status VX_SUCCESS if successful, any other value indicates failure.
+     * @ingroup group_int_kernel
+     */
+    static vx_status loadKernels(vx_context context, const vx_char *name);
+
+    /**
+     * @brief Unloads all kernels from the context that had been loaded from
+     * the module using the \ref loadKernels function.
+     *
+     * @param [in] context The reference to the context the kernels must be removed from.
+     * @param [in] module The short name of the module to unload. On systems where
+     * there are specific naming conventions for modules, the name passed
+     * should ignore such conventions. For example: \c libxyz.so should be
+     * passed as just \c xyz and the implementation will <i>do the right thing</i>
+     * that the platform requires.
+     * @note This API uses the system pre-defined paths for modules.
+     *
+     * @return vx_status VX_SUCCESS if successful, any other value indicates failure.
+     * @ingroup group_int_kernel
+     */
+    static vx_status unloadKernels(vx_context context, const vx_char *name);
+
+    /**
+     * @brief Get the Kernel By Name
+     *
+     * @param [in] context The reference to the implementation context.
+     * @param [in] string  The string of the name of the kernel to get.
+     * @return vx_kernel   A <tt>\ref vx_kernel</tt> reference. Any possible errors preventing a
+     * successful completion of the function should be checked using <tt>\ref Error::getStatus</tt>.
+     * @ingroup group_int_kernel
+     */
+    static vx_kernel getKernelByName(vx_context context, const vx_char string[VX_MAX_KERNEL_NAME]);
+
+    /**
+     * @brief Get the Kernel By Enum
+     *
+     * @param context    The reference to the implementation context.
+     * @param kernelenum A value from a vendor or client-defined value.
+     * @return vx_kernel A <tt>\ref vx_kernel</tt> reference. Any possible errors preventing a
+     * successful completion of the function should be checked using <tt>\ref Error::getStatus</tt>.
+     * @ingroup group_int_kernel
+     */
+    static vx_kernel getKernelByEnum(vx_context context, vx_enum kernelenum);
+
     /*! \brief Used to deinitialize a kernel object in a target kernel list.
+     * \return vx_status VX_SUCCESS if successful, any other value indicates failure.
      * \ingroup group_int_kernel
      */
     vx_status deinitializeKernel();

@@ -104,22 +104,6 @@ VX_API_ENTRY vx_lut VX_API_CALL vxCreateVirtualLUT(vx_graph graph, vx_enum data_
     return (vx_lut)lut;
 }
 
-VX_API_ENTRY vx_status VX_API_CALL vxReleaseLUT(vx_lut* l)
-{
-    vx_status status = VX_FAILURE;
-
-    if (nullptr != l)
-    {
-        vx_lut lut = *l;
-        if (vx_true_e == Reference::isValidReference(lut, VX_TYPE_LUT))
-        {
-            status = Reference::releaseReference((vx_reference*)l, VX_TYPE_LUT, VX_EXTERNAL, nullptr);
-        }
-    }
-
-    return status;
-}
-
 VX_API_ENTRY vx_status VX_API_CALL vxQueryLUT(vx_lut lut, vx_enum attribute, void *ptr, vx_size size)
 {
     vx_status status = VX_SUCCESS;
@@ -132,7 +116,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryLUT(vx_lut lut, vx_enum attribute, voi
         case VX_LUT_TYPE:
             if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
             {
-                *(vx_enum *)ptr = lut->item_type;
+                *(vx_enum *)ptr = lut->itemType();
             }
             else
             {
@@ -142,7 +126,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryLUT(vx_lut lut, vx_enum attribute, voi
         case VX_LUT_COUNT:
             if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
             {
-                *(vx_size *)ptr = lut->num_items;
+                *(vx_size *)ptr = lut->numItems();
             }
             else
             {
@@ -152,7 +136,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryLUT(vx_lut lut, vx_enum attribute, voi
         case VX_LUT_SIZE:
             if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
             {
-                *(vx_size *)ptr = lut->num_items * lut->item_size;
+                *(vx_size *)ptr = lut->totalSize();
             }
             else
             {
@@ -162,7 +146,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryLUT(vx_lut lut, vx_enum attribute, voi
         case VX_LUT_OFFSET:
             if (VX_CHECK_PARAM(ptr, size, vx_uint32, 0x3))
             {
-                *(vx_uint32 *)ptr = lut->offset;
+                *(vx_uint32 *)ptr = lut->offsetVal();
             }
             else
             {
@@ -211,45 +195,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyLUT(vx_lut lut, void *user_ptr, vx_enum
     if (Reference::isValidReference(reinterpret_cast<vx_reference>(lut), VX_TYPE_LUT) == vx_true_e)
     {
         vx_size stride = lut->item_size;
-#ifdef OPENVX_USE_OPENCL_INTEROP
-        void * user_ptr_given = user_ptr;
-        vx_enum user_mem_type_given = user_mem_type;
-        if (user_mem_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
-        {
-            /* get ptr from OpenCL buffer for HOST */
-            size_t size = 0;
-            cl_mem opencl_buf = (cl_mem)user_ptr;
-            cl_int cerr = clGetMemObjectInfo(opencl_buf, CL_MEM_SIZE, sizeof(size_t), &size, nullptr);
-            VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyLUT: clGetMemObjectInfo(%p) => (%d)\n",
-                opencl_buf, cerr);
-            if (cerr != CL_SUCCESS)
-            {
-                return VX_ERROR_INVALID_PARAMETERS;
-            }
-            user_ptr = clEnqueueMapBuffer(lut->context->opencl_command_queue,
-                opencl_buf, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, size,
-                0, nullptr, nullptr, &cerr);
-            VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyLUT: clEnqueueMapBuffer(%p,%d) => %p (%d)\n",
-                opencl_buf, (int)size, user_ptr, cerr);
-            if (cerr != CL_SUCCESS)
-            {
-                return VX_ERROR_INVALID_PARAMETERS;
-            }
-            user_mem_type = VX_MEMORY_TYPE_HOST;
-        }
-#endif
-
         status = lut->copyArrayRange(0, lut->num_items, stride, user_ptr, usage, user_mem_type);
-
-#ifdef OPENVX_USE_OPENCL_INTEROP
-        if (user_mem_type_given == VX_MEMORY_TYPE_OPENCL_BUFFER)
-        {
-            clEnqueueUnmapMemObject(lut->context->opencl_command_queue,
-                (cl_mem)user_ptr_given, user_ptr, 0, nullptr, nullptr);
-            clFinish(lut->context->opencl_command_queue);
-        }
-#endif
-
     }
     else
     {
@@ -264,41 +210,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapLUT(vx_lut lut, vx_map_id *map_id, void 
 
     if (Reference::isValidReference(reinterpret_cast<vx_reference>(lut), VX_TYPE_LUT) == vx_true_e)
     {
-#ifdef OPENVX_USE_OPENCL_INTEROP
-         vx_enum mem_type_requested = mem_type;
-         if (mem_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
-         {
-             mem_type = VX_MEMORY_TYPE_HOST;
-         }
-#endif
-
         vx_size stride = lut->item_size;
-        status = lut->mapArrayRange(0, lut->num_items, map_id, &stride, ptr, usage, mem_type, flags);
-
-#ifdef OPENVX_USE_OPENCL_INTEROP
-        vx_size size = lut->num_items * stride;
-        if ((status == VX_SUCCESS) && lut->context->opencl_context &&
-            (mem_type_requested == VX_MEMORY_TYPE_OPENCL_BUFFER) &&
-            (size > 0) && ptr && *ptr)
-        {
-            /* create OpenCL buffer using the host allocated pointer */
-            cl_int cerr = 0;
-            cl_mem opencl_buf = clCreateBuffer(lut->context->opencl_context,
-                CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-                size, *ptr, &cerr);
-            VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxMapLUT: clCreateBuffer(%u) => %p (%d)\n",
-                (vx_uint32)size, opencl_buf, cerr);
-            if (cerr == CL_SUCCESS)
-            {
-                lut->context->memory_maps[*map_id].opencl_buf = opencl_buf;
-                *ptr = opencl_buf;
-            }
-            else
-            {
-                status = VX_FAILURE;
-            }
-        }
-#endif
+        status =
+            lut->mapArrayRange(0, lut->num_items, map_id, &stride, ptr, usage, mem_type, flags);
     }
     else
     {
@@ -313,27 +227,28 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapLUT(vx_lut lut, vx_map_id map_id)
 
     if (Reference::isValidReference(reinterpret_cast<vx_reference>(lut), VX_TYPE_LUT) == vx_true_e)
     {
-#ifdef OPENVX_USE_OPENCL_INTEROP
-        if (lut->context->opencl_context &&
-            lut->context->memory_maps[map_id].opencl_buf &&
-            lut->context->memory_maps[map_id].ptr)
-        {
-            clEnqueueUnmapMemObject(lut->context->opencl_command_queue,
-                lut->context->memory_maps[map_id].opencl_buf,
-                lut->context->memory_maps[map_id].ptr, 0, nullptr, nullptr);
-            clFinish(lut->context->opencl_command_queue);
-            cl_int cerr = clReleaseMemObject(lut->context->memory_maps[map_id].opencl_buf);
-            VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxUnmapLUT: clReleaseMemObject(%p) => (%d)\n",
-                lut->context->memory_maps[map_id].opencl_buf, cerr);
-            lut->context->memory_maps[map_id].opencl_buf = nullptr;
-        }
-#endif
-
         status = lut->unmapArrayRange(map_id);
     }
     else
     {
         VX_PRINT(VX_ZONE_ERROR, "Not a valid object!\n");
     }
+    return status;
+}
+
+VX_API_ENTRY vx_status VX_API_CALL vxReleaseLUT(vx_lut *l)
+{
+    vx_status status = VX_FAILURE;
+
+    if (nullptr != l)
+    {
+        vx_lut lut = *l;
+        if (vx_true_e == Reference::isValidReference(lut, VX_TYPE_LUT))
+        {
+            status =
+                Reference::releaseReference((vx_reference *)l, VX_TYPE_LUT, VX_EXTERNAL, nullptr);
+        }
+    }
+
     return status;
 }

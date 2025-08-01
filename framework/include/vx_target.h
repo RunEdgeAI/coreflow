@@ -22,7 +22,6 @@
 /*!
  * \file
  * \brief The internal target implementation.
- * \author Erik Rainey <erik.rainey@gmail.com>
  * \defgroup group_int_target Internal Target API
  * \ingroup group_internal
  * \brief The Internal Target API.

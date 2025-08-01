@@ -21,11 +21,43 @@
 /*!
  * \file
  * \brief The internal log implementation
- * \author Erik Rainey <erik.rainey@gmail.com>
  *
  * \defgroup group_int_log Internal Log API
- * \ingroup group_internal
  * \brief The Internal Log API
+ * \ingroup group_internal
  */
 
- #endif /* VX_LOG_H */
+/**
+ * @brief Logger utility class that wraps spdlog functionality
+ * @ingroup group_int_log
+ */
+class Logger
+{
+public:
+    /**
+     * @brief Registers a callback facility to the OpenVX implementation to receive error logs.
+     *
+     * @param [in] context The overall context to OpenVX.
+     * @param [in] callback The callback function. If NULL, the previous callback is removed.
+     * @param [in] reentrant If reentrancy flag is <tt>\ref vx_true_e</tt>, then the callback may be
+     * entered from multiple simultaneous tasks or threads (if the host OS supports this).
+     * @ingroup group_int_log
+     */
+    static void registerLogCallback(vx_context context, vx_log_callback_f callback, vx_bool reentrant);
+
+    /**
+     * @brief Adds a line to the log.
+     *
+     * @param [in] ref The reference to add the log entry against. Some valid value must be
+     * provided.
+     * @param [in] status The status code. <tt>\ref VX_SUCCESS</tt> status entries are ignored and
+     * not added.
+     * @param [in] message The human readable message to add to the log.
+     * @param [in] ap a list of variable arguments to the message.
+     * @note Messages may not exceed <tt>\ref VX_MAX_LOG_MESSAGE_LEN</tt> bytes and will be
+     * truncated in the log if they exceed this limit.
+     * @ingroup group_int_log
+     */
+    static void addLogEntry(vx_reference ref, vx_status status, const char *message, va_list ap);
+};
+#endif /* VX_LOG_H */

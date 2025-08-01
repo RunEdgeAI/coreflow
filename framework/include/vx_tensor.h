@@ -112,6 +112,90 @@ public:
         vx_size * tensor_pos, vx_size * patch_pos);
 
     /**
+     * @brief Get the dimensions of the tensor
+     * @return const vx_size* The dimensions of the tensor
+     * @ingroup group_int_tensor
+     */
+    const vx_size *dims() const;
+
+    /**
+     * @brief Get the number of dimensions in the tensor
+     * @return vx_size The number of dimensions
+     * @ingroup group_int_tensor
+     */
+    vx_size numDims() const;
+
+    /**
+     * @brief Get the data type of the tensor
+     * @return vx_enum The data type of the tensor
+     * @ingroup group_int_tensor
+     */
+    vx_enum dataType() const;
+
+    /**
+     * @brief Get the fixed point position of the tensor
+     * @return vx_int8 The fixed point position of the tensor
+     * @ingroup group_int_tensor
+     */
+    vx_int8 fixedPointPosition() const;
+
+    /**
+     * @brief Get the strides of the tensor
+     * @return const vx_size* The strides of the tensor
+     * @ingroup group_int_tensor
+     */
+    const vx_size *strides() const;
+
+    /**
+     * @brief Get the size of the tensor in bytes
+     * @return vx_size The size of the tensor in bytes
+     * @ingroup group_int_tensor
+     */
+    vx_size size() const;
+
+    /**
+     * @brief Copy a patch of the tensor to/from user memory
+     *
+     * @param number_of_dimensions The number of dimensions in the patch
+     * @param view_start           The start indices of the patch
+     * @param view_end             The end indices of the patch
+     * @param user_stride          The stride in user memory
+     * @param user_ptr             The pointer to user memory
+     * @param usage                The usage of the memory (read/write)
+     * @param user_memory_type     The type of user memory (host, opencl, etc.)
+     * @return vx_status VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_tensor
+     */
+    vx_status copyPatch(vx_size number_of_dimensions, const vx_size *view_start,
+                        const vx_size *view_end, const vx_size *user_stride, void *user_ptr,
+                        vx_enum usage, vx_enum user_memory_type);
+
+    /**
+     * @brief Map a patch of the tensor to user memory
+     * @param number_of_dimensions The number of dimensions in the patch
+     * @param view_start           The start indices of the patch
+     * @param view_end             The end indices of the patch
+     * @param map_id               The map ID for the patch
+     * @param stride               The stride in the patch
+     * @param ptr                  The pointer to the mapped memory
+     * @param usage                The usage of the memory (read/write)
+     * @param mem_type             The type of memory (host, device, etc.)
+     * @return vx_status VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_tensor
+     */
+    vx_status mapPatch(vx_size number_of_dimensions, const vx_size *view_start,
+                       const vx_size *view_end, vx_map_id *map_id, vx_size *stride, void **ptr,
+                       vx_enum usage, vx_enum mem_type);
+
+    /**
+     * @brief Unmap a patch of the tensor
+     * @param map_id The map ID for the patch
+     * @return vx_status VX_SUCCESS on success, error code otherwise
+     * @ingroup group_int_tensor
+     */
+    vx_status unmapPatch(vx_map_id map_id);
+
+    /**
      * @brief Function to destroy tensor obj
      * @ingroup group_int_tensor
      */

@@ -20,8 +20,6 @@
 #include "vx_internal.h"
 #include "vx_context.h"
 
-const vx_char implementation[VX_MAX_IMPLEMENTATION_NAME] = "core.VX";
-
 vx_char targetModules[][VX_MAX_TARGET_NAME] = {
 #if defined(EXPERIMENTAL_USE_OPENCL)
     "openvx-opencl",
@@ -34,21 +32,6 @@ vx_char targetModules[][VX_MAX_TARGET_NAME] = {
 #endif
     "openvx-c_model", "openvx-onnxRT", "openvx-ai_server", "openvx-liteRT", "openvx-torch",
 };
-
-const vx_char extensions[] =
-#if defined(OPENVX_USE_TILING)
-    OPENVX_KHR_TILING" "
-#endif
-#if defined(OPENVX_USE_XML)
-    OPENVX_KHR_XML" "
-#endif
-#if defined(OPENVX_USE_S16)
-    "vx_khr_s16 "
-#endif
-#if defined(EXPERIMENTAL_USE_DOT)
-    OPENVX_KHR_DOT" "
-#endif
-    " ";
 
 static std::shared_ptr<Context> single_context = nullptr;
 static vx_sem_t context_lock;
@@ -102,7 +85,24 @@ Context::Context()
       event_queue(),
 #endif
       graph_queue(),
-      numGraphsQueued(0ul)
+      numGraphsQueued(0ul),
+      vendor_id((vx_uint16)VX_ID_EDGE_AI),
+      version_number((vx_uint16)VX_VERSION),
+      implementation("core.VX"),
+      extension(
+#if defined(OPENVX_USE_TILING)
+    OPENVX_KHR_TILING " "
+#endif
+#if defined(OPENVX_USE_XML)
+    OPENVX_KHR_XML " "
+#endif
+#if defined(OPENVX_USE_S16)
+    "vx_khr_s16 "
+#endif
+#if defined(EXPERIMENTAL_USE_DOT)
+    OPENVX_KHR_DOT " "
+#endif
+    " ")
 {
     imm_border.mode = VX_BORDER_UNDEFINED;
 }
@@ -121,6 +121,132 @@ Context::~Context()
             num_references--;
         }
     }
+}
+
+vx_uint16 Context::vendorId() const
+{
+    return vendor_id;
+}
+
+vx_uint16 Context::version() const
+{
+    return version_number;
+}
+
+vx_uint32 Context::numModules() const
+{
+    return num_modules;
+}
+
+vx_uint32 Context::numReferences() const
+{
+    return num_references;
+}
+
+const vx_char *Context::implName() const
+{
+    return implementation;
+}
+
+const vx_char* Context::extensions() const
+{
+    return extension;
+}
+
+vx_size Context::convolutionMaxDim() const
+{
+    return VX_INT_MAX_CONVOLUTION_DIM;
+}
+
+vx_size Context::nonLinearMaxDim() const
+{
+    return VX_INT_MAX_NONLINEAR_DIM;
+}
+
+vx_size Context::opticalFlowMaxWindowDim() const
+{
+    return VX_OPTICALFLOWPYRLK_MAX_DIM;
+}
+
+vx_border_t Context::immediateBorder() const
+{
+    return imm_border;
+}
+
+vx_enum Context::immediateBorderPolicy() const
+{
+    return imm_border_policy;
+}
+
+vx_uint32 Context::numUniqueKernels() const
+{
+    return num_unique_kernels;
+}
+
+vx_size Context::maxTensorDims() const
+{
+    return VX_MAX_TENSOR_DIMENSIONS;
+}
+
+std::vector<vx_kernel_info_t> Context::uniqueKernelTable()
+{
+    vx_uint32 k = 0u;
+    vx_uint32 t = 0u;
+    vx_uint32 k2 = 0u;
+    vx_uint32 numk = 0u;
+    std::vector<vx_kernel_info_t> table(VX_INT_MAX_KERNELS);
+
+    for (t = 0; t < this->num_targets; t++)
+    {
+        for (k = 0u; k < VX_INT_MAX_KERNELS; k++)
+        {
+            vx_bool found = vx_false_e;
+            VX_PRINT(VX_ZONE_INFO, "Checking uniqueness of %s (%d)\n",
+                     this->targets[t]->kernels[k]->name, this->targets[t]->kernels[k]->enumeration);
+            for (k2 = 0u; k2 < numk; k2++)
+            {
+                if (VX_KERNEL_INVALID < this->targets[t]->kernels[k]->enumeration &&
+                    VX_KERNEL_MAX_1_0 > this->targets[t]->kernels[k]->enumeration &&
+                    table[k2].enumeration == this->targets[t]->kernels[k]->enumeration)
+                {
+                    found = vx_true_e;
+                    break;
+                }
+            }
+
+            if (VX_KERNEL_INVALID < this->targets[t]->kernels[k]->enumeration &&
+                VX_KERNEL_MAX_1_0 > this->targets[t]->kernels[k]->enumeration &&
+                found == vx_false_e)
+            {
+                VX_PRINT(VX_ZONE_INFO, "Kernel %s is unique\n", this->targets[t]->kernels[k]->name);
+                table[numk].enumeration = this->targets[t]->kernels[k]->enumeration;
+                strncpy(table[numk].name, this->targets[t]->kernels[k]->name, VX_MAX_KERNEL_NAME);
+                numk++;
+            }
+        }
+    }
+
+    return table;
+}
+
+cl_context Context::clContext() const
+{
+    return opencl_context;
+}
+
+cl_command_queue Context::clCommandQueue() const
+{
+    return opencl_command_queue;
+}
+
+void Context::setLoggingEnabled(vx_bool flag)
+{
+    log_enabled = flag;
+}
+
+void Context::setPerfEnabled(vx_bool flag)
+{
+    perf_enabled = flag;
 }
 
 vx_bool Context::isValidContext(vx_context context)
@@ -715,6 +841,206 @@ vx_target* Context::findTargetByString(const char* target_string)
     return target;
 }
 
+vx_enum Context::registerUserStruct(vx_size size)
+{
+    vx_enum type = VX_TYPE_INVALID;
+    vx_uint32 i = 0;
+
+    if (size != 0)
+    {
+        for (i = 0; i < VX_INT_MAX_USER_STRUCTS; ++i)
+        {
+            if (user_structs[i].type == VX_TYPE_INVALID)
+            {
+                user_structs[i].type = VX_TYPE_USER_STRUCT_START + i;
+                user_structs[i].size = size;
+                user_structs[i].name[0] = 0;
+                type = user_structs[i].type;
+                break;
+            }
+        }
+    }
+
+    return type;
+}
+
+vx_enum Context::getUserStructByName(const vx_char *name)
+{
+    vx_enum type = VX_TYPE_INVALID;
+    vx_uint32 i = 0;
+    vx_size len = strlen(name);
+
+    if (VX_MAX_STRUCT_NAME < len)
+    {
+        len = VX_MAX_STRUCT_NAME;
+    }
+
+    if (len != 0)
+    {
+        for (i = 0; i < VX_INT_MAX_USER_STRUCTS; ++i)
+        {
+            if ((VX_TYPE_INVALID != user_structs[i].type) &&
+                (0 == strncmp(user_structs[i].name, name, len)))
+            {
+                type = user_structs[i].type;
+                break;
+            }
+        }
+    }
+
+    return type;
+}
+
+vx_status Context::getUserStructNameByEnum(vx_enum user_struct_type, vx_char *type_name,
+                                           vx_size name_size)
+{
+    vx_status status = VX_ERROR_INVALID_PARAMETERS;
+    vx_uint32 i = 0;
+
+    if (user_struct_type != VX_TYPE_INVALID)
+    {
+        for (i = 0; i < VX_INT_MAX_USER_STRUCTS; ++i)
+        {
+            if (user_struct_type == user_structs[i].type)
+            {
+                break;
+            }
+        }
+
+        if (i == VX_INT_MAX_USER_STRUCTS)
+        {
+            status = VX_FAILURE;
+        }
+        else
+        {
+            if (name_size < (strlen(user_structs[i].name) + 1))
+            {
+                status = VX_ERROR_NO_MEMORY;
+            }
+            else
+            {
+                memcpy(type_name, user_structs[i].name, strlen(user_structs[i].name) + 1);
+                status = VX_SUCCESS;
+            }
+        }
+    }
+
+    return status;
+}
+
+vx_status Context::getUserStructEnumByName(const vx_char *type_name, vx_enum *user_struct_type)
+{
+    vx_status status = VX_FAILURE;
+    vx_uint32 i = 0;
+    vx_size len = 0;
+
+    if (nullptr != type_name)
+    {
+        len = strlen(type_name);
+        if (VX_MAX_REFERENCE_NAME < len)
+        {
+            len = VX_MAX_REFERENCE_NAME;
+        }
+    }
+    if (len != 0)
+    {
+        for (i = 0; i < VX_INT_MAX_USER_STRUCTS; ++i)
+        {
+            if ((VX_TYPE_INVALID != user_structs[i].type) &&
+                (0 == strncmp(user_structs[i].name, type_name, len)))
+            {
+                *user_struct_type = user_structs[i].type;
+                status = VX_SUCCESS;
+                break;
+            }
+        }
+    }
+
+    return status;
+}
+
+vx_enum Context::registerUserStructWithName(vx_size size, const vx_char *type_name)
+{
+    vx_enum type = VX_TYPE_INVALID;
+    vx_uint32 i = 0;
+
+    if ((size != 0) && VX_TYPE_INVALID == getUserStructByName(type_name))
+    {
+        for (i = 0; i < VX_INT_MAX_USER_STRUCTS; ++i)
+        {
+            if (user_structs[i].type == VX_TYPE_INVALID)
+            {
+                user_structs[i].type = VX_TYPE_USER_STRUCT_START + i;
+                user_structs[i].size = size;
+                strncpy(user_structs[i].name, type_name, VX_MAX_REFERENCE_NAME - 1);
+                type = user_structs[i].type;
+                break;
+            }
+        }
+    }
+
+    return type;
+}
+
+vx_status Context::allocateKernelId(vx_enum *pKernelEnumId)
+{
+    vx_status status = VX_ERROR_NO_RESOURCES;
+    if (next_dynamic_user_kernel_id <= VX_KERNEL_MASK)
+    {
+        *pKernelEnumId = VX_KERNEL_BASE(VX_ID_USER, 0) + next_dynamic_user_kernel_id++;
+        status = VX_SUCCESS;
+    }
+    return status;
+}
+
+vx_status Context::allocateLibraryId(vx_enum *pLibraryId)
+{
+    vx_status status = VX_ERROR_NO_RESOURCES;
+    if (next_dynamic_user_library_id <= VX_LIBRARY(VX_LIBRARY_MASK))
+    {
+        *pLibraryId = next_dynamic_user_library_id++;
+        status = VX_SUCCESS;
+    }
+    return status;
+}
+
+vx_status Context::setImmediateModeTarget(vx_enum target_enum, const char *target_string)
+{
+    vx_status status = VX_FAILURE;
+    vx_target *target = nullptr;
+
+    switch (target_enum)
+    {
+        case VX_TARGET_ANY:
+            context->imm_target_enum = VX_TARGET_ANY;
+            memset(context->imm_target_string, 0, sizeof(context->imm_target_string));
+            status = VX_SUCCESS;
+            break;
+
+        case VX_TARGET_STRING:
+            target = context->findTargetByString(target_string);
+            if (target != nullptr) /* target was found */
+            {
+                context->imm_target_enum = VX_TARGET_STRING;
+                strncpy(context->imm_target_string, target_string,
+                        sizeof(context->imm_target_string));
+                context->imm_target_string[sizeof(context->imm_target_string) - 1] = '\0';
+                status = VX_SUCCESS;
+            }
+            else /* target was not found */
+            {
+                status = VX_ERROR_NOT_SUPPORTED;
+            }
+            break;
+
+        default:
+            status = VX_ERROR_NOT_SUPPORTED;
+            break;
+    }
+
+    return status;
+}
+
 /******************************************************************************/
 /* PUBLIC API */
 /******************************************************************************/
@@ -862,159 +1188,26 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContext(void)
     return context;
 }
 
-VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context* c)
-{
-    vx_status status = VX_SUCCESS;
-    vx_context context = (c?*c:0);
-    vx_uint32 r,m,a;
-    vx_uint32 t;
-
-    if (c) *c = 0;
-    Osal::semWait(&context_lock);
-    if (Context::isValidContext(context) == vx_true_e)
-    {
-        if (context->decrementReference(VX_EXTERNAL) == 0)
-        {
 #ifdef OPENVX_USE_OPENCL_INTEROP
-            if(context->opencl_command_queue)
-            {
-                clReleaseCommandQueue(context->opencl_command_queue);
-                context->opencl_command_queue = nullptr;
-            }
-            if(context->opencl_context)
-            {
-                clReleaseContext(context->opencl_context);
-                context->opencl_context = nullptr;
-            }
-#endif
-            Osal::destroyThreadpool(&context->workers);
-            context->proc.running = vx_false_e;
-            Osal::popQueue(&context->proc.input);
-            Osal::joinThread(context->proc.thread, nullptr);
-            Osal::deinitQueue(&context->proc.output);
-            Osal::deinitQueue(&context->proc.input);
-
-            /* Deregister any log callbacks if there is any registered */
-            vxRegisterLogCallback(context, nullptr, vx_false_e);
-
-            /*! \internal Garbage Collect All References */
-            /* Details:
-             *   1. This loop will warn of references which have not been released by the user.
-             *   2. It will close all internally opened error references.
-             *   3. It will close the external references, which in turn will internally
-             *      close any internally dependent references that they reference, assuming the
-             *      reference counting has been done properly in the framework.
-             *   4. This garbage collection must be done before the targets are released since some of
-             *      these external references may have internal references to target kernels.
-             */
-            for (r = 0; r < VX_INT_MAX_REF; r++)
-            {
-                vx_reference ref = context->reftable[r];
-
-                /* Warnings should only come when users have not released all external references */
-                if (ref && ref->external_count > 0)
-                {
-                    VX_PRINT(VX_ZONE_WARNING,"Stale reference " VX_FMT_REF " of type %s at external count %u, internal count %u\n",
-                             ref, vxGetObjectTypeName(ref->type), ref->external_count, ref->internal_count);
-                }
-
-                /* These were internally opened during creation, so should internally close ERRORs */
-                if (ref && ref->type == VX_TYPE_ERROR)
-                {
-                    Reference::releaseReference(&ref, ref->type, VX_INTERNAL, nullptr);
-                }
-
-                /* Warning above so user can fix release external objects, but close here anyway */
-                while (ref && ref->external_count > 1)
-                {
-                    ref->decrementReference(VX_EXTERNAL);
-                }
-                if (ref && ref->external_count > 0)
-                {
-                    Reference::releaseReference(&ref, ref->type, VX_EXTERNAL, nullptr);
-                }
-            }
-
-            for (m = 0; m < VX_INT_MAX_MODULES; m++)
-            {
-                Osal::semWait(&context->modules[m].lock);
-                if (context->modules[m].handle)
-                {
-                    Osal::unloadModule(context->modules[m].handle);
-                    memset(context->modules[m].name, 0, sizeof(context->modules[m].name));
-                    context->modules[m].handle = VX_MODULE_INIT;
-                }
-                Osal::semPost(&context->modules[m].lock);
-                Osal::destroySem(&context->modules[m].lock);
-            }
-
-            /* de-initialize and unload each target */
-            for (t = 0u; t < context->num_targets; t++)
-            {
-                /* if (context->targets[t]->enabled == vx_true_e) */
-                {
-                    context->targets[t]->funcs.deinit(context->targets[t]);
-                    context->targets[t]->enabled = vx_false_e;
-                    context->unloadTarget(t, vx_true_e);
-                }
-            }
-
-            /* Remove all outstanding accessors. */
-            for (a = 0; a < dimof(context->accessors); ++a)
-            {
-                if (context->accessors[a].used)
-                {
-                    context->removeAccessor(a);
-                }
-            }
-
-            /* Check for outstanding mappings */
-            for (a = 0; a < dimof(context->memory_maps); ++a)
-            {
-                if (context->memory_maps[a].used)
-                {
-                    VX_PRINT(VX_ZONE_ERROR, "Memory map %d not unmapped\n", a);
-                    context->memoryUnmap(a);
-                }
-            }
-
-            Osal::destroySem(&context->memory_maps_lock);
-
-            /* By now, all external and internal references should be removed */
-            for (r = 0; r < VX_INT_MAX_REF; r++)
-            {
-                if (context->reftable[r])
-                {
-                    VX_PRINT(VX_ZONE_ERROR, "Reference %p, type %x not removed [%d:%d]\n",
-                        context->reftable[r], context->reftable[r]->type,
-                        context->reftable[r]->internal_count, context->reftable[r]->external_count);
-                }
-            }
-
-            /*! \internal wipe away the context memory first */
-            /* Normally destroy sem is part of release reference, but can't for context */
-            Osal::destroySem(&context->lock);
-            Osal::destroySem(&global_lock);
-            Osal::semPost(&context_lock);
-            Osal::destroySem(&context_lock);
-            single_context.reset();
-            single_context = nullptr;
-
-            return status;
-        }
-        else
-        {
-            VX_PRINT(VX_ZONE_WARNING, "Context still has %u holders\n", context->totalReferenceCount());
-        }
-    }
-    else
+VX_API_ENTRY vx_context VX_API_CALL vxCreateContextFromCL(cl_context opencl_context,
+                                                          cl_command_queue opencl_command_queue)
+{
+    vx_context context = vxCreateContext();
+    if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
     {
-        status = VX_ERROR_INVALID_REFERENCE;
+        cl_int err1 = clRetainContext(opencl_context);
+        cl_int err2 = clRetainCommandQueue(opencl_command_queue);
+        if ((err1 != CL_SUCCESS) || (err2 != CL_SUCCESS))
+        {
+            vxReleaseContext(&context);
+            return nullptr;
+        }
+        context->opencl_context = opencl_context;
+        context->opencl_command_queue = opencl_command_queue;
     }
-    Osal::semPost(&context_lock);
-
-    return status;
+    return context;
 }
+#endif /* OPENVX_USE_OPENCL_INTEROP */
 
 VX_API_ENTRY vx_context VX_API_CALL vxGetContext(vx_reference reference)
 {
@@ -1087,7 +1280,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryContext(vx_context context, vx_enum at
             case VX_CONTEXT_VENDOR_ID:
                 if (VX_CHECK_PARAM(ptr, size, vx_uint16, 0x1))
                 {
-                    *(vx_uint16 *)ptr = VX_ID_KHRONOS;
+                    *(vx_uint16 *)ptr = context->vendorId();
                 }
                 else
                 {
@@ -1097,7 +1290,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryContext(vx_context context, vx_enum at
             case VX_CONTEXT_VERSION:
                 if (VX_CHECK_PARAM(ptr, size, vx_uint16, 0x1))
                 {
-                    *(vx_uint16 *)ptr = (vx_uint16)VX_VERSION;
+                    *(vx_uint16 *)ptr = context->version();
                 }
                 else
                 {
@@ -1107,7 +1300,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryContext(vx_context context, vx_enum at
             case VX_CONTEXT_MODULES:
                 if (VX_CHECK_PARAM(ptr, size, vx_uint32, 0x3))
                 {
-                    *(vx_uint32 *)ptr = context->num_modules;
+                    *(vx_uint32 *)ptr = context->numModules();
                 }
                 else
                 {
@@ -1117,7 +1310,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryContext(vx_context context, vx_enum at
             case VX_CONTEXT_REFERENCES:
                 if (VX_CHECK_PARAM(ptr, size, vx_uint32, 0x3))
                 {
-                    *(vx_uint32 *)ptr = context->num_references;
+                    *(vx_uint32 *)ptr = context->numReferences();
                 }
                 else
                 {
@@ -1127,7 +1320,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryContext(vx_context context, vx_enum at
             case VX_CONTEXT_IMPLEMENTATION:
                 if (size <= VX_MAX_IMPLEMENTATION_NAME && ptr)
                 {
-                    strncpy(reinterpret_cast<char*>(ptr), implementation, VX_MAX_IMPLEMENTATION_NAME);
+                    strncpy(reinterpret_cast<char *>(ptr), context->implName(),
+                            VX_MAX_IMPLEMENTATION_NAME);
                 }
                 else
                 {
@@ -1137,7 +1331,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryContext(vx_context context, vx_enum at
             case VX_CONTEXT_EXTENSIONS_SIZE:
                 if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
                 {
-                    *(vx_size *)ptr = sizeof(extensions);
+                    *(vx_size *)ptr = strlen(context->extensions());
                 }
                 else
                 {
@@ -1145,9 +1339,9 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryContext(vx_context context, vx_enum at
                 }
                 break;
             case VX_CONTEXT_EXTENSIONS:
-                if (size <= sizeof(extensions) && ptr)
+                if (size <= strlen(context->extensions()) && ptr)
                 {
-                    strncpy(reinterpret_cast<char*>(ptr), extensions, size);
+                    strncpy(reinterpret_cast<char *>(ptr), context->extensions(), size);
                 }
                 else
                 {
@@ -1157,7 +1351,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryContext(vx_context context, vx_enum at
             case VX_CONTEXT_CONVOLUTION_MAX_DIMENSION:
                 if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
                 {
-                    *(vx_size *)ptr = VX_INT_MAX_CONVOLUTION_DIM;
+                    *(vx_size *)ptr = context->convolutionMaxDim();
                 }
                 else
                 {
@@ -1167,7 +1361,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryContext(vx_context context, vx_enum at
             case VX_CONTEXT_NONLINEAR_MAX_DIMENSION:
                 if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
                 {
-                    *(vx_size *)ptr = VX_INT_MAX_NONLINEAR_DIM;
+                    *(vx_size *)ptr = context->nonLinearMaxDim();
                 }
                 else
                 {
@@ -1177,7 +1371,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryContext(vx_context context, vx_enum at
             case VX_CONTEXT_OPTICAL_FLOW_MAX_WINDOW_DIMENSION:
                 if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
                 {
-                    *(vx_size *)ptr = VX_OPTICALFLOWPYRLK_MAX_DIM;
+                    *(vx_size *)ptr = context->opticalFlowMaxWindowDim();
                 }
                 else
                 {
@@ -1187,7 +1381,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryContext(vx_context context, vx_enum at
             case VX_CONTEXT_IMMEDIATE_BORDER:
                 if (VX_CHECK_PARAM(ptr, size, vx_border_t, 0x3))
                 {
-                    *(vx_border_t *)ptr = context->imm_border;
+                    *(vx_border_t *)ptr = context->immediateBorder();
                 }
                 else
                 {
@@ -1197,7 +1391,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryContext(vx_context context, vx_enum at
             case VX_CONTEXT_IMMEDIATE_BORDER_POLICY:
                 if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
                 {
-                    *(vx_enum *)ptr = context->imm_border_policy;
+                    *(vx_enum *)ptr = context->immediateBorderPolicy();
                 }
                 else
                 {
@@ -1207,7 +1401,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryContext(vx_context context, vx_enum at
             case VX_CONTEXT_UNIQUE_KERNELS:
                 if (VX_CHECK_PARAM(ptr, size, vx_uint32, 0x3))
                 {
-                    *(vx_uint32 *)ptr = context->num_unique_kernels;
+                    *(vx_uint32 *)ptr = context->numUniqueKernels();
                 }
                 else
                 {
@@ -1217,7 +1411,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryContext(vx_context context, vx_enum at
             case VX_CONTEXT_MAX_TENSOR_DIMS:
                 if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
                 {
-                    *(vx_size *)ptr = VX_MAX_TENSOR_DIMENSIONS;
+                    *(vx_size *)ptr = context->maxTensorDims();
                 }
                 else
                 {
@@ -1228,41 +1422,11 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryContext(vx_context context, vx_enum at
                 if ((size == (context->num_unique_kernels * sizeof(vx_kernel_info_t))) &&
                     (ptr != nullptr))
                 {
-                    vx_uint32 k = 0u;
-                    vx_uint32 t = 0u;
-                    vx_uint32 k2 = 0u;
-                    vx_uint32 numk = 0u;
-                    vx_kernel_info_t* table = (vx_kernel_info_t*)ptr;
-
-                    for (t = 0; t < context->num_targets; t++)
-                    {
-                        for (k = 0u; k < VX_INT_MAX_KERNELS; k++)
-                        {
-                            vx_bool found = vx_false_e;
-                            VX_PRINT(VX_ZONE_INFO, "Checking uniqueness of %s (%d)\n", context->targets[t]->kernels[k]->name, context->targets[t]->kernels[k]->enumeration);
-                            for (k2 = 0u; k2 < numk; k2++)
-                            {
-                                if (VX_KERNEL_INVALID < context->targets[t]->kernels[k]->enumeration &&
-                                    VX_KERNEL_MAX_1_0 > context->targets[t]->kernels[k]->enumeration &&
-                                    table[k2].enumeration == context->targets[t]->kernels[k]->enumeration)
-                                {
-                                    found = vx_true_e;
-                                    break;
-                                }
-                            }
-
-                            if (VX_KERNEL_INVALID < context->targets[t]->kernels[k]->enumeration &&
-                                VX_KERNEL_MAX_1_0 > context->targets[t]->kernels[k]->enumeration &&
-                                found == vx_false_e)
-                            {
-                                VX_PRINT(VX_ZONE_INFO, "Kernel %s is unique\n", context->targets[t]->kernels[k]->name);
-                                table[numk].enumeration = context->targets[t]->kernels[k]->enumeration;
-                                strncpy(table[numk].name, context->targets[t]->kernels[k]->name, VX_MAX_KERNEL_NAME);
-                                numk++;
-                            }
-                        }
-                    }
-                } else {
+                    std::vector<vx_kernel_info_t> table = context->uniqueKernelTable();
+                    memcpy((vx_kernel_info_t *)ptr, table.data(), size);
+                }
+                else
+                {
                     status = VX_ERROR_INVALID_PARAMETERS;
                 }
                 break;
@@ -1270,7 +1434,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryContext(vx_context context, vx_enum at
             case VX_CONTEXT_CL_CONTEXT:
                 if (VX_CHECK_PARAM(ptr, size, cl_context, 0x3))
                 {
-                    *(cl_context *)ptr = context->opencl_context;
+                    *(cl_context *)ptr = context->clContext();
                 }
                 else
                 {
@@ -1280,7 +1444,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryContext(vx_context context, vx_enum at
             case VX_CONTEXT_CL_COMMAND_QUEUE:
                 if (VX_CHECK_PARAM(ptr, size, cl_command_queue, 0x3))
                 {
-                    *(cl_command_queue  *)ptr = context->opencl_command_queue;
+                    *(cl_command_queue *)ptr = context->clCommandQueue();
                 }
                 else
                 {
@@ -1348,15 +1512,15 @@ VX_API_ENTRY vx_status VX_API_CALL vxDirective(vx_reference reference, vx_enum d
     switch (directive)
     {
         case VX_DIRECTIVE_DISABLE_LOGGING:
-            context->log_enabled = vx_false_e;
+            context->setLoggingEnabled(vx_false_e);
             break;
         case VX_DIRECTIVE_ENABLE_LOGGING:
-            context->log_enabled = vx_true_e;
+            context->setLoggingEnabled(vx_true_e);
             break;
         case VX_DIRECTIVE_DISABLE_PERFORMANCE:
             if (ref_type == VX_TYPE_CONTEXT)
             {
-                context->perf_enabled = vx_false_e;
+                context->setPerfEnabled(vx_false_e);
             }
             else
             {
@@ -1366,7 +1530,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxDirective(vx_reference reference, vx_enum d
         case VX_DIRECTIVE_ENABLE_PERFORMANCE:
             if (ref_type == VX_TYPE_CONTEXT)
             {
-                context->perf_enabled = vx_true_e;
+                context->setPerfEnabled(vx_true_e);
             }
             else
             {
@@ -1384,22 +1548,10 @@ VX_API_ENTRY vx_status VX_API_CALL vxDirective(vx_reference reference, vx_enum d
 VX_API_ENTRY vx_enum VX_API_CALL vxRegisterUserStruct(vx_context context, vx_size size)
 {
     vx_enum type = VX_TYPE_INVALID;
-    vx_uint32 i = 0;
 
-    if ((Context::isValidContext(context) == vx_true_e) &&
-        (size != 0))
+    if (Context::isValidContext(context) == vx_true_e)
     {
-        for (i = 0; i < VX_INT_MAX_USER_STRUCTS; ++i)
-        {
-            if (context->user_structs[i].type == VX_TYPE_INVALID)
-            {
-                context->user_structs[i].type = VX_TYPE_USER_STRUCT_START + i;
-                context->user_structs[i].size = size;
-                context->user_structs[i].name[0] = 0;
-                type = context->user_structs[i].type;
-                break;
-            }
-        }
+        type = context->registerUserStruct(size);
     }
 
     return type;
@@ -1408,26 +1560,10 @@ VX_API_ENTRY vx_enum VX_API_CALL vxRegisterUserStruct(vx_context context, vx_siz
 VX_API_ENTRY vx_enum VX_API_CALL vxGetUserStructByName(vx_context context, const vx_char *name)
 {
     vx_enum type = VX_TYPE_INVALID;
-    vx_uint32 i = 0;
-    vx_size len = strlen(name);
 
-    if (VX_MAX_STRUCT_NAME < len)
+    if (Context::isValidContext(context) == vx_true_e)
     {
-        len = VX_MAX_STRUCT_NAME;
-    }
-
-    if ((Context::isValidContext(context) == vx_true_e) &&
-        (len != 0))
-    {
-        for (i = 0; i < VX_INT_MAX_USER_STRUCTS; ++i)
-        {
-            if ((VX_TYPE_INVALID != context->user_structs[i].type) &&
-                (0 == strncmp(context->user_structs[i].name, name, len)))
-            {
-                type = context->user_structs[i].type;
-                break;
-            }
-        }
+        type = context->getUserStructByName(name);
     }
 
     return type;
@@ -1436,35 +1572,10 @@ VX_API_ENTRY vx_enum VX_API_CALL vxGetUserStructByName(vx_context context, const
 VX_API_ENTRY vx_status VX_API_CALL vxGetUserStructNameByEnum(vx_context context, vx_enum user_struct_type, vx_char* type_name, vx_size name_size)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;
-    vx_uint32 i = 0;
 
-    if ((Context::isValidContext(context) == vx_true_e) && (user_struct_type != VX_TYPE_INVALID))
+    if (Context::isValidContext(context) == vx_true_e)
     {
-        for (i = 0; i < VX_INT_MAX_USER_STRUCTS; ++i)
-        {
-            if (user_struct_type == context->user_structs[i].type)
-            {
-                break;
-            }
-        }
-
-        if (i == VX_INT_MAX_USER_STRUCTS)
-        {
-            status = VX_FAILURE;
-        }
-        else
-        {
-            if (name_size < (strlen(context->user_structs[i].name) + 1))
-            {
-                status = VX_ERROR_NO_MEMORY;
-            }
-            else
-            {
-                memcpy(type_name, context->user_structs[i].name,
-                       strlen(context->user_structs[i].name) + 1);
-                status = VX_SUCCESS;
-            }
-        }
+        status = context->getUserStructNameByEnum(user_struct_type, type_name, name_size);
     }
 
     return status;
@@ -1472,30 +1583,11 @@ VX_API_ENTRY vx_status VX_API_CALL vxGetUserStructNameByEnum(vx_context context,
 
 VX_API_ENTRY vx_status VX_API_CALL vxGetUserStructEnumByName(vx_context context, const vx_char* type_name, vx_enum *user_struct_type)
 {
-    vx_status status = VX_FAILURE;
-    vx_uint32 i = 0;
-    vx_size len = 0;
+    vx_status status = VX_ERROR_INVALID_REFERENCE;
 
-    if (nullptr != type_name)
+    if (Context::isValidContext(context) == vx_true_e)
     {
-        len = strlen(type_name);
-        if (VX_MAX_REFERENCE_NAME < len)
-        {
-            len = VX_MAX_REFERENCE_NAME;
-        }
-    }
-    if ((Context::isValidContext(context) == vx_true_e) && (len != 0))
-    {
-        for (i = 0; i < VX_INT_MAX_USER_STRUCTS; ++i)
-        {
-            if ((VX_TYPE_INVALID != context->user_structs[i].type) &&
-                (0 == strncmp(context->user_structs[i].name, type_name, len)))
-            {
-                *user_struct_type = context->user_structs[i].type;
-                status = VX_SUCCESS;
-                break;
-            }
-        }
+        status = context->getUserStructEnumByName(type_name, user_struct_type);
     }
 
     return status;
@@ -1504,23 +1596,10 @@ VX_API_ENTRY vx_status VX_API_CALL vxGetUserStructEnumByName(vx_context context,
 VX_API_ENTRY vx_enum VX_API_CALL vxRegisterUserStructWithName(vx_context context, vx_size size, const vx_char *type_name)
 {
     vx_enum type = VX_TYPE_INVALID;
-    vx_uint32 i = 0;
 
-    if ((Context::isValidContext(context) == vx_true_e) &&
-        (size != 0) &&
-        VX_TYPE_INVALID == vxGetUserStructByName(context, type_name))
+    if (Context::isValidContext(context) == vx_true_e)
     {
-        for (i = 0; i < VX_INT_MAX_USER_STRUCTS; ++i)
-        {
-            if (context->user_structs[i].type == VX_TYPE_INVALID)
-            {
-                context->user_structs[i].type = VX_TYPE_USER_STRUCT_START + i;
-                context->user_structs[i].size = size;
-                strncpy(context->user_structs[i].name, type_name, VX_MAX_REFERENCE_NAME - 1);
-                type = context->user_structs[i].type;
-                break;
-            }
-        }
+        type = context->registerUserStructWithName(size, type_name);
     }
 
     return type;
@@ -1531,12 +1610,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxAllocateUserKernelId(vx_context context, vx
     vx_status status = VX_ERROR_INVALID_REFERENCE;
     if ((Context::isValidContext(context) == vx_true_e) && pKernelEnumId)
     {
-        status = VX_ERROR_NO_RESOURCES;
-        if(context->next_dynamic_user_kernel_id <= VX_KERNEL_MASK)
-        {
-            *pKernelEnumId = VX_KERNEL_BASE(VX_ID_USER,0) + context->next_dynamic_user_kernel_id++;
-            status = VX_SUCCESS;
-        }
+        status = context->allocateKernelId(pKernelEnumId);
     }
     return status;
 }
@@ -1546,12 +1620,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxAllocateUserKernelLibraryId(vx_context cont
     vx_status status = VX_ERROR_INVALID_REFERENCE;
     if ((Context::isValidContext(context) == vx_true_e) && pLibraryId)
     {
-        status = VX_ERROR_NO_RESOURCES;
-        if(context->next_dynamic_user_library_id <= VX_LIBRARY(VX_LIBRARY_MASK))
-        {
-            *pLibraryId = context->next_dynamic_user_library_id++;
-            status = VX_SUCCESS;
-        }
+        status = context->allocateLibraryId(pLibraryId);
     }
     return status;
 }
@@ -1562,54 +1631,168 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetImmediateModeTarget(vx_context context, 
 
     if (Context::isValidContext(context) == vx_true_e)
     {
-        vx_target* target = nullptr;
-        switch (target_enum)
-        {
-            case VX_TARGET_ANY:
-                context->imm_target_enum = VX_TARGET_ANY;
-                memset(context->imm_target_string, 0, sizeof(context->imm_target_string));
-                status = VX_SUCCESS;
-                break;
-
-            case VX_TARGET_STRING:
-                target = context->findTargetByString(target_string);
-                if (target != nullptr) /* target was found */
-                {
-                    context->imm_target_enum = VX_TARGET_STRING;
-                    strncpy(context->imm_target_string, target_string, sizeof(context->imm_target_string));
-                    context->imm_target_string[sizeof(context->imm_target_string) - 1] = '\0';
-                    status = VX_SUCCESS;
-                }
-                else /* target was not found */
-                {
-                    status = VX_ERROR_NOT_SUPPORTED;
-                }
-                break;
-
-            default:
-                status = VX_ERROR_NOT_SUPPORTED;
-                break;
-        }
+        status = context->setImmediateModeTarget(target_enum, target_string);
     }
+
     return status;
 }
 
-#ifdef OPENVX_USE_OPENCL_INTEROP
-VX_API_ENTRY vx_context VX_API_CALL vxCreateContextFromCL(cl_context opencl_context, cl_command_queue opencl_command_queue)
+VX_API_ENTRY vx_status VX_API_CALL vxReleaseContext(vx_context *c)
 {
-    vx_context context = vxCreateContext();
-    if(vxGetStatus((vx_reference)context) == VX_SUCCESS)
+    vx_status status = VX_SUCCESS;
+    vx_context context = (c ? *c : 0);
+    vx_uint32 r, m, a;
+    vx_uint32 t;
+
+    if (c) *c = 0;
+    Osal::semWait(&context_lock);
+    if (Context::isValidContext(context) == vx_true_e)
     {
-        cl_int err1 = clRetainContext(opencl_context);
-        cl_int err2 = clRetainCommandQueue(opencl_command_queue);
-        if((err1 != CL_SUCCESS) || (err2 != CL_SUCCESS))
+        if (context->decrementReference(VX_EXTERNAL) == 0)
         {
-            vxReleaseContext(&context);
-            return nullptr;
-        }
-        context->opencl_context = opencl_context;
-        context->opencl_command_queue = opencl_command_queue;
-    }
-    return context;
-}
+#ifdef OPENVX_USE_OPENCL_INTEROP
+            if (context->opencl_command_queue)
+            {
+                clReleaseCommandQueue(context->opencl_command_queue);
+                context->opencl_command_queue = nullptr;
+            }
+            if (context->opencl_context)
+            {
+                clReleaseContext(context->opencl_context);
+                context->opencl_context = nullptr;
+            }
 #endif
+            Osal::destroyThreadpool(&context->workers);
+            context->proc.running = vx_false_e;
+            Osal::popQueue(&context->proc.input);
+            Osal::joinThread(context->proc.thread, nullptr);
+            Osal::deinitQueue(&context->proc.output);
+            Osal::deinitQueue(&context->proc.input);
+
+            /* Deregister any log callbacks if there is any registered */
+            vxRegisterLogCallback(context, nullptr, vx_false_e);
+
+            /*! \internal Garbage Collect All References */
+            /* Details:
+             *   1. This loop will warn of references which have not been released by the user.
+             *   2. It will close all internally opened error references.
+             *   3. It will close the external references, which in turn will internally
+             *      close any internally dependent references that they reference, assuming the
+             *      reference counting has been done properly in the framework.
+             *   4. This garbage collection must be done before the targets are released since some
+             * of these external references may have internal references to target kernels.
+             */
+            for (r = 0; r < VX_INT_MAX_REF; r++)
+            {
+                vx_reference ref = context->reftable[r];
+
+                /* Warnings should only come when users have not released all external references */
+                if (ref && ref->external_count > 0)
+                {
+                    VX_PRINT(VX_ZONE_WARNING,
+                             "Stale reference " VX_FMT_REF
+                             " of type %s at external count %u, internal count %u\n",
+                             ref, vxGetObjectTypeName(ref->type), ref->external_count,
+                             ref->internal_count);
+                }
+
+                /* These were internally opened during creation, so should internally close ERRORs
+                 */
+                if (ref && ref->type == VX_TYPE_ERROR)
+                {
+                    Reference::releaseReference(&ref, ref->type, VX_INTERNAL, nullptr);
+                }
+
+                /* Warning above so user can fix release external objects, but close here anyway */
+                while (ref && ref->external_count > 1)
+                {
+                    ref->decrementReference(VX_EXTERNAL);
+                }
+                if (ref && ref->external_count > 0)
+                {
+                    Reference::releaseReference(&ref, ref->type, VX_EXTERNAL, nullptr);
+                }
+            }
+
+            for (m = 0; m < VX_INT_MAX_MODULES; m++)
+            {
+                Osal::semWait(&context->modules[m].lock);
+                if (context->modules[m].handle)
+                {
+                    Osal::unloadModule(context->modules[m].handle);
+                    memset(context->modules[m].name, 0, sizeof(context->modules[m].name));
+                    context->modules[m].handle = VX_MODULE_INIT;
+                }
+                Osal::semPost(&context->modules[m].lock);
+                Osal::destroySem(&context->modules[m].lock);
+            }
+
+            /* de-initialize and unload each target */
+            for (t = 0u; t < context->num_targets; t++)
+            {
+                /* if (context->targets[t]->enabled == vx_true_e) */
+                {
+                    context->targets[t]->funcs.deinit(context->targets[t]);
+                    context->targets[t]->enabled = vx_false_e;
+                    context->unloadTarget(t, vx_true_e);
+                }
+            }
+
+            /* Remove all outstanding accessors. */
+            for (a = 0; a < dimof(context->accessors); ++a)
+            {
+                if (context->accessors[a].used)
+                {
+                    context->removeAccessor(a);
+                }
+            }
+
+            /* Check for outstanding mappings */
+            for (a = 0; a < dimof(context->memory_maps); ++a)
+            {
+                if (context->memory_maps[a].used)
+                {
+                    VX_PRINT(VX_ZONE_ERROR, "Memory map %d not unmapped\n", a);
+                    context->memoryUnmap(a);
+                }
+            }
+
+            Osal::destroySem(&context->memory_maps_lock);
+
+            /* By now, all external and internal references should be removed */
+            for (r = 0; r < VX_INT_MAX_REF; r++)
+            {
+                if (context->reftable[r])
+                {
+                    VX_PRINT(VX_ZONE_ERROR, "Reference %p, type %x not removed [%d:%d]\n",
+                             context->reftable[r], context->reftable[r]->type,
+                             context->reftable[r]->internal_count,
+                             context->reftable[r]->external_count);
+                }
+            }
+
+            /*! \internal wipe away the context memory first */
+            /* Normally destroy sem is part of release reference, but can't for context */
+            Osal::destroySem(&context->lock);
+            Osal::destroySem(&global_lock);
+            Osal::semPost(&context_lock);
+            Osal::destroySem(&context_lock);
+            single_context.reset();
+            single_context = nullptr;
+
+            return status;
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_WARNING, "Context still has %u holders\n",
+                     context->totalReferenceCount());
+        }
+    }
+    else
+    {
+        status = VX_ERROR_INVALID_REFERENCE;
+    }
+    Osal::semPost(&context_lock);
+
+    return status;
+}

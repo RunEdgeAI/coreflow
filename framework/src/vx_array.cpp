@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-#include "vx_internal.h"
 #include "vx_context.h"
+#include "vx_internal.h"
+#include "vx_log.h"
 
 /******************************************************************************/
 /* INTERNAL INTERFACE                                                         */
@@ -120,6 +121,7 @@ vx_status Array::accessArrayRange(vx_size start, vx_size end, vx_size *pStride, 
         (ptr == nullptr) ||
         (start >= end) || (end > num_items))
     {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to access array range\n");
         return VX_ERROR_INVALID_PARAMETERS;
     }
 
@@ -140,6 +142,7 @@ vx_status Array::accessArrayRange(vx_size start, vx_size end, vx_size *pStride, 
      */
     if (allocateArray() == vx_false_e)
     {
+        VX_PRINT(VX_ZONE_ERROR, "Failed to allocate array memory\n");
         return VX_ERROR_NO_MEMORY;
     }
 
@@ -200,6 +203,9 @@ vx_status Array::accessArrayRange(vx_size start, vx_size end, vx_size *pStride, 
             else
             {
                 status = VX_ERROR_NO_MEMORY;
+                VX_PRINT(VX_ZONE_ERROR,
+                         "Failed to allocate memory for COPY-ON-READ! Size=" VX_FMT_SIZE "\n",
+                         size);
                 vxAddLogEntry((vx_reference)this, status, "Failed to allocate memory for COPY-ON-READ! Size=" VX_FMT_SIZE "\n", size);
             }
         }
@@ -261,6 +267,8 @@ vx_status Array::accessArrayRange(vx_size start, vx_size end, vx_size *pStride, 
         else
         {
             status = VX_ERROR_NO_MEMORY;
+            VX_PRINT(VX_ZONE_ERROR,
+                     "Failed to allocate memory for COPY-ON-READ! Size=" VX_FMT_SIZE "\n", size);
             vxAddLogEntry((vx_reference)this, status, "Failed to allocate memory for COPY-ON-READ! Size=" VX_FMT_SIZE "\n", size);
         }
     }
@@ -271,12 +279,17 @@ vx_status Array::accessArrayRange(vx_size start, vx_size end, vx_size *pStride, 
 vx_status Array::commitArrayRange(vx_size start, vx_size end, const void *ptr)
 {
     vx_status status = VX_ERROR_INVALID_REFERENCE;
-
     vx_bool external = vx_true_e; /* assume that it was an allocated buffer */
 
     if ((ptr == nullptr) ||
         (start > end) || (end > num_items))
     {
+        /* bad parameters */
+        VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to commit array range\n");
+        VX_PRINT(VX_ZONE_DEBUG,
+                 "start=" VX_FMT_SIZE ", end=" VX_FMT_SIZE ", num_items=" VX_FMT_SIZE
+                 " , ptr=" VX_FMT_SIZE "\n ",
+                 start, end, num_items, ptr);
         return VX_ERROR_INVALID_PARAMETERS;
     }
 
@@ -290,6 +303,13 @@ vx_status Array::commitArrayRange(vx_size start, vx_size end, const void *ptr)
             return VX_ERROR_OPTIMIZED_AWAY;
         }
         /* framework trying to access a virtual array, this is ok. */
+    }
+
+    /* Ensure memory is allocated */
+    if (allocateArray() == vx_false_e)
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Failed to allocate array memory\n");
+        return VX_ERROR_NO_MEMORY;
     }
 
     /* VARIABLES:
@@ -336,12 +356,15 @@ vx_status Array::commitArrayRange(vx_size start, vx_size end, const void *ptr)
                     {
                         vx_size stride = *(vx_size *)context->accessors[index].extra_data;
 
-                        if (stride == item_size) {
+                        if (stride == item_size)
+                        {
                             memcpy(&beg_ptr[offset], ptr, len);
                         }
-                        else {
+                        else
+                        {
                             int i;
-                            const vx_uint8 *pSrc; vx_uint8 *pDest;
+                            const vx_uint8 *pSrc;
+                            vx_uint8 *pDest;
 
                             for (i = (int)start, pSrc = (const vx_uint8*)ptr, pDest= &beg_ptr[offset];
                                  i < (int)end;
@@ -354,7 +377,8 @@ vx_status Array::commitArrayRange(vx_size start, vx_size end, const void *ptr)
                         /* a write only or read/write copy */
                         context->removeAccessor(index);
                     }
-                    else {
+                    else
+                    {
                         memcpy(&beg_ptr[offset], ptr, len);
                     }
                 }
@@ -391,6 +415,34 @@ vx_status Array::copyArrayRange(vx_size start, vx_size end, vx_size stride, void
 {
     vx_status status = VX_FAILURE;
     (void)mem_type;
+
+#ifdef OPENVX_USE_OPENCL_INTEROP
+    void *ptr_given = ptr;
+    vx_enum mem_type_given = mem_type;
+    if (mem_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
+    {
+        /* get ptr from OpenCL buffer for HOST */
+        size_t size = 0;
+        cl_mem opencl_buf = (cl_mem)ptr;
+        cl_int cerr = clGetMemObjectInfo(opencl_buf, CL_MEM_SIZE, sizeof(size_t), &size, nullptr);
+        VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyArrayRange: clGetMemObjectInfo(%p) => (%d)\n",
+                 opencl_buf, cerr);
+        if (cerr != CL_SUCCESS)
+        {
+            return VX_ERROR_INVALID_PARAMETERS;
+        }
+        ptr = clEnqueueMapBuffer(context->opencl_command_queue, opencl_buf, CL_TRUE,
+                                 CL_MAP_READ | CL_MAP_WRITE, 0, size, 0, nullptr, nullptr, &cerr);
+        VX_PRINT(VX_ZONE_CONTEXT,
+                 "OPENCL: vxCopyArrayRange: clEnqueueMapBuffer(%p,%d) => %p (%d)\n", opencl_buf,
+                 (int)size, ptr, cerr);
+        if (cerr != CL_SUCCESS)
+        {
+            return VX_ERROR_INVALID_PARAMETERS;
+        }
+        mem_type = VX_MEMORY_TYPE_HOST;
+    }
+#endif
 
     /* bad parameters */
     if (((usage != VX_READ_ONLY) && (VX_WRITE_ONLY != usage)) ||
@@ -480,6 +532,15 @@ vx_status Array::copyArrayRange(vx_size start, vx_size end, vx_size stride, void
         }
     }
 
+#ifdef OPENVX_USE_OPENCL_INTEROP
+    if (mem_type_given == VX_MEMORY_TYPE_OPENCL_BUFFER)
+    {
+        clEnqueueUnmapMemObject(context->opencl_command_queue, (cl_mem)ptr_given, ptr, 0, nullptr,
+                                nullptr);
+        clFinish(context->opencl_command_queue);
+    }
+#endif
+
     return status;
 }
 
@@ -488,11 +549,24 @@ vx_status Array::mapArrayRange(vx_size start, vx_size end, vx_map_id *map_id, vx
 {
     vx_status status = VX_FAILURE;
 
+#ifdef OPENVX_USE_OPENCL_INTEROP
+    vx_enum mem_type_requested = mem_type;
+    if (mem_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
+    {
+        mem_type = VX_MEMORY_TYPE_HOST;
+    }
+#endif
+
     /* bad parameters */
     if ((usage < VX_READ_ONLY) || (VX_READ_AND_WRITE < usage) ||
         (ptr == nullptr) || (stride == nullptr) ||
         (start >= end) || (end > num_items))
     {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to map array range\n");
+        VX_PRINT(VX_ZONE_DEBUG,
+                 "usage=" VX_FMT_SIZE ", ptr=" VX_FMT_SIZE ", stride=" VX_FMT_SIZE
+                 ", start=" VX_FMT_SIZE ", end=" VX_FMT_SIZE ", num_items=" VX_FMT_SIZE "\n",
+                 usage, ptr, stride, start, end, num_items);
         return VX_ERROR_INVALID_PARAMETERS;
     }
 
@@ -513,6 +587,7 @@ vx_status Array::mapArrayRange(vx_size start, vx_size end, vx_map_id *map_id, vx
      */
     if (allocateArray() == vx_false_e)
     {
+        VX_PRINT(VX_ZONE_ERROR, "Failed to allocate memory for array\n");
         return VX_ERROR_NO_MEMORY;
     }
 
@@ -544,6 +619,7 @@ vx_status Array::mapArrayRange(vx_size start, vx_size end, vx_map_id *map_id, vx
             }
             else
             {
+                VX_PRINT(VX_ZONE_ERROR, "Failed to lock sem for array memory map\n");
                 status = VX_ERROR_NO_RESOURCES;
             }
         }
@@ -558,8 +634,33 @@ vx_status Array::mapArrayRange(vx_size start, vx_size end, vx_map_id *map_id, vx
     }
     else
     {
+        VX_PRINT(VX_ZONE_ERROR, "Failed to memory map array range\n");
         status = VX_FAILURE;
     }
+
+#ifdef OPENVX_USE_OPENCL_INTEROP
+    vx_size sze = (end - start) * *stride;
+    if ((status == VX_SUCCESS) && context->opencl_context &&
+        (mem_type_requested == VX_MEMORY_TYPE_OPENCL_BUFFER) && (sze > 0) && ptr && *ptr)
+    {
+        /* create OpenCL buffer using the host allocated pointer */
+        cl_int cerr = 0;
+        cl_mem opencl_buf = clCreateBuffer(
+            context->opencl_context, CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, sze, *ptr, &cerr);
+        VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxMapArrayRange: clCreateBuffer(%u) => %p (%d)\n",
+                 (vx_uint32)sze, opencl_buf, cerr);
+        if (cerr == CL_SUCCESS)
+        {
+            context->memory_maps[*map_id].opencl_buf = opencl_buf;
+            *ptr = opencl_buf;
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Failed to create OpenCL buffer for array map\n");
+            status = VX_FAILURE;
+        }
+    }
+#endif
 
     return status;
 }
@@ -567,6 +668,21 @@ vx_status Array::mapArrayRange(vx_size start, vx_size end, vx_map_id *map_id, vx
 vx_status Array::unmapArrayRange(vx_map_id map_id)
 {
     vx_status status = VX_FAILURE;
+
+#ifdef OPENVX_USE_OPENCL_INTEROP
+    if (context->opencl_context && context->memory_maps[map_id].opencl_buf &&
+        context->memory_maps[map_id].ptr)
+    {
+        clEnqueueUnmapMemObject(context->opencl_command_queue,
+                                context->memory_maps[map_id].opencl_buf,
+                                context->memory_maps[map_id].ptr, 0, nullptr, nullptr);
+        clFinish(context->opencl_command_queue);
+        cl_int cerr = clReleaseMemObject(context->memory_maps[map_id].opencl_buf);
+        VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxUnmapArrayRange: clReleaseMemObject(%p) => (%d)\n",
+                 context->memory_maps[map_id].opencl_buf, cerr);
+        context->memory_maps[map_id].opencl_buf = nullptr;
+    }
+#endif
 
     /* determine if virtual before checking for memory */
     if (is_virtual == vx_true_e)
@@ -611,6 +727,7 @@ vx_status Array::unmapArrayRange(vx_map_id map_id)
             }
             else
             {
+                VX_PRINT(VX_ZONE_ERROR, "Unable to acquire semaphore resource\n");
                 status = VX_ERROR_NO_RESOURCES;
             }
         }
@@ -624,6 +741,7 @@ vx_status Array::unmapArrayRange(vx_map_id map_id)
     }
     else
     {
+        VX_PRINT(VX_ZONE_ERROR, "Internal memory map issue\n");
         status = VX_FAILURE;
     }
 
@@ -682,63 +800,146 @@ void Array::initArrayMemory()
     memory.dims[0][1] = (vx_uint32)capacity;
 }
 
+vx_enum Array::itemType() const
+{
+    return item_type;
+}
+
+vx_size Array::numItems() const
+{
+    return num_items;
+}
+
+vx_size Array::totalCapacity() const
+{
+    return capacity;
+}
+
+vx_size Array::itemSize() const
+{
+    return item_size;
+}
+
+vx_size Array::totalSize() const
+{
+    return itemSize() * numItems();
+}
+
+vx_uint32 Array::offsetVal() const
+{
+    return offset;
+}
+
+vx_status Array::addItems(vx_size count, const void *ptr, vx_size stride)
+{
+    vx_status status = VX_ERROR_NO_MEMORY;
+
+    if (allocateArray() == vx_true_e)
+    {
+        status = VX_ERROR_INVALID_PARAMETERS;
+
+        if ((count > 0) && (ptr != nullptr) && (stride >= item_size))
+        {
+            status = VX_FAILURE;
+
+            if (num_items + count <= capacity)
+            {
+                vx_size offset = num_items * item_size;
+                vx_uint8 *dst_ptr = &memory.ptrs[0][offset];
+
+                vx_size i;
+                for (i = 0; i < count; ++i)
+                {
+                    vx_uint8 *src_ptr = (vx_uint8 *)ptr;
+                    memcpy(&dst_ptr[i * item_size], &src_ptr[i * stride], item_size);
+                }
+
+                num_items += count;
+
+                status = VX_SUCCESS;
+            }
+        }
+    }
+
+    return status;
+}
+
+vx_status Array::truncate(vx_size new_num_items)
+{
+    vx_status status = VX_FAILURE;
+
+    if (new_num_items <= capacity &&
+        new_num_items <= num_items)
+    {
+        num_items = new_num_items;
+        status = VX_SUCCESS;
+    }
+    else
+    {
+        status = VX_ERROR_INVALID_PARAMETERS;
+    }
+
+    return status;
+}
+
 void Array::printArray(vx_array array)
 {
-    VX_PRINT(VX_ZONE_INFO, "Array:%p has %zu elements of %04x type of %zu size each.\n", array, array->capacity, array->item_type, array->item_size);
+    VX_PRINT(VX_ZONE_INFO, "Array:%p has %zu elements of %04x type of %zu size each.\n", array,
+             array->capacity, array->item_type, array->item_size);
 }
 
 /******************************************************************************/
 /* PUBLIC INTERFACE                                                           */
 /******************************************************************************/
 
-VX_API_ENTRY vx_array VX_API_CALL vxCreateArray(vx_context context, vx_enum item_type, vx_size capacity)
+VX_API_ENTRY vx_array VX_API_CALL vxCreateArray(vx_context context, vx_enum item_type,
+                                                vx_size capacity)
 {
     vx_array arr = nullptr;
 
-    if (Context::isValidContext(context) == vx_true_e)
+    if (Context::isValidContext(context) == vx_true_e &&
+        (Array::isValidArrayItemType(context, item_type) == vx_true_e) && (capacity > 0))
     {
-        if ( (Array::isValidArrayItemType(context, item_type) == vx_true_e) &&
-             (capacity > 0))
-        {
-            arr = (vx_array)Array::createArray(context, item_type, capacity, vx_false_e, VX_TYPE_ARRAY);
+        arr = (vx_array)Array::createArray(context, item_type, capacity, vx_false_e, VX_TYPE_ARRAY);
 
-            if (arr == nullptr)
-            {
-                arr = (vx_array)vxGetErrorObject(context, VX_ERROR_NO_MEMORY);
-            }
-        }
-        else
+        if (arr == nullptr)
         {
-            arr = (vx_array)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+            arr = (vx_array)vxGetErrorObject(context, VX_ERROR_NO_MEMORY);
         }
+    }
+    else
+    {
+        arr = (vx_array)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
     }
 
     return arr;
 }
 
-VX_API_ENTRY vx_array VX_API_CALL vxCreateVirtualArray(vx_graph graph, vx_enum item_type, vx_size capacity)
+VX_API_ENTRY vx_array VX_API_CALL vxCreateVirtualArray(vx_graph graph, vx_enum item_type,
+                                                       vx_size capacity)
 {
     vx_array arr = nullptr;
 
-    if (Reference::isValidReference(reinterpret_cast<vx_reference>(graph), VX_TYPE_GRAPH) == vx_true_e)
+    if (Reference::isValidReference(reinterpret_cast<vx_reference>(graph), VX_TYPE_GRAPH) ==
+            vx_true_e &&
+        ((Array::isValidArrayItemType(graph->context, item_type) == vx_true_e) ||
+         item_type == VX_TYPE_INVALID))
     {
-        if (((Array::isValidArrayItemType(graph->context, item_type) == vx_true_e) || item_type == VX_TYPE_INVALID))
-        {
-            arr = (vx_array)Array::createArray(graph->context, item_type, capacity, vx_true_e, VX_TYPE_ARRAY);
+        arr = (vx_array)Array::createArray(graph->context, item_type, capacity, vx_true_e,
+                                           VX_TYPE_ARRAY);
 
-            if (arr && arr->type == VX_TYPE_ARRAY)
-            {
-                arr->scope = (vx_reference)graph;
-            }
-            else
-            {
-                arr = (vx_array)vxGetErrorObject(graph->context, VX_ERROR_NO_MEMORY);
-            }
+        if (arr && arr->type == VX_TYPE_ARRAY)
+        {
+            arr->scope = (vx_reference)graph;
         }
         else
         {
-            arr = (vx_array)vxGetErrorObject(graph->context, VX_ERROR_INVALID_PARAMETERS);
+            arr = (vx_array)vxGetErrorObject(graph->context, VX_ERROR_NO_MEMORY);
         }
+    }
+    else
+    {
+        arr = (vx_array)vxGetErrorObject(graph->context, VX_ERROR_INVALID_PARAMETERS);
     }
 
     return arr;
@@ -754,14 +955,16 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseArray(vx_array *a)
         vx_array arr = *(a);
         if (Reference::isValidReference(arr, VX_TYPE_ARRAY) == vx_true_e)
         {
-            status = Reference::releaseReference((vx_reference*)a, VX_TYPE_ARRAY, VX_EXTERNAL, nullptr);
+            status =
+                Reference::releaseReference((vx_reference *)a, VX_TYPE_ARRAY, VX_EXTERNAL, nullptr);
         }
     }
 
     return status;
 }
 
-VX_API_ENTRY vx_status VX_API_CALL vxQueryArray(vx_array arr, vx_enum attribute, void *ptr, vx_size size)
+VX_API_ENTRY vx_status VX_API_CALL vxQueryArray(vx_array arr, vx_enum attribute, void *ptr,
+                                                vx_size size)
 {
     vx_status status = VX_ERROR_INVALID_REFERENCE;
     if (Array::isValidArray(arr) == vx_true_e)
@@ -772,7 +975,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryArray(vx_array arr, vx_enum attribute,
             case VX_ARRAY_ITEMTYPE:
                 if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
                 {
-                    *(vx_enum *)ptr = arr->item_type;
+                    *(vx_enum *)ptr = arr->itemType();
                 }
                 else
                 {
@@ -783,7 +986,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryArray(vx_array arr, vx_enum attribute,
             case VX_ARRAY_NUMITEMS:
                 if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
                 {
-                    *(vx_size *)ptr = arr->num_items;
+                    *(vx_size *)ptr = arr->numItems();
                 }
                 else
                 {
@@ -794,7 +997,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryArray(vx_array arr, vx_enum attribute,
             case VX_ARRAY_CAPACITY:
                 if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
                 {
-                    *(vx_size *)ptr = arr->capacity;
+                    *(vx_size *)ptr = arr->totalCapacity();
                 }
                 else
                 {
@@ -805,7 +1008,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryArray(vx_array arr, vx_enum attribute,
             case VX_ARRAY_ITEMSIZE:
                 if (VX_CHECK_PARAM(ptr, size, vx_size, 0x3))
                 {
-                    *(vx_size *)ptr = arr->item_size;
+                    *(vx_size *)ptr = arr->itemSize();
                 }
                 else
                 {
@@ -822,66 +1025,21 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryArray(vx_array arr, vx_enum attribute,
     return status;
 }
 
-VX_API_ENTRY vx_status VX_API_CALL vxAddArrayItems(vx_array arr, vx_size count, const void *ptr, vx_size stride)
+VX_API_ENTRY vx_status VX_API_CALL vxAddArrayItems(vx_array arr, vx_size count, const void *ptr,
+                                                   vx_size stride)
 {
-    vx_status status = VX_ERROR_INVALID_REFERENCE;
-    if (Array::isValidArray(arr) == vx_true_e)
+    /* bad references */
+    if (Array::isValidArray(arr) == vx_false_e)
     {
-        status = VX_ERROR_NO_MEMORY;
-
-        if (arr->allocateArray() == vx_true_e)
-        {
-            status = VX_ERROR_INVALID_PARAMETERS;
-
-            if ((count > 0) && (ptr != nullptr) && (stride >= arr->item_size))
-            {
-                status = VX_FAILURE;
-
-                if (arr->num_items + count <= arr->capacity)
-                {
-                    vx_size offset = arr->num_items * arr->item_size;
-                    vx_uint8 *dst_ptr = &arr->memory.ptrs[0][offset];
-
-                    vx_size i;
-                    for (i = 0; i < count; ++i)
-                    {
-                        vx_uint8 *src_ptr = (vx_uint8 *)ptr;
-                        memcpy(&dst_ptr[i * arr->item_size], &src_ptr[i * stride], arr->item_size);
-                    }
-
-                    arr->num_items += count;
-                    // ownWroteToReference(&arr->base);
-
-                    status = VX_SUCCESS;
-                }
-            }
-        }
+        VX_PRINT(VX_ZONE_ERROR, "Not a valid array!\n");
+        return VX_ERROR_INVALID_REFERENCE;
     }
 
-    return status;
+    return arr->addItems(count, ptr, stride);
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxTruncateArray(vx_array arr, vx_size new_num_items)
 {
-    vx_status status = VX_ERROR_INVALID_REFERENCE;
-    if (Array::isValidArray(arr) == vx_true_e)
-    {
-        status = VX_ERROR_INVALID_PARAMETERS;
-
-        if (new_num_items <= arr->num_items)
-        {
-            arr->num_items = new_num_items;
-            // ownWroteToReference(&arr->base);
-
-            status = VX_SUCCESS;
-        }
-    }
-    return status;
-}
-
-VX_API_ENTRY vx_status VX_API_CALL vxAccessArrayRange(vx_array arr, vx_size start, vx_size end, vx_size *stride, void **ptr, vx_enum usage)
-{
-    vx_status status = VX_FAILURE;
     /* bad references */
     if (Array::isValidArray(arr) == vx_false_e)
     {
@@ -889,30 +1047,39 @@ VX_API_ENTRY vx_status VX_API_CALL vxAccessArrayRange(vx_array arr, vx_size star
         return VX_ERROR_INVALID_REFERENCE;
     }
 
-    /* bad parameters */
-    if (stride == nullptr)
-    {
-        return VX_ERROR_INVALID_PARAMETERS;
-    }
-
-    status = arr->accessArrayRange(start, end, stride, ptr, usage);
-
-    return status;
+    return arr->truncate(new_num_items);
 }
 
-VX_API_ENTRY vx_status VX_API_CALL vxCommitArrayRange(vx_array arr, vx_size start, vx_size end, const void *ptr)
+VX_API_ENTRY vx_status VX_API_CALL vxAccessArrayRange(vx_array arr, vx_size start, vx_size end,
+                                                      vx_size *stride, void **ptr, vx_enum usage)
 {
+    /* bad references */
     if (Array::isValidArray(arr) == vx_false_e)
     {
+        VX_PRINT(VX_ZONE_ERROR, "Not a valid array!\n");
         return VX_ERROR_INVALID_REFERENCE;
     }
+
+    return arr->accessArrayRange(start, end, stride, ptr, usage);
+}
+
+VX_API_ENTRY vx_status VX_API_CALL vxCommitArrayRange(vx_array arr, vx_size start, vx_size end,
+                                                      const void *ptr)
+{
+    /* bad references */
+    if (Array::isValidArray(arr) == vx_false_e)
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Not a valid array!\n");
+        return VX_ERROR_INVALID_REFERENCE;
+    }
+
     return arr->commitArrayRange(start, end, ptr);
 }
 
-VX_API_ENTRY vx_status VX_API_CALL vxCopyArrayRange(vx_array arr, vx_size start, vx_size end, vx_size stride,
-                                                    void *ptr, vx_enum usage, vx_enum mem_type)
+VX_API_ENTRY vx_status VX_API_CALL vxCopyArrayRange(vx_array arr, vx_size start, vx_size end,
+                                                    vx_size stride, void *ptr, vx_enum usage,
+                                                    vx_enum mem_type)
 {
-    vx_status status = VX_FAILURE;
     /* bad references */
     if (Array::isValidArray(arr) == vx_false_e)
     {
@@ -920,52 +1087,13 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyArrayRange(vx_array arr, vx_size start,
         return VX_ERROR_INVALID_REFERENCE;
     }
 
-#ifdef OPENVX_USE_OPENCL_INTEROP
-    void * ptr_given = ptr;
-    vx_enum mem_type_given = mem_type;
-    if (mem_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
-    {
-        /* get ptr from OpenCL buffer for HOST */
-        size_t size = 0;
-        cl_mem opencl_buf = (cl_mem)ptr;
-        cl_int cerr = clGetMemObjectInfo(opencl_buf, CL_MEM_SIZE, sizeof(size_t), &size, nullptr);
-        VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyArrayRange: clGetMemObjectInfo(%p) => (%d)\n",
-            opencl_buf, cerr);
-        if (cerr != CL_SUCCESS)
-        {
-            return VX_ERROR_INVALID_PARAMETERS;
-        }
-        ptr = clEnqueueMapBuffer(arr->context->opencl_command_queue,
-            opencl_buf, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, size,
-            0, nullptr, nullptr, &cerr);
-        VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxCopyArrayRange: clEnqueueMapBuffer(%p,%d) => %p (%d)\n",
-            opencl_buf, (int)size, ptr, cerr);
-        if (cerr != CL_SUCCESS)
-        {
-            return VX_ERROR_INVALID_PARAMETERS;
-        }
-        mem_type = VX_MEMORY_TYPE_HOST;
-    }
-#endif
-
-    status = arr->copyArrayRange(start, end, stride, ptr, usage, mem_type);
-
-#ifdef OPENVX_USE_OPENCL_INTEROP
-    if (mem_type_given == VX_MEMORY_TYPE_OPENCL_BUFFER)
-    {
-        clEnqueueUnmapMemObject(arr->context->opencl_command_queue,
-            (cl_mem)ptr_given, ptr, 0, nullptr, nullptr);
-        clFinish(arr->context->opencl_command_queue);
-    }
-#endif
-
-    return status;
+    return arr->copyArrayRange(start, end, stride, ptr, usage, mem_type);
 }
 
-VX_API_ENTRY vx_status VX_API_CALL vxMapArrayRange(vx_array arr, vx_size start, vx_size end, vx_map_id *map_id, vx_size *stride,
-                                                   void **ptr, vx_enum usage, vx_enum mem_type, vx_uint32 flags)
+VX_API_ENTRY vx_status VX_API_CALL vxMapArrayRange(vx_array arr, vx_size start, vx_size end,
+                                                   vx_map_id *map_id, vx_size *stride, void **ptr,
+                                                   vx_enum usage, vx_enum mem_type, vx_uint32 flags)
 {
-    vx_status status = VX_FAILURE;
     /* bad references */
     if (Array::isValidArray(arr) == vx_false_e)
     {
@@ -973,47 +1101,11 @@ VX_API_ENTRY vx_status VX_API_CALL vxMapArrayRange(vx_array arr, vx_size start, 
         return VX_ERROR_INVALID_REFERENCE;
     }
 
-#ifdef OPENVX_USE_OPENCL_INTEROP
-    vx_enum mem_type_requested = mem_type;
-    if (mem_type == VX_MEMORY_TYPE_OPENCL_BUFFER)
-    {
-        mem_type = VX_MEMORY_TYPE_HOST;
-    }
-#endif
-
-    status = arr->mapArrayRange(start, end, map_id, stride, ptr, usage, mem_type, flags);
-
-#ifdef OPENVX_USE_OPENCL_INTEROP
-    vx_size size = (end - start) * *stride;
-    if ((status == VX_SUCCESS) && arr->context->opencl_context &&
-        (mem_type_requested == VX_MEMORY_TYPE_OPENCL_BUFFER) &&
-        (size > 0) && ptr && *ptr)
-    {
-        /* create OpenCL buffer using the host allocated pointer */
-        cl_int cerr = 0;
-        cl_mem opencl_buf = clCreateBuffer(arr->context->opencl_context,
-            CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-            size, *ptr, &cerr);
-        VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxMapArrayRange: clCreateBuffer(%u) => %p (%d)\n",
-            (vx_uint32)size, opencl_buf, cerr);
-        if (cerr == CL_SUCCESS)
-        {
-            arr->context->memory_maps[*map_id].opencl_buf = opencl_buf;
-            *ptr = opencl_buf;
-        }
-        else
-        {
-            status = VX_FAILURE;
-        }
-    }
-#endif
-
-    return status;
+    return arr->mapArrayRange(start, end, map_id, stride, ptr, usage, mem_type, flags);
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxUnmapArrayRange(vx_array arr, vx_map_id map_id)
 {
-    vx_status status = VX_FAILURE;
     /* bad references */
     if (Array::isValidArray(arr) == vx_false_e)
     {
@@ -1021,23 +1113,5 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapArrayRange(vx_array arr, vx_map_id map
         return VX_ERROR_INVALID_REFERENCE;
     }
 
-#ifdef OPENVX_USE_OPENCL_INTEROP
-    if (arr->context->opencl_context &&
-        arr->context->memory_maps[map_id].opencl_buf &&
-        arr->context->memory_maps[map_id].ptr)
-    {
-        clEnqueueUnmapMemObject(arr->context->opencl_command_queue,
-            arr->context->memory_maps[map_id].opencl_buf,
-            arr->context->memory_maps[map_id].ptr, 0, nullptr, nullptr);
-        clFinish(arr->context->opencl_command_queue);
-        cl_int cerr = clReleaseMemObject(arr->context->memory_maps[map_id].opencl_buf);
-        VX_PRINT(VX_ZONE_CONTEXT, "OPENCL: vxUnmapArrayRange: clReleaseMemObject(%p) => (%d)\n",
-            arr->context->memory_maps[map_id].opencl_buf, cerr);
-        arr->context->memory_maps[map_id].opencl_buf = nullptr;
-    }
-#endif
-
-    status = arr->unmapArrayRange(map_id);
-
-    return status;
+    return arr->unmapArrayRange(map_id);
 }

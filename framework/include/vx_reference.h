@@ -53,6 +53,37 @@ public:
      */
     virtual ~Reference();
 
+    /**
+     * @brief Returns the reference count of the object
+     * @return vx_uint32 The reference count
+     * @ingroup group_int_reference
+     */
+    vx_uint32 refCount() const;
+
+    /**
+     * @brief Returns the type of the reference
+     *
+     * @return vx_enum The type of the reference
+     * @ingroup group_int_reference
+     */
+    vx_enum dataType() const;
+
+    /**
+     * @brief Returns the name of the reference
+     *
+     * @return const vx_char* The name of the reference
+     * @ingroup group_int_reference
+     */
+    const vx_char* refName() const;
+
+    /**
+     * @brief Sets the name of the reference
+     *
+     * @param name The name to set
+     * @ingroup group_int_reference
+     */
+    void setName(const vx_char* name);
+
     /*! \brief Used to create a reference.
      * \note This does not add the reference to the system context yet.
      * \param [in] context The system context.
@@ -181,7 +212,7 @@ public:
     cl_event event;
 #endif
     /*! \brief The reference name */
-    char name[VX_MAX_REFERENCE_NAME];
+    vx_char name[VX_MAX_REFERENCE_NAME];
 };
 
 #endif /* VX_REFERENCE_H */

@@ -60,6 +60,30 @@ Reference::~Reference()
     // VX_PRINT(VX_ZONE_REFERENCE, ">>>> Reference count was zero, destructed object " VX_FMT_REF "\n", this);
 }
 
+vx_uint32 Reference::refCount() const
+{
+    return external_count;
+}
+
+vx_enum Reference::dataType() const
+{
+    return type;
+}
+
+const vx_char* Reference::refName() const
+{
+    return name;
+}
+
+void Reference::setName(const char* name)
+{
+    if (name != nullptr)
+    {
+        strncpy(this->name, name, strnlen(name, VX_MAX_REFERENCE_NAME));
+        this->name[VX_MAX_REFERENCE_NAME - 1] = '\0';  // Ensure null termination
+    }
+}
+
 vx_bool Reference::isValidReference(vx_reference ref)
 {
     vx_bool ret = vx_false_e;
@@ -433,7 +457,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryReference(vx_reference ref, vx_enum at
         case VX_REFERENCE_COUNT:
             if (VX_CHECK_PARAM(ptr, size, vx_uint32, 0x3))
             {
-                *(vx_uint32 *)ptr = ref->external_count;
+                *(vx_uint32*)ptr = ref->refCount();
             }
             else
             {
@@ -443,7 +467,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryReference(vx_reference ref, vx_enum at
         case VX_REFERENCE_TYPE:
             if (VX_CHECK_PARAM(ptr, size, vx_enum, 0x3))
             {
-                *(vx_enum *)ptr = ref->type;
+                *(vx_enum*)ptr = ref->dataType();
             }
             else
             {
@@ -453,7 +477,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryReference(vx_reference ref, vx_enum at
         case VX_REFERENCE_NAME:
             if (VX_CHECK_PARAM(ptr, size, vx_char*, 0x3))
             {
-                *(vx_char**)ptr = &ref->name[0];
+                *(vx_char**)ptr = const_cast<vx_char*>(ref->refName());
             }
             else
             {
@@ -473,49 +497,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetReferenceName(vx_reference ref, const vx
 
     if (Reference::isValidReference(ref))
     {
-        strncpy(ref->name, name, strnlen(name, VX_MAX_REFERENCE_NAME));
+        ref->setName(name);
         status = VX_SUCCESS;
-    }
-
-    return status;
-}
-
-VX_API_ENTRY vx_status VX_API_CALL vxReleaseReference(vx_reference* ref_ptr)
-{
-    vx_status status = VX_ERROR_INVALID_REFERENCE;
-
-    vx_reference ref = (ref_ptr ? *ref_ptr : nullptr);
-    if (Reference::isValidReference(ref) == vx_true_e)
-    {
-        switch (ref->type)
-        {
-        case VX_TYPE_CONTEXT:      status = vxReleaseContext((vx_context*)ref_ptr); break;
-        case VX_TYPE_GRAPH:        status = vxReleaseGraph((vx_graph*)ref_ptr); break;
-        case VX_TYPE_NODE:         status = vxReleaseNode((vx_node*)ref_ptr); break;
-        case VX_TYPE_ARRAY:        status = vxReleaseArray((vx_array*)ref_ptr); break;
-        case VX_TYPE_OBJECT_ARRAY: status = vxReleaseObjectArray((vx_object_array*)ref_ptr); break;
-        case VX_TYPE_CONVOLUTION:  status = vxReleaseConvolution((vx_convolution*)ref_ptr); break;
-        case VX_TYPE_DISTRIBUTION: status = vxReleaseDistribution((vx_distribution*)ref_ptr); break;
-        case VX_TYPE_IMAGE:        status = vxReleaseImage((vx_image*)ref_ptr); break;
-        case VX_TYPE_LUT:          status = vxReleaseLUT((vx_lut*)ref_ptr); break;
-        case VX_TYPE_MATRIX:       status = vxReleaseMatrix((vx_matrix*)ref_ptr); break;
-        case VX_TYPE_PYRAMID:      status = vxReleasePyramid((vx_pyramid*)ref_ptr); break;
-        case VX_TYPE_REMAP:        status = vxReleaseRemap((vx_remap*)ref_ptr); break;
-        case VX_TYPE_SCALAR:       status = vxReleaseScalar((vx_scalar*)ref_ptr); break;
-        case VX_TYPE_THRESHOLD:    status = vxReleaseThreshold((vx_threshold*)ref_ptr); break;
-        case VX_TYPE_DELAY:        status = vxReleaseDelay((vx_delay*)ref_ptr); break;
-        case VX_TYPE_KERNEL:       status = vxReleaseKernel((vx_kernel*)ref_ptr); break;
-        case VX_TYPE_PARAMETER:    status = vxReleaseParameter((vx_parameter*)ref_ptr); break;
-        case VX_TYPE_TENSOR:       status = vxReleaseTensor((vx_tensor*)ref_ptr); break;
-#if defined(OPENVX_USE_USER_DATA_OBJECT)
-        case VX_TYPE_USER_DATA_OBJECT: status = vxReleaseUserDataObject((vx_user_data_object*)ref_ptr); break;
-#endif /* defined(OPENVX_USE_USER_DATA_OBJECT) */
-#if defined(OPENVX_USE_IX) || defined(OPENVX_USE_XML)
-        case VX_TYPE_IMPORT:       status = vxReleaseImport((vx_import*)ref_ptr); break;
-#endif
-        default:
-            break;
-        }
     }
 
     return status;
@@ -532,6 +515,87 @@ VX_API_ENTRY vx_status VX_API_CALL vxRetainReference(vx_reference ref)
     else
     {
         status = VX_ERROR_INVALID_REFERENCE;
+    }
+
+    return status;
+}
+
+VX_API_ENTRY vx_status VX_API_CALL vxReleaseReference(vx_reference* ref_ptr)
+{
+    vx_status status = VX_ERROR_INVALID_REFERENCE;
+
+    vx_reference ref = (ref_ptr ? *ref_ptr : nullptr);
+    if (Reference::isValidReference(ref) == vx_true_e)
+    {
+        switch (ref->type)
+        {
+            case VX_TYPE_CONTEXT:
+                status = vxReleaseContext((vx_context*)ref_ptr);
+                break;
+            case VX_TYPE_GRAPH:
+                status = vxReleaseGraph((vx_graph*)ref_ptr);
+                break;
+            case VX_TYPE_NODE:
+                status = vxReleaseNode((vx_node*)ref_ptr);
+                break;
+            case VX_TYPE_ARRAY:
+                status = vxReleaseArray((vx_array*)ref_ptr);
+                break;
+            case VX_TYPE_OBJECT_ARRAY:
+                status = vxReleaseObjectArray((vx_object_array*)ref_ptr);
+                break;
+            case VX_TYPE_CONVOLUTION:
+                status = vxReleaseConvolution((vx_convolution*)ref_ptr);
+                break;
+            case VX_TYPE_DISTRIBUTION:
+                status = vxReleaseDistribution((vx_distribution*)ref_ptr);
+                break;
+            case VX_TYPE_IMAGE:
+                status = vxReleaseImage((vx_image*)ref_ptr);
+                break;
+            case VX_TYPE_LUT:
+                status = vxReleaseLUT((vx_lut*)ref_ptr);
+                break;
+            case VX_TYPE_MATRIX:
+                status = vxReleaseMatrix((vx_matrix*)ref_ptr);
+                break;
+            case VX_TYPE_PYRAMID:
+                status = vxReleasePyramid((vx_pyramid*)ref_ptr);
+                break;
+            case VX_TYPE_REMAP:
+                status = vxReleaseRemap((vx_remap*)ref_ptr);
+                break;
+            case VX_TYPE_SCALAR:
+                status = vxReleaseScalar((vx_scalar*)ref_ptr);
+                break;
+            case VX_TYPE_THRESHOLD:
+                status = vxReleaseThreshold((vx_threshold*)ref_ptr);
+                break;
+            case VX_TYPE_DELAY:
+                status = vxReleaseDelay((vx_delay*)ref_ptr);
+                break;
+            case VX_TYPE_KERNEL:
+                status = vxReleaseKernel((vx_kernel*)ref_ptr);
+                break;
+            case VX_TYPE_PARAMETER:
+                status = vxReleaseParameter((vx_parameter*)ref_ptr);
+                break;
+            case VX_TYPE_TENSOR:
+                status = vxReleaseTensor((vx_tensor*)ref_ptr);
+                break;
+#if defined(OPENVX_USE_USER_DATA_OBJECT)
+            case VX_TYPE_USER_DATA_OBJECT:
+                status = vxReleaseUserDataObject((vx_user_data_object*)ref_ptr);
+                break;
+#endif /* defined(OPENVX_USE_USER_DATA_OBJECT) */
+#if defined(OPENVX_USE_IX) || defined(OPENVX_USE_XML)
+            case VX_TYPE_IMPORT:
+                status = vxReleaseImport((vx_import*)ref_ptr);
+                break;
+#endif
+            default:
+                break;
+        }
     }
 
     return status;
