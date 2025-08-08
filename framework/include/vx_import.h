@@ -32,6 +32,8 @@
 /*! \brief The internal representation of a \ref vx_import
  * \ingroup group_int_import
  */
+namespace corevx {
+
 class Import : public Reference
 {
 public:
@@ -131,5 +133,10 @@ public:
     /*! \brief The set of references in the import. */
     vx_reference* refs;
 };
+
+} // namespace corevx
+
+// Temporary global alias during namespace migration
+using corevx::Import;
 
 #endif /* VX_IMPORT_H */

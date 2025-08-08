@@ -34,6 +34,8 @@
 /*! \brief The internal representation of a graph.
  * \ingroup group_int_graph
  */
+namespace corevx {
+
 class Graph : public Reference
 {
 private:
@@ -405,5 +407,10 @@ public:
     /*! \brief The graph scheduling mode */
     vx_graph_schedule_mode_type_e scheduleMode;
 };
+
+} // namespace corevx
+
+// Temporary global alias during namespace migration
+using corevx::Graph;
 
 #endif /* VX_GRAPH_H */

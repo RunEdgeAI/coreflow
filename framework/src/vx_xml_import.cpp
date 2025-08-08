@@ -18,6 +18,8 @@
 #include "vx_internal.h"
 #include "vx_type_pairs.h"
 
+using namespace corevx;
+
 #if defined(OPENVX_USE_XML)
 
 #if defined(__APPLE__)

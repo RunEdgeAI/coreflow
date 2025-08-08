@@ -35,6 +35,8 @@ void ownReleaseThresholdInt(vx_threshold* threshold);
 /*! \brief The internal threshold structure.
  * \ingroup group_int_threshold
  */
+namespace corevx {
+
 class Threshold : public Reference
 {
 public:
@@ -326,5 +328,10 @@ public:
     /*! \brief The output image format  */
     vx_df_image output_format;
 };
+
+} // namespace corevx
+
+// Temporary global alias during namespace migration
+using corevx::Threshold;
 
 #endif /* VX_THRESHOLD_H */

@@ -38,6 +38,8 @@ extern const vx_char implementation[];
 /*! \brief The top level context data for the entire OpenVX instance
  * \ingroup group_int_context
  */
+namespace corevx {
+
 class Context : public Reference
 {
 public:
@@ -504,5 +506,10 @@ public:
     /*! \brief The name of additional extensions in this impleemntation */
     const vx_char* extension;
 };
+
+} // namespace corevx
+
+// Temporary global alias during namespace migration
+using corevx::Context;
 
 #endif /* VX_CONTEXT_H */

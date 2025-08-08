@@ -31,6 +31,8 @@
 /*! \brief The internal representation of a \ref vx_array
  * \ingroup group_int_array
  */
+namespace corevx {
+
 class Array : public Reference
 {
 public:
@@ -295,5 +297,10 @@ public:
     /*! \brief Offset attribute value. Used internally by LUT implementation */
     vx_uint32 offset;
 };
+
+} // namespace corevx
+
+// Temporary global alias during namespace migration
+using corevx::Array;
 
 #endif /* VX_ARRAY_H */

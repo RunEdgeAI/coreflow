@@ -25,6 +25,8 @@
 /*! \brief user data object descriptor as placed in shared memory
  * \ingroup group_int_user_data_object
  */
+namespace corevx {
+
 class UserDataObject : public Reference
 {
 public:
@@ -113,5 +115,10 @@ public:
     /*! \brief The type name of the user data object. */
     vx_char type_name[VX_MAX_REFERENCE_NAME];
 };
+
+} // namespace corevx
+
+// Temporary global alias during namespace migration
+using corevx::UserDataObject;
 
 #endif /* VX_USER_DATA_OBJECT_H */

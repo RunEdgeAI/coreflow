@@ -16,6 +16,8 @@
 
 #include "vx_internal.h"
 
+using namespace corevx;
+
 vx_enum static_objects[] = {
         VX_TYPE_TARGET,
         VX_TYPE_KERNEL,

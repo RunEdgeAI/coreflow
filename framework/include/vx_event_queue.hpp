@@ -23,6 +23,8 @@
  * @brief Internal Event Queue Object
  *
  */
+namespace corevx {
+
 class EventQueue
 {
     // Registration structure that stores additional event parameters for a vx_reference.
@@ -256,3 +258,8 @@ private : bool enabled_;
         return std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
     }
 };
+
+} // namespace corevx
+
+// Temporary global alias during namespace migration
+using corevx::EventQueue;

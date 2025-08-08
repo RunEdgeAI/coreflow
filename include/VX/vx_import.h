@@ -52,8 +52,8 @@ IMPORT
  * \ingroup group_import
  */
 #ifdef __cplusplus
-class Import;
-using vx_import = Import*;
+namespace corevx { class Import; }
+using vx_import = corevx::Import*;
 #else
 struct Import;
 typedef struct Import* vx_import;

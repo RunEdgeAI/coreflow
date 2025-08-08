@@ -31,6 +31,8 @@
 /*! \brief A Distribution.
  * \ingroup group_int_distribution
  */
+namespace corevx {
+
 class Distribution : public Reference
 {
 public:
@@ -166,5 +168,10 @@ public:
     /*! \brief The number of inactive elements from zero in the Y dimension */
     vx_int32 offset_y;
 };
+
+} // namespace corevx
+
+// Temporary global alias during namespace migration
+using corevx::Distribution;
 
 #endif /* VX_DISTRIBUTION_H */

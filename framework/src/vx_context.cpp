@@ -20,6 +20,8 @@
 #include "vx_internal.h"
 #include "vx_context.h"
 
+using namespace corevx;
+
 vx_char targetModules[][VX_MAX_TARGET_NAME] = {
 #if defined(EXPERIMENTAL_USE_OPENCL)
     "openvx-opencl",

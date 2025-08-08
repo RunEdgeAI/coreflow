@@ -30,6 +30,8 @@
 /*! \brief The internal representation of the error object.
  * \ingroup group_int_error
  */
+namespace corevx {
+
 class Error : public Reference
 {
 public:
@@ -84,6 +86,11 @@ public:
     /*! \brief The specific error code contained in this object. */
     vx_status status;
 };
+
+} // namespace corevx
+
+// Temporary global alias during namespace migration
+using corevx::Error;
 
 /*! \brief Matches the status code against all known error objects in the
  * context.

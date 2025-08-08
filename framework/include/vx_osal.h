@@ -28,6 +28,7 @@
  * \ingroup group_internal
  * \brief The Internal Operating System Abstraction Layer API.
  */
+namespace corevx {
 
 /**
  * @brief OS Abstraction Layer Utility Class
@@ -312,5 +313,7 @@ public:
      */
     static vx_symbol_t getSymbol(vx_module_handle_t mod, const vx_char * name);
 };
+
+} // namespace corevx
 
 #endif /* VX_OSAL_H */

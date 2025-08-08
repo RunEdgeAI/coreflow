@@ -35,6 +35,8 @@
  * framework to automatically create the data object, if needed.
  * \ingroup group_int_meta_format
  */
+namespace corevx {
+
 class MetaFormat : public Reference
 {
 public:
@@ -245,6 +247,11 @@ public:
 
     vx_kernel_image_valid_rectangle_f set_valid_rectangle_callback;
 };
+
+} // namespace corevx
+
+// Temporary global alias during namespace migration
+using corevx::MetaFormat;
 
 /*! \brief Creates a metaformat object.
  * \param [in] context The overall context object.

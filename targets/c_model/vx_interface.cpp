@@ -26,6 +26,8 @@
 #include "vx_internal.h"
 #include "vx_interface.h"
 
+using namespace corevx;
+
 static const vx_char name[VX_MAX_TARGET_NAME] = "khronos.any";
 
 /*! \brief Declares the list of all supported base kernels.

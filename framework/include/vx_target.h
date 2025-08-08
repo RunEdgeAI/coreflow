@@ -30,6 +30,8 @@
 /*! \brief The internal representation of a target.
  * \ingroup group_int_target
  */
+namespace corevx {
+
 class Target : public Reference
 {
 public:
@@ -118,5 +120,10 @@ public:
     /*! \brief Target Specific Private Data */
     void               *reserved;
 };
+
+} // namespace corevx
+
+// Temporary global alias during namespace migration
+using corevx::Target;
 
 #endif /* VX_TARGET_H */

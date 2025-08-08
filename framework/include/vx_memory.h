@@ -29,6 +29,8 @@
 /*! \brief The internal representation of a \ref vx_memory_t
  * \ingroup group_int_memory
  */
+namespace corevx {
+
 class Memory
 {
 public:
@@ -77,5 +79,10 @@ public:
                                             vx_uint32 y,
                                             vx_uint32 p);
 };
+
+} // namespace corevx
+
+// Temporary global alias during namespace migration
+using corevx::Memory;
 
 #endif /* VX_MEMORY_H */

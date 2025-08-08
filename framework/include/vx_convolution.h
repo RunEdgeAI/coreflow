@@ -32,6 +32,8 @@
 /*! \brief A convolution is a special type of matrix (MxM)
  * \ingroup group_int_convolution
  */
+namespace corevx {
+
 class Convolution : public Matrix
 {
 public:
@@ -113,5 +115,10 @@ public:
      */
     vx_uint32 scale;
 };
+
+} // namespace corevx
+
+// Temporary global alias during namespace migration
+using corevx::Convolution;
 
 #endif /* VX_CONVOLUTION_H */

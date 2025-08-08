@@ -55,6 +55,8 @@ vx_graph vxGetChildGraphOfNode(vx_node node);
 /*! \brief The internal representation of a node.
  * \ingroup group_int_node
  */
+namespace corevx {
+
 class Node : public Reference
 {
 public:
@@ -295,5 +297,10 @@ public:
     /*! \brief The node state */
     vx_node_state_e     state;
 };
+
+} // namespace corevx
+
+// Temporary global alias during namespace migration
+using corevx::Node;
 
 #endif /* VX_NODE_H */
