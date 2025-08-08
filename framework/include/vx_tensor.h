@@ -225,5 +225,4 @@ public:
 
 } // namespace corevx
 
-
-#endif
+#endif /* VX_TENSOR_H */

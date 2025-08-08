@@ -421,5 +421,4 @@ public:
 
 } // namespace corevx
 
-
 #endif /* VX_IMAGE_H */

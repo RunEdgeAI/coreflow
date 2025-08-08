@@ -189,5 +189,4 @@ public:
 
 } // namespace corevx
 
-
 #endif /* VX_SCALAR_H */

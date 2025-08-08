@@ -175,5 +175,4 @@ public:
 
 } // namespace corevx
 
-
 #endif /* VX_PARAMETER_H */

@@ -300,5 +300,4 @@ public:
 
 } // namespace corevx
 
-
 #endif /* VX_ARRAY_H */

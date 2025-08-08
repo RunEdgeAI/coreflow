@@ -260,4 +260,3 @@ private : bool enabled_;
 };
 
 } // namespace corevx
-

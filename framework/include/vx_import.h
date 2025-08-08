@@ -136,5 +136,4 @@ public:
 
 } // namespace corevx
 
-
 #endif /* VX_IMPORT_H */

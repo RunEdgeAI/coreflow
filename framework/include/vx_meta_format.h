@@ -250,7 +250,6 @@ public:
 
 } // namespace corevx
 
-
 /*! \brief Creates a metaformat object.
  * \param [in] context The overall context object.
  * \ingroup group_int_meta_format

@@ -82,5 +82,4 @@ public:
 
 } // namespace corevx
 
-
 #endif /* VX_MEMORY_H */

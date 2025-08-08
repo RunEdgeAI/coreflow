@@ -219,5 +219,4 @@ public:
 
 } // namespace corevx
 
-
 #endif /* VX_REFERENCE_H */

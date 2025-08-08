@@ -171,5 +171,4 @@ public:
 
 } // namespace corevx
 
-
 #endif /* VX_DISTRIBUTION_H */

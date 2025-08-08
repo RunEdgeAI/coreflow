@@ -410,5 +410,4 @@ public:
 
 } // namespace corevx
 
-
 #endif /* VX_GRAPH_H */

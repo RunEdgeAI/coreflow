@@ -144,5 +144,4 @@ public:
 
 } // namespace corevx
 
-
 #endif /* VX_OBJECT_ARRAY_H */

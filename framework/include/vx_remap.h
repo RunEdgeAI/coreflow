@@ -197,5 +197,4 @@ public:
 
 } // namespace corevx
 
-
 #endif /* VX_REMAP_H */

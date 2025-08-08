@@ -462,5 +462,4 @@ public:
 
 } // namespace corevx
 
-
 #endif /* VX_KERNEL_H */

@@ -118,5 +118,4 @@ public:
 
 } // namespace corevx
 
-
 #endif /* VX_CONVOLUTION_H */

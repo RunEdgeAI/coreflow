@@ -331,5 +331,4 @@ public:
 
 } // namespace corevx
 
-
 #endif /* VX_THRESHOLD_H */

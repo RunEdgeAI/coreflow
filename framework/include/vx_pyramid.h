@@ -151,5 +151,4 @@ public:
 
 } // namespace corevx
 
-
 #endif /* VX_PYRAMID_H */

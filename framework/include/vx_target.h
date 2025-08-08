@@ -123,5 +123,4 @@ public:
 
 } // namespace corevx
 
-
 #endif /* VX_TARGET_H */

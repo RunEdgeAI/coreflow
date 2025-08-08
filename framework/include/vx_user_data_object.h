@@ -118,5 +118,4 @@ public:
 
 } // namespace corevx
 
-
 #endif /* VX_USER_DATA_OBJECT_H */

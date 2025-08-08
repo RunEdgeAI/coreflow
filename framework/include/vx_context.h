@@ -509,5 +509,4 @@ public:
 
 } // namespace corevx
 
-
 #endif /* VX_CONTEXT_H */

@@ -89,7 +89,6 @@ public:
 
 } // namespace corevx
 
-
 /*! \brief Matches the status code against all known error objects in the
  * context.
  * \param [in] context The pointer to the overall context.
