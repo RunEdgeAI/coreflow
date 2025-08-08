@@ -11,6 +11,7 @@
 // C++ class headers (implementation classes). These expose full class methods.
 // Note: These are part of the current implementation and may include internal details.
 // They are intentionally exposed here to allow direct C++ usage of the pipeline engine.
+#include "framework/include/vx_internal.h"
 #include "framework/include/vx_reference.h"
 #include "framework/include/vx_context.h"
 #include "framework/include/vx_graph.h"
