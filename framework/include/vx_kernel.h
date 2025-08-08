@@ -462,7 +462,5 @@ public:
 
 } // namespace corevx
 
-// Temporary global alias during namespace migration
-using corevx::Kernel;
 
 #endif /* VX_KERNEL_H */

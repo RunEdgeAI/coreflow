@@ -56,7 +56,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
     vx_enum stype = VX_TYPE_INVALID;
     vxCopyScalar(sc, &value, VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     vxQueryScalar(sc, VX_SCALAR_TYPE, &stype, sizeof(stype));
-    size = Reference::sizeOfType(stype);
+    size = corevx::Reference::sizeOfType(stype);
     err = clSetKernelArg(kernel, argidx++, size, &value);
 
 
@@ -80,7 +80,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         memory->hdls[pln],
         CL_TRUE,
         0,
-        Memory::computeMemorySize(memory, pln),
+        corevx::Memory::computeMemorySize(memory, pln),
         memory->ptrs[pln],
         0,
         nullptr,
@@ -91,7 +91,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
     ref = node->parameters[2];
     memory = &((vx_matrix)ref)->memory;
 
-    size = Memory::computeMemorySize(memory, pln);
+    size = corevx::Memory::computeMemorySize(memory, pln);
 
     memory->hdls[pln] = clCreateBuffer(context->global[0], CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, size, memory->ptrs[pln], &err);
     err = clEnqueueWriteBuffer(context->queues[plidx][didx],
@@ -194,7 +194,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
 
     err = clEnqueueReadBuffer(context->queues[plidx][didx],
         memory->hdls[pln],
-        CL_TRUE, 0, Memory::computeMemorySize(memory, pln),
+        CL_TRUE, 0, corevx::Memory::computeMemorySize(memory, pln),
         memory->ptrs[pln],
         0, nullptr, nullptr);
 

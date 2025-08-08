@@ -261,5 +261,3 @@ private : bool enabled_;
 
 } // namespace corevx
 
-// Temporary global alias during namespace migration
-using corevx::EventQueue;

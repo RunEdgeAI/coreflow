@@ -151,7 +151,5 @@ public:
 
 } // namespace corevx
 
-// Temporary global alias during namespace migration
-using corevx::Pyramid;
 
 #endif /* VX_PYRAMID_H */

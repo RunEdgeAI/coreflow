@@ -136,7 +136,5 @@ public:
 
 } // namespace corevx
 
-// Temporary global alias during namespace migration
-using corevx::Import;
 
 #endif /* VX_IMPORT_H */

@@ -150,7 +150,5 @@ public:
 
 } // namespace corevx
 
-// Temporary global alias during namespace migration
-using corevx::Matrix;
 
 #endif /* VX_MATRIX_H */

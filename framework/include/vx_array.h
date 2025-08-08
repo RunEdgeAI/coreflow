@@ -300,7 +300,5 @@ public:
 
 } // namespace corevx
 
-// Temporary global alias during namespace migration
-using corevx::Array;
 
 #endif /* VX_ARRAY_H */

@@ -509,7 +509,5 @@ public:
 
 } // namespace corevx
 
-// Temporary global alias during namespace migration
-using corevx::Context;
 
 #endif /* VX_CONTEXT_H */

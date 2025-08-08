@@ -65,7 +65,5 @@ public:
 
 } // namespace corevx
 
-// Temporary global alias during namespace migration
-using corevx::Logger;
 
 #endif /* VX_LOG_H */

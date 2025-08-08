@@ -142,7 +142,4 @@ public:
 
 } // namespace corevx
 
-// Temporary global alias during namespace migration
-using corevx::Delay;
-
 #endif /* VX_DELAY_H */

@@ -175,7 +175,5 @@ public:
 
 } // namespace corevx
 
-// Temporary global alias during namespace migration
-using corevx::Parameter;
 
 #endif /* VX_PARAMETER_H */

@@ -16,6 +16,8 @@
 
 #include "vx_internal.h"
 
+using namespace corevx;
+
 #ifdef OPENVX_USE_IX
 #ifndef VX_IX_USE_IMPORT_AS_KERNEL
 #define VX_IX_USE_IMPORT_AS_KERNEL (VX_ENUM_BASE(VX_ID_KHRONOS, VX_ENUM_IX_USE) + 0x3) /*!< \brief Graph exported as user kernel. */

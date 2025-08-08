@@ -250,8 +250,6 @@ public:
 
 } // namespace corevx
 
-// Temporary global alias during namespace migration
-using corevx::MetaFormat;
 
 /*! \brief Creates a metaformat object.
  * \param [in] context The overall context object.

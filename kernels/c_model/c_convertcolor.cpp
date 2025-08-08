@@ -164,12 +164,12 @@ vx_status vxConvertColor(vx_image src, vx_image dst)
     for (p = 0; p < src_planes; p++)
     {
         status |= vxAccessImagePatch(src, &rect, p, &src_addr[p], &src_base[p], VX_READ_ONLY);
-        Image::printImageAddressing(&src_addr[p]);
+        corevx::Image::printImageAddressing(&src_addr[p]);
     }
     for (p = 0; p < dst_planes; p++)
     {
         status |= vxAccessImagePatch(dst, &rect, p, &dst_addr[p], &dst_base[p], VX_WRITE_ONLY);
-        Image::printImageAddressing(&dst_addr[p]);
+        corevx::Image::printImageAddressing(&dst_addr[p]);
     }
     if (status != VX_SUCCESS)
     {

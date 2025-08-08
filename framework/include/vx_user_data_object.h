@@ -118,7 +118,5 @@ public:
 
 } // namespace corevx
 
-// Temporary global alias during namespace migration
-using corevx::UserDataObject;
 
 #endif /* VX_USER_DATA_OBJECT_H */

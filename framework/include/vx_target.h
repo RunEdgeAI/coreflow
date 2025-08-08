@@ -123,7 +123,5 @@ public:
 
 } // namespace corevx
 
-// Temporary global alias during namespace migration
-using corevx::Target;
 
 #endif /* VX_TARGET_H */

@@ -89,8 +89,6 @@ public:
 
 } // namespace corevx
 
-// Temporary global alias during namespace migration
-using corevx::Error;
 
 /*! \brief Matches the status code against all known error objects in the
  * context.

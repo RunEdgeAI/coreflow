@@ -189,7 +189,5 @@ public:
 
 } // namespace corevx
 
-// Temporary global alias during namespace migration
-using corevx::Scalar;
 
 #endif /* VX_SCALAR_H */

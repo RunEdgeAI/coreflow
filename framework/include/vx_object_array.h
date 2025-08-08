@@ -144,7 +144,5 @@ public:
 
 } // namespace corevx
 
-// Temporary global alias during namespace migration
-using corevx::ObjectArray;
 
 #endif /* VX_OBJECT_ARRAY_H */

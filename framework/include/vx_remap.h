@@ -197,7 +197,5 @@ public:
 
 } // namespace corevx
 
-// Temporary global alias during namespace migration
-using corevx::Remap;
 
 #endif /* VX_REMAP_H */

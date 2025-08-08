@@ -12,6 +12,8 @@
 
 #include "vx_internal.h"
 
+using namespace corevx;
+
 class ScalarTest : public ::testing::Test
 {
 protected:

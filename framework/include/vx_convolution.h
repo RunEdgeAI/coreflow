@@ -118,7 +118,5 @@ public:
 
 } // namespace corevx
 
-// Temporary global alias during namespace migration
-using corevx::Convolution;
 
 #endif /* VX_CONVOLUTION_H */

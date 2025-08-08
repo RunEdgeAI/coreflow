@@ -300,7 +300,5 @@ public:
 
 } // namespace corevx
 
-// Temporary global alias during namespace migration
-using corevx::Node;
 
 #endif /* VX_NODE_H */

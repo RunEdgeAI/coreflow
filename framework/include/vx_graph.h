@@ -410,7 +410,5 @@ public:
 
 } // namespace corevx
 
-// Temporary global alias during namespace migration
-using corevx::Graph;
 
 #endif /* VX_GRAPH_H */
