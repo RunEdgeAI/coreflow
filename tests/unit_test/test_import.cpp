@@ -12,6 +12,8 @@
 
 #include "vx_internal.h"
 
+using namespace corevx;
+
 #if defined(OPENVX_USE_XML) || defined(OPENVX_USE_IX)
 
 class ImportTest : public ::testing::Test

@@ -17,6 +17,8 @@
 #include "vx_internal.h"
 #include "vx_osal.h"
 
+using namespace corevx;
+
 #define BILLION (1000000000LLU)
 
 vx_bool Osal::createSem(vx_sem_t *sem, vx_uint32 count)

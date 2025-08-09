@@ -30,6 +30,8 @@
 /*! \brief The internal representation of a tensor.
  * \ingroup group_int_tensor
  */
+namespace corevx {
+
 class Tensor : public Reference
 {
 public:
@@ -220,5 +222,8 @@ public:
     /*! \brief Array of subimages. */
     vx_image  subimages[VX_INT_MAX_REF];
 };
+
+} // namespace corevx
+
 
 #endif

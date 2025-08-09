@@ -35,6 +35,8 @@
  *  to allow casting to this type.
  * \ingroup group_int_reference
  */
+namespace corevx {
+
 class Reference {
 public:
     /**
@@ -214,5 +216,8 @@ public:
     /*! \brief The reference name */
     vx_char name[VX_MAX_REFERENCE_NAME];
 };
+
+} // namespace corevx
+
 
 #endif /* VX_REFERENCE_H */

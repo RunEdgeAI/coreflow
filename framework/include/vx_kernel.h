@@ -35,6 +35,8 @@
 /*! \brief The internal representation of an abstract kernel.
  * \ingroup group_int_kernel
  */
+namespace corevx {
+
 class Kernel : public Reference
 {
 public:
@@ -457,5 +459,8 @@ public:
     /*! \brief Indicates whether kernel has piped up */
     vx_uint32 pipeUpCounter;
 };
+
+} // namespace corevx
+
 
 #endif /* VX_KERNEL_H */

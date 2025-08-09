@@ -19,6 +19,8 @@
 
 #include "vx_internal.h"
 
+using namespace corevx;
+
 #ifdef OPENVX_USE_STREAMING
 
 VX_API_ENTRY vx_status VX_API_CALL vxEnableGraphStreaming(vx_graph graph,

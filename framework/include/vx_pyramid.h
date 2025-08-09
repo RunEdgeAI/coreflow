@@ -31,6 +31,8 @@
 /*! \brief A pyramid object. Contains a set of scaled images.
  * \ingroup group_int_pyramid
  */
+namespace corevx {
+
 class Pyramid : public Reference
 {
 public:
@@ -146,5 +148,8 @@ public:
     /*! \brief Format for all levels */
     vx_df_image format;
 };
+
+} // namespace corevx
+
 
 #endif /* VX_PYRAMID_H */

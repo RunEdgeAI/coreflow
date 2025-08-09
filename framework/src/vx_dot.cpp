@@ -22,6 +22,8 @@
 #include "vx_internal.h"
 #include "vx_type_pairs.h"
 
+using namespace corevx;
+
 #if defined(EXPERIMENTAL_USE_DOT)
 VX_API_ENTRY vx_status VX_API_CALL vxExportGraphToDot(vx_graph graph, vx_char dotfile[], vx_bool showData)
 {

@@ -30,6 +30,8 @@
 /*! \brief The internal representation of a parameter.
  * \ingroup group_int_parameter
  */
+namespace corevx {
+
 class Parameter : public Reference
 {
 public:
@@ -170,5 +172,8 @@ public:
      */
     vx_kernel      kernel;
 };
+
+} // namespace corevx
+
 
 #endif /* VX_PARAMETER_H */

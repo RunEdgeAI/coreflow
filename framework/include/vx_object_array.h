@@ -31,6 +31,8 @@
 /*! \brief The internal representation of a \ref vx_object_array
  * \ingroup group_int_object_array
  */
+namespace corevx {
+
 class ObjectArray : public Reference
 {
 public:
@@ -139,5 +141,8 @@ public:
     /*! \brief The item type of the array. */
     vx_enum item_type;
 };
+
+} // namespace corevx
+
 
 #endif /* VX_OBJECT_ARRAY_H */

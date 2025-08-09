@@ -199,7 +199,8 @@
 /*! \brief Used to determine is a type is an image.
  * \ingroup group_int_macros
  */
-#define VX_TYPE_IS_IMAGE(type)  (Image::isSupportedFourcc(type) == vx_true_e)
+// Ensure namespaced Image is referenced
+#define VX_TYPE_IS_IMAGE(type)  (corevx::Image::isSupportedFourcc(type) == vx_true_e)
 
 /*! \brief Used to determine if a type is a scalar.
  * \ingroup group_int_macros
@@ -426,10 +427,9 @@ typedef struct vx_processor_t {
 // forward declarations
 struct vx_threadpool_t;
 struct vx_threadpool_worker_t;
-class Target;
-using vx_target = Target*;
-class Error;
-using vx_error = Error*;
+namespace corevx { class Target; class Error; }
+using vx_target = corevx::Target*;
+using vx_error = corevx::Error*;
 
 /*! \brief The function pointer to the worker function.
  * \param [in] worker The per-thread worker data structure.

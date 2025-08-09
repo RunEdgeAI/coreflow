@@ -30,6 +30,8 @@
 /*! \brief The internal matrix structure.
  * \ingroup group_int_matrix
  */
+namespace corevx {
+
 class Matrix : public Reference
 {
 public:
@@ -145,5 +147,8 @@ public:
     /*! \brief Pattern */
     vx_enum pattern;
 };
+
+} // namespace corevx
+
 
 #endif /* VX_MATRIX_H */

@@ -61,8 +61,13 @@ enum vx_import_attribute_e {
  * \ingroup group_xml
  * \extends vx_reference
  */
-class Import;
-using vx_import = Import*;
+#ifdef __cplusplus
+namespace corevx { class Import; }
+using vx_import = corevx::Import*;
+#else
+struct Import;
+typedef struct Import* vx_import;
+#endif
 
 
 #ifdef __cplusplus

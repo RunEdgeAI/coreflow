@@ -12,6 +12,8 @@
 
 #include "vx_internal.h"
 
+using namespace corevx;
+
 #ifdef OPENVX_USE_USER_DATA_OBJECT
 
 class UserDataObjectTest : public ::testing::Test

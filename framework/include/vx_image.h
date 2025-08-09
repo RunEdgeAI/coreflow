@@ -31,6 +31,8 @@
 /*! \brief The internal representation of a \ref vx_image
  * \ingroup group_int_image
  */
+namespace corevx {
+
 class Image : public Reference
 {
 public:
@@ -416,5 +418,8 @@ public:
     cl_image_format cl_format;
 #endif
 };
+
+} // namespace corevx
+
 
 #endif /* VX_IMAGE_H */

@@ -12,6 +12,8 @@
 
 #include "vx_internal.h"
 
+using namespace corevx;
+
 class RemapTest : public ::testing::Test
 {
 protected:

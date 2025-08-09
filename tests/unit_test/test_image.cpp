@@ -12,6 +12,8 @@
 
 #include "vx_internal.h"
 
+using namespace corevx;
+
 class ImageTest : public ::testing::Test
 {
 protected:

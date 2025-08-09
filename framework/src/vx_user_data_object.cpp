@@ -23,6 +23,8 @@
 
 #include "vx_internal.h"
 
+using namespace corevx;
+
 #if defined(OPENVX_USE_USER_DATA_OBJECT)
 
 /*****************************************************************************/

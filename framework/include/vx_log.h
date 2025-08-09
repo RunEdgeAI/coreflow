@@ -31,6 +31,8 @@
  * @brief Logger utility class that wraps spdlog functionality
  * @ingroup group_int_log
  */
+namespace corevx {
+
 class Logger
 {
 public:
@@ -60,5 +62,8 @@ public:
      */
     static void addLogEntry(vx_reference ref, vx_status status, const char *message, va_list ap);
 };
+
+} // namespace corevx
+
 
 #endif /* VX_LOG_H */

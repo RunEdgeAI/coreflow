@@ -30,6 +30,8 @@
 /*! \brief The internal representation of a scalar value.
  * \ingroup group_int_scalar
  */
+namespace corevx {
+
 class Scalar : public Reference
 {
 public:
@@ -184,5 +186,8 @@ public:
     /*! \brief The length of pointer data_addr */
     vx_size data_len;
 };
+
+} // namespace corevx
+
 
 #endif /* VX_SCALAR_H */

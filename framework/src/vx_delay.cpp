@@ -17,6 +17,7 @@
 #include "vx_internal.h"
 #include "vx_delay.h"
 
+using namespace corevx;
 #define vxIsValidDelay(d) ((d) && Reference::isValidReference((vx_reference)(d), VX_TYPE_DELAY))
 #define vxIsValidGraph(g) ((g) && Reference::isValidReference((vx_reference)(g), VX_TYPE_GRAPH))
 

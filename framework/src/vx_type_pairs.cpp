@@ -15,6 +15,8 @@
 
 #include "vx_type_pairs.h"
 
+using namespace corevx;
+
 #if defined(EXPERIMENTAL_USE_DOT) || defined(OPENVX_USE_XML)
 
 vx_int32 TypePairs::stringFromType(vx_enum type)

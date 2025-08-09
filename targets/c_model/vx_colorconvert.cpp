@@ -28,7 +28,7 @@
 
 static vx_status VX_CALLBACK vxColorConvertKernel(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    if (vx_true_e == Reference::isValidReference(node, VX_TYPE_NODE) &&
+    if (vx_true_e == corevx::Reference::isValidReference(node, VX_TYPE_NODE) &&
         (2 == num))
     {
         vx_image src = (vx_image)parameters[0];

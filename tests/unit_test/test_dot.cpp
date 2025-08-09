@@ -14,6 +14,8 @@
 #include <VX/vx.h>
 #include "vx_internal.h"
 
+using namespace corevx;
+
 // Helper to write DOT file content to a temporary file.
 static std::string writeTempDotFile(const std::string &content)
 {

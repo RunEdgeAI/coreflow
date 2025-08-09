@@ -12,6 +12,8 @@
 
 #include "vx_internal.h"
 
+using namespace corevx;
+
 class ArrayTest : public ::testing::Test
 {
 protected:

@@ -26,6 +26,8 @@
 /*! \brief The internal representation of any delay object.
  * \ingroup group_int_delay
  */
+namespace corevx {
+
 class Delay : public Reference
 {
 public:
@@ -137,5 +139,7 @@ public:
     /*! \brief The set of delays for pyramid levels. */
     vx_delay* pyr;
 };
+
+} // namespace corevx
 
 #endif /* VX_DELAY_H */

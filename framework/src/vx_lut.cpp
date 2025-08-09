@@ -17,6 +17,8 @@
 #include "vx_internal.h"
 #include "vx_lut.h"
 
+using namespace corevx;
+
 VX_API_ENTRY vx_lut VX_API_CALL vxCreateLUT(vx_context context, vx_enum data_type, vx_size count)
 {
     vx_lut_t lut = nullptr;

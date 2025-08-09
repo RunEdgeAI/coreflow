@@ -75,7 +75,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
         memory->hdls[pln],
         CL_TRUE,
         0,
-        Memory::computeMemorySize(memory, pln),
+        corevx::Memory::computeMemorySize(memory, pln),
         memory->ptrs[pln],
         0,
         nullptr,
@@ -141,7 +141,7 @@ static vx_status VX_CALLBACK vxclCallOpenCLKernel(vx_node node, const vx_referen
 
     err = clEnqueueReadBuffer(context->queues[plidx][didx],
         memory->hdls[pln],
-        CL_TRUE, 0, Memory::computeMemorySize(memory, pln),
+        CL_TRUE, 0, corevx::Memory::computeMemorySize(memory, pln),
         memory->ptrs[pln],
         0, nullptr, nullptr);
 
