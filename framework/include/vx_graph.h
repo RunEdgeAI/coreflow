@@ -39,7 +39,6 @@ namespace corevx {
 class Graph : public Reference
 {
 private:
-
     /**
      * @brief Get the next node index given current node index
      *
@@ -89,6 +88,12 @@ private:
      * @ingroup group_int_graph
      */
     static void contaminateGraphs(vx_reference ref);
+
+    /**
+     * @brief Destroy the Graph object
+     * @ingroup group_int_graph
+     */
+    ~Graph();
 public:
     /**
      * @brief Construct a new Graph object
@@ -100,10 +105,13 @@ public:
     Graph(vx_context context, vx_reference scope);
 
     /**
-     * @brief Destroy the Graph object
+     * @brief Create a graph
+     *
+     * @param context   The context associated with this graph
+     * @return vx_graph The graph object
      * @ingroup group_int_graph
      */
-    ~Graph();
+    static vx_graph createGraph(vx_context context);
 
     /**
      * @brief Do a topological in-place sort of the nodes in list, with current

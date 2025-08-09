@@ -244,6 +244,12 @@ vx_image Image::createImage(vx_context context,
 {
     vx_image image = nullptr;
 
+    if ((width == 0) || (height == 0) || (Image::isSupportedFourcc(color) == vx_false_e) ||
+        (color == VX_DF_IMAGE_VIRT))
+    {
+        return (vx_image)Error::getError(context, VX_ERROR_INVALID_PARAMETERS);
+    }
+
     if (Context::isValidContext(context) == vx_true_e)
     {
         if (Image::isSupportedFourcc(color) == vx_true_e)
@@ -251,7 +257,7 @@ vx_image Image::createImage(vx_context context,
             if (Image::isValidDimensions(width, height, color) == vx_true_e)
             {
                 image = (vx_image)Reference::createReference(context, VX_TYPE_IMAGE, VX_EXTERNAL, context);
-                if (vxGetStatus((vx_reference)image) == VX_SUCCESS && image->type == VX_TYPE_IMAGE)
+                if (Error::getStatus((vx_reference)image) == VX_SUCCESS && image->type == VX_TYPE_IMAGE)
                 {
                     image->is_virtual = is_virtual;
                     image->initImage(width, height, color);
@@ -261,14 +267,14 @@ vx_image Image::createImage(vx_context context,
             {
                 VX_PRINT(VX_ZONE_ERROR, "Requested Image Dimensions are invalid!\n");
                 vxAddLogEntry((vx_reference)image, VX_ERROR_INVALID_DIMENSION, "Requested Image Dimensions was invalid!\n");
-                image = (vx_image)vxGetErrorObject(context, VX_ERROR_INVALID_DIMENSION);
+                image = (vx_image)Error::getError(context, VX_ERROR_INVALID_DIMENSION);
             }
         }
         else
         {
             VX_PRINT(VX_ZONE_ERROR, "Requested Image Format was invalid!\n");
             vxAddLogEntry((vx_reference)context, VX_ERROR_INVALID_FORMAT, "Requested Image Format was invalid!\n");
-            image = (vx_image)vxGetErrorObject(context, VX_ERROR_INVALID_FORMAT);
+            image = (vx_image)Error::getError(context, VX_ERROR_INVALID_FORMAT);
         }
     }
 
@@ -2237,11 +2243,6 @@ void Image::destruct()
 
 VX_API_ENTRY vx_image VX_API_CALL vxCreateImage(vx_context context, vx_uint32 width, vx_uint32 height, vx_df_image format)
 {
-    if ((width == 0) || (height == 0) ||
-        (Image::isSupportedFourcc(format) == vx_false_e) || (format == VX_DF_IMAGE_VIRT))
-    {
-        return (vx_image)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
-    }
     return (vx_image)Image::createImage(context, width, height, format, vx_false_e);
 }
 

@@ -51,6 +51,19 @@ public:
     ~Remap();
 
     /**
+     * @brief Create a remap object
+     *
+     * @param context   The context associated with this obj
+     * @param src_width The width of the source image
+     * @param src_height The height of the source image
+     * @param dst_width The width of the destination image
+     * @param dst_height The height of the destination image
+     * @return vx_remap The remap object
+     * @ingroup group_int_remap
+     */
+    static vx_remap createRemap(vx_context context, vx_uint32 src_width, vx_uint32 src_height, vx_uint32 dst_width, vx_uint32 dst_height);
+
+    /**
      * @brief Validate remap object
      *
      * @param remap

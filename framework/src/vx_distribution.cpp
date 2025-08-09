@@ -31,6 +31,43 @@ offset_y(0)
 {
 }
 
+vx_distribution Distribution::createDistribution(vx_context context, vx_size numBins, vx_int32 offset, vx_uint32 range)
+{
+    vx_distribution distribution = nullptr;
+
+    if (Context::isValidContext(context) == vx_true_e)
+    {
+        if ((numBins != 0) && (range != 0))
+        {
+            distribution = (vx_distribution)Reference::createReference(
+                context, VX_TYPE_DISTRIBUTION, VX_EXTERNAL, context);
+            if (Error::getStatus((vx_reference)distribution) == VX_SUCCESS &&
+                distribution->type == VX_TYPE_DISTRIBUTION)
+            {
+                distribution->memory.ndims = 2;
+                distribution->memory.nptrs = 1;
+                distribution->memory.strides[0][VX_DIM_C] = sizeof(vx_int32);
+                distribution->memory.dims[0][VX_DIM_C] = 1;
+                distribution->memory.dims[0][VX_DIM_X] = (vx_uint32)numBins;
+                distribution->memory.dims[0][VX_DIM_Y] = 1;
+                distribution->range_x = (vx_uint32)range;
+                distribution->range_y = 1;
+                distribution->offset_x = offset;
+                distribution->offset_y = 0;
+            }
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to distribution\n");
+            vxAddLogEntry(context, VX_ERROR_INVALID_PARAMETERS,
+                          "Invalid parameters to distribution\n");
+            distribution = (vx_distribution)Error::getError(context, VX_ERROR_INVALID_PARAMETERS);
+        }
+    }
+
+    return distribution;
+}
+
 vx_size Distribution::dims() const
 {
     return (vx_size)(memory.ndims - 1);
@@ -388,33 +425,7 @@ VX_API_ENTRY vx_distribution VX_API_CALL vxCreateDistribution(vx_context context
 {
     vx_distribution distribution = nullptr;
 
-    if (Context::isValidContext(context) == vx_true_e)
-    {
-        if ((numBins != 0) && (range != 0))
-        {
-            distribution = (vx_distribution)Reference::createReference(context, VX_TYPE_DISTRIBUTION, VX_EXTERNAL, context);
-            if ( vxGetStatus((vx_reference)distribution) == VX_SUCCESS &&
-                 distribution->type == VX_TYPE_DISTRIBUTION)
-            {
-                distribution->memory.ndims = 2;
-                distribution->memory.nptrs = 1;
-                distribution->memory.strides[0][VX_DIM_C] = sizeof(vx_int32);
-                distribution->memory.dims[0][VX_DIM_C] = 1;
-                distribution->memory.dims[0][VX_DIM_X] = (vx_uint32)numBins;
-                distribution->memory.dims[0][VX_DIM_Y] = 1;
-                distribution->range_x = (vx_uint32)range;
-                distribution->range_y = 1;
-                distribution->offset_x = offset;
-                distribution->offset_y = 0;
-            }
-        }
-        else
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to distribution\n");
-            vxAddLogEntry(context, VX_ERROR_INVALID_PARAMETERS, "Invalid parameters to distribution\n");
-            distribution = (vx_distribution)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
-        }
-    }
+    distribution = Distribution::createDistribution(context, numBins, offset, range);
 
     return distribution;
 }

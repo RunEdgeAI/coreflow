@@ -32,6 +32,41 @@ Convolution::~Convolution()
 {
 }
 
+vx_convolution Convolution::createConvolution(vx_context context, vx_size columns, vx_size rows)
+{
+    vx_convolution convolution = nullptr;
+
+    if (Context::isValidContext(context) == vx_true_e)
+    {
+        if (vxIsOdd(columns) && columns >= 3 && vxIsOdd(rows) && rows >= 3)
+        {
+            convolution = (vx_convolution)Reference::createReference(context, VX_TYPE_CONVOLUTION,
+                                                                     VX_EXTERNAL, context);
+            if (Error::getStatus((vx_reference)convolution) == VX_SUCCESS &&
+                convolution->type == VX_TYPE_CONVOLUTION)
+            {
+                convolution->data_type = VX_TYPE_INT16;
+                convolution->columns = columns;
+                convolution->rows = rows;
+                convolution->memory.ndims = 2;
+                convolution->memory.nptrs = 1;
+                convolution->memory.dims[0][0] = sizeof(vx_int16);
+                convolution->memory.dims[0][1] = (vx_uint32)(columns * rows);
+                convolution->scale = 1;
+            }
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Failed to create convolution, invalid dimensions\n");
+            vxAddLogEntry((vx_reference)context, VX_ERROR_INVALID_DIMENSION,
+                          "Invalid dimensions to convolution\n");
+            convolution = (vx_convolution)Error::getError(context, VX_ERROR_INVALID_DIMENSION);
+        }
+    }
+
+    return convolution;
+}
+
 vx_uint32 Convolution::scaleFactor() const
 {
     return scale;
@@ -196,30 +231,8 @@ VX_API_ENTRY vx_convolution VX_API_CALL vxCreateConvolution(vx_context context, 
 {
     vx_convolution convolution = nullptr;
 
-    if (Context::isValidContext(context) == vx_true_e)
-    {
-        if (vxIsOdd(columns) && columns >= 3 && vxIsOdd(rows) && rows >= 3)
-        {
-            convolution = (vx_convolution)Reference::createReference(context, VX_TYPE_CONVOLUTION, VX_EXTERNAL, context);
-            if (vxGetStatus((vx_reference)convolution) == VX_SUCCESS && convolution->type == VX_TYPE_CONVOLUTION)
-            {
-                convolution->data_type = VX_TYPE_INT16;
-                convolution->columns = columns;
-                convolution->rows = rows;
-                convolution->memory.ndims = 2;
-                convolution->memory.nptrs = 1;
-                convolution->memory.dims[0][0] = sizeof(vx_int16);
-                convolution->memory.dims[0][1] = (vx_uint32)(columns*rows);
-                convolution->scale = 1;
-            }
-        }
-        else
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Failed to create convolution, invalid dimensions\n");
-            vxAddLogEntry((vx_reference)context, VX_ERROR_INVALID_DIMENSION, "Invalid dimensions to convolution\n");
-            convolution = (vx_convolution)vxGetErrorObject(context, VX_ERROR_INVALID_DIMENSION);
-        }
-    }
+    convolution = Convolution::createConvolution(context, columns, rows);
+
     return convolution;
 }
 

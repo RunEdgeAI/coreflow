@@ -56,6 +56,17 @@ public:
     ~Threshold();
 
     /**
+     * @brief Create a threshold object
+     *
+     * @param context   The context associated with this obj
+     * @param thresh_type The threshold type
+     * @param data_type The data type
+     * @return vx_threshold The threshold object
+     * @ingroup group_int_threshold
+     */
+    static vx_threshold createThreshold(vx_context context, vx_enum thresh_type, vx_enum data_type);
+
+    /**
      * @brief Set the binary threshold value
      *
      * @param value The binary threshold value

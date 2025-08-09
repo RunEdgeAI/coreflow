@@ -55,6 +55,18 @@ public:
     Matrix(vx_context context, vx_type_e type, vx_reference scope);
 
     /**
+     * @brief Create a matrix object
+     *
+     * @param context   The context associated with this obj
+     * @param data_type The data type of the matrix
+     * @param columns   The number of columns in the matrix
+     * @param rows      The number of rows in the matrix
+     * @return vx_matrix The matrix object
+     * @ingroup group_int_matrix
+     */
+    static vx_matrix createMatrix(vx_context context, vx_enum data_type, vx_size columns, vx_size rows);
+
+    /**
      * @brief Get the data type of the matrix
      *
      * @return vx_enum The data type of the matrix

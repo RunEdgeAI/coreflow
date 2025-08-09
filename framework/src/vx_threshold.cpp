@@ -41,6 +41,76 @@ Threshold::~Threshold()
 
 }
 
+vx_threshold Threshold::createThreshold(vx_context context, vx_enum thresh_type, vx_enum data_type)
+{
+    vx_threshold threshold = nullptr;
+
+    if (Context::isValidContext(context) == vx_true_e)
+    {
+        if (Threshold::isValidThresholdDataType(data_type) == vx_true_e)
+        {
+            if (Threshold::isValidThresholdType(thresh_type) == vx_true_e)
+            {
+                threshold = (vx_threshold)Reference::createReference(context, VX_TYPE_THRESHOLD,
+                                                                     VX_EXTERNAL, context);
+                if (Error::getStatus((vx_reference)threshold) == VX_SUCCESS &&
+                    threshold->type == VX_TYPE_THRESHOLD)
+                {
+                    threshold->thresh_type = thresh_type;
+                    threshold->data_type = data_type;
+                    switch (data_type)
+                    {
+                        case VX_TYPE_BOOL:
+                            threshold->true_value.U1 = VX_U1_THRESHOLD_TRUE_VALUE;
+                            threshold->false_value.U1 = VX_U1_THRESHOLD_FALSE_VALUE;
+                            break;
+                        case VX_TYPE_INT8:
+                            threshold->true_value.U8 = VX_DEFAULT_THRESHOLD_TRUE_VALUE;
+                            threshold->false_value.U8 = VX_DEFAULT_THRESHOLD_FALSE_VALUE;
+                            break;
+                        case VX_TYPE_UINT8:
+                            threshold->true_value.U8 = VX_DEFAULT_THRESHOLD_TRUE_VALUE;
+                            threshold->false_value.U8 = VX_DEFAULT_THRESHOLD_FALSE_VALUE;
+                            break;
+                        case VX_TYPE_UINT16:
+                            threshold->true_value.U16 = VX_DEFAULT_THRESHOLD_TRUE_VALUE;
+                            threshold->false_value.U16 = VX_DEFAULT_THRESHOLD_FALSE_VALUE;
+                            break;
+                        case VX_TYPE_INT16:
+                            threshold->true_value.S16 = VX_DEFAULT_THRESHOLD_TRUE_VALUE;
+                            threshold->false_value.S16 = VX_DEFAULT_THRESHOLD_FALSE_VALUE;
+                            break;
+                        case VX_TYPE_INT32:
+                            threshold->true_value.S32 = VX_DEFAULT_THRESHOLD_TRUE_VALUE;
+                            threshold->false_value.S32 = VX_DEFAULT_THRESHOLD_FALSE_VALUE;
+                            break;
+                        case VX_TYPE_UINT32:
+                            threshold->true_value.U32 = VX_DEFAULT_THRESHOLD_TRUE_VALUE;
+                            threshold->false_value.U32 = VX_DEFAULT_THRESHOLD_FALSE_VALUE;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+            else
+            {
+                VX_PRINT(VX_ZONE_ERROR, "Invalid threshold type\n");
+                vxAddLogEntry(context, VX_ERROR_INVALID_TYPE, "Invalid threshold type\n");
+                threshold = (vx_threshold)Error::getError(context, VX_ERROR_INVALID_TYPE);
+            }
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Invalid data type\n");
+            vxAddLogEntry(context, VX_ERROR_INVALID_TYPE, "Invalid data type\n");
+            threshold = (vx_threshold)Error::getError(context, VX_ERROR_INVALID_TYPE);
+        }
+    }
+
+    return threshold;
+}
+
 void Threshold::setBinaryValue(vx_int32 value)
 {
     this->value.S32 = value;
@@ -586,68 +656,7 @@ VX_API_ENTRY vx_threshold VX_API_CALL vxCreateThreshold(vx_context context, vx_e
 {
     vx_threshold threshold = nullptr;
 
-    if (Context::isValidContext(context) == vx_true_e)
-    {
-        if (Threshold::isValidThresholdDataType(data_type) == vx_true_e)
-        {
-            if (Threshold::isValidThresholdType(thresh_type) == vx_true_e)
-            {
-                threshold = (vx_threshold)Reference::createReference(context, VX_TYPE_THRESHOLD,
-                                                                     VX_EXTERNAL, context);
-                if (vxGetStatus((vx_reference)threshold) == VX_SUCCESS &&
-                    threshold->type == VX_TYPE_THRESHOLD)
-                {
-                    threshold->thresh_type = thresh_type;
-                    threshold->data_type = data_type;
-                    switch (data_type)
-                    {
-                        case VX_TYPE_BOOL:
-                            threshold->true_value.U1 = VX_U1_THRESHOLD_TRUE_VALUE;
-                            threshold->false_value.U1 = VX_U1_THRESHOLD_FALSE_VALUE;
-                            break;
-                        case VX_TYPE_INT8:
-                            threshold->true_value.U8 = VX_DEFAULT_THRESHOLD_TRUE_VALUE;
-                            threshold->false_value.U8 = VX_DEFAULT_THRESHOLD_FALSE_VALUE;
-                            break;
-                        case VX_TYPE_UINT8:
-                            threshold->true_value.U8 = VX_DEFAULT_THRESHOLD_TRUE_VALUE;
-                            threshold->false_value.U8 = VX_DEFAULT_THRESHOLD_FALSE_VALUE;
-                            break;
-                        case VX_TYPE_UINT16:
-                            threshold->true_value.U16 = VX_DEFAULT_THRESHOLD_TRUE_VALUE;
-                            threshold->false_value.U16 = VX_DEFAULT_THRESHOLD_FALSE_VALUE;
-                            break;
-                        case VX_TYPE_INT16:
-                            threshold->true_value.S16 = VX_DEFAULT_THRESHOLD_TRUE_VALUE;
-                            threshold->false_value.S16 = VX_DEFAULT_THRESHOLD_FALSE_VALUE;
-                            break;
-                        case VX_TYPE_INT32:
-                            threshold->true_value.S32 = VX_DEFAULT_THRESHOLD_TRUE_VALUE;
-                            threshold->false_value.S32 = VX_DEFAULT_THRESHOLD_FALSE_VALUE;
-                            break;
-                        case VX_TYPE_UINT32:
-                            threshold->true_value.U32 = VX_DEFAULT_THRESHOLD_TRUE_VALUE;
-                            threshold->false_value.U32 = VX_DEFAULT_THRESHOLD_FALSE_VALUE;
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
-            else
-            {
-                VX_PRINT(VX_ZONE_ERROR, "Invalid threshold type\n");
-                vxAddLogEntry(context, VX_ERROR_INVALID_TYPE, "Invalid threshold type\n");
-                threshold = (vx_threshold)vxGetErrorObject(context, VX_ERROR_INVALID_TYPE);
-            }
-        }
-        else
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Invalid data type\n");
-            vxAddLogEntry(context, VX_ERROR_INVALID_TYPE, "Invalid data type\n");
-            threshold = (vx_threshold)vxGetErrorObject(context, VX_ERROR_INVALID_TYPE);
-        }
-    }
+    threshold = Threshold::createThreshold(context, thresh_type, data_type);
 
     return threshold;
 }

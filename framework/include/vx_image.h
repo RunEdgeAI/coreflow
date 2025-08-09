@@ -72,7 +72,7 @@ public:
                                    vx_uint32 width,
                                    vx_uint32 height,
                                    vx_df_image color,
-                                   vx_bool is_virtual);
+                                   vx_bool is_virtual = vx_false_e);
 
     /*! \brief Used to initialize a single plane in an image object.
      * \param [in] index The index to the plane.

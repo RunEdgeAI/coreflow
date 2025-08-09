@@ -349,22 +349,62 @@ vx_size ObjectArray::numItems() const
     return num_items;
 }
 
+vx_object_array ObjectArray::createObjectArray(vx_context context, vx_enum type)
+{
+    vx_object_array arr = nullptr;
+
+    if (Context::isValidContext(context) == vx_true_e)
+    {
+        if ((type != VX_TYPE_CONTEXT) && (type != VX_TYPE_DELAY) && (type != VX_TYPE_OBJECT_ARRAY))
+        {
+            arr = (vx_object_array)Reference::createReference(context, VX_TYPE_OBJECT_ARRAY,
+                                                              VX_EXTERNAL, context);
+            if (Error::getStatus((vx_reference)arr) == VX_SUCCESS && arr->type == VX_TYPE_OBJECT_ARRAY)
+            {
+                arr->scope = context;
+                arr->is_virtual = vx_false_e;
+                arr->item_type = type;
+            }
+            else
+            {
+                arr = (vx_object_array)Error::getError(context, VX_ERROR_NO_MEMORY);
+            }
+        }
+        else
+        {
+            arr = (vx_object_array)Error::getError(context, VX_ERROR_INVALID_PARAMETERS);
+        }
+    }
+
+    return arr;
+}
+
 vx_object_array ObjectArray::createObjectArray(vx_reference scope, vx_reference exemplar, vx_size count, vx_bool is_virtual)
 {
     vx_context context = scope->context ? scope->context : (vx_context)scope;
     vx_object_array arr = nullptr;
 
-    arr = (vx_object_array)Reference::createReference(context, VX_TYPE_OBJECT_ARRAY, VX_EXTERNAL, scope);
-    if (vxGetStatus((vx_reference)arr) == VX_SUCCESS && arr->type == VX_TYPE_OBJECT_ARRAY)
+    if (Context::isValidContext(context) == vx_true_e &&
+        Reference::isValidReference(exemplar) &&
+        (exemplar->type != VX_TYPE_DELAY) &&
+        (exemplar->type != VX_TYPE_OBJECT_ARRAY))
     {
-        arr->scope = scope;
-        arr->is_virtual = is_virtual;
-
-        if (arr->initObjectArray(exemplar, count) != VX_SUCCESS)
+        arr = (vx_object_array)Reference::createReference(context, VX_TYPE_OBJECT_ARRAY, VX_EXTERNAL, scope);
+        if (Error::getStatus((vx_reference)arr) == VX_SUCCESS && arr->type == VX_TYPE_OBJECT_ARRAY)
         {
-            Reference::releaseReference((vx_reference*)&arr, VX_TYPE_OBJECT_ARRAY, VX_EXTERNAL, nullptr);
-            arr = (vx_object_array)vxGetErrorObject(context, VX_ERROR_NO_MEMORY);
+            arr->scope = scope;
+            arr->is_virtual = is_virtual;
+
+            if (arr->initObjectArray(exemplar, count) != VX_SUCCESS)
+            {
+                Reference::releaseReference((vx_reference*)&arr, VX_TYPE_OBJECT_ARRAY, VX_EXTERNAL, nullptr);
+                arr = (vx_object_array)Error::getError(context, VX_ERROR_NO_MEMORY);
+            }
         }
+    }
+    else
+    {
+        arr = (vx_object_array)Error::getError(context, VX_ERROR_INVALID_PARAMETERS);
     }
     return arr;
 }
@@ -410,24 +450,7 @@ VX_API_ENTRY vx_object_array VX_API_CALL vxCreateObjectArray(vx_context context,
 {
     vx_object_array arr = nullptr;
 
-    if (Context::isValidContext(context) == vx_true_e)
-    {
-        if (Reference::isValidReference(exemplar) &&
-            (exemplar->type != VX_TYPE_DELAY) &&
-            (exemplar->type != VX_TYPE_OBJECT_ARRAY))
-        {
-            arr = ObjectArray::createObjectArray((vx_reference)context, exemplar, count, vx_false_e);
-
-            if (arr == nullptr)
-            {
-                arr = (vx_object_array)vxGetErrorObject(context, VX_ERROR_NO_MEMORY);
-            }
-        }
-        else
-        {
-            arr = (vx_object_array)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
-        }
-    }
+    arr = ObjectArray::createObjectArray((vx_reference)context, exemplar, count, vx_false_e);
 
     return arr;
 }
@@ -436,29 +459,7 @@ VX_API_ENTRY vx_object_array VX_API_CALL vxCreateObjectArrayWithType(vx_context 
 {
     vx_object_array arr = nullptr;
 
-    if (Context::isValidContext(context) == vx_true_e)
-    {
-        if ((type != VX_TYPE_CONTEXT) &&
-            (type != VX_TYPE_DELAY) &&
-            (type != VX_TYPE_OBJECT_ARRAY))
-        {
-            arr = (vx_object_array)Reference::createReference(context, VX_TYPE_OBJECT_ARRAY, VX_EXTERNAL, context);
-            if (vxGetStatus((vx_reference)arr) == VX_SUCCESS && arr->type == VX_TYPE_OBJECT_ARRAY)
-            {
-                arr->scope = context;
-                arr->is_virtual = vx_false_e;
-                arr->item_type = type;
-            }
-            else
-            {
-                arr = (vx_object_array)vxGetErrorObject(context, VX_ERROR_NO_MEMORY);
-            }
-        }
-        else
-        {
-            arr = (vx_object_array)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
-        }
-    }
+    arr = ObjectArray::createObjectArray(context, type);
 
     return arr;
 }

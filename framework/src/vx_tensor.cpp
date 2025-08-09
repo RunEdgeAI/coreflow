@@ -41,6 +41,42 @@ Tensor::~Tensor()
 {
 }
 
+vx_tensor Tensor::createTensor(vx_context context, vx_size number_of_dims, const vx_size *dims, vx_enum data_type, vx_int8 fixed_point_position)
+{
+    vx_tensor tensor = nullptr;
+
+    if (Context::isValidContext(context) == vx_false_e)
+    {
+        return tensor;
+    }
+
+    if (number_of_dims < 1)
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid dimensions for the tensor.\n");
+        return (vx_tensor)Error::getError(context, VX_ERROR_INVALID_DIMENSION);
+    }
+
+    if (!validFormat(data_type, fixed_point_position))
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid format for the tensor.\n");
+        return (vx_tensor)Error::getError(context, VX_ERROR_INVALID_TYPE);
+    }
+
+    tensor = (vx_tensor)Reference::createReference(context, VX_TYPE_TENSOR, VX_EXTERNAL, context);
+
+    if (Error::getStatus((vx_reference)tensor) != VX_SUCCESS || tensor->type != VX_TYPE_TENSOR)
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Failed to create reference for tensor.\n");
+        return tensor;
+    }
+
+    tensor->initTensor(dims, number_of_dims, data_type, fixed_point_position);
+    tensor->parent = nullptr;
+    tensor->scope = (vx_reference)context;
+
+    return tensor;
+}
+
 vx_bool Tensor::isValidTensor(vx_tensor tensor)
 {
     if (Reference::isValidReference(reinterpret_cast<vx_reference>(tensor), VX_TYPE_TENSOR) == vx_true_e)
@@ -469,36 +505,7 @@ VX_API_ENTRY vx_tensor VX_API_CALL vxCreateTensor(
 {
     vx_tensor tensor = nullptr;
 
-    //TODO: add unlikely() for err checks
-
-    if (Context::isValidContext(context) == vx_false_e)
-    {
-        //TODO: check, do we not need to set the err here
-        return tensor;
-    }
-
-    if (number_of_dims < 1)
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Invalid dimensions for the tensor.\n");
-        return (vx_tensor)vxGetErrorObject(context, VX_ERROR_INVALID_DIMENSION);
-    }
-
-    if (!validFormat(data_type, fixed_point_position))
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Invalid format for the tensor.\n");
-        return (vx_tensor)vxGetErrorObject(context, VX_ERROR_INVALID_TYPE);
-    }
-
-    tensor = (vx_tensor)Reference::createReference(context, VX_TYPE_TENSOR, VX_EXTERNAL, context);
-    if (vxGetStatus((vx_reference)tensor) != VX_SUCCESS || tensor->type != VX_TYPE_TENSOR)
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Failed to create reference for tensor.\n");
-        //TODO: check, do we not need to set the err here
-        return tensor;
-    }
-    tensor->initTensor(dims, number_of_dims, data_type, fixed_point_position);
-    tensor->parent = nullptr;
-    tensor->scope = (vx_reference)context;
+    tensor = Tensor::createTensor(context, number_of_dims, dims, data_type, fixed_point_position);
 
     return tensor;
 }

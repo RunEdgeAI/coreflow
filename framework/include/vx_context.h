@@ -56,6 +56,12 @@ public:
     ~Context();
 
     /**
+     * @brief Create a new context
+     * @ingroup group_int_context
+     */
+    static vx_context createContext();
+
+    /**
      * @brief Get vendor id
      *
      * @return vx_uint16 The vendor id.

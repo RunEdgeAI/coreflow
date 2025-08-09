@@ -35,6 +35,33 @@ Scalar::~Scalar()
 {
 }
 
+vx_scalar Scalar::createScalar(vx_context context, vx_enum data_type, const void* ptr)
+{
+    vx_scalar scalar = nullptr;
+
+    if (Context::isValidContext(context) == vx_false_e) return nullptr;
+
+    if (!VX_TYPE_IS_SCALAR(data_type))
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid type to scalar\n");
+        vxAddLogEntry(reinterpret_cast<vx_reference>(context), VX_ERROR_INVALID_TYPE,
+                      "Invalid type to scalar\n");
+        scalar = (vx_scalar)Error::getError(context, VX_ERROR_INVALID_TYPE);
+    }
+    else
+    {
+        scalar =
+            (vx_scalar)Reference::createReference(context, VX_TYPE_SCALAR, VX_EXTERNAL, context);
+        if (Error::getStatus((vx_reference)scalar) == VX_SUCCESS && scalar->type == VX_TYPE_SCALAR)
+        {
+            scalar->data_type = data_type;
+            vxCopyScalar(scalar, (void *)ptr, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+        }
+    }
+
+    return scalar;
+}
+
 void* Scalar::allocateScalarMemory(vx_size size)
 {
     if (data_addr == nullptr)
@@ -489,24 +516,7 @@ VX_API_ENTRY vx_scalar VX_API_CALL vxCreateScalar(vx_context context, vx_enum da
 {
     vx_scalar scalar = nullptr;
 
-    if (Context::isValidContext(context) == vx_false_e)
-        return nullptr;
-
-    if (!VX_TYPE_IS_SCALAR(data_type))
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Invalid type to scalar\n");
-        vxAddLogEntry(reinterpret_cast<vx_reference>(context), VX_ERROR_INVALID_TYPE, "Invalid type to scalar\n");
-        scalar = (vx_scalar)vxGetErrorObject(context, VX_ERROR_INVALID_TYPE);
-    }
-    else
-    {
-        scalar = (vx_scalar)Reference::createReference(context, VX_TYPE_SCALAR, VX_EXTERNAL, context);
-        if (vxGetStatus((vx_reference)scalar) == VX_SUCCESS && scalar->type == VX_TYPE_SCALAR)
-        {
-            scalar->data_type = data_type;
-            vxCopyScalar(scalar, (void*)ptr, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-        }
-    }
+    scalar = (vx_scalar)Scalar::createScalar(context, data_type, ptr);
 
     return (vx_scalar)scalar;
 } /* vxCreateScalar() */

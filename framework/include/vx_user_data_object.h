@@ -46,6 +46,18 @@ public:
     ~UserDataObject();
 
     /**
+     * @brief Create a user data object
+     *
+     * @param context   The context associated with this obj
+     * @param type_name The type name of the user data object
+     * @param size      The size of the user data object
+     * @param ptr       The pointer to the user data object
+     * @return vx_user_data_object The user data object
+     * @ingroup group_int_user_data_object
+     */
+    static vx_user_data_object createUserDataObject(vx_context context, const vx_char *type_name, vx_size size, const void *ptr);
+
+    /**
      * @brief Get the type name of the user data object
      *
      * @return vx_char* The type name

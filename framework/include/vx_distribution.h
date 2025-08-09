@@ -46,6 +46,18 @@ public:
     Distribution(vx_context context, vx_reference scope);
 
     /**
+     * @brief Create a new distribution
+     *
+     * @param context   The context associated with this distribution
+     * @param numBins   The number of bins in the distribution
+     * @param offset    The offset of the distribution
+     * @param range     The range of the distribution
+     * @return vx_distribution The distribution object
+     * @ingroup group_int_distribution
+     */
+    static vx_distribution createDistribution(vx_context context, vx_size numBins, vx_int32 offset, vx_uint32 range);
+
+    /**
      * @brief Get the number of dimensions in the distribution
      *
      * @return vx_size The number of dimensions

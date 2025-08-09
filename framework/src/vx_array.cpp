@@ -51,15 +51,30 @@ Array::~Array()
 
 vx_array Array::createArray(vx_context context, vx_enum item_type, vx_size capacity, vx_bool is_virtual, vx_enum type)
 {
-    vx_array arr = (vx_array)Reference::createReference(context, type, VX_EXTERNAL, context);
-    if (vxGetStatus((vx_reference)arr) == VX_SUCCESS && arr->type == type)
+    vx_array arr = nullptr;
+
+    if (Context::isValidContext(context) == vx_true_e)
     {
-        arr->item_type = item_type;
-        arr->item_size = Array::itemSize(context, item_type);
-        arr->capacity = capacity;
-        arr->is_virtual = is_virtual;
-        arr->initArrayMemory();
+        if ((Array::isValidArrayItemType(context, item_type) == vx_true_e) && (capacity > 0))
+        {
+            arr = (vx_array)Reference::createReference(context, type, VX_EXTERNAL, context);
+            if (Error::getStatus((vx_reference)arr) == VX_SUCCESS && arr->type == type)
+            {
+                arr->item_type = item_type;
+                arr->item_size = Array::itemSize(context, item_type);
+                arr->capacity = capacity;
+                arr->is_virtual = is_virtual;
+                arr->initArrayMemory();
+            }
+
+            if (arr == nullptr) arr = (vx_array)Error::getError(context, VX_ERROR_NO_MEMORY);
+        }
+        else
+        {
+            arr = (vx_array)Error::getError(context, VX_ERROR_INVALID_PARAMETERS);
+        }
     }
+
     return arr;
 }
 
@@ -899,20 +914,7 @@ VX_API_ENTRY vx_array VX_API_CALL vxCreateArray(vx_context context, vx_enum item
 {
     vx_array arr = nullptr;
 
-    if (Context::isValidContext(context) == vx_true_e &&
-        (Array::isValidArrayItemType(context, item_type) == vx_true_e) && (capacity > 0))
-    {
-        arr = (vx_array)Array::createArray(context, item_type, capacity, vx_false_e, VX_TYPE_ARRAY);
-
-        if (arr == nullptr)
-        {
-            arr = (vx_array)vxGetErrorObject(context, VX_ERROR_NO_MEMORY);
-        }
-    }
-    else
-    {
-        arr = (vx_array)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
-    }
+    arr = (vx_array)Array::createArray(context, item_type, capacity, vx_false_e, VX_TYPE_ARRAY);
 
     return arr;
 }

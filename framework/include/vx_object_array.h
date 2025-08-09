@@ -54,6 +54,16 @@ public:
     /**
      * @brief Create a Object Array object
      *
+     * @param context   The context associated with this obj
+     * @param type      The type of the object array
+     * @return vx_object_array The object array object
+     * @ingroup group_int_object_array
+     */
+    static vx_object_array createObjectArray(vx_context context, vx_enum type);
+
+    /**
+     * @brief Create a Object Array object
+     *
      * @param scope             Parent ref of obj
      * @param exemplar          ref to create arry of
      * @param count             depth of obj arr

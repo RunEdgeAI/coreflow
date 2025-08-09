@@ -30,6 +30,31 @@ set_valid_rectangle_callback(nullptr)
 
 }
 
+vx_meta_format MetaFormat::createMetaFormat(vx_context context)
+{
+    vx_meta_format meta = nullptr;
+
+    if (Context::isValidContext(context) == vx_true_e)
+    {
+        meta = (vx_meta_format)Reference::createReference(context, VX_TYPE_META_FORMAT, VX_EXTERNAL, context);
+        if (Error::getStatus((vx_reference)meta) == VX_SUCCESS)
+        {
+            meta->size = sizeof(vx_meta_format);
+            meta->type = VX_TYPE_INVALID;
+        }
+        else
+        {
+            meta = (vx_meta_format)Error::getError(context, VX_ERROR_NO_MEMORY);
+        }
+    }
+    else
+    {
+        meta = (vx_meta_format)Error::getError(context, VX_ERROR_INVALID_PARAMETERS);
+    }
+
+    return meta;
+}
+
 vx_bool MetaFormat::isValidMetaFormat(vx_meta_format meta1, vx_meta_format meta2)
 {
     vx_bool isValid = vx_false_e;
@@ -424,15 +449,7 @@ vx_meta_format vxCreateMetaFormat(vx_context context)
 {
     vx_meta_format meta = nullptr;
 
-    if (Context::isValidContext(context) == vx_true_e)
-    {
-        meta = (vx_meta_format)Reference::createReference(context, VX_TYPE_META_FORMAT, VX_EXTERNAL, context);
-        if (vxGetStatus((vx_reference)meta) == VX_SUCCESS)
-        {
-            meta->size = sizeof(vx_meta_format);
-            meta->type = VX_TYPE_INVALID;
-        }
-    }
+    meta = MetaFormat::createMetaFormat(context);
 
     return meta;
 }

@@ -75,6 +75,16 @@ public:
      */
     ~Node();
 
+    /**
+     * @brief Create a new node
+     *
+     * @param graph   The graph associated with this node
+     * @param kernel  The kernel associated with this node
+     * @return vx_node The node object
+     * @ingroup group_int_node
+     */
+    static vx_node createNode(vx_graph graph, vx_kernel kernel);
+
     /*! \brief Node parameter setter, no check.
      * \ingroup group_int_node
      */

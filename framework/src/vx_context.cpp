@@ -125,6 +125,134 @@ Context::~Context()
     }
 }
 
+vx_context Context::createContext()
+{
+    vx_context context = nullptr;
+
+    if (single_context == nullptr)
+    {
+        Osal::createSem(&context_lock, 1);
+        Osal::createSem(&global_lock, 1);
+    }
+
+    Osal::semWait(&context_lock);
+    if (single_context == nullptr)
+    {
+        /* read the variables for debugging flags */
+        vx_set_debug_zone_from_env();
+
+        single_context = std::make_shared<Context>();
+        context = single_context.get();
+
+        if (context)
+        {
+            vx_uint32 p = 0u, p2 = 0u, t = 0u, m = 0u;
+#if !DISABLE_ICD_COMPATIBILITY
+            context->platform = platform;
+#endif
+            context->incrementReference(VX_EXTERNAL);
+            context->workers = Osal::createThreadpool(VX_INT_HOST_CORES,
+                                                  VX_INT_MAX_REF, /* very deep queues! */
+                                                  sizeof(vx_work_t),
+                                                  Context::workerNode,
+                                                  context);
+            Error::createConstErrors(context);
+
+            /* initialize modules */
+            for (m = 0u; m < VX_INT_MAX_MODULES; m++)
+            {
+                Osal::createSem(&context->modules[m].lock, 1);
+            }
+
+            /* load all targets */
+            for (t = 0u; t < dimof(targetModules); t++)
+            {
+                if (context->loadTarget(targetModules[t]) == VX_SUCCESS)
+                {
+                    context->num_targets++;
+                }
+            }
+
+            if (context->num_targets == 0)
+            {
+                VX_PRINT(VX_ZONE_ERROR, "No targets loaded!\n");
+                Osal::semPost(&context_lock);
+                single_context.reset();
+                return nullptr;
+            }
+
+            /* initialize all targets */
+            for (t = 0u; t < context->num_targets; t++)
+            {
+                if (context->targets[t]->module.handle &&
+                    context->targets[t]->funcs.init)
+                {
+                    /* call the init function */
+                    if (context->targets[t]->funcs.init(context->targets[t]) != VX_SUCCESS)
+                    {
+                        VX_PRINT(VX_ZONE_WARNING, "Target %s failed to initialize!\n", context->targets[t]->name);
+                        /* unload this module */
+                        /* @TODO: unload target now or on context release? */
+                        /*
+                         * context->unloadTarget(t, vx_true_e);
+                         * break;
+                         */
+                    }
+                    else
+                    {
+                        context->targets[t]->enabled = vx_true_e;
+                        VX_PRINT(VX_ZONE_INFO, "Target %s enabled!\n", context->targets[t]->name);
+                    }
+                }
+            }
+
+            /* assign the targets by priority into the list */
+            p2 = 0u;
+            for (p = 0u; p < VX_TARGET_PRIORITY_MAX; p++)
+            {
+                for (t = 0u; t < context->num_targets; t++)
+                {
+                    vx_target target = context->targets[t];
+                    if (p == target->priority)
+                    {
+                        context->priority_targets[p2] = t;
+                        p2++;
+                    }
+                }
+            }
+            /* print out the priority list */
+            for (t = 0u; t < context->num_targets; t++)
+            {
+                vx_target target = context->targets[context->priority_targets[t]];
+                if (target->enabled == vx_true_e)
+                {
+                    VX_PRINT(VX_ZONE_TARGET, "target[%u]: %s\n",
+                                target->priority,
+                                target->name);
+                }
+            }
+
+            /* create the internal thread which processes graphs for asynchronous mode. */
+            Osal::initQueue(&context->proc.input);
+            Osal::initQueue(&context->proc.output);
+            context->proc.running = vx_true_e;
+            context->proc.thread = Osal::createThread(Context::workerGraph, &context->proc);
+            context->imm_target_enum = VX_TARGET_ANY;
+            memset(context->imm_target_string, 0, sizeof(context->imm_target_string));
+
+            /* memory maps table lock */
+            Osal::createSem(&context->memory_maps_lock, 1);
+        }
+    }
+    else
+    {
+        context = single_context.get();
+        context->incrementReference(VX_EXTERNAL);
+    }
+    Osal::semPost(&context_lock);
+    return context;
+}
+
 vx_uint16 Context::vendorId() const
 {
     return vendor_id;
@@ -1063,129 +1191,7 @@ VX_API_ENTRY vx_context VX_API_CALL vxCreateContextFromPlatform(struct _vx_platf
 VX_API_ENTRY vx_context VX_API_CALL vxCreateContext(void)
 #endif
 {
-    vx_context context;
-
-    if (single_context == nullptr)
-    {
-        Osal::createSem(&context_lock, 1);
-        Osal::createSem(&global_lock, 1);
-    }
-
-    Osal::semWait(&context_lock);
-    if (single_context == nullptr)
-    {
-        /* read the variables for debugging flags */
-        vx_set_debug_zone_from_env();
-
-        single_context = std::make_shared<Context>();
-        context = single_context.get();
-
-        if (context)
-        {
-            vx_uint32 p = 0u, p2 = 0u, t = 0u, m = 0u;
-#if !DISABLE_ICD_COMPATIBILITY
-            context->platform = platform;
-#endif
-            context->incrementReference(VX_EXTERNAL);
-            context->workers = Osal::createThreadpool(VX_INT_HOST_CORES,
-                                                  VX_INT_MAX_REF, /* very deep queues! */
-                                                  sizeof(vx_work_t),
-                                                  Context::workerNode,
-                                                  context);
-            Error::createConstErrors(context);
-
-            /* initialize modules */
-            for (m = 0u; m < VX_INT_MAX_MODULES; m++)
-            {
-                Osal::createSem(&context->modules[m].lock, 1);
-            }
-
-            /* load all targets */
-            for (t = 0u; t < dimof(targetModules); t++)
-            {
-                if (context->loadTarget(targetModules[t]) == VX_SUCCESS)
-                {
-                    context->num_targets++;
-                }
-            }
-
-            if (context->num_targets == 0)
-            {
-                VX_PRINT(VX_ZONE_ERROR, "No targets loaded!\n");
-                Osal::semPost(&context_lock);
-                single_context.reset();
-                return nullptr;
-            }
-
-            /* initialize all targets */
-            for (t = 0u; t < context->num_targets; t++)
-            {
-                if (context->targets[t]->module.handle &&
-                    context->targets[t]->funcs.init)
-                {
-                    /* call the init function */
-                    if (context->targets[t]->funcs.init(context->targets[t]) != VX_SUCCESS)
-                    {
-                        VX_PRINT(VX_ZONE_WARNING, "Target %s failed to initialize!\n", context->targets[t]->name);
-                        /* unload this module */
-                        /* @TODO: unload target now or on context release? */
-                        /*
-                         * context->unloadTarget(t, vx_true_e);
-                         * break;
-                         */
-                    }
-                    else
-                    {
-                        context->targets[t]->enabled = vx_true_e;
-                        VX_PRINT(VX_ZONE_INFO, "Target %s enabled!\n", context->targets[t]->name);
-                    }
-                }
-            }
-
-            /* assign the targets by priority into the list */
-            p2 = 0u;
-            for (p = 0u; p < VX_TARGET_PRIORITY_MAX; p++)
-            {
-                for (t = 0u; t < context->num_targets; t++)
-                {
-                    vx_target target = context->targets[t];
-                    if (p == target->priority)
-                    {
-                        context->priority_targets[p2] = t;
-                        p2++;
-                    }
-                }
-            }
-            /* print out the priority list */
-            for (t = 0u; t < context->num_targets; t++)
-            {
-                vx_target target = context->targets[context->priority_targets[t]];
-                if (target->enabled == vx_true_e)
-                {
-                    VX_PRINT(VX_ZONE_TARGET, "target[%u]: %s\n",
-                                target->priority,
-                                target->name);
-                }
-            }
-
-            /* create the internal thread which processes graphs for asynchronous mode. */
-            Osal::initQueue(&context->proc.input);
-            Osal::initQueue(&context->proc.output);
-            context->proc.running = vx_true_e;
-            context->proc.thread = Osal::createThread(Context::workerGraph, &context->proc);
-            context->imm_target_enum = VX_TARGET_ANY;
-            memset(context->imm_target_string, 0, sizeof(context->imm_target_string));
-
-            /* memory maps table lock */
-            Osal::createSem(&context->memory_maps_lock, 1);
-        }
-    }
-    else
-    {
-        context = single_context.get();
-        context->incrementReference(VX_EXTERNAL);
-    }
-    Osal::semPost(&context_lock);
+    vx_context context = Context::createContext();
 
     return context;
 }
