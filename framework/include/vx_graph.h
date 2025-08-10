@@ -90,40 +90,6 @@ private:
     static void contaminateGraphs(vx_reference ref);
 
     /**
-     * @brief Destroy the Graph object
-     * @ingroup group_int_graph
-     */
-    ~Graph();
-public:
-    /**
-     * @brief Construct a new Graph object
-     *
-     * @param context   The context associated with this graph
-     * @param scope     Parent reference of this graph
-     * @ingroup group_int_graph
-     */
-    Graph(vx_context context, vx_reference scope);
-
-    /**
-     * @brief Create a graph
-     *
-     * @param context   The context associated with this graph
-     * @return vx_graph The graph object
-     * @ingroup group_int_graph
-     */
-    static vx_graph createGraph(vx_context context);
-
-    /**
-     * @brief Do a topological in-place sort of the nodes in list, with current
-     * order maintained between independent nodes.
-     *
-     * @param list      list of nodes
-     * @param nnodes    number of nodes
-     * @ingroup group_int_graph
-     */
-    void topologicalSort(vx_node *list, vx_uint32 nnodes);
-
-    /**
      * @brief Setup output
      *
      * @param n             index of node
@@ -169,48 +135,6 @@ public:
     vx_bool postprocessOutput(vx_uint32 n, vx_uint32 p, vx_reference* vref, vx_meta_format meta,
                                   vx_status* status, vx_uint32* num_errors);
 
-    /*! \brief Clears visited flag.
-     * \ingroup group_int_graph
-     */
-    void clearVisitation();
-
-    /*! \brief Clears execution flag.
-     * \ingroup group_int_graph
-     */
-    void clearExecution();
-
-    /**
-     * @brief Find nodes using this reference as input or output parameter.
-     * This function starts on the next node in the list and loops until we
-     * hit the original node again. Parse over the nodes in circular fashion.
-     * @param ref       The reference to search for
-     * @param refnodes  The nodes to search within
-     * @param count     Count of nodes found using ref
-     * @param reftype   The reference type
-     * @return vx_status
-     * @ingroup group_int_graph
-     */
-    vx_status findNodesWithReference(
-                                    vx_reference ref,
-                                    vx_uint32 refnodes[],
-                                    vx_uint32 *count,
-                                    vx_enum reftype);
-
-    /*! \brief Given a set of last nodes, this function will determine the next
-     * set of nodes which are capable of being run. Nodes which are encountered but
-     * can't be run will be placed in the left nodes list.
-     * \param [in] last_nodes The last list of nodes executed.
-     * \param [in] numLast The number of nodes in the last_nodes list which are valid.
-     * \param [out] next_nodes The list of nodes next to be executed.
-     * \param [in] numNext The number of nodes in the next_nodes list which are valid.
-     * \param [out] left_nodes The list of nodes which are next, but can't be executed.
-     * \param [in] numLeft The number of nodes in the left_nodes list which are valid.
-     * \ingroup group_int_graph
-     */
-    void findNextNodes(vx_uint32 last_nodes[VX_INT_MAX_REF], vx_uint32 numLast,
-                       vx_uint32 next_nodes[VX_INT_MAX_REF], vx_uint32 *numNext,
-                       vx_uint32 left_nodes[VX_INT_MAX_REF], vx_uint32 *numLeft);
-
     /**
      * @brief Traverse graph
      *
@@ -221,6 +145,49 @@ public:
      */
     vx_status traverseGraph(vx_uint32 parentIndex,
                             vx_uint32 childIndex);
+
+    /**
+     * @brief Do a topological in-place sort of the nodes in list, with current
+     * order maintained between independent nodes.
+     *
+     * @param list      list of nodes
+     * @param nnodes    number of nodes
+     * @ingroup group_int_graph
+     */
+    void topologicalSort(vx_node* list, vx_uint32 nnodes);
+
+    /**
+     * @brief Execute the graph
+     *
+     * @param depth      Optional count of executions
+     * @return vx_status VX_SUCCESS if successful, otherwise return status with error code.
+     * @ingroup group_int_graph
+     */
+    vx_status executeGraph(vx_uint32 depth);
+
+    /**
+     * @brief Destroy the Graph object
+     * @ingroup group_int_graph
+     */
+    ~Graph();
+public:
+    /**
+     * @brief Construct a new Graph object
+     *
+     * @param context   The context associated with this graph
+     * @param scope     Parent reference of this graph
+     * @ingroup group_int_graph
+     */
+    Graph(vx_context context, vx_reference scope);
+
+    /**
+     * @brief Create a graph
+     *
+     * @param context   The context associated with this graph
+     * @return vx_graph The graph object
+     * @ingroup group_int_graph
+     */
+    static vx_graph createGraph(vx_context context);
 
     /**
      * @brief Get the graph performance
@@ -271,15 +238,6 @@ public:
     vx_status verify();
 
     /**
-     * @brief Execute the graph
-     *
-     * @param depth      Optional count of executions
-     * @return vx_status VX_SUCCESS if successful, otherwise return status with error code.
-     * @ingroup group_int_graph
-     */
-    vx_status executeGraph(vx_uint32 depth);
-
-    /**
      * @brief Schedule the graph
      *
      * @return vx_status VX_SUCCESS if successful, otherwise return status with error code.
@@ -301,7 +259,7 @@ public:
      * @return vx_status VX_SUCCESS if successful, otherwise return status with error code.
      * @ingroup group_int_graph
      */
-    vx_status processGraph();
+    vx_status process();
 
     /**
      * @brief Add a graph paramter
@@ -340,6 +298,45 @@ public:
      */
     vx_status pipelineValidateRefsList(
         const vx_graph_parameter_queue_params_t graph_parameters_queue_param);
+
+    /*! \brief Clears visited flag.
+     * \ingroup group_int_graph
+     */
+    void clearVisitation();
+
+    /*! \brief Clears execution flag.
+     * \ingroup group_int_graph
+     */
+    void clearExecution();
+
+    /**
+     * @brief Find nodes using this reference as input or output parameter.
+     * This function starts on the next node in the list and loops until we
+     * hit the original node again. Parse over the nodes in circular fashion.
+     * @param ref       The reference to search for
+     * @param refnodes  The nodes to search within
+     * @param count     Count of nodes found using ref
+     * @param reftype   The reference type
+     * @return vx_status
+     * @ingroup group_int_graph
+     */
+    vx_status findNodesWithReference(vx_reference ref, vx_uint32 refnodes[], vx_uint32* count,
+                                     vx_enum reftype);
+
+    /*! \brief Given a set of last nodes, this function will determine the next
+     * set of nodes which are capable of being run. Nodes which are encountered but
+     * can't be run will be placed in the left nodes list.
+     * \param [in] last_nodes The last list of nodes executed.
+     * \param [in] numLast The number of nodes in the last_nodes list which are valid.
+     * \param [out] next_nodes The list of nodes next to be executed.
+     * \param [in] numNext The number of nodes in the next_nodes list which are valid.
+     * \param [out] left_nodes The list of nodes which are next, but can't be executed.
+     * \param [in] numLeft The number of nodes in the left_nodes list which are valid.
+     * \ingroup group_int_graph
+     */
+    void findNextNodes(vx_uint32 last_nodes[VX_INT_MAX_REF], vx_uint32 numLast,
+                       vx_uint32 next_nodes[VX_INT_MAX_REF], vx_uint32* numNext,
+                       vx_uint32 left_nodes[VX_INT_MAX_REF], vx_uint32* numLeft);
 
     /**
      * @brief Streaming loop function

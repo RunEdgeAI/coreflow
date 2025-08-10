@@ -1516,7 +1516,7 @@ vx_status Graph::wait()
     return status;
 }
 
-vx_status Graph::processGraph()
+vx_status Graph::process()
 {
     vx_status status = VX_SUCCESS;
 
@@ -3260,7 +3260,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxProcessGraph(vx_graph graph)
 
     if (VX_SUCCESS == status)
     {
-        status = graph->processGraph();
+        status = graph->process();
     }
 
     VX_PRINT(VX_ZONE_GRAPH, "%s returned %d\n", __func__, status );

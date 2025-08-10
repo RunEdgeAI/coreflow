@@ -38,7 +38,7 @@
 namespace corevx {
 
 class Reference {
-public:
+protected:
     /**
      * @brief Construct a new Reference object
      *
@@ -55,6 +55,7 @@ public:
      */
     virtual ~Reference();
 
+public:
     /**
      * @brief Returns the reference count of the object
      * @return vx_uint32 The reference count

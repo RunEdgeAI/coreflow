@@ -359,6 +359,7 @@ std::vector<vx_kernel_info_t> Context::uniqueKernelTable()
     return table;
 }
 
+#ifdef OPENVX_USE_OPENCL_INTEROP
 cl_context Context::clContext() const
 {
     return opencl_context;
@@ -368,6 +369,7 @@ cl_command_queue Context::clCommandQueue() const
 {
     return opencl_command_queue;
 }
+#endif /** OPENVX_USE_OPENCL_INTEROP */
 
 void Context::setLoggingEnabled(vx_bool flag)
 {

@@ -37,8 +37,27 @@
  */
 namespace corevx {
 
-class Context : public Reference
+class Context final : public Reference
 {
+private:
+    /**
+     * @brief Launch worker graph thread
+     *
+     * @param arg         Optional argument to pass as parameter.
+     * @return vx_value_t Thread return value.
+     * @ingroup group_int_context
+     */
+    static vx_value_t workerGraph(void* arg);
+
+    /**
+     * @brief Launch worker node
+     *
+     * @param worker   The threadpool of the worker.
+     * @return vx_bool vx_true_e if ran successful, vx_false_e otherwise
+     * @ingroup group_int_context
+     */
+    static vx_bool workerNode(vx_threadpool_worker_t* worker);
+
 public:
     /**
      * @brief Construct a new Context object
@@ -177,6 +196,7 @@ public:
      */
     std::vector<vx_kernel_info_t> uniqueKernelTable();
 
+#ifdef OPENVX_USE_OPENCL_INTEROP
     /**
      * @brief Get the OpenCL context
      *
@@ -192,6 +212,7 @@ public:
      * @ingroup group_int_context
      */
     cl_command_queue clCommandQueue() const;
+#endif /** OPENVX_USE_OPENCL_INTEROP */
 
     /**
      * @brief Set the logging enabled state
@@ -322,24 +343,6 @@ public:
      * @ingroup group_int_context
      */
     static vx_bool isValidBorderMode(vx_enum mode);
-
-    /**
-     * @brief Launch worker graph thread
-     *
-     * @param arg         Optional argument to pass as parameter.
-     * @return vx_value_t Thread return value.
-     * @ingroup group_int_context
-     */
-    static vx_value_t workerGraph(void *arg);
-
-    /**
-     * @brief Launch worker node
-     *
-     * @param worker   The threadpool of the worker.
-     * @return vx_bool vx_true_e if ran successful, vx_false_e otherwise
-     * @ingroup group_int_context
-     */
-    static vx_bool workerNode(vx_threadpool_worker_t *worker);
 
     /**
      * @brief Register a user struct with a certain number of bytes
