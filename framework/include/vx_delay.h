@@ -47,6 +47,17 @@ public:
     ~Delay();
 
     /**
+     * @brief Create a delay object
+     *
+     * @param context
+     * @param exemplar
+     * @param count
+     * @return vx_delay
+     * @ingroup group_int_delay
+     */
+    static vx_delay createDelay(vx_context context, vx_reference exemplar, vx_size count);
+
+    /**
      * @brief Get data type of references associated with this delay object
      *
      * @return vx_enum The data type of references.

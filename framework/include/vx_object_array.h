@@ -71,7 +71,8 @@ public:
      * @return vx_object_array  Object array created
      * @ingroup group_int_object_array
      */
-    static vx_object_array createObjectArray(vx_reference scope, vx_reference exemplar, vx_size count, vx_bool is_virtual);
+    static vx_object_array createObjectArray(
+        vx_reference scope, vx_reference exemplar, vx_size count, vx_bool is_virtual = vx_false_e);
 
     /**
      * @brief Initialize object array

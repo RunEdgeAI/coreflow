@@ -19,7 +19,7 @@
 
 using namespace corevx;
 
-VX_API_ENTRY vx_lut VX_API_CALL vxCreateLUT(vx_context context, vx_enum data_type, vx_size count)
+vx_lut_t Lut::createLUT(vx_context context, vx_enum data_type, vx_size count)
 {
     vx_lut_t lut = nullptr;
 
@@ -32,13 +32,14 @@ VX_API_ENTRY vx_lut VX_API_CALL vxCreateLUT(vx_context context, vx_enum data_typ
             {
                 VX_PRINT(VX_ZONE_ERROR, "Invalid parameter to LUT\n");
                 vxAddLogEntry(context, VX_ERROR_INVALID_PARAMETERS, "Invalid parameter to LUT\n");
-                lut = (vx_lut_t)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+                lut = (vx_lut_t)Error::getError(context, VX_ERROR_INVALID_PARAMETERS);
             }
             else
 #endif
             {
-                lut = (vx_lut_t)Array::createArray(context, VX_TYPE_UINT8, count, vx_false_e, VX_TYPE_LUT);
-                if (vxGetStatus((vx_reference)lut) == VX_SUCCESS && lut->type == VX_TYPE_LUT)
+                lut = (vx_lut_t)Array::createArray(context, VX_TYPE_UINT8, count, vx_false_e,
+                                                   VX_TYPE_LUT);
+                if (Error::getStatus((vx_reference)lut) == VX_SUCCESS && lut->type == VX_TYPE_LUT)
                 {
                     lut->num_items = count;
                     lut->offset = 0;
@@ -52,15 +53,16 @@ VX_API_ENTRY vx_lut VX_API_CALL vxCreateLUT(vx_context context, vx_enum data_typ
             {
                 VX_PRINT(VX_ZONE_ERROR, "Invalid parameter to LUT\n");
                 vxAddLogEntry(context, VX_ERROR_INVALID_PARAMETERS, "Invalid parameter to LUT\n");
-                lut = (vx_lut_t)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+                lut = (vx_lut_t)Error::getError(context, VX_ERROR_INVALID_PARAMETERS);
             }
             else
             {
-                lut = (vx_lut_t)Array::createArray(context, VX_TYPE_INT16, count, vx_false_e, VX_TYPE_LUT);
-                if (vxGetStatus((vx_reference)lut) == VX_SUCCESS && lut->type == VX_TYPE_LUT)
+                lut = (vx_lut_t)Array::createArray(context, VX_TYPE_INT16, count, vx_false_e,
+                                                   VX_TYPE_LUT);
+                if (Error::getStatus((vx_reference)lut) == VX_SUCCESS && lut->type == VX_TYPE_LUT)
                 {
                     lut->num_items = count;
-                    lut->offset = (vx_uint32)(count/2);
+                    lut->offset = (vx_uint32)(count / 2);
                     Array::printArray(lut);
                 }
             }
@@ -68,8 +70,9 @@ VX_API_ENTRY vx_lut VX_API_CALL vxCreateLUT(vx_context context, vx_enum data_typ
 #if !defined(OPENVX_STRICT_1_0)
         else if (data_type == VX_TYPE_UINT16)
         {
-            lut = (vx_lut_t)Array::createArray(context, VX_TYPE_UINT16, count, vx_false_e, VX_TYPE_LUT);
-            if (vxGetStatus((vx_reference)lut) == VX_SUCCESS && lut->type == VX_TYPE_LUT)
+            lut = (vx_lut_t)Array::createArray(context, VX_TYPE_UINT16, count, vx_false_e,
+                                               VX_TYPE_LUT);
+            if (Error::getStatus((vx_reference)lut) == VX_SUCCESS && lut->type == VX_TYPE_LUT)
             {
                 lut->num_items = count;
                 lut->offset = 0;
@@ -81,9 +84,22 @@ VX_API_ENTRY vx_lut VX_API_CALL vxCreateLUT(vx_context context, vx_enum data_typ
         {
             VX_PRINT(VX_ZONE_ERROR, "Invalid data type\n");
             vxAddLogEntry(context, VX_ERROR_INVALID_TYPE, "Invalid data type\n");
-            lut = (vx_lut_t)vxGetErrorObject(context, VX_ERROR_INVALID_TYPE);
+            lut = (vx_lut_t)Error::getError(context, VX_ERROR_INVALID_TYPE);
         }
     }
+
+    return lut;
+}
+
+/******************************************************************************/
+/* PUBLIC INTERFACE                                                           */
+/******************************************************************************/
+
+VX_API_ENTRY vx_lut VX_API_CALL vxCreateLUT(vx_context context, vx_enum data_type, vx_size count)
+{
+    vx_lut_t lut = nullptr;
+
+    lut = Lut::createLUT(context, data_type, count);
 
     return (vx_lut)lut;
 }
