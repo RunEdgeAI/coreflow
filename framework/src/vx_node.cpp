@@ -115,6 +115,14 @@ vx_node Node::createNode(vx_graph graph, vx_kernel kernel)
     return node;
 }
 
+vx_node Node::createNode(vx_graph graph, vx_kernel kernel, std::initializer_list<vx_reference> params)
+{
+    vx_node node = createNode(graph, kernel);
+    vx_uint32 idx = 0;
+    for (const auto& obj : params) node->setParameter(idx++, obj);
+    return node;
+}
+
 void Node::setParameter(vx_uint32 index, vx_reference value)
 {
     if (parameters[index])

@@ -55,7 +55,7 @@ vx_scalar Scalar::createScalar(vx_context context, vx_enum data_type, const void
         if (Error::getStatus((vx_reference)scalar) == VX_SUCCESS && scalar->type == VX_TYPE_SCALAR)
         {
             scalar->data_type = data_type;
-            vxCopyScalar(scalar, (void *)ptr, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+            scalar->copy(const_cast<void*>(ptr), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
         }
     }
 

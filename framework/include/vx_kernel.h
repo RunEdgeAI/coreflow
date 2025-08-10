@@ -41,6 +41,18 @@ class Kernel : public Reference
 {
 public:
     /**
+     * @brief The parameter of the kernel
+     *
+     * @ingroup group_int_kernel
+     */
+    struct Param
+    {
+        vx_enum direction;  // VX_INPUT, VX_OUTPUT, etc.
+        vx_enum type;       // VX_TYPE_SCALAR, VX_TYPE_IMAGE, etc.
+        vx_enum state;      // VX_PARAMETER_STATE_REQUIRED, VX_PARAMETER_STATE_OPTIONAL, etc.
+    };
+
+    /**
      * @brief Construct a new Kernel object
      *
      * @param context   The context associated with this obj
@@ -74,6 +86,28 @@ public:
      * @ingroup group_int_kernel
      */
     ~Kernel() = default;
+
+    /**
+     * @brief Register a custom kernel
+     *
+     * @param context The context
+     * @param name The name of the kernel
+     * @param params The parameters of the kernel
+     * @param function The function of the kernel
+     * @param validate The validate function of the kernel
+     * @param initialize The initialize function of the kernel
+     * @param deinitialize The deinitialize function of the kernel
+     * @return vx_kernel The kernel
+     * @ingroup group_int_kernel
+     */
+    static vx_kernel registerCustomKernel(
+        vx_context context,
+        std::string name,
+        const std::vector<Param> &params,
+        vx_kernel_f function,
+        vx_kernel_validate_f validate = nullptr,
+        vx_kernel_initialize_f initialize = nullptr,
+        vx_kernel_deinitialize_f deinitialize = nullptr);
 
     /**
      * @brief Get the number of kernel parameters

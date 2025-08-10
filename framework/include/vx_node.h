@@ -85,6 +85,17 @@ public:
      */
     static vx_node createNode(vx_graph graph, vx_kernel kernel);
 
+    /**
+     * @brief Create a new node with parameters
+     *
+     * @param graph   The graph associated with this node
+     * @param kernel  The kernel associated with this node
+     * @param params  The parameters associated with this node
+     * @return vx_node The node object
+     * @ingroup group_int_node
+     */
+    static vx_node createNode(vx_graph graph, vx_kernel kernel, std::initializer_list<vx_reference> params);
+
     /*! \brief Node parameter setter, no check.
      * \ingroup group_int_node
      */
