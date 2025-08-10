@@ -32,9 +32,6 @@
  * \brief The Internal Context API
  */
 
-/*! \brief The implementation string which is of the format "<vendor>.<substring>" */
-extern const vx_char implementation[];
-
 /*! \brief The top level context data for the entire OpenVX instance
  * \ingroup group_int_context
  */
@@ -48,6 +45,13 @@ public:
      * @ingroup group_int_context
      */
     Context();
+
+    /**
+     * @brief Delete copy constructor and assignment operator to prevent copying
+     * @ingroup group_int_context
+     */
+    Context(const Context&) = delete;
+    Context& operator=(const Context&) = delete;
 
     /**
      * @brief Destroy the Context object
@@ -507,7 +511,7 @@ public:
     const vx_uint16 vendor_id;
     /*! \brief The version number this implements */
     const vx_uint16 version_number;
-    /*! \brief The name of this impleemntation */
+    /*! \brief The implementation string which is of the format "<vendor>.<substring>" */
     const vx_char implementation[VX_MAX_IMPLEMENTATION_NAME];
     /*! \brief The name of additional extensions in this impleemntation */
     const vx_char* extension;
