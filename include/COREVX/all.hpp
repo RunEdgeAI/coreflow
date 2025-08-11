@@ -33,3 +33,5 @@
 #include "framework/include/vx_error.h"
 #include "framework/include/vx_delay.h"
 #include "framework/include/vx_event_queue.hpp"
+#include "framework/include/vx_user_data_object.h"
+#include "framework/include/vx_xml.h"
