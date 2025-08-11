@@ -244,10 +244,13 @@ vx_image Image::createImage(vx_context context,
 {
     vx_image image = nullptr;
 
-    if ((width == 0) || (height == 0) || (Image::isSupportedFourcc(color) == vx_false_e) ||
-        (color == VX_DF_IMAGE_VIRT))
+    if (vx_false_e == is_virtual)
     {
-        return (vx_image)Error::getError(context, VX_ERROR_INVALID_PARAMETERS);
+        if ((width == 0) || (height == 0) || (Image::isSupportedFourcc(color) == vx_false_e) ||
+            (color == VX_DF_IMAGE_VIRT))
+        {
+            return (vx_image)Error::getError(context, VX_ERROR_INVALID_PARAMETERS);
+        }
     }
 
     if (Context::isValidContext(context) == vx_true_e)
