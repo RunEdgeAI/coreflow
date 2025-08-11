@@ -15,6 +15,7 @@
  */
 
 /*!
+ * \file
  * \brief Elementwise binary norm kernel (Extras)
  */
 

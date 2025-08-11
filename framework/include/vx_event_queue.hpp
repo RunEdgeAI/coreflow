@@ -1,6 +1,6 @@
 /**
  * @file vx_event_queue.hpp
- * @brief
+ * @brief Internal Event Queue Object
  * @version 0.1
  * @date 2025-05-09
  *

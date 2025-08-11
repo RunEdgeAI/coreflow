@@ -4,7 +4,7 @@
  * @version 0.1
  * @date 2025-05-16
  *
- * @copyright Copyright (c) 2025
+ * @copyright Copyright (c) 2025 EdgeAI, LLC. All rights reserved.
  * @ingroup group_corevx_ext
  */
 #include <condition_variable>

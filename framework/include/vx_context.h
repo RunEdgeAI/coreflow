@@ -25,7 +25,7 @@
 
 /*!
  * \file
- * \brief
+ * \brief The internal context implementation.
  *
  * \defgroup group_int_context Internal Context API
  * \ingroup group_internal

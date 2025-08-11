@@ -16,7 +16,7 @@
 
 /*!
  * \file
- * \brief The C-Model Target Interface
+ * \brief The OpenCL Target Interface
  * \author Erik Rainey <erik.rainey@gmail.com>
  */
 #include <sys/time.h>

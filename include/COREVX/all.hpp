@@ -1,7 +1,12 @@
-// CoreVX single-include header for C++ development
-// Exposes the existing C++ classes under the corevx namespace without refactoring
-// and re-exports the stable OpenVX C API for convenience.
-
+/**
+ * @file all.hpp
+ * @brief CoreVX single-include header for C++ development
+ * @version 0.1
+ * @date 2025-08-11
+ *
+ * @copyright Copyright (c) 2025 EdgeAI, LLC. All rights reserved.
+ * @ingroup group_corevx_ext
+ */
 #pragma once
 
 // Public OpenVX C API (stable surface)

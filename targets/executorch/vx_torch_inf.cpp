@@ -1,10 +1,10 @@
 /**
- * @file vx_ort_inf.cpp
+ * @file vx_torch_inf.cpp
  * @brief OpenVX Interface Into Executorch
  * @version 0.1
  * @date 2025-01-20
  *
- * @copyright Copyright (c) 2025
+ * @copyright Copyright (c) 2025 EdgeAI, LLC. All rights reserved.
  *
  */
 #include <string>

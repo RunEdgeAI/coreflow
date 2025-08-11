@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/*!
+ * \file
+ * \brief The Neural Network Kernel.
+ */
+
 #include <VX/vx.h>
 #include <VX/vx_helper.h>
 #include <VX/vx_khr_nn.h>

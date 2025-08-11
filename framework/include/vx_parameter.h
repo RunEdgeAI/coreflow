@@ -156,9 +156,8 @@ public:
     /**
      * @brief Get a parameter by index from a node
      *
-     * @param node  The node to get the parameter from
-     * @param index The index of the parameter
-     * @return vx_parameter The parameter object, or nullptr if not found
+     * @param value  The reference to set as the parameter value
+     * @return vx_status VX_SUCCESS on success, error code otherwise
      * @ingroup group_int_parameter
      */
     vx_status setParameterByReference(vx_reference value);

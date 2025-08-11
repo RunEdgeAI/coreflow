@@ -302,7 +302,6 @@ public:
      * @param plane_index The plane index to access
      * @param addr       The addressing information for the patch
      * @param ptr        The pointer to the user memory
-     * @param mem_type   The type of memory (host, opencl, etc.)
      * @param usage      The usage of the memory (read/write)
      * @return vx_status VX_SUCCESS on success, error code otherwise
      * @ingroup group_int_image

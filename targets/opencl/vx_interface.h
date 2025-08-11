@@ -18,6 +18,11 @@
 
 #include "vx_internal.h"
 
+/*!
+ * \file
+ * \brief The OpenCL Kernel Interface Header.
+ */
+
 #if defined(DARWIN) || defined(__APPLE__)
 #include <OpenCL/opencl.h>
 #else

@@ -23,6 +23,11 @@
 #include <math.h>
 #include "tensor_utils.h"
 
+/*!
+ * \file
+ * \brief The Bilateral Filter Kernel.
+ */
+
 typedef enum _bilateral_filter_params_e {
     BILATERAL_FILTER_PARAM_SRC = 0,
     BILATERAL_FILTER_PARAM_DIAMETER,

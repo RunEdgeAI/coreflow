@@ -18,6 +18,11 @@
 
 #include "tiling.h"
 
+/*!
+ * \file
+ * \brief The Non-Linear Filter Kernel.
+ */
+
 static vx_status VX_CALLBACK vxNonLinearFilterInputValidator(vx_node node, vx_uint32 index)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;

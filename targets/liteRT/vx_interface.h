@@ -10,6 +10,11 @@
 #ifndef OPENVX_INTERFACE_H
 #define OPENVX_INTERFACE_H
 
+/*!
+ * \file
+ * \brief The TFLITE Runtime Kernel Interface Header.
+ */
+
 #include <VX/vx_helper.h>
 
 extern vx_kernel_description_t tflite_cpu_inf_kernel;

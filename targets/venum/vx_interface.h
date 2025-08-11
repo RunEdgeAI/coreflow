@@ -20,6 +20,11 @@
 #include <venum.h>
 #include <VX/vx_helper.h>
 
+/*!
+ * \file
+ * \brief The Venum Kernel Interface Header.
+ */
+
 extern vx_kernel_description_t absdiff_kernel;
 extern vx_kernel_description_t not_kernel;
 extern vx_kernel_description_t median3x3_kernel;

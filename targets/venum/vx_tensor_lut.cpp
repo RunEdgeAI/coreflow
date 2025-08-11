@@ -24,6 +24,11 @@
 #include <math.h>
 #include "tensor_utils.h"
 
+/*!
+ * \file
+ * \brief The Tensor LUT Kernel.
+ */
+
 typedef enum _lut_params_e {
     LUT_PARAM_TENSOR_IN = 0,
     LUT_PARAM_LUT,

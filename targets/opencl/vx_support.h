@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/*!
+ * \file
+ * \brief The OpenCL Support Functions Header.
+ */
+
 #include "vx_interface.h"
 #include "vx_internal.h"
 

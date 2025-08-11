@@ -18,6 +18,7 @@
 #include "vx_lut.h"
 
 using namespace corevx;
+using Lut = Array;
 
 vx_lut_t Lut::createLUT(vx_context context, vx_enum data_type, vx_size count)
 {

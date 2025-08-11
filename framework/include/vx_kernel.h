@@ -103,7 +103,7 @@ public:
     static vx_kernel registerCustomKernel(
         vx_context context,
         std::string name,
-        const std::vector<Param> &params,
+        const std::vector<Kernel::Param> &params,
         vx_kernel_f function,
         vx_kernel_validate_f validate = nullptr,
         vx_kernel_initialize_f initialize = nullptr,
@@ -373,7 +373,7 @@ public:
      * @brief Removes a custom kernel from its context and releases it.
      *
      * @param [in] kernel The reference to the kernel to remove. Returned from <tt>\ref
-     * addKernel</tt>.
+     * addkernel</tt>.
      * @note Any kernel enumerated in the base standard
      * cannot be removed; only kernels added through <tt>\ref vxAddUserKernel</tt> can
      * be removed.
@@ -389,7 +389,7 @@ public:
      * @note When all references to loaded kernels are released, the module
      * may be automatically unloaded.
      * @param [in] context The reference to the context the kernels must be added to.
-     * @param [in] module The short name of the module to load. On systems where
+     * @param [in] name    The short name of the module to load. On systems where
      * there are specific naming conventions for modules, the name passed
      * should ignore such conventions. For example: \c libxyz.so should be
      * passed as just \c xyz and the implementation will <i>do the right thing</i> that
@@ -405,7 +405,7 @@ public:
      * the module using the \ref loadKernels function.
      *
      * @param [in] context The reference to the context the kernels must be removed from.
-     * @param [in] module The short name of the module to unload. On systems where
+     * @param [in] name    The short name of the module to unload. On systems where
      * there are specific naming conventions for modules, the name passed
      * should ignore such conventions. For example: \c libxyz.so should be
      * passed as just \c xyz and the implementation will <i>do the right thing</i>

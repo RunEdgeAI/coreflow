@@ -1,5 +1,5 @@
 /**
- * @file vx_ort_inf.cpp
+ * @file vx_litert_inf.cpp
  * @brief OpenVX Interface Into LiteRT
  * @version 0.1
  * @date 2025-01-20
