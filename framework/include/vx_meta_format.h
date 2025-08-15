@@ -56,6 +56,15 @@ public:
     ~MetaFormat() = default;
 
     /**
+     * @brief Create a new meta format
+     *
+     * @param context   The context associated with this meta format
+     * @return vx_meta_format The meta format object
+     * @ingroup group_int_meta_format
+     */
+    static vx_meta_format createMetaFormat(vx_context context);
+
+    /**
      * @brief Check if two meta formats are valid
      *
      * @param meta1     The first meta format
@@ -249,7 +258,6 @@ public:
 };
 
 } // namespace corevx
-
 
 /*! \brief Creates a metaformat object.
  * \param [in] context The overall context object.

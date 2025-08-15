@@ -36,6 +36,41 @@ Remap::~Remap()
 {
 }
 
+vx_remap Remap::createRemap(vx_context context, vx_uint32 src_width, vx_uint32 src_height, vx_uint32 dst_width, vx_uint32 dst_height)
+{
+    vx_remap remap = nullptr;
+
+    if (Context::isValidContext(context) == vx_true_e)
+    {
+        if (src_width != 0 && src_height != 0 && dst_width != 0 && dst_height != 0)
+        {
+            remap =
+                (vx_remap)Reference::createReference(context, VX_TYPE_REMAP, VX_EXTERNAL, context);
+            if (Error::getStatus((vx_reference)remap) == VX_SUCCESS && remap->type == VX_TYPE_REMAP)
+            {
+                remap->src_width = src_width;
+                remap->src_height = src_height;
+                remap->dst_width = dst_width;
+                remap->dst_height = dst_height;
+                remap->memory.ndims = 3;
+                remap->memory.nptrs = 1;
+                remap->memory.dims[0][VX_DIM_C] = 2;  // 2 "channels" of f32
+                remap->memory.dims[0][VX_DIM_X] = dst_width;
+                remap->memory.dims[0][VX_DIM_Y] = dst_height;
+                remap->memory.strides[0][VX_DIM_C] = sizeof(vx_float32);
+            }
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to remap\n");
+            vxAddLogEntry(context, VX_ERROR_INVALID_PARAMETERS, "Invalid parameters to remap\n");
+            remap = (vx_remap)Error::getError(context, VX_ERROR_INVALID_PARAMETERS);
+        }
+    }
+
+    return remap;
+}
+
 vx_bool Remap::isValidRemap(vx_remap remap)
 {
     if (Reference::isValidReference(remap, VX_TYPE_REMAP) == vx_true_e)
@@ -549,33 +584,7 @@ VX_API_ENTRY vx_remap VX_API_CALL vxCreateRemap(vx_context context, vx_uint32 sr
 {
     vx_remap remap = nullptr;
 
-    if (Context::isValidContext(context) == vx_true_e)
-    {
-        if (src_width != 0 && src_height != 0 && dst_width != 0 && dst_height != 0)
-        {
-            remap =
-                (vx_remap)Reference::createReference(context, VX_TYPE_REMAP, VX_EXTERNAL, context);
-            if (vxGetStatus((vx_reference)remap) == VX_SUCCESS && remap->type == VX_TYPE_REMAP)
-            {
-                remap->src_width = src_width;
-                remap->src_height = src_height;
-                remap->dst_width = dst_width;
-                remap->dst_height = dst_height;
-                remap->memory.ndims = 3;
-                remap->memory.nptrs = 1;
-                remap->memory.dims[0][VX_DIM_C] = 2;  // 2 "channels" of f32
-                remap->memory.dims[0][VX_DIM_X] = dst_width;
-                remap->memory.dims[0][VX_DIM_Y] = dst_height;
-                remap->memory.strides[0][VX_DIM_C] = sizeof(vx_float32);
-            }
-        }
-        else
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Invalid parameters to remap\n");
-            vxAddLogEntry(context, VX_ERROR_INVALID_PARAMETERS, "Invalid parameters to remap\n");
-            remap = (vx_remap)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
-        }
-    }
+    remap = (vx_remap)Remap::createRemap(context, src_width, src_height, dst_width, dst_height);
 
     return remap;
 }

@@ -61,7 +61,7 @@ public:
      * \ingroup group_int_target
      * \retval vx_true_e If string matches, vx_false_e if not.
      */
-    static vx_bool matchTargetNameWithString(const char* target_name, const char* target_string);
+    static vx_bool matchTargetNameWithString(const vx_char* target_name, const vx_char* target_string);
 
     /**
      * @brief Find the last occurrence of a substring in a string.
@@ -71,7 +71,7 @@ public:
      * @return const char* Pointer to the last occurrence of the substring, or nullptr if not found.
      * @ingroup group_int_target
      */
-    static const char* reverse_strstr(const char* string, const char* substr);
+    static const vx_char* reverse_strstr(const vx_char* string, const vx_char* substr);
 
     /*! \brief Initializes a target's kernels list.
      * \param [in] kernels The array of kernels that the target supports.
@@ -122,6 +122,5 @@ public:
 };
 
 } // namespace corevx
-
 
 #endif /* VX_TARGET_H */

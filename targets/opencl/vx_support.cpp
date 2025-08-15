@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/*!
+ * \file
+ * \brief The OpenCL Support Functions.
+ */
+
 #include <vx_support.h>
 
 #define CASE_STRINGERIZE(err, label, function, file, line) \

@@ -16,7 +16,7 @@
 
 /*!
  * \file
- * \brief The C-Model Target Interface
+ * \brief The Venum Target Interface
  * \author Erik Rainey <erik.rainey@gmail.com>
  */
 

@@ -44,6 +44,64 @@ pattern()
 
 }
 
+vx_matrix Matrix::createMatrix(vx_context context, vx_enum data_type, vx_size columns, vx_size rows)
+{
+    vx_matrix matrix = nullptr;
+
+    vx_size dim = 0ul;
+
+    if (Context::isValidContext(context) == vx_false_e)
+        return 0;
+
+    if ((data_type == VX_TYPE_INT8) || (data_type == VX_TYPE_UINT8))
+    {
+        dim = sizeof(vx_uint8);
+    }
+    else if ((data_type == VX_TYPE_INT16) || (data_type == VX_TYPE_UINT16))
+    {
+        dim = sizeof(vx_uint16);
+    }
+    else if ((data_type == VX_TYPE_INT32) || (data_type == VX_TYPE_UINT32) || (data_type == VX_TYPE_FLOAT32))
+    {
+        dim = sizeof(vx_uint32);
+    }
+    else if ((data_type == VX_TYPE_INT64) || (data_type == VX_TYPE_UINT64) || (data_type == VX_TYPE_FLOAT64))
+    {
+        dim = sizeof(vx_uint64);
+    }
+
+    if (dim == 0ul)
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid data type\n");
+        vxAddLogEntry(context, VX_ERROR_INVALID_TYPE, "Invalid data type\n");
+        return (vx_matrix)Error::getError(context, VX_ERROR_INVALID_TYPE);
+    }
+
+    if ((columns == 0ul) || (rows == 0ul))
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Invalid dimensions to matrix\n");
+        vxAddLogEntry(context, VX_ERROR_INVALID_DIMENSION, "Invalid dimensions to matrix\n");
+        return (vx_matrix)Error::getError(context, VX_ERROR_INVALID_DIMENSION);
+    }
+
+    matrix = (vx_matrix)Reference::createReference(context, VX_TYPE_MATRIX, VX_EXTERNAL, context);
+    if (Error::getStatus((vx_reference)matrix) == VX_SUCCESS && matrix->type == VX_TYPE_MATRIX)
+    {
+        matrix->data_type = data_type;
+        matrix->columns = columns;
+        matrix->rows = rows;
+        matrix->memory.ndims = 2;
+        matrix->memory.nptrs = 1;
+        matrix->memory.dims[0][0] = (vx_uint32)dim;
+        matrix->memory.dims[0][1] = (vx_uint32)(columns*rows);
+        matrix->origin.x = (vx_uint32)(columns / 2);
+        matrix->origin.y = (vx_uint32)(rows / 2);
+        matrix->pattern = VX_PATTERN_OTHER;
+    }
+
+    return matrix;
+}
+
 vx_enum Matrix::dataType() const
 {
     return data_type;
@@ -218,53 +276,9 @@ void Matrix::destruct()
 VX_API_ENTRY vx_matrix VX_API_CALL vxCreateMatrix(vx_context context, vx_enum data_type, vx_size columns, vx_size rows)
 {
     vx_matrix matrix = nullptr;
-    vx_size dim = 0ul;
 
-    if (Context::isValidContext(context) == vx_false_e)
-        return 0;
+    matrix = Matrix::createMatrix(context, data_type, columns, rows);
 
-    if ((data_type == VX_TYPE_INT8) || (data_type == VX_TYPE_UINT8))
-    {
-        dim = sizeof(vx_uint8);
-    }
-    else if ((data_type == VX_TYPE_INT16) || (data_type == VX_TYPE_UINT16))
-    {
-        dim = sizeof(vx_uint16);
-    }
-    else if ((data_type == VX_TYPE_INT32) || (data_type == VX_TYPE_UINT32) || (data_type == VX_TYPE_FLOAT32))
-    {
-        dim = sizeof(vx_uint32);
-    }
-    else if ((data_type == VX_TYPE_INT64) || (data_type == VX_TYPE_UINT64) || (data_type == VX_TYPE_FLOAT64))
-    {
-        dim = sizeof(vx_uint64);
-    }
-    if (dim == 0ul)
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Invalid data type\n");
-        vxAddLogEntry(context, VX_ERROR_INVALID_TYPE, "Invalid data type\n");
-        return (vx_matrix)vxGetErrorObject(context, VX_ERROR_INVALID_TYPE);
-    }
-    if ((columns == 0ul) || (rows == 0ul))
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Invalid dimensions to matrix\n");
-        vxAddLogEntry(context, VX_ERROR_INVALID_DIMENSION, "Invalid dimensions to matrix\n");
-        return (vx_matrix)vxGetErrorObject(context, VX_ERROR_INVALID_DIMENSION);
-    }
-    matrix = (vx_matrix)Reference::createReference(context, VX_TYPE_MATRIX, VX_EXTERNAL, context);
-    if (vxGetStatus((vx_reference)matrix) == VX_SUCCESS && matrix->type == VX_TYPE_MATRIX)
-    {
-        matrix->data_type = data_type;
-        matrix->columns = columns;
-        matrix->rows = rows;
-        matrix->memory.ndims = 2;
-        matrix->memory.nptrs = 1;
-        matrix->memory.dims[0][0] = (vx_uint32)dim;
-        matrix->memory.dims[0][1] = (vx_uint32)(columns*rows);
-        matrix->origin.x = (vx_uint32)(columns / 2);
-        matrix->origin.y = (vx_uint32)(rows / 2);
-        matrix->pattern = VX_PATTERN_OTHER;
-    }
     return (vx_matrix)matrix;
 }
 

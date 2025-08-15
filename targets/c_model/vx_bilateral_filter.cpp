@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/*!
+ * \file
+ * \brief The Bilateral Filter Kernel.
+ */
+
 #include <VX/vx.h>
 #include <VX/vx_helper.h>
 

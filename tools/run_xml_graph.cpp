@@ -1,3 +1,12 @@
+/**
+ * @file run_xml_graph.cpp
+ * @brief CoreVX Graph Runner
+ * @version 0.1
+ * @date 2025-08-11
+ *
+ * @copyright Copyright (c) 2025 EdgeAI, LLC. All rights reserved.
+ * @ingroup group_corevx_ext
+ */
 #include <iostream>
 #include <memory>
 #include <stdexcept>

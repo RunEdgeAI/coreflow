@@ -51,6 +51,17 @@ public:
     ~Scalar();
 
     /**
+     * @brief Create a scalar object
+     *
+     * @param context   The context associated with this obj
+     * @param data_type The data type of the scalar
+     * @param ptr       The pointer to the scalar value
+     * @return vx_scalar The scalar object
+     * @ingroup group_int_scalar
+     */
+    static vx_scalar createScalar(vx_context context, vx_enum data_type, const void* ptr);
+
+    /**
      * @brief   Allocate memory for scalar obj
      *
      * @param size      size of bytes to alloc
@@ -188,6 +199,5 @@ public:
 };
 
 } // namespace corevx
-
 
 #endif /* VX_SCALAR_H */

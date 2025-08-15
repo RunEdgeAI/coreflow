@@ -65,5 +65,4 @@ public:
 
 } // namespace corevx
 
-
 #endif /* VX_LOG_H */

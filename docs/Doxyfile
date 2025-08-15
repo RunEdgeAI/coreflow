@@ -1120,7 +1120,7 @@ EXCLUDE_PATTERNS       = */bazel-*/* \
                          */build/* \
                          */cts/* \
                          */external/* \
-                         */kernels/NNEF-Tools/* \
+                         */kernels/nnef/NNEF-Tools/* \
                          */kernels/utils/half/* \
                          *.md \
                          /private/var/tmp/_bazel* \

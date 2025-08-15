@@ -57,6 +57,33 @@ Graph::Graph(vx_context context, vx_reference scope)
 
 Graph::~Graph() {}
 
+vx_graph Graph::createGraph(vx_context context)
+{
+    vx_graph graph = nullptr;
+
+    if (Context::isValidContext(context) == vx_true_e)
+    {
+        graph = (vx_graph)Reference::createReference(context, VX_TYPE_GRAPH, VX_EXTERNAL, context);
+        if (Error::getStatus((vx_reference)graph) == VX_SUCCESS && graph->type == VX_TYPE_GRAPH)
+        {
+            Osal::initPerf(&graph->perf);
+            Osal::createSem(&graph->lock, 1);
+            VX_PRINT(VX_ZONE_GRAPH, "Created Graph %p\n", graph);
+            Reference::printReference((vx_reference)graph);
+            graph->reverify = graph->verified;
+            graph->verified = vx_false_e;
+            graph->state = VX_GRAPH_STATE_UNVERIFIED;
+        }
+
+        if (graph == nullptr)
+        {
+            graph = (vx_graph)Error::getError(context, VX_ERROR_NO_MEMORY);
+        }
+    }
+
+    return graph;
+}
+
 vx_uint32 Graph::nextNode(vx_uint32 index)
 {
     return ((index + 1) % numNodes);
@@ -1489,7 +1516,7 @@ vx_status Graph::wait()
     return status;
 }
 
-vx_status Graph::processGraph()
+vx_status Graph::process()
 {
     vx_status status = VX_SUCCESS;
 
@@ -3096,20 +3123,7 @@ VX_API_ENTRY vx_graph VX_API_CALL vxCreateGraph(vx_context context)
 {
     vx_graph graph = nullptr;
 
-    if (Context::isValidContext(context) == vx_true_e)
-    {
-        graph = (vx_graph)Reference::createReference(context, VX_TYPE_GRAPH, VX_EXTERNAL, context);
-        if (vxGetStatus((vx_reference)graph) == VX_SUCCESS && graph->type == VX_TYPE_GRAPH)
-        {
-            Osal::initPerf(&graph->perf);
-            Osal::createSem(&graph->lock, 1);
-            VX_PRINT(VX_ZONE_GRAPH,"Created Graph %p\n", graph);
-            Reference::printReference((vx_reference)graph);
-            graph->reverify = graph->verified;
-            graph->verified = vx_false_e;
-            graph->state = VX_GRAPH_STATE_UNVERIFIED;
-        }
-    }
+    graph = Graph::createGraph(context);
 
     return (vx_graph)graph;
 }
@@ -3246,7 +3260,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxProcessGraph(vx_graph graph)
 
     if (VX_SUCCESS == status)
     {
-        status = graph->processGraph();
+        status = graph->process();
     }
 
     VX_PRINT(VX_ZONE_GRAPH, "%s returned %d\n", __func__, status );

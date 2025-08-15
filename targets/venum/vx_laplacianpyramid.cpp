@@ -22,6 +22,11 @@
 #include <VX/vxu.h>
 #include "vx_internal.h"
 
+/*!
+ * \file
+ * \brief The Laplacian Pyramid Kernel.
+ */
+
 static const vx_uint32 gaussian5x5scale = 256;
 static const vx_int16 gaussian5x5[5][5] =
 {

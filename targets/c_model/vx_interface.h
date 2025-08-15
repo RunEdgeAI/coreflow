@@ -17,6 +17,11 @@
 #ifndef _OPENVX_INTERFACE_H_
 #define _OPENVX_INTERFACE_H_
 
+/*!
+ * \file
+ * \brief The C-Model Kernel Interface Header.
+ */
+
 #include <c_model.h>
 #include <VX/vx_helper.h>
 

@@ -25,23 +25,39 @@
 
 /*!
  * \file
- * \brief
+ * \brief The internal context implementation.
  *
  * \defgroup group_int_context Internal Context API
  * \ingroup group_internal
  * \brief The Internal Context API
  */
 
-/*! \brief The implementation string which is of the format "<vendor>.<substring>" */
-extern const vx_char implementation[];
-
 /*! \brief The top level context data for the entire OpenVX instance
  * \ingroup group_int_context
  */
 namespace corevx {
 
-class Context : public Reference
+class Context final : public Reference
 {
+private:
+    /**
+     * @brief Launch worker graph thread
+     *
+     * @param arg         Optional argument to pass as parameter.
+     * @return vx_value_t Thread return value.
+     * @ingroup group_int_context
+     */
+    static vx_value_t workerGraph(void* arg);
+
+    /**
+     * @brief Launch worker node
+     *
+     * @param worker   The threadpool of the worker.
+     * @return vx_bool vx_true_e if ran successful, vx_false_e otherwise
+     * @ingroup group_int_context
+     */
+    static vx_bool workerNode(vx_threadpool_worker_t* worker);
+
 public:
     /**
      * @brief Construct a new Context object
@@ -50,10 +66,23 @@ public:
     Context();
 
     /**
+     * @brief Delete copy constructor and assignment operator to prevent copying
+     * @ingroup group_int_context
+     */
+    Context(const Context&) = delete;
+    Context& operator=(const Context&) = delete;
+
+    /**
      * @brief Destroy the Context object
      * @ingroup group_int_context
      */
     ~Context();
+
+    /**
+     * @brief Create a new context
+     * @ingroup group_int_context
+     */
+    static vx_context createContext();
 
     /**
      * @brief Get vendor id
@@ -167,6 +196,7 @@ public:
      */
     std::vector<vx_kernel_info_t> uniqueKernelTable();
 
+#ifdef OPENVX_USE_OPENCL_INTEROP
     /**
      * @brief Get the OpenCL context
      *
@@ -182,6 +212,7 @@ public:
      * @ingroup group_int_context
      */
     cl_command_queue clCommandQueue() const;
+#endif /** OPENVX_USE_OPENCL_INTEROP */
 
     /**
      * @brief Set the logging enabled state
@@ -312,24 +343,6 @@ public:
      * @ingroup group_int_context
      */
     static vx_bool isValidBorderMode(vx_enum mode);
-
-    /**
-     * @brief Launch worker graph thread
-     *
-     * @param arg         Optional argument to pass as parameter.
-     * @return vx_value_t Thread return value.
-     * @ingroup group_int_context
-     */
-    static vx_value_t workerGraph(void *arg);
-
-    /**
-     * @brief Launch worker node
-     *
-     * @param worker   The threadpool of the worker.
-     * @return vx_bool vx_true_e if ran successful, vx_false_e otherwise
-     * @ingroup group_int_context
-     */
-    static vx_bool workerNode(vx_threadpool_worker_t *worker);
 
     /**
      * @brief Register a user struct with a certain number of bytes
@@ -501,13 +514,12 @@ public:
     const vx_uint16 vendor_id;
     /*! \brief The version number this implements */
     const vx_uint16 version_number;
-    /*! \brief The name of this impleemntation */
+    /*! \brief The implementation string which is of the format "<vendor>.<substring>" */
     const vx_char implementation[VX_MAX_IMPLEMENTATION_NAME];
     /*! \brief The name of additional extensions in this impleemntation */
     const vx_char* extension;
 };
 
 } // namespace corevx
-
 
 #endif /* VX_CONTEXT_H */

@@ -70,7 +70,7 @@ public:
                                       vx_uint32 width,
                                       vx_uint32 height,
                                       vx_df_image format,
-                                      vx_bool is_virtual);
+                                      vx_bool is_virtual = vx_false_e);
 
     /**
      * @brief Get the number of levels in the pyramid
@@ -150,6 +150,5 @@ public:
 };
 
 } // namespace corevx
-
 
 #endif /* VX_PYRAMID_H */

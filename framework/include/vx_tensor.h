@@ -50,6 +50,20 @@ public:
      */
     ~Tensor();
 
+    /**
+     * @brief Create a tensor object
+     *
+     * @param context   The context associated with this obj
+     * @param number_of_dims The number of dimensions of the tensor
+     * @param dims The dimensions of the tensor
+     * @param data_type The data type of the tensor
+     * @param fixed_point_position The fixed point position of the tensor
+     * @return vx_tensor The tensor object
+     * @ingroup group_int_tensor
+     */
+    static vx_tensor createTensor(
+        vx_context context, vx_size number_of_dims, const vx_size *dims, vx_enum data_type, vx_int8 fixed_point_position);
+
     /*! \brief Used to validate the vx_tensor types.
      * \param [in] tensor The vx_tensor to validate.
      * \ingroup group_int_tensor
@@ -225,5 +239,4 @@ public:
 
 } // namespace corevx
 
-
-#endif
+#endif /* VX_TENSOR_H */

@@ -38,6 +38,216 @@ Delay::~Delay()
 {
 }
 
+vx_delay Delay::createDelay(vx_context context, vx_reference exemplar, vx_size count)
+{
+    vx_delay delay = nullptr;
+    vx_uint32 t = 0u;
+    vx_enum invalid_types[] = {
+        VX_TYPE_CONTEXT,
+        VX_TYPE_GRAPH,
+        VX_TYPE_NODE,
+        VX_TYPE_KERNEL,
+        VX_TYPE_TARGET,
+        VX_TYPE_PARAMETER,
+        VX_TYPE_REFERENCE,
+        VX_TYPE_DELAY, /* no delays of delays */
+#ifdef OPENVX_KHR_XML
+        VX_TYPE_IMPORT,
+#endif
+    };
+
+    if (Context::isValidContext(context) == vx_false_e)
+    {
+        return delay;
+    }
+
+    if (Reference::isValidReference(exemplar) == vx_false_e)
+    {
+        return (vx_delay)Error::getError(context, VX_ERROR_INVALID_REFERENCE);
+    }
+
+    for (t = 0u; t < dimof(invalid_types); t++)
+    {
+        if (exemplar->type == invalid_types[t])
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Attempted to create delay of invalid object type!\n");
+            vxAddLogEntry((vx_reference)context, VX_ERROR_INVALID_REFERENCE, "Attempted to create delay of invalid object type!\n");
+            return (vx_delay)Error::getError(context, VX_ERROR_INVALID_REFERENCE);
+        }
+    }
+
+    delay = (vx_delay)Reference::createReference(context, VX_TYPE_DELAY, VX_EXTERNAL, context);
+    if (Error::getStatus((vx_reference)delay) == VX_SUCCESS &&
+        delay->type == VX_TYPE_DELAY)
+    {
+        vx_size i = 0;
+        delay->pyr = nullptr;
+        delay->set = new vx_delay_param_t[count]();
+        delay->refs = new vx_reference[count]();
+        delay->type = exemplar->type;
+        delay->count = count;
+        VX_PRINT(VX_ZONE_DELAY, "Creating Delay of %u objects of type %x!\n", count, exemplar->type);
+        for (i = 0; i < count; i++)
+        {
+            vx_bool ref_bool = vx_true_e;
+            switch (exemplar->type)
+            {
+                case VX_TYPE_IMAGE:
+                {
+                    vx_image image = (vx_image )exemplar;
+                    delay->refs[i] = (vx_reference)Image::createImage(context, image->width, image->height, image->format);
+                    VX_PRINT(VX_ZONE_DELAY, "Creating image with width %d height %d format %d", image->width, image->height, image->format);
+                    break;
+                }
+                case VX_TYPE_ARRAY:
+                {
+                    vx_array arr = (vx_array )exemplar;
+                    delay->refs[i] = (vx_reference)Array::createArray(context, arr->item_type, arr->capacity);
+                    break;
+                }
+                case VX_TYPE_MATRIX:
+                {
+                    vx_matrix mat = (vx_matrix)exemplar;
+                    delay->refs[i] = (vx_reference)Matrix::createMatrix(context, mat->data_type, mat->columns, mat->rows);
+                    break;
+                }
+                case VX_TYPE_CONVOLUTION:
+                {
+                    vx_convolution conv = (vx_convolution)exemplar;
+                    vx_convolution conv2 = Convolution::createConvolution(context, conv->columns, conv->rows);
+                    conv2->scale = conv->scale;
+                    delay->refs[i] = (vx_reference)conv2;
+                    break;
+                }
+                case VX_TYPE_DISTRIBUTION:
+                {
+                    vx_distribution dist = (vx_distribution)exemplar;
+                    delay->refs[i] = (vx_reference)Distribution::createDistribution(
+                        context, dist->memory.dims[0][VX_DIM_X], dist->offset_x, dist->range_x);
+                    break;
+                }
+                case VX_TYPE_REMAP:
+                {
+                    vx_remap remap = (vx_remap)exemplar;
+                    delay->refs[i] = (vx_reference)Remap::createRemap(
+                        context, remap->src_width, remap->src_height, remap->dst_width, remap->dst_height);
+                    break;
+                }
+                case VX_TYPE_LUT:
+                {
+                    vx_lut_t lut = (vx_lut_t)exemplar;
+                    delay->refs[i] = (vx_reference)vxCreateLUT(context, lut->item_type, lut->capacity);
+                    break;
+                }
+                case VX_TYPE_PYRAMID:
+                {
+                    vx_pyramid pyramid = (vx_pyramid )exemplar;
+                    delay->refs[i] = (vx_reference)Pyramid::createPyramid(
+                        context, pyramid->numLevels, pyramid->scale, pyramid->width, pyramid->height, pyramid->format);
+                    break;
+                }
+                case VX_TYPE_THRESHOLD:
+                {
+                    vx_threshold thresh = (vx_threshold )exemplar;
+                    delay->refs[i] = (vx_reference)Threshold::createThreshold(context, thresh->thresh_type, VX_TYPE_UINT8);
+                    break;
+                }
+                case VX_TYPE_SCALAR:
+                {
+                    vx_scalar scalar = (vx_scalar )exemplar;
+                    delay->refs[i] = (vx_reference)Scalar::createScalar(context, scalar->data_type, nullptr);
+                    break;
+                }
+                case VX_TYPE_TENSOR:
+                {
+                    vx_tensor tensor = (vx_tensor )exemplar;
+                    delay->refs[i] = (vx_reference)Tensor::createTensor(
+                        context, tensor->number_of_dimensions, tensor->dimensions, tensor->data_type, tensor->fixed_point_position);
+                    break;
+                }
+                default:
+                    ref_bool = vx_false_e;
+                    break;
+            }
+            if (ref_bool)
+            {
+                /* set the object as a delay element */
+                delay->refs[i]->initReferenceForDelay(delay, (vx_int32)i);
+                /* change the counting from external to internal */
+                delay->refs[i]->incrementReference(VX_INTERNAL);
+                delay->refs[i]->decrementReference(VX_EXTERNAL);
+                /* set the scope to the delay */
+                ((vx_reference)delay->refs[i])->scope = (vx_reference)delay;
+            }
+        }
+
+        if (exemplar->type == VX_TYPE_PYRAMID)
+        {
+            /* create internal delays for each pyramid level */
+            vx_size j = 0;
+            vx_size numLevels = ((vx_pyramid)exemplar)->numLevels;
+            delay->pyr = new vx_delay[numLevels]();
+            vx_delay pyrdelay = nullptr;
+            for (j = 0; j < numLevels; ++j)
+            {
+                pyrdelay = (vx_delay)Reference::createReference(context, VX_TYPE_DELAY, VX_INTERNAL, (vx_reference)delay);
+                delay->pyr[j] = pyrdelay;
+                if (Error::getStatus((vx_reference)pyrdelay) == VX_SUCCESS && pyrdelay->type == VX_TYPE_DELAY)
+                {
+                    pyrdelay->set = new vx_delay_param_t[count]();
+                    pyrdelay->refs = new vx_reference[count]();
+                    pyrdelay->type = VX_TYPE_IMAGE;
+                    pyrdelay->count = count;
+                    for (i = 0; i < count; i++)
+                    {
+                        if (Reference::isValidReference((vx_pyramid)delay->refs[i],
+                                                        VX_TYPE_PYRAMID) == vx_true_e)
+                        {
+                            pyrdelay->refs[i] = ((vx_pyramid)delay->refs[i])->getAtLevel((vx_uint32)j);
+                        }
+                        /* set the object as a delay element */
+                        pyrdelay->refs[i]->initReferenceForDelay(pyrdelay, (vx_int32)i);
+                        /* change the counting from external to internal */
+                        pyrdelay->refs[i]->incrementReference(VX_INTERNAL);
+                        pyrdelay->refs[i]->decrementReference(VX_EXTERNAL);
+                    }
+                }
+            }
+        }
+
+        if (exemplar->type == VX_TYPE_OBJECT_ARRAY)
+        {
+            vx_object_array objarray = (vx_object_array )exemplar;
+            if (objarray->num_items != 0)
+            {
+                for (i = 0; i < count; i++)
+                {
+                    delay->refs[i] = (vx_reference)ObjectArray::createObjectArray(context,
+                                                                       objarray->items[0],
+                                                                       objarray->num_items);
+                    /* set the object as a delay element */
+                    delay->refs[i]->initReferenceForDelay(delay, (vx_int32)i);
+                    /* change the counting from external to internal */
+                    delay->refs[i]->incrementReference(VX_INTERNAL);
+                    delay->refs[i]->decrementReference(VX_EXTERNAL);
+                    /* set the scope to the delay */
+                    ((vx_reference)delay->refs[i])->scope = (vx_reference)delay;
+                }
+            }
+            else
+            {
+                vxReleaseDelay(&delay);
+            }
+        }
+    }
+    else
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Delay created is invalid!\n");
+    }
+
+    return delay;
+}
+
 vx_enum Delay::dataType() const
 {
     return type;
@@ -63,7 +273,7 @@ vx_reference Delay::getReference(vx_int32 index)
     {
         vxAddLogEntry((vx_reference)this, VX_ERROR_INVALID_PARAMETERS,
                       "Failed to retrieve reference from delay by index %d\n", index);
-        ref = (vx_reference)vxGetErrorObject(this->context, VX_ERROR_INVALID_PARAMETERS);
+        ref = (vx_reference)Error::getError(this->context, VX_ERROR_INVALID_PARAMETERS);
     }
 
     return ref;
@@ -294,202 +504,8 @@ VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
                                                 vx_size count)
 {
     vx_delay delay = nullptr;
-    vx_uint32 t = 0u;
-    vx_enum invalid_types[] = {
-        VX_TYPE_CONTEXT,
-        VX_TYPE_GRAPH,
-        VX_TYPE_NODE,
-        VX_TYPE_KERNEL,
-        VX_TYPE_TARGET,
-        VX_TYPE_PARAMETER,
-        VX_TYPE_REFERENCE,
-        VX_TYPE_DELAY, /* no delays of delays */
-#ifdef OPENVX_KHR_XML
-        VX_TYPE_IMPORT,
-#endif
-    };
 
-    if (Context::isValidContext(context) == vx_false_e)
-    {
-        return delay;
-    }
-
-    if (Reference::isValidReference(exemplar) == vx_false_e)
-    {
-        return (vx_delay)vxGetErrorObject(context, VX_ERROR_INVALID_REFERENCE);
-    }
-
-    for (t = 0u; t < dimof(invalid_types); t++)
-    {
-        if (exemplar->type == invalid_types[t])
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Attempted to create delay of invalid object type!\n");
-            vxAddLogEntry((vx_reference)context, VX_ERROR_INVALID_REFERENCE, "Attempted to create delay of invalid object type!\n");
-            return (vx_delay)vxGetErrorObject(context, VX_ERROR_INVALID_REFERENCE);
-        }
-    }
-
-    delay = (vx_delay)Reference::createReference(context, VX_TYPE_DELAY, VX_EXTERNAL, context);
-    if (vxGetStatus((vx_reference)delay) == VX_SUCCESS &&
-        delay->type == VX_TYPE_DELAY)
-    {
-        vx_size i = 0;
-        delay->pyr = nullptr;
-        delay->set = new vx_delay_param_t[count]();
-        delay->refs = new vx_reference[count]();
-        delay->type = exemplar->type;
-        delay->count = count;
-        VX_PRINT(VX_ZONE_DELAY, "Creating Delay of %u objects of type %x!\n", count, exemplar->type);
-        for (i = 0; i < count; i++)
-        {
-            vx_bool ref_bool = vx_true_e;
-            switch (exemplar->type)
-            {
-                case VX_TYPE_IMAGE:
-                {
-                    vx_image image = (vx_image )exemplar;
-                    delay->refs[i] = (vx_reference)vxCreateImage(context, image->width, image->height, image->format);
-                    VX_PRINT(VX_ZONE_DELAY, "Creating image with width %d height %d format %d", image->width, image->height, image->format);
-                    break;
-                }
-                case VX_TYPE_ARRAY:
-                {
-                    vx_array arr = (vx_array )exemplar;
-                    delay->refs[i] = (vx_reference)vxCreateArray(context, arr->item_type, arr->capacity);
-                    break;
-                }
-                case VX_TYPE_MATRIX:
-                {
-                    vx_matrix mat = (vx_matrix)exemplar;
-                    delay->refs[i] = (vx_reference)vxCreateMatrix(context, mat->data_type, mat->columns, mat->rows);
-                    break;
-                }
-                case VX_TYPE_CONVOLUTION:
-                {
-                    vx_convolution conv = (vx_convolution)exemplar;
-                    vx_convolution conv2 = vxCreateConvolution(context, conv->columns, conv->rows);
-                    conv2->scale = conv->scale;
-                    delay->refs[i] = (vx_reference)conv2;
-                    break;
-                }
-                case VX_TYPE_DISTRIBUTION:
-                {
-                    vx_distribution dist = (vx_distribution)exemplar;
-                    delay->refs[i] = (vx_reference)vxCreateDistribution(context, dist->memory.dims[0][VX_DIM_X], dist->offset_x, dist->range_x);
-                    break;
-                }
-                case VX_TYPE_REMAP:
-                {
-                    vx_remap remap = (vx_remap)exemplar;
-                    delay->refs[i] = (vx_reference)vxCreateRemap(context, remap->src_width, remap->src_height, remap->dst_width, remap->dst_height);
-                    break;
-                }
-                case VX_TYPE_LUT:
-                {
-                    vx_lut_t lut = (vx_lut_t)exemplar;
-                    delay->refs[i] = (vx_reference)vxCreateLUT(context, lut->item_type, lut->capacity);
-                    break;
-                }
-                case VX_TYPE_PYRAMID:
-                {
-                    vx_pyramid pyramid = (vx_pyramid )exemplar;
-                    delay->refs[i] = (vx_reference)vxCreatePyramid(context, pyramid->numLevels, pyramid->scale, pyramid->width, pyramid->height, pyramid->format);
-                    break;
-                }
-                case VX_TYPE_THRESHOLD:
-                {
-                    vx_threshold thresh = (vx_threshold )exemplar;
-                    delay->refs[i] = (vx_reference)vxCreateThreshold(context, thresh->thresh_type, VX_TYPE_UINT8);
-                    break;
-                }
-                case VX_TYPE_SCALAR:
-                {
-                    vx_scalar scalar = (vx_scalar )exemplar;
-                    delay->refs[i] = (vx_reference)vxCreateScalar(context, scalar->data_type, nullptr);
-                    break;
-                }
-                case VX_TYPE_TENSOR:
-                {
-                    vx_tensor tensor = (vx_tensor )exemplar;
-                    delay->refs[i] = (vx_reference)vxCreateTensor(context, tensor->number_of_dimensions, tensor->dimensions, tensor->data_type,
-                                                                  tensor->fixed_point_position);
-                    break;
-                }
-                default:
-                    ref_bool = vx_false_e;
-                    break;
-            }
-            if (ref_bool)
-            {
-                /* set the object as a delay element */
-                delay->refs[i]->initReferenceForDelay(delay, (vx_int32)i);
-                /* change the counting from external to internal */
-                delay->refs[i]->incrementReference(VX_INTERNAL);
-                delay->refs[i]->decrementReference(VX_EXTERNAL);
-                /* set the scope to the delay */
-                ((vx_reference)delay->refs[i])->scope = (vx_reference)delay;
-            }
-        }
-
-        if (exemplar->type == VX_TYPE_PYRAMID)
-        {
-            /* create internal delays for each pyramid level */
-            vx_size j = 0;
-            vx_size numLevels = ((vx_pyramid)exemplar)->numLevels;
-            delay->pyr = new vx_delay[numLevels]();
-            vx_delay pyrdelay = nullptr;
-            for (j = 0; j < numLevels; ++j)
-            {
-                pyrdelay = (vx_delay)Reference::createReference(context, VX_TYPE_DELAY, VX_INTERNAL, (vx_reference)delay);
-                delay->pyr[j] = pyrdelay;
-                if (vxGetStatus((vx_reference)pyrdelay) == VX_SUCCESS && pyrdelay->type == VX_TYPE_DELAY)
-                {
-                    pyrdelay->set = new vx_delay_param_t[count]();
-                    pyrdelay->refs = new vx_reference[count]();
-                    pyrdelay->type = VX_TYPE_IMAGE;
-                    pyrdelay->count = count;
-                    for (i = 0; i < count; i++)
-                    {
-                        pyrdelay->refs[i] = (vx_reference)vxGetPyramidLevel((vx_pyramid)delay->refs[i], (vx_uint32)j);
-                        /* set the object as a delay element */
-                        pyrdelay->refs[i]->initReferenceForDelay(pyrdelay, (vx_int32)i);
-                        /* change the counting from external to internal */
-                        pyrdelay->refs[i]->incrementReference(VX_INTERNAL);
-                        pyrdelay->refs[i]->decrementReference(VX_EXTERNAL);
-                    }
-                }
-            }
-        }
-
-        if (exemplar->type == VX_TYPE_OBJECT_ARRAY)
-        {
-            vx_object_array objarray = (vx_object_array )exemplar;
-            if (objarray->num_items != 0)
-            {
-                for (i = 0; i < count; i++)
-                {
-                    delay->refs[i] = (vx_reference)vxCreateObjectArray(context,
-                                                                       objarray->items[0],
-                                                                       objarray->num_items);
-                    /* set the object as a delay element */
-                    delay->refs[i]->initReferenceForDelay(delay, (vx_int32)i);
-                    /* change the counting from external to internal */
-                    delay->refs[i]->incrementReference(VX_INTERNAL);
-                    delay->refs[i]->decrementReference(VX_EXTERNAL);
-                    /* set the scope to the delay */
-                    ((vx_reference)delay->refs[i])->scope = (vx_reference)delay;
-                }
-            }
-            else
-            {
-                vxReleaseDelay(&delay);
-            }
-        }
-    }
-    else
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Delay created is invalid!\n");
-    }
+    delay = Delay::createDelay(context, exemplar, count);
 
     return (vx_delay)delay;
 }

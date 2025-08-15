@@ -69,17 +69,29 @@ public:
      * @param capacity      capacity of array
      * @param is_virtual    is array virtual
      * @param type          array or lut
-     * @return vx_array
+     * @return vx_array     array object
      * @ingroup group_int_array
      */
-    static vx_array createArray(vx_context context, vx_enum item_type, vx_size capacity, vx_bool is_virtual, vx_enum type);
+    static vx_array createArray(
+        vx_context context, vx_enum item_type, vx_size capacity, vx_bool is_virtual = vx_false_e, vx_enum type = VX_TYPE_ARRAY);
+
+    /**
+     * @brief Create a LUT object
+     *
+     * @param context       context object
+     * @param data_type     array object type
+     * @param count         count of array
+     * @return vx_lut_t     LUT object
+     * @ingroup group_int_array
+     */
+    static vx_lut_t createLUT(vx_context context, vx_enum data_type, vx_size count);
 
     /**
      * @brief Validate array object
      *
      * @param item_type     array object type
      * @param capacity      capacity of array
-     * @return vx_bool
+     * @return vx_bool      true if valid, false otherwise
      * @ingroup group_int_array
      */
     vx_bool validateArray(vx_enum item_type, vx_size capacity);
@@ -87,7 +99,7 @@ public:
     /**
      * @brief Allocate memory for array object
      *
-     * @return vx_bool
+     * @return vx_bool      true if successful, false otherwise
      * @ingroup group_int_array
      */
     vx_bool allocateArray();
@@ -97,7 +109,7 @@ public:
      *
      * @param context     global context
      * @param item_type   item type
-     * @return vx_size
+     * @return vx_size    size of item
      * @ingroup group_int_array
      */
     static vx_size itemSize(vx_context context, vx_enum item_type);
@@ -107,7 +119,7 @@ public:
      *
      * @param context    global context
      * @param item_type  item type
-     * @return vx_bool
+     * @return vx_bool   true if valid, false otherwise
      * @ingroup group_int_array
      */
     static vx_bool isValidArrayItemType(vx_context context, vx_enum item_type);
@@ -116,7 +128,7 @@ public:
      * @brief Validate array object
      *
      * @param arr       array object to check
-     * @return vx_bool
+     * @return vx_bool  true if valid, false otherwise
      * @ingroup group_int_array
      */
     static vx_bool isValidArray(vx_array arr);
@@ -133,7 +145,7 @@ public:
      *
      * @param item_type     array object type
      * @param capacity      capacity of array
-     * @return vx_bool
+     * @return vx_bool      true if successful, false otherwise
      * @ingroup group_int_array
      */
     vx_bool initVirtualArray(vx_enum item_type, vx_size capacity);
@@ -209,12 +221,12 @@ public:
     /**
      * @brief Access array range in object
      *
-     * @param start     start index
-     * @param end       end index
-     * @param pStride   pointer of stride
-     * @param ptr       pointer to data
-     * @param usage     ro | rw | wo
-     * @return vx_status
+     * @param start      start index
+     * @param end        end index
+     * @param pStride    pointer of stride
+     * @param ptr        pointer to data
+     * @param usage      ro | rw | wo
+     * @return vx_status VX_SUCCESS if successful, any other value indicates failure.
      * @ingroup group_int_array
      */
     vx_status accessArrayRange(vx_size start, vx_size end, vx_size *pStride, void **ptr, vx_enum usage);
@@ -222,10 +234,10 @@ public:
     /**
      * @brief Commit array range
      *
-     * @param start     start index
-     * @param end       end index
-     * @param ptr       pointer to data
-     * @return vx_status
+     * @param start      start index
+     * @param end        end index
+     * @param ptr        pointer to data
+     * @return vx_status VX_SUCCESS if successful, any other value indicates failure.
      * @ingroup group_int_array
      */
     vx_status commitArrayRange(vx_size start, vx_size end, const void *ptr);
@@ -233,13 +245,13 @@ public:
     /**
      * @brief Copy array range
      *
-     * @param start     start index
-     * @param end       end index
-     * @param stride    size of stride
-     * @param ptr       pointer to data
-     * @param usage     ro | rw | wo
-     * @param mem_type  host | device
-     * @return vx_status
+     * @param start      start index
+     * @param end        end index
+     * @param stride     size of stride
+     * @param ptr        pointer to data
+     * @param usage      ro | rw | wo
+     * @param mem_type   host | device
+     * @return vx_status VX_SUCCESS if successful, any other value indicates failure.
      * @ingroup group_int_array
      */
     vx_status copyArrayRange(vx_size start, vx_size end, vx_size stride, void *ptr, vx_enum usage, vx_enum mem_type);
@@ -247,15 +259,15 @@ public:
     /**
      * @brief Map array range
      *
-     * @param start     start index
-     * @param end       end index
-     * @param map_id    memory map id
-     * @param stride    size of stride
-     * @param ptr       pointer to data
-     * @param usage     ro | rw | wo
-     * @param mem_type  host | device
-     * @param flags     additional flags
-     * @return vx_status
+     * @param start      start index
+     * @param end        end index
+     * @param map_id     memory map id
+     * @param stride     size of stride
+     * @param ptr        pointer to data
+     * @param usage      ro | rw | wo
+     * @param mem_type   host | device
+     * @param flags      additional flags
+     * @return vx_status VX_SUCCESS if successful, any other value indicates failure.
      * @ingroup group_int_array
      */
     vx_status mapArrayRange(vx_size start, vx_size end, vx_map_id *map_id, vx_size *stride,
@@ -265,7 +277,7 @@ public:
      * @brief Unmap array range
      *
      * @param map_id        memory map id
-     * @return vx_status
+     * @return vx_status    VX_SUCCESS if successful, any other value indicates failure.
      * @ingroup group_int_array
      */
     vx_status unmapArrayRange(vx_map_id map_id);
@@ -299,6 +311,5 @@ public:
 };
 
 } // namespace corevx
-
 
 #endif /* VX_ARRAY_H */

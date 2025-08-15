@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/*!
+ * \file
+ * \brief The Tiling Kernel Interface Header.
+ */
+
 #ifndef _OPENVX_INTERFACE_H_
 #define _OPENVX_INTERFACE_H_
 

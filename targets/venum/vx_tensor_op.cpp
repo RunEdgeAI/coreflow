@@ -20,6 +20,10 @@
 
 #include <assert.h>
 
+/*!
+ * \file
+ * \brief The Tensor Op Kernel.
+ */
 
 #define Q78_FIXED_POINT_POSITION 8
 
@@ -29,8 +33,7 @@
         if (status_ != VX_SUCCESS) return status_; \
     } while(0)
 
-
-static enum TensorCFmt getTensorCFmt(vx_tensor tensor)
+    static enum TensorCFmt getTensorCFmt(vx_tensor tensor)
 {
     if (tensor->data_type == VX_TYPE_INT16 && tensor->fixed_point_position == Q78_FIXED_POINT_POSITION)
         return TENSOR_C_FMT_Q78;

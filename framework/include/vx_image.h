@@ -72,7 +72,7 @@ public:
                                    vx_uint32 width,
                                    vx_uint32 height,
                                    vx_df_image color,
-                                   vx_bool is_virtual);
+                                   vx_bool is_virtual = vx_false_e);
 
     /*! \brief Used to initialize a single plane in an image object.
      * \param [in] index The index to the plane.
@@ -302,7 +302,6 @@ public:
      * @param plane_index The plane index to access
      * @param addr       The addressing information for the patch
      * @param ptr        The pointer to the user memory
-     * @param mem_type   The type of memory (host, opencl, etc.)
      * @param usage      The usage of the memory (read/write)
      * @return vx_status VX_SUCCESS on success, error code otherwise
      * @ingroup group_int_image
@@ -420,6 +419,5 @@ public:
 };
 
 } // namespace corevx
-
 
 #endif /* VX_IMAGE_H */

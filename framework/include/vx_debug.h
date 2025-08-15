@@ -29,6 +29,7 @@
 
 /*!
  * \file
+ * \brief The internal debugging implementation.
  *
  * \defgroup group_int_debug Internal Debugging API
  * \ingroup group_internal

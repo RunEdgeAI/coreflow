@@ -109,7 +109,7 @@ vx_status Target::deinitializeTarget()
     return status;
 }
 
-vx_bool Target::matchTargetNameWithString(const char* target_name, const char* target_string)
+vx_bool Target::matchTargetNameWithString(const vx_char* target_name, const vx_char* target_string)
 {
     /* 1. find latest occurrence of target_string in target_name;
        2. match only the cases: target_name == "[smth.]<target_string>[.smth]"
@@ -132,10 +132,10 @@ vx_bool Target::matchTargetNameWithString(const char* target_name, const char* t
     return match;
 }
 
-const char* Target::reverse_strstr(const char* string, const char* substr)
+const vx_char* Target::reverse_strstr(const vx_char* string, const vx_char* substr)
 {
-    const char* last = nullptr;
-    const char* cur = string;
+    const vx_char* last = nullptr;
+    const vx_char* cur = string;
     do {
         cur = (const char*) strstr(cur, substr);
         if (cur != nullptr)

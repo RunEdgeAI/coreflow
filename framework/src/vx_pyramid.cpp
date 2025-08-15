@@ -190,9 +190,15 @@ vx_pyramid Pyramid::createPyramid(vx_context context,
     if (Context::isValidContext(context) == vx_false_e)
     {
         /* Context is invalid, we can't get any error object,
-         * we then simply return nullptr as it is handled by vxGetStatus
-         */
-        return nullptr;
+        * we then simply return nullptr as it is handled by vxGetStatus
+        */
+       return nullptr;
+
+    }
+
+    if ((width == 0) || (height == 0) || (format == VX_DF_IMAGE_VIRT))
+    {
+        pyramid = (vx_pyramid)Error::getError(context, VX_ERROR_INVALID_PARAMETERS);
     }
 
     if ((scale != VX_SCALE_PYRAMID_HALF) &&
@@ -200,18 +206,18 @@ vx_pyramid Pyramid::createPyramid(vx_context context,
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid scale %lf for pyramid!\n",scale);
         vxAddLogEntry((vx_reference)context, VX_ERROR_INVALID_PARAMETERS, "Invalid scale %lf for pyramid!\n",scale);
-        pyramid = (vx_pyramid)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+        pyramid = (vx_pyramid)Error::getError(context, VX_ERROR_INVALID_PARAMETERS);
     }
     else if (levels == 0 || levels > 8)
     {
         VX_PRINT(VX_ZONE_ERROR, "Invalid number of levels for pyramid!\n", levels);
         vxAddLogEntry((vx_reference)context, VX_ERROR_INVALID_PARAMETERS, "Invalid number of levels for pyramid!\n", levels);
-        pyramid = (vx_pyramid)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
+        pyramid = (vx_pyramid)Error::getError(context, VX_ERROR_INVALID_PARAMETERS);
     }
     else
     {
         pyramid = (vx_pyramid)Reference::createReference(context, VX_TYPE_PYRAMID, VX_EXTERNAL, context);
-        if (vxGetStatus((vx_reference)pyramid) == VX_SUCCESS && pyramid->type == VX_TYPE_PYRAMID)
+        if (Error::getStatus((vx_reference)pyramid) == VX_SUCCESS && pyramid->type == VX_TYPE_PYRAMID)
         {
             vx_status status;
             pyramid->is_virtual = is_virtual;
@@ -220,14 +226,14 @@ vx_pyramid Pyramid::createPyramid(vx_context context,
             {
                 vxAddLogEntry((vx_reference)pyramid, status, "Failed to initialize pyramid\n");
                 vxReleasePyramid((vx_pyramid *)&pyramid);
-                pyramid = (vx_pyramid)vxGetErrorObject(context, status);
+                pyramid = (vx_pyramid)Error::getError(context, status);
             }
         }
         else
         {
             VX_PRINT(VX_ZONE_ERROR, "Failed to allocate memory\n");
             vxAddLogEntry((vx_reference)context, VX_ERROR_NO_MEMORY, "Failed to allocate memory\n");
-            pyramid = (vx_pyramid)vxGetErrorObject(context, VX_ERROR_NO_MEMORY);
+            pyramid = (vx_pyramid)Error::getError(context, VX_ERROR_NO_MEMORY);
         }
     }
 
@@ -237,6 +243,17 @@ vx_pyramid Pyramid::createPyramid(vx_context context,
 /******************************************************************************/
 /* PUBLIC INTERFACE                                                           */
 /******************************************************************************/
+
+VX_API_ENTRY vx_pyramid VX_API_CALL vxCreatePyramid(vx_context context, vx_size levels, vx_float32 scale, vx_uint32 width, vx_uint32 height, vx_df_image format)
+{
+    vx_pyramid pyr = nullptr;
+
+    pyr = (vx_pyramid)Pyramid::createPyramid(context,
+                                            levels, scale, width, height, format,
+                                            vx_false_e);
+
+    return pyr;
+}
 
 VX_API_ENTRY vx_pyramid VX_API_CALL vxCreateVirtualPyramid(vx_graph graph,
                                                            vx_size levels,
@@ -261,27 +278,6 @@ VX_API_ENTRY vx_pyramid VX_API_CALL vxCreateVirtualPyramid(vx_graph graph,
     /* else, the graph is invalid, we can't get any context and then error object */
 
     return pyramid;
-}
-
-VX_API_ENTRY vx_pyramid VX_API_CALL vxCreatePyramid(vx_context context, vx_size levels, vx_float32 scale, vx_uint32 width, vx_uint32 height, vx_df_image format)
-{
-    vx_pyramid pyr = nullptr;
-
-    if (Context::isValidContext(context) == vx_true_e)
-    {
-        if ((width == 0) || (height == 0) || (format == VX_DF_IMAGE_VIRT))
-        {
-            pyr = (vx_pyramid)vxGetErrorObject(context, VX_ERROR_INVALID_PARAMETERS);
-        }
-        else
-        {
-            pyr = (vx_pyramid)Pyramid::createPyramid(context,
-                                                 levels, scale, width, height, format,
-                                                 vx_false_e);
-        }
-    }
-
-    return pyr;
 }
 
 VX_API_ENTRY vx_status VX_API_CALL vxQueryPyramid(vx_pyramid pyramid, vx_enum attribute, void *ptr, vx_size size)

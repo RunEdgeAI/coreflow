@@ -41,6 +41,18 @@ class Kernel : public Reference
 {
 public:
     /**
+     * @brief The parameter of the kernel
+     *
+     * @ingroup group_int_kernel
+     */
+    struct Param
+    {
+        vx_enum direction;  // VX_INPUT, VX_OUTPUT, etc.
+        vx_enum type;       // VX_TYPE_SCALAR, VX_TYPE_IMAGE, etc.
+        vx_enum state;      // VX_PARAMETER_STATE_REQUIRED, VX_PARAMETER_STATE_OPTIONAL, etc.
+    };
+
+    /**
      * @brief Construct a new Kernel object
      *
      * @param context   The context associated with this obj
@@ -74,6 +86,28 @@ public:
      * @ingroup group_int_kernel
      */
     ~Kernel() = default;
+
+    /**
+     * @brief Register a custom kernel
+     *
+     * @param context The context
+     * @param name The name of the kernel
+     * @param params The parameters of the kernel
+     * @param function The function of the kernel
+     * @param validate The validate function of the kernel
+     * @param initialize The initialize function of the kernel
+     * @param deinitialize The deinitialize function of the kernel
+     * @return vx_kernel The kernel
+     * @ingroup group_int_kernel
+     */
+    static vx_kernel registerCustomKernel(
+        vx_context context,
+        std::string name,
+        const std::vector<Kernel::Param> &params,
+        vx_kernel_f function,
+        vx_kernel_validate_f validate = nullptr,
+        vx_kernel_initialize_f initialize = nullptr,
+        vx_kernel_deinitialize_f deinitialize = nullptr);
 
     /**
      * @brief Get the number of kernel parameters
@@ -339,7 +373,7 @@ public:
      * @brief Removes a custom kernel from its context and releases it.
      *
      * @param [in] kernel The reference to the kernel to remove. Returned from <tt>\ref
-     * addKernel</tt>.
+     * addkernel</tt>.
      * @note Any kernel enumerated in the base standard
      * cannot be removed; only kernels added through <tt>\ref vxAddUserKernel</tt> can
      * be removed.
@@ -355,7 +389,7 @@ public:
      * @note When all references to loaded kernels are released, the module
      * may be automatically unloaded.
      * @param [in] context The reference to the context the kernels must be added to.
-     * @param [in] module The short name of the module to load. On systems where
+     * @param [in] name    The short name of the module to load. On systems where
      * there are specific naming conventions for modules, the name passed
      * should ignore such conventions. For example: \c libxyz.so should be
      * passed as just \c xyz and the implementation will <i>do the right thing</i> that
@@ -371,7 +405,7 @@ public:
      * the module using the \ref loadKernels function.
      *
      * @param [in] context The reference to the context the kernels must be removed from.
-     * @param [in] module The short name of the module to unload. On systems where
+     * @param [in] name    The short name of the module to unload. On systems where
      * there are specific naming conventions for modules, the name passed
      * should ignore such conventions. For example: \c libxyz.so should be
      * passed as just \c xyz and the implementation will <i>do the right thing</i>
@@ -461,6 +495,5 @@ public:
 };
 
 } // namespace corevx
-
 
 #endif /* VX_KERNEL_H */

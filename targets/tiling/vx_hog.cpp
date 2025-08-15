@@ -30,6 +30,10 @@
 #include "vx_internal.h"
 #include "tiling.h"
 
+/*!
+ * \file
+ * \brief The HOG Cells Kernel.
+ */
 
 static vx_status VX_CALLBACK vxHogCellsInputValidator(vx_node node, vx_uint32 index)
 {

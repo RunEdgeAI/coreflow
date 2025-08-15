@@ -13,6 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/*!
+ * \file
+ * \brief The Tensor Op Kernel.
+ */
+
 #include <VX/vx.h>
 #include <VX/vx_helper.h>
 #include "vx_internal.h"

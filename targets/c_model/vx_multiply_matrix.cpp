@@ -15,6 +15,11 @@
  * limitations under the License.
  */
 
+/*!
+ * \file
+ * \brief The Matrix Multiply Kernel.
+ */
+
 #include <VX/vx.h>
 #include <VX/vx_helper.h>
 

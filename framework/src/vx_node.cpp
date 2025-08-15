@@ -49,6 +49,80 @@ Node::~Node()
 {
 }
 
+vx_node Node::createNode(vx_graph graph, vx_kernel kernel)
+{
+    vx_node node = nullptr;
+
+    if (Reference::isValidReference(reinterpret_cast<vx_reference>(graph), VX_TYPE_GRAPH) == vx_true_e)
+    {
+        if (Reference::isValidReference(reinterpret_cast<vx_reference>(kernel), VX_TYPE_KERNEL) == vx_true_e)
+        {
+            vx_uint32 n = 0;
+            Osal::semWait(&graph->lock);
+            for (n = 0; n < VX_INT_MAX_REF; n++)
+            {
+                if (graph->nodes[n] == nullptr)
+                {
+                    node = (vx_node)Reference::createReference(graph->context, VX_TYPE_NODE, VX_EXTERNAL, reinterpret_cast<vx_reference>(graph));
+                    if (Error::getStatus((vx_reference)node) == VX_SUCCESS && node->type == VX_TYPE_NODE)
+                    {
+                        /* reference the abstract kernel. */
+                        node->kernel = kernel;
+                        node->affinity = kernel->affinity;
+
+                        /* show that there are potentially multiple nodes using this kernel. */
+                        kernel->incrementReference(VX_INTERNAL);
+
+                        /* copy the attributes over */
+                        memcpy(&node->attributes, &kernel->attributes, sizeof(vx_kernel_attr_t));
+
+                        /* setup our forward and back references to the node/graph */
+                        graph->nodes[n] = node;
+                        node->graph = graph;
+                        node->incrementReference(VX_INTERNAL); /* one for the graph */
+
+                        /* increase the count of nodes in the graph. */
+                        graph->numNodes++;
+
+                        Osal::initPerf(&graph->nodes[n]->perf);
+
+                        /* force a re-verify */
+                        graph->reverify = graph->verified;
+                        graph->verified = vx_false_e;
+                        graph->state = VX_GRAPH_STATE_UNVERIFIED;
+
+                        VX_PRINT(VX_ZONE_NODE, "Created Node %p %s affinity:%s\n", node, node->kernel->name, node->context->targets[node->affinity]->name);
+                    }
+                    break; /* succeed or fail, break. */
+                }
+            }
+            Osal::semPost(&graph->lock);
+            Reference::printReference((vx_reference )node);
+        }
+        else
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Kernel %p was invalid!\n", kernel);
+            vxAddLogEntry((vx_reference)graph, VX_ERROR_INVALID_REFERENCE, "Kernel %p was invalid!\n", kernel);
+            node = (vx_node)Error::getError(graph->context, VX_ERROR_INVALID_REFERENCE);
+        }
+    }
+    else
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Graph %p was invalid!\n", graph);
+        vxAddLogEntry((vx_reference)graph, VX_ERROR_INVALID_REFERENCE, "Graph %p as invalid!\n", graph);
+    }
+
+    return node;
+}
+
+vx_node Node::createNode(vx_graph graph, vx_kernel kernel, std::initializer_list<vx_reference> params)
+{
+    vx_node node = createNode(graph, kernel);
+    vx_uint32 idx = 0;
+    for (const auto& obj : params) node->setParameter(idx++, obj);
+    return node;
+}
+
 void Node::setParameter(vx_uint32 index, vx_reference value)
 {
     if (parameters[index])
@@ -550,64 +624,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxCreateGenericNode(vx_graph graph, vx_kernel k
 {
     vx_node node = nullptr;
 
-    if (Reference::isValidReference(reinterpret_cast<vx_reference>(graph), VX_TYPE_GRAPH) == vx_true_e)
-    {
-        if (Reference::isValidReference(reinterpret_cast<vx_reference>(kernel), VX_TYPE_KERNEL) == vx_true_e)
-        {
-            vx_uint32 n = 0;
-            Osal::semWait(&graph->lock);
-            for (n = 0; n < VX_INT_MAX_REF; n++)
-            {
-                if (graph->nodes[n] == nullptr)
-                {
-                    node = (vx_node)Reference::createReference(graph->context, VX_TYPE_NODE, VX_EXTERNAL, reinterpret_cast<vx_reference>(graph));
-                    if (vxGetStatus((vx_reference)node) == VX_SUCCESS && node->type == VX_TYPE_NODE)
-                    {
-                        /* reference the abstract kernel. */
-                        node->kernel = kernel;
-                        node->affinity = kernel->affinity;
-
-                        /* show that there are potentially multiple nodes using this kernel. */
-                        kernel->incrementReference(VX_INTERNAL);
-
-                        /* copy the attributes over */
-                        memcpy(&node->attributes, &kernel->attributes, sizeof(vx_kernel_attr_t));
-
-                        /* setup our forward and back references to the node/graph */
-                        graph->nodes[n] = node;
-                        node->graph = graph;
-                        node->incrementReference(VX_INTERNAL); /* one for the graph */
-
-                        /* increase the count of nodes in the graph. */
-                        graph->numNodes++;
-
-                        Osal::initPerf(&graph->nodes[n]->perf);
-
-                        /* force a re-verify */
-                        graph->reverify = graph->verified;
-                        graph->verified = vx_false_e;
-                        graph->state = VX_GRAPH_STATE_UNVERIFIED;
-
-                        VX_PRINT(VX_ZONE_NODE, "Created Node %p %s affinity:%s\n", node, node->kernel->name, node->context->targets[node->affinity]->name);
-                    }
-                    break; /* succeed or fail, break. */
-                }
-            }
-            Osal::semPost(&graph->lock);
-            Reference::printReference((vx_reference )node);
-        }
-        else
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Kernel %p was invalid!\n", kernel);
-            vxAddLogEntry((vx_reference)graph, VX_ERROR_INVALID_REFERENCE, "Kernel %p was invalid!\n", kernel);
-            node = (vx_node)vxGetErrorObject(graph->context, VX_ERROR_INVALID_REFERENCE);
-        }
-    }
-    else
-    {
-        VX_PRINT(VX_ZONE_ERROR, "Graph %p was invalid!\n", graph);
-        vxAddLogEntry((vx_reference)graph, VX_ERROR_INVALID_REFERENCE, "Graph %p as invalid!\n", graph);
-    }
+    node = Node::createNode(graph, kernel);
 
     return (vx_node)node;
 }

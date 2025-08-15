@@ -21,6 +21,11 @@
 
 #include <venum.h>
 
+/*!
+ * \file
+ * \brief The Non-Linear Filter Kernel.
+ */
+
 static vx_status VX_CALLBACK vxNonLinearFilterKernel(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
     vx_status status = VX_ERROR_INVALID_PARAMETERS;

@@ -42,6 +42,69 @@ UserDataObject::~UserDataObject()
     Memory::freeMemory(context, &memory);
 }
 
+vx_user_data_object UserDataObject::createUserDataObject(vx_context context, const vx_char *type_name, vx_size size, const void *ptr)
+{
+    vx_user_data_object user_data_object = nullptr;
+    vx_status status = VX_SUCCESS;
+
+    if(Context::isValidContext(context) == (vx_bool)vx_true_e)
+    {
+        if (size < 1U)
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Invalid size for the user data object.\n");
+            user_data_object = (vx_user_data_object)Error::getError(context, VX_ERROR_INVALID_PARAMETERS);
+        }
+
+        if( nullptr == user_data_object )
+        {
+            user_data_object = (vx_user_data_object)Reference::createReference(context, VX_TYPE_USER_DATA_OBJECT, VX_EXTERNAL, context);
+
+            if ((Error::getStatus((vx_reference)user_data_object) == (vx_status)VX_SUCCESS) &&
+                (user_data_object->type == VX_TYPE_USER_DATA_OBJECT))
+            {
+                user_data_object->size = size;
+
+                /* Initialize string with zeros, which safely fills with nullptr terminators */
+                user_data_object->type_name[0] = (char)0;
+
+                if (type_name != nullptr)
+                {
+                    strncpy(user_data_object->type_name, type_name, VX_MAX_REFERENCE_NAME);
+                }
+
+                user_data_object->memory.nptrs = 1;
+                user_data_object->memory.ndims = 1;
+                user_data_object->memory.dims[0][0] = (vx_uint32)size;
+
+                if (nullptr != ptr)
+                {
+                    status = vxCopyUserDataObject(user_data_object, 0, size, (void*)ptr, (vx_enum)VX_WRITE_ONLY, (vx_enum)VX_MEMORY_TYPE_HOST);
+                }
+                else
+                {
+                    status = VX_BOOL_TO_STATUS(user_data_object->allocateUserDataObject());
+
+                    if (status == (vx_status)VX_SUCCESS)
+                    {
+                        vx_uint8 *start_ptr = (vx_uint8 *)&user_data_object->memory.ptrs[0][0];
+                        memset(start_ptr, 0, size);
+                    }
+                }
+            }
+
+            if(status != (vx_status)VX_SUCCESS)
+            {
+                user_data_object = nullptr;
+                VX_PRINT(VX_ZONE_ERROR, "Failed to create user data object with error: %d\n", status);
+                user_data_object = (vx_user_data_object)Error::getError(
+                    context, (vx_status)VX_ERROR_INVALID_PARAMETERS);
+            }
+        }
+    }
+
+    return user_data_object;
+}
+
 const vx_char *UserDataObject::typeName() const
 {
     return type_name;
@@ -259,62 +322,8 @@ VX_API_ENTRY vx_user_data_object VX_API_CALL vxCreateUserDataObject(
     const void *ptr)
 {
     vx_user_data_object user_data_object = nullptr;
-    vx_status status = (vx_status)VX_SUCCESS;
 
-    if(Context::isValidContext(context) == (vx_bool)vx_true_e)
-    {
-        if (size < 1U)
-        {
-            VX_PRINT(VX_ZONE_ERROR, "Invalid size for the user data object.\n");
-            user_data_object = (vx_user_data_object)vxGetErrorObject((vx_context)context, (vx_status)VX_ERROR_INVALID_PARAMETERS);
-        }
-
-        if( nullptr == user_data_object )
-        {
-            user_data_object = (vx_user_data_object)Reference::createReference(context, VX_TYPE_USER_DATA_OBJECT, VX_EXTERNAL, context);
-
-            if ((vxGetStatus((vx_reference)user_data_object) == (vx_status)VX_SUCCESS) &&
-                (user_data_object->type == VX_TYPE_USER_DATA_OBJECT))
-            {
-                user_data_object->size = size;
-
-                /* Initialize string with zeros, which safely fills with nullptr terminators */
-                user_data_object->type_name[0] = (char)0;
-
-                if (type_name != nullptr)
-                {
-                    strncpy(user_data_object->type_name, type_name, VX_MAX_REFERENCE_NAME);
-                }
-
-                user_data_object->memory.nptrs = 1;
-                user_data_object->memory.ndims = 1;
-                user_data_object->memory.dims[0][0] = (vx_uint32)size;
-
-                if (nullptr != ptr)
-                {
-                    status = vxCopyUserDataObject(user_data_object, 0, size, (void*)ptr, (vx_enum)VX_WRITE_ONLY, (vx_enum)VX_MEMORY_TYPE_HOST);
-                }
-                else
-                {
-                    status = VX_BOOL_TO_STATUS(user_data_object->allocateUserDataObject());
-
-                    if (status == (vx_status)VX_SUCCESS)
-                    {
-                        vx_uint8 *start_ptr = (vx_uint8 *)&user_data_object->memory.ptrs[0][0];
-                        memset(start_ptr, 0, size);
-                    }
-                }
-            }
-
-            if(status != (vx_status)VX_SUCCESS)
-            {
-                user_data_object = nullptr;
-                VX_PRINT(VX_ZONE_ERROR, "Failed to create user data object with error: %d\n", status);
-                user_data_object = (vx_user_data_object)vxGetErrorObject(
-                    context, (vx_status)VX_ERROR_INVALID_PARAMETERS);
-            }
-        }
-    }
+    user_data_object = UserDataObject::createUserDataObject(context, type_name, size, ptr);
 
     return (user_data_object);
 }

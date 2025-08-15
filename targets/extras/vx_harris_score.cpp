@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/*!
+ * \file
+ * \brief The Harris Score Kernel.
+ */
+
 #include <VX/vx.h>
 #include <VX/vx_lib_extras.h>
 #include <VX/vx_helper.h>

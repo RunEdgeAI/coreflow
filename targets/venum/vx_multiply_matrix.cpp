@@ -24,6 +24,11 @@
 #include <math.h>
 #include "tensor_utils.h"
 
+/*!
+ * \file
+ * \brief The Matrix Multiply Kernel.
+ */
+
 typedef enum _matrix_multiply_params_e {
     MATRIX_MULTIPLY_PARAM_TENSOR_IN1 = 0,
     MATRIX_MULTIPLY_PARAM_TENSOR_IN2,

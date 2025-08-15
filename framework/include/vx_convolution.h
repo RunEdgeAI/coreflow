@@ -47,6 +47,17 @@ public:
     Convolution(vx_context context, vx_reference scope);
 
     /**
+     * @brief Create a new convolution
+     *
+     * @param context   The context associated with this convolution
+     * @param columns   The number of columns in the convolution
+     * @param rows      The number of rows in the convolution
+     * @return vx_convolution The convolution object
+     * @ingroup group_int_convolution
+     */
+    static vx_convolution createConvolution(vx_context context, vx_size columns, vx_size rows);
+
+    /**
      * @brief Get the scale factor of the convolution
      *
      * @return vx_uint32 The scale factor
@@ -117,6 +128,5 @@ public:
 };
 
 } // namespace corevx
-
 
 #endif /* VX_CONVOLUTION_H */

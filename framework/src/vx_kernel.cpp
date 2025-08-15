@@ -82,6 +82,57 @@ Kernel::Kernel(vx_context context,
     }
 }
 
+vx_kernel Kernel::registerCustomKernel(
+        vx_context context,
+        std::string name,
+        const std::vector<Kernel::Param> &params,
+        vx_kernel_f function,
+        vx_kernel_validate_f validate,
+        vx_kernel_initialize_f initialize,
+        vx_kernel_deinitialize_f deinitialize)
+{
+    vx_enum kernel_enum = 0;
+
+    if (context->allocateKernelId(&kernel_enum) != VX_SUCCESS)
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Failed to allocate user kernel ID\n");
+        return nullptr;
+    }
+
+    // 2. Add the user kernel
+    vx_kernel kernel = addkernel(context, name.c_str(), kernel_enum, function,
+                                 static_cast<vx_uint32>(params.size()), validate,
+                                 nullptr, nullptr, initialize, deinitialize, vx_true_e);
+    if (!kernel)
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Failed to add user kernel\n");
+        return nullptr;
+    }
+
+    // 3. Add parameters
+    for (vx_uint32 i = 0; i < params.size(); ++i)
+    {
+        const auto &p = params[i];
+        if (kernel->addParameter(i, p.direction, p.type, p.state) != VX_SUCCESS)
+        {
+            VX_PRINT(VX_ZONE_ERROR, "Failed to add parameter %u to kernel\n", i);
+            // vxReleaseKernel(&kernel);
+            return nullptr;
+        }
+    }
+
+    // 4. Finalize the kernel
+    if (kernel->finalize() != VX_SUCCESS)
+    {
+        VX_PRINT(VX_ZONE_ERROR, "Failed to finalize kernel\n");
+        // vxReleaseKernel(&kernel);
+        return nullptr;
+    }
+
+    // 5. Return the kernel handle
+    return kernel;
+}
+
 void Kernel::printKernel(vx_kernel kernel)
 {
     VX_PRINT(VX_ZONE_KERNEL, "kernel[%u] enabled?=%s %s \n",

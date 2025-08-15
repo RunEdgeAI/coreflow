@@ -15,6 +15,11 @@
  * limitations under the License.
  */
 
+/*!
+ * \file
+ * \brief The Tensor LUT Kernel.
+ */
+
 #include <VX/vx.h>
 #include <VX/vx_helper.h>
 

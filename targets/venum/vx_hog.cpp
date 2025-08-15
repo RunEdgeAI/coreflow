@@ -26,6 +26,11 @@
 * MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
 */
 
+/*!
+ * \file
+ * \brief The HOG Cells Kernel.
+ */
+
 #include <VX/vx.h>
 #include <VX/vx_helper.h>
 
