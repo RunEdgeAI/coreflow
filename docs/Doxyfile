@@ -991,11 +991,12 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = /Users/Andrew/Projects/coreVX \
-                         /Users/Andrew/Projects/coreVX/README.md \
-                         /Users/Andrew/Projects/coreVX/docs/install.md \
-                         /Users/Andrew/Projects/coreVX/docs/api_overview.md \
-                         /Users/Andrew/Projects/coreVX/LICENSE.md
+INPUT                  = ../include \
+                         ../framework/include \
+                         ../README.md \
+                         install.md \
+                         api_overview.md \
+                         ../LICENSE.md
 
 # This tag can be used to specify the character encoding of the source files
 # that Doxygen parses. Internally Doxygen uses the UTF-8 encoding. Doxygen uses
