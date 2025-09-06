@@ -1,16 +1,21 @@
+/**
+ * @example blur_pipeline.cpp
+ * @brief Image Processing Pipeline
+ * @version 0.1
+ * @date 2025-09-06
+ *
+ * @copyright Copyright (c) 2025 Edge AI, LLC. All rights reserved.
+ */
 #include <cstdlib>
 
 #include <COREVX/all.hpp>
 
 using namespace corevx;
 
-int main(int argc, char* argv[])
+int main()
 {
-    (void)argc;
-    (void)argv;
-
     // Create context
-    vx_context context = Context::createContext();
+    auto context = Context::createContext();
     if (Error::getStatus(context) != VX_SUCCESS)
     {
         std::cerr << "Failed to create Context" << std::endl;
@@ -18,7 +23,7 @@ int main(int argc, char* argv[])
     }
 
     // Create graph
-    vx_graph graph = Graph::createGraph(context);
+    auto graph = Graph::createGraph(context);
     if (Error::getStatus(graph) != VX_SUCCESS)
     {
         std::cerr << "Failed to create Graph" << std::endl;
@@ -27,17 +32,17 @@ int main(int argc, char* argv[])
 
     // Create data objects
     const vx_uint32 width = 256, height = 256;
-    vx_image rgb  = Image::createImage(context, width, height, VX_DF_IMAGE_RGB);
-    vx_image yuv  = Image::createImage(context, width, height, VX_DF_IMAGE_YUV4);
-    vx_image gray = Image::createImage(context, width, height, VX_DF_IMAGE_U8);
-    vx_image blur = Image::createImage(context, width, height, VX_DF_IMAGE_U8);
+    auto rgb  = Image::createImage(context, width, height, VX_DF_IMAGE_RGB);
+    auto yuv  = Image::createImage(context, width, height, VX_DF_IMAGE_YUV4);
+    auto gray = Image::createImage(context, width, height, VX_DF_IMAGE_U8);
+    auto blur = Image::createImage(context, width, height, VX_DF_IMAGE_U8);
 
     // Color convert (RGB -> YUV)
-    vx_node ncc = vxColorConvertNode(graph, rgb, yuv);
+    auto ncc = vxColorConvertNode(graph, rgb, yuv);
     // Extract Y plane to gray
-    vx_node nce = vxChannelExtractNode(graph, yuv, VX_CHANNEL_Y, gray);
+    auto nce = vxChannelExtractNode(graph, yuv, VX_CHANNEL_Y, gray);
     // Box filter 3x3
-    vx_node nbox = vxBox3x3Node(graph, gray, blur);
+    auto nbox = vxBox3x3Node(graph, gray, blur);
     (void)ncc; (void)nce; (void)nbox;
 
     // Process graph

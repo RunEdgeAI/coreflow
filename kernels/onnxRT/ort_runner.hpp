@@ -27,7 +27,11 @@ public:
     /**
      * @brief Onnx Runtime Model Runner Constructor
      */
-    OnnxRuntimeRunner() : model_loaded(false) {}
+    OnnxRuntimeRunner() : model_loaded(false)
+    {
+        // Ensure environment is initialized first
+        getEnv();
+    }
 
     /**
      * @brief Onnx Runtime Model Runner Destructor
@@ -196,25 +200,25 @@ public:
         std::vector<Ort::Value> input_tensors;
         std::vector<Ort::Value> output_tensors;
 
-        // Prepare ORT tensors for inputs
-        Ort::MemoryInfo mem_info =
-            Ort::MemoryInfo::CreateCpu(OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);
-        for (std::size_t i = 0; i < input_names.size(); ++i)
-        {
-            input_tensors.emplace_back(Ort::Value::CreateTensor<float>(
-                mem_info, inputTensors[i].first, inputTensors[i].second, input_shapes[i].data(), input_shapes[i].size()));
-        }
-
-        // Prepare ORT tensors for outputs
-        for (std::size_t i = 0; i < output_names.size(); ++i)
-        {
-            output_tensors.emplace_back(Ort::Value::CreateTensor<float>(
-                mem_info, outputTensors[i].first, outputTensors[i].second, output_shapes[i].data(), output_shapes[i].size()));
-        }
-
         // Run inference
         try
         {
+            // Prepare ORT tensors for inputs
+            Ort::MemoryInfo mem_info =
+                Ort::MemoryInfo::CreateCpu(OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);
+            for (std::size_t i = 0; i < input_names.size(); ++i)
+            {
+                input_tensors.emplace_back(Ort::Value::CreateTensor<float>(
+                    mem_info, inputTensors[i].first, inputTensors[i].second, input_shapes[i].data(), input_shapes[i].size()));
+            }
+
+            // Prepare ORT tensors for outputs
+            for (std::size_t i = 0; i < output_names.size(); ++i)
+            {
+                output_tensors.emplace_back(Ort::Value::CreateTensor<float>(
+                    mem_info, outputTensors[i].first, outputTensors[i].second, output_shapes[i].data(), output_shapes[i].size()));
+            }
+
             session->Run(Ort::RunOptions{nullptr},
                 input_names.data(), input_tensors.data(), input_names.size(),
                 output_names.data(), output_tensors.data(), output_names.size());
@@ -244,7 +248,7 @@ private:
      */
     static Ort::Env& getEnv()
     {
-        static Ort::Env env{ORT_LOGGING_LEVEL_WARNING, "OnnxRuntimeRunner"};
+        static Ort::Env env{ORT_LOGGING_LEVEL_WARNING};
         return env;
     }
 

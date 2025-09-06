@@ -194,6 +194,8 @@
 #ifdef __cplusplus
 #include <string>
 
+#define VX_MAX_STRING_LENGTH    (1024)
+
 /*! \brief A character array (string) type.
  * \note This is a C++ string type. It is not a C string.
  * \ingroup group_basic_features

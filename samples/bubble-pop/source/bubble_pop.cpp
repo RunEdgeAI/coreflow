@@ -1,3 +1,12 @@
+/**
+ * @example bubble_pop.cpp
+ * @brief Bubble Pop Sample
+ * @version 0.1
+ * @date 2025-09-03
+ *
+ * @copyright Copyright (c) 2025 Edge AI, LLC. All rights reserved.
+ *
+ */
 #include <string>
 
 #include <VX/vx.h>

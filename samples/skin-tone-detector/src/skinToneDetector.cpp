@@ -1,10 +1,19 @@
+/**
+ * @example skinToneDetector.cpp
+ * @brief Skin Tone Detector Sample
+ * @version 0.1
+ * @date 2025-09-03
+ *
+ * @copyright Copyright (c) 2025 Edge AI, LLC. All rights reserved.
+ *
+ */
 #include <string>
 
-#include <VX/vx.h>
-#include <VX/vx_compatibility.h>
 #include <opencv2/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv2/videoio.hpp>
+#include <VX/vx.h>
+#include <VX/vx_compatibility.h>
 
 using namespace cv;
 using namespace std;

@@ -1,95 +1,66 @@
-#  What is CoreVX ?
-![](https://img.shields.io/badge/OpenVX-1.3.1-blue)
+# CoreFlow: A Modern Orchestration Framework
+[TOC]
+
+## 🚀 Why CoreFlow?
+<p align="left">
+  <img width="35%" src="https://img.shields.io/badge/Graph%20Execution%20Runtime-blue?style=for-the-badge&logo=graphql" />
+</p>
+
 ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black)
 ![macOS](https://img.shields.io/badge/macOS-000000?logo=apple&logoColor=F0F0F0)
 ![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white)
+![](https://img.shields.io/badge/OpenVX-1.3.1-blue)
 [TOC]
-This project is an implementation of the OpenVX specification version 1.3.1, with various extensions and features enabled.
-The project is built using Google's Bazel build system and is validated by unit tests, integration tests, and the OpenVX conformance tests.
 
-- [Installation](./docs/install.md)
-- [API Reference](./docs/api_overview.md)
-- [Licenses](LICENSE.md)
+**CoreFlow** is a modern, high-performance graph execution runtime designed for AI, ML, and computer vision applications. Our platform combines:
 
-## Project Structure
-```
-.bazelrc
-.bazelversion
-.gitignore
-BUILD
-build_tools/
-    platforms/
-docs/
-    Doxyfile
-framework/
-    include/
-    src/
-include/
-    VX/
-    vx_ix_format.txt
-    windows/
-kernels/
-    c_model/
-    debug/
-    extras/
-    NNEF-Tools/
-    opencl/
-    README
-    tiling/
-    utils/
-    venum/
-MODULE.bazel
-MODULE.bazel.lock
-targets/
-    c_model/
-    debug/
-    extras/
-    opencl/
-    tiling/
-    venum/
-tests/
-vxu/
-WORKSPACE
-```
+- **🔗 No-code Graph Builder**: Visual, intuitive UI to build pipelines with automatic optimization
+- **🤖 Cross-platform Support**: Seamless deployment across ARM or x86 with unified APIs.
+- **⚡ High Performance**: Optimized determinstic execution for real-time processing across CPU, GPU, and specialized hardware
+- **🛠️ Developer Friendly**: Simple C++ API with comprehensive error handling
+- **🔧 Extensible**: Easy to add custom kernels and processing behaviors
 
-## Enabled Extensions in CoreVX
-The following extensions and features are enabled in the CoreVX project, as defined in the `vx_corevx_ext.h` file:
+## 🔧 Architecture
 
-- **OPENVX_USE_USER_DATA_OBJECT**: Enables the user data object extension, allowing custom data objects to be used within the OpenVX framework.
-- **OPENVX_USE_IX**: Enables the import/export extension, facilitating the import and export of data between different OpenVX contexts.
-- **OPENVX_USE_XML**: Enables XML-based graph serialization and deserialization.
-- **OPENVX_USE_S16**: Enables support for 16-bit signed integer data types.
-- **OPENVX_USE_OPENCL_INTEROP**: Enables interoperability with OpenCL, allowing OpenVX to leverage OpenCL for acceleration.
-- **OPENVX_USE_NN**: Enables the neural network extension, providing support for neural network operations within OpenVX.
-- **OPENVX_USE_NN_16**: Enables half float (float16) support for the neural network extension.
+### Graph-Based Execution
+CoreFlow uses a graph-based execution model where:
+- **Graphs** represent execution modeled as DAG (Directed Acyclic Graph)
+- **Nodes** represent processing operations
+- **Edges** define data flow between operations
+- **Kernels** define a runnable operation or algorithm
+- **Targets** define a collection of suppported operations
 
-### Conditional Extensions for ARM Architectures
-The following extensions are conditionally enabled for ARM and ARM64 architectures:
+### Built-in AI/ML Support
+- **ONNX Runtime**: Deploy models using Open Neural Network Exchange
+- **TensorFlow Lite**: Leverage Google's on-device AI framework
+- **Executorch**: Leverage Meta's on-device AI framework
+- **Model Management**: Easy model loading and switching
 
-- **OPENVX_USE_TILING**: Enables the tiling extension, which allows for tiled processing of images.
-- **OPENVX_KHR_TILING**: Enables Khronos tiling extension for efficient image processing.
-- **EXPERIMENTAL_USE_VENUM**: Enables experimental support for VENUM, a vector processing unit.
-
-### Conformance and Experimental Features
-
-- **OPENVX_CONFORMANCE_VISION**: Enables conformance for vision functions per the OpenVX specification.
-- **OPENVX_USE_ENHANCED_VISION**: Enables conforamnce enhanced vision functions per the OpenVX specfication.
-- **OPENVX_CONFORMANCE_NNEF_IMPORT**: Enables conformance for NNEF (Neural Network Exchange Format) import, ensuring compatibility with NNEF models.
-- **OPENVX_CONFORMANCE_NEURAL_NETWORKS**: Enables conformance for neural networks, ensuring that neural network operations meet the OpenVX standard.
-- **EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT**: Enables experimental support for 16-bit floating-point data types.
-- **EXPERIMENTAL_USE_DOT**: Enables experimental support for DOT (Graphviz) output for graph visualization.
-- **EXPERIMENTAL_USE_OPENCL**: Enables experimental support for OpenCL, allowing for further exploration and development of OpenCL-based acceleration within OpenVX.
-
-## Conformance Tests
-The project includes conformance tests to verify the implementation against the OpenVX standard. The test data path is set using the VX_TEST_DATA_PATH environment variable.
+### Performance Features
+- **Memory Management**: Automatic memory optimization
+- **Hardware Acceleration**: CPU, GPU, and specialized hardware support
+- **Streaming and Pipelining Support**: Automatic graph runtime optimization
+- **Error Handling**: Comprehensive error reporting and recovery
 
 ## License
-This project is of confidental and propreitary material. See the [LICENSE](LICENSE.md) file for more details.
+This project is of confidental and contains proprietary material. See the [LICENSE](LICENSE.md) file for more details.
+
+## 🆘 Support
+
+- **Documentation**: [runedge.ai/docs/orchestration](https://www.runedge.ai/docs/orchestration)
+- **Email**: support@corevx.com
+
+---
+
+<p align="center">
+  <strong>Ready to build the future with CoreFlow?</strong><br>
+  Start with our samples and discover the power of CoreFlow's execution model.
+</p>
 
 <div class="section_buttons">
 
 | Previous          |                              Next |
 |:------------------|----------------------------------:|
-| | [Installation](docs/install.md) |
+| | [Getting Started](docs/install.md) |
 
 </div>

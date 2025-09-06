@@ -22,10 +22,10 @@
       <tab type="interfacehierarchy" visible="yes" title="" intro=""/>
     </tab>
     <tab type="classes" visible="no" title="">
-      <tab type="classlist" visible="yes" title="" intro=""/>
+      <tab type="classlist" visible="no" title="" intro=""/>
       <tab type="classindex" visible="$ALPHABETICAL_INDEX" title=""/>
-      <tab type="hierarchy" visible="yes" title="" intro=""/>
-      <tab type="classmembers" visible="yes" title="" intro=""/>
+      <tab type="hierarchy" visible="no" title="" intro=""/>
+      <tab type="classmembers" visible="no" title="" intro=""/>
     </tab>
     <tab type="structs" visible="yes" title="">
       <tab type="structlist" visible="yes" title="" intro=""/>
@@ -40,7 +40,7 @@
       <tab type="filelist" visible="yes" title="" intro=""/>
       <tab type="globals" visible="no" title="" intro=""/>
     </tab>
-    <tab type="examples" visible="yes" title="" intro=""/>
+    <tab type="examples" visible="yes" title="Appendix: Examples" intro=""/>
   </navindex>
 
   <!-- Layout definition for a class page -->

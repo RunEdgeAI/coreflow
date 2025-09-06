@@ -10,6 +10,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 | Previous          |                              Next |
 |:------------------|----------------------------------:|
-| [API Reference](docs/api_overview.md) |  |
+| [Getting Started](docs/install.md) |  |
 
 </div>

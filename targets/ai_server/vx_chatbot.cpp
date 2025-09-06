@@ -137,11 +137,11 @@ public:
         vx_string input_text, output_text;
 
         status = load_vx_string_from_array((vx_array)parameters[0], input_text);
-        std::cout << "[input]: " << input_text << std::endl;
+        // std::cout << "[input]: " << input_text << std::endl;
         status |= kernel->AiServerQuery(input_text,        // Input text
                                         output_text,       // Output text
                                         api_map["chat"]);  // API path
-        std::cout << "[output]: " << output_text << std::endl;
+        // std::cout << "[output]: " << output_text << std::endl;
         status |= store_vx_string_to_array((vx_array)parameters[1], output_text);
 
         return status;

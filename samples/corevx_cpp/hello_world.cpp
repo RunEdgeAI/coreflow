@@ -1,3 +1,11 @@
+/**
+ * @example hello_world.cpp
+ * @brief Hello World Example
+ * @version 0.1
+ * @date 2025-09-06
+ *
+ * @copyright Copyright (c) 2025 Edge AI, LLC. All rights reserved.
+ */
 #include <cstdlib>
 #include <iostream>
 
@@ -14,7 +22,7 @@ int main(int argc, char* argv[])
     }
 
     // Create context
-    vx_context context = Context::createContext();
+    auto context = Context::createContext();
     if (Error::getStatus(context) != VX_SUCCESS)
     {
         std::cerr << "Failed to create Context" << std::endl;
