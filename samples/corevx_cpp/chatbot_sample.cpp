@@ -11,9 +11,9 @@
 #include <iostream>
 #include <string>
 
-#include <COREVX/all.hpp>
+#include <COREFLOW/all.hpp>
 
-using namespace corevx;
+using namespace coreflow;
 
 int main()
 {

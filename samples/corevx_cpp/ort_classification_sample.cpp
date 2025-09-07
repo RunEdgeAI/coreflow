@@ -15,9 +15,9 @@
 #include <string>
 #include <sstream>
 
-#include <COREVX/all.hpp>
+#include <COREFLOW/all.hpp>
 
-using namespace corevx;
+using namespace coreflow;
 
 /**
  * @brief Print the digit pattern to the console

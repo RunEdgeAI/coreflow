@@ -52,8 +52,8 @@ IMPORT
  * \ingroup group_import
  */
 #ifdef __cplusplus
-namespace corevx { class Import; }
-using vx_import = corevx::Import*;
+namespace coreflow { class Import; }
+using vx_import = coreflow::Import*;
 #else
 struct Import;
 typedef struct Import* vx_import;

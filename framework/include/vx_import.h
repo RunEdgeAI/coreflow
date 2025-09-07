@@ -32,7 +32,7 @@
 /*! \brief The internal representation of a \ref vx_import
  * \ingroup group_int_import
  */
-namespace corevx {
+namespace coreflow {
 
 class Import : public Reference
 {
@@ -134,6 +134,6 @@ public:
     vx_reference* refs;
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_IMPORT_H */

@@ -23,7 +23,7 @@
  * @brief Internal Event Queue Object
  *
  */
-namespace corevx {
+namespace coreflow {
 
 class EventQueue
 {
@@ -259,4 +259,4 @@ private : bool enabled_;
     }
 };
 
-} // namespace corevx
+} // namespace coreflow

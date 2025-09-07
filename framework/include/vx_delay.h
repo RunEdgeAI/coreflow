@@ -26,7 +26,7 @@
 /*! \brief The internal representation of any delay object.
  * \ingroup group_int_delay
  */
-namespace corevx {
+namespace coreflow {
 
 class Delay : public Reference
 {
@@ -151,6 +151,6 @@ public:
     vx_delay* pyr;
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_DELAY_H */

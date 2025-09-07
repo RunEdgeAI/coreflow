@@ -145,7 +145,7 @@ typedef double   vx_float64;
  * \ingroup group_reference
  */
 #ifdef __cplusplus
-namespace corevx {
+namespace coreflow {
 class Reference;
 class Context;
 class Graph;
@@ -167,7 +167,7 @@ class Delay;
 class MetaFormat;
 using Lut = Array;
 }
-using vx_reference    = corevx::Reference*;
+using vx_reference    = coreflow::Reference*;
 #else
 struct Reference;
 typedef struct Reference* vx_reference;
@@ -202,7 +202,7 @@ typedef uintptr_t vx_map_id;
  * \extends vx_reference
  */
 #ifdef __cplusplus
-using vx_scalar = corevx::Scalar*;
+using vx_scalar = coreflow::Scalar*;
 #else
 struct Scalar;
 typedef struct Scalar* vx_scalar;
@@ -214,7 +214,7 @@ typedef struct Scalar* vx_scalar;
  * \extends vx_reference
  */
 #ifdef __cplusplus
-using vx_image = corevx::Image*;
+using vx_image = coreflow::Image*;
 #else
 typedef struct Image* vx_image;
 #endif
@@ -226,7 +226,7 @@ typedef struct Image* vx_image;
  * \extends vx_reference
  */
 #ifdef __cplusplus
-using vx_kernel = corevx::Kernel*;
+using vx_kernel = coreflow::Kernel*;
 #else
 typedef struct Kernel* vx_kernel;
 #endif
@@ -237,7 +237,7 @@ typedef struct Kernel* vx_kernel;
  * \extends vx_reference
  */
 #ifdef __cplusplus
-using vx_parameter = corevx::Parameter*;
+using vx_parameter = coreflow::Parameter*;
 #else
 typedef struct Parameter* vx_parameter;
 #endif
@@ -248,7 +248,7 @@ typedef struct Parameter* vx_parameter;
  * \extends vx_reference
  */
 #ifdef __cplusplus
-using vx_node = corevx::Node*;
+using vx_node = coreflow::Node*;
 #else
 typedef struct Node* vx_node;
 #endif
@@ -258,7 +258,7 @@ typedef struct Node* vx_node;
  * \extends vx_reference
  */
 #ifdef __cplusplus
-using vx_graph = corevx::Graph*;
+using vx_graph = coreflow::Graph*;
 #else
 typedef struct Graph* vx_graph;
 #endif
@@ -269,7 +269,7 @@ typedef struct Graph* vx_graph;
  * \extends vx_reference
  */
 #ifdef __cplusplus
-using vx_context = corevx::Context*;
+using vx_context = coreflow::Context*;
 #else
 typedef struct Context* vx_context;
 #endif
@@ -281,7 +281,7 @@ typedef struct Context* vx_context;
  * \ingroup group_delay
  */
 #ifdef __cplusplus
-using vx_delay = corevx::Delay*;
+using vx_delay = coreflow::Delay*;
 #else
 typedef struct Delay* vx_delay;
 #endif
@@ -291,7 +291,7 @@ typedef struct Delay* vx_delay;
  * \ingroup group_lut
  */
 #ifdef __cplusplus
-using vx_lut = corevx::Lut*;
+using vx_lut = coreflow::Lut*;
 #else
 typedef struct Lut* vx_lut;
 #endif
@@ -302,7 +302,7 @@ typedef struct Lut* vx_lut;
  * \ingroup group_distribution
  */
 #ifdef __cplusplus
-using vx_distribution = corevx::Distribution*;
+using vx_distribution = coreflow::Distribution*;
 #else
 typedef struct Distribution* vx_distribution;
 #endif
@@ -312,7 +312,7 @@ typedef struct Distribution* vx_distribution;
  * \ingroup group_matrix
  */
 #ifdef __cplusplus
-using vx_matrix = corevx::Matrix*;
+using vx_matrix = coreflow::Matrix*;
 #else
 typedef struct Matrix* vx_matrix;
 #endif
@@ -322,7 +322,7 @@ typedef struct Matrix* vx_matrix;
  * \ingroup group_pyramid
  */
 #ifdef __cplusplus
-using vx_pyramid = corevx::Pyramid*;
+using vx_pyramid = coreflow::Pyramid*;
 #else
 typedef struct Pyramid* vx_pyramid;
 #endif
@@ -333,7 +333,7 @@ typedef struct Pyramid* vx_pyramid;
  * \ingroup group_threshold
  */
 #ifdef __cplusplus
-using vx_threshold = corevx::Threshold*;
+using vx_threshold = coreflow::Threshold*;
 #else
 typedef struct Threshold* vx_threshold;
 #endif
@@ -343,7 +343,7 @@ typedef struct Threshold* vx_threshold;
  * \ingroup group_convolution
  */
 #ifdef __cplusplus
-using vx_convolution = corevx::Convolution*;
+using vx_convolution = coreflow::Convolution*;
 #else
 typedef struct Convolution* vx_convolution;
 #endif
@@ -353,7 +353,7 @@ typedef struct Convolution* vx_convolution;
  * \ingroup group_remap
  */
 #ifdef __cplusplus
-using vx_remap = corevx::Remap*;
+using vx_remap = coreflow::Remap*;
 #else
 typedef struct Remap* vx_remap;
 #endif
@@ -362,7 +362,7 @@ typedef struct Remap* vx_remap;
  * \ingroup group_array
  */
 #ifdef __cplusplus
-using vx_array = corevx::Array*;
+using vx_array = coreflow::Array*;
 #else
 typedef struct Array* vx_array;
 #endif
@@ -371,7 +371,7 @@ typedef struct Array* vx_array;
  * \ingroup group_object_array
  */
 #ifdef __cplusplus
-using vx_object_array = corevx::ObjectArray*;
+using vx_object_array = coreflow::ObjectArray*;
 #else
 typedef struct ObjectArray* vx_object_array;
 #endif
@@ -382,7 +382,7 @@ typedef struct ObjectArray* vx_object_array;
  * \extends vx_reference
  */
 #ifdef __cplusplus
-using vx_tensor = corevx::Tensor*;
+using vx_tensor = coreflow::Tensor*;
 #else
 typedef struct Tensor* vx_tensor;
 #endif
@@ -422,7 +422,7 @@ typedef vx_enum vx_bool;
  * \ingroup group_user_kernels
  */
 #ifdef __cplusplus
-using vx_meta_format = corevx::MetaFormat*;
+using vx_meta_format = coreflow::MetaFormat*;
 #else
 typedef struct MetaFormat* vx_meta_format;
 #endif

@@ -17,7 +17,7 @@
 #include "vx_internal.h"
 #include "vx_memory.h"
 
-using namespace corevx;
+using namespace coreflow;
 
 vx_bool Memory::freeMemory(vx_context context, vx_memory_t *memory)
 {

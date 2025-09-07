@@ -31,7 +31,7 @@
 /*! \brief A Distribution.
  * \ingroup group_int_distribution
  */
-namespace corevx {
+namespace coreflow {
 
 class Distribution : public Reference
 {
@@ -181,6 +181,6 @@ public:
     vx_int32 offset_y;
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_DISTRIBUTION_H */

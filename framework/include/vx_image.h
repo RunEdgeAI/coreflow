@@ -31,7 +31,7 @@
 /*! \brief The internal representation of a \ref vx_image
  * \ingroup group_int_image
  */
-namespace corevx {
+namespace coreflow {
 
 class Image : public Reference
 {
@@ -418,6 +418,6 @@ public:
 #endif
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_IMAGE_H */

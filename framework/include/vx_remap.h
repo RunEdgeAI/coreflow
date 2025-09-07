@@ -30,7 +30,7 @@
 /*! \brief A remap is a 2D image of float32 pairs.
  * \ingroup group_int_remap
  */
-namespace corevx {
+namespace coreflow {
 
 class Remap : public Reference
 {
@@ -208,6 +208,6 @@ public:
     vx_uint32 dst_height;
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_REMAP_H */

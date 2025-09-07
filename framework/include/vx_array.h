@@ -31,7 +31,7 @@
 /*! \brief The internal representation of a \ref vx_array
  * \ingroup group_int_array
  */
-namespace corevx {
+namespace coreflow {
 
 class Array : public Reference
 {
@@ -310,6 +310,6 @@ public:
     vx_uint32 offset;
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_ARRAY_H */

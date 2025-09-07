@@ -17,7 +17,7 @@
 #include "vx_internal.h"
 #include "vx_osal.h"
 
-using namespace corevx;
+using namespace coreflow;
 
 #define BILLION (1000000000LLU)
 

@@ -200,7 +200,7 @@
  * \ingroup group_int_macros
  */
 // Ensure namespaced Image is referenced
-#define VX_TYPE_IS_IMAGE(type)  (corevx::Image::isSupportedFourcc(type) == vx_true_e)
+#define VX_TYPE_IS_IMAGE(type)  (coreflow::Image::isSupportedFourcc(type) == vx_true_e)
 
 /*! \brief Used to determine if a type is a scalar.
  * \ingroup group_int_macros
@@ -427,9 +427,9 @@ typedef struct vx_processor_t {
 // forward declarations
 struct vx_threadpool_t;
 struct vx_threadpool_worker_t;
-namespace corevx { class Target; class Error; }
-using vx_target = corevx::Target*;
-using vx_error = corevx::Error*;
+namespace coreflow { class Target; class Error; }
+using vx_target = coreflow::Target*;
+using vx_error = coreflow::Error*;
 
 /*! \brief The function pointer to the worker function.
  * \param [in] worker The per-thread worker data structure.

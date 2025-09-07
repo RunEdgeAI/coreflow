@@ -30,7 +30,7 @@
 /*! \brief The internal representation of a target.
  * \ingroup group_int_target
  */
-namespace corevx {
+namespace coreflow {
 
 class Target : public Reference
 {
@@ -121,6 +121,6 @@ public:
     void               *reserved;
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_TARGET_H */

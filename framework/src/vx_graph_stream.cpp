@@ -19,7 +19,7 @@
 
 #include "vx_internal.h"
 
-using namespace corevx;
+using namespace coreflow;
 
 #ifdef OPENVX_USE_STREAMING
 

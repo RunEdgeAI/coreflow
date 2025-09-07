@@ -15,7 +15,7 @@
 
 #include "vx_type_pairs.h"
 
-using namespace corevx;
+using namespace coreflow;
 
 #if defined(EXPERIMENTAL_USE_DOT) || defined(OPENVX_USE_XML)
 

@@ -17,7 +17,7 @@
  * @ingroup group_internal
  * @brief The XML import/export API
  */
-namespace corevx
+namespace coreflow
 {
 namespace xml
 {
@@ -123,6 +123,6 @@ public:
 };
 
 }  // namespace xml
-}  // namespace corevx
+}  // namespace coreflow
 
 #endif /* VX_XML_H */

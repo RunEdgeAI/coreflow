@@ -18,9 +18,9 @@
 #include "vx_internal.h"
 #include "vx_interface.h"
 
-using namespace corevx;
+using namespace coreflow;
 
-static const vx_char name[VX_MAX_TARGET_NAME] = "corevx.ai.server";
+static const vx_char name[VX_MAX_TARGET_NAME] = "coreflow.ai.server";
 
 /*! \brief Declares the list of all supported base kernels.
  * \ingroup group_implementation

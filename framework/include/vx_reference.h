@@ -35,7 +35,7 @@
  *  to allow casting to this type.
  * \ingroup group_int_reference
  */
-namespace corevx {
+namespace coreflow {
 
 class Reference {
 protected:
@@ -218,6 +218,6 @@ public:
     vx_char name[VX_MAX_REFERENCE_NAME];
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_REFERENCE_H */

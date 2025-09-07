@@ -12,7 +12,7 @@
 
 #include "vx_internal.h"
 
-using namespace corevx;
+using namespace coreflow;
 
 class ThresholdTest : public ::testing::Test
 {

@@ -55,7 +55,7 @@ vx_graph vxGetChildGraphOfNode(vx_node node);
 /*! \brief The internal representation of a node.
  * \ingroup group_int_node
  */
-namespace corevx {
+namespace coreflow {
 
 class Node : public Reference
 {
@@ -319,6 +319,6 @@ public:
     vx_node_state_e     state;
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_NODE_H */

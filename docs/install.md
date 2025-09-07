@@ -39,22 +39,22 @@ The simplest way to start is with the `hello_world` example, which imports and e
 
 ```bash
 # Hello World (requires XML file)
-./bin/examples/corevx_cpp/hello_world graph.xml
+./bin/examples/hello_world graph.xml
 ```
 
 You can likewise run any of the examples in the bin directory with:
 ```bash
 # AI Chatbot
-./bin/examples/corevx_cpp/chatbot_sample
+./bin/examples/chatbot_sample
 
 # MNIST Classification
-./bin/examples/corevx_cpp/ort_classification_sample
+./bin/examples/ort_classification_sample
 
 # Image Processing
-./bin/examples/corevx_cpp/blur_pipeline
+./bin/examples/blur_pipeline
 
 # Custom Kernel
-./bin/examples/corevx_cpp/custom_code
+./bin/examples/custom_code
 ```
 
 <div class="section_buttons">

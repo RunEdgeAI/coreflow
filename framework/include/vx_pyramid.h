@@ -31,7 +31,7 @@
 /*! \brief A pyramid object. Contains a set of scaled images.
  * \ingroup group_int_pyramid
  */
-namespace corevx {
+namespace coreflow {
 
 class Pyramid : public Reference
 {
@@ -149,6 +149,6 @@ public:
     vx_df_image format;
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_PYRAMID_H */

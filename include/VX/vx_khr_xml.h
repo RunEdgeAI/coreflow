@@ -62,8 +62,8 @@ enum vx_import_attribute_e {
  * \extends vx_reference
  */
 #ifdef __cplusplus
-namespace corevx { class Import; }
-using vx_import = corevx::Import*;
+namespace coreflow { class Import; }
+using vx_import = coreflow::Import*;
 #else
 struct Import;
 typedef struct Import* vx_import;

@@ -30,7 +30,7 @@
 /*! \brief The internal representation of a tensor.
  * \ingroup group_int_tensor
  */
-namespace corevx {
+namespace coreflow {
 
 class Tensor : public Reference
 {
@@ -237,6 +237,6 @@ public:
     vx_image  subimages[VX_INT_MAX_REF];
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_TENSOR_H */

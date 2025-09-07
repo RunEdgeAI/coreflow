@@ -10,9 +10,9 @@
 #include <cstdlib>
 #include <iostream>
 
-#include <COREVX/all.hpp>
+#include <COREFLOW/all.hpp>
 
-using namespace corevx;
+using namespace coreflow;
 
 int main()
 {

@@ -30,7 +30,7 @@
 /*! \brief The internal matrix structure.
  * \ingroup group_int_matrix
  */
-namespace corevx {
+namespace coreflow {
 
 class Matrix : public Reference
 {
@@ -160,6 +160,6 @@ public:
     vx_enum pattern;
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_MATRIX_H */

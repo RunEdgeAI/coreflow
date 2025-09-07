@@ -26,7 +26,7 @@
 #include "vx_internal.h"
 #include "vx_interface.h"
 
-using namespace corevx;
+using namespace coreflow;
 
 static const vx_char name[VX_MAX_TARGET_NAME] = "khronos.any";
 

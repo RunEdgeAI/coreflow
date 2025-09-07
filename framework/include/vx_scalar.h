@@ -30,7 +30,7 @@
 /*! \brief The internal representation of a scalar value.
  * \ingroup group_int_scalar
  */
-namespace corevx {
+namespace coreflow {
 
 class Scalar : public Reference
 {
@@ -198,6 +198,6 @@ public:
     vx_size data_len;
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_SCALAR_H */

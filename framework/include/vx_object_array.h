@@ -31,7 +31,7 @@
 /*! \brief The internal representation of a \ref vx_object_array
  * \ingroup group_int_object_array
  */
-namespace corevx {
+namespace coreflow {
 
 class ObjectArray : public Reference
 {
@@ -153,6 +153,6 @@ public:
     vx_enum item_type;
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_OBJECT_ARRAY_H */

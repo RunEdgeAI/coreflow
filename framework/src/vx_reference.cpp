@@ -16,7 +16,7 @@
 
 #include "vx_internal.h"
 
-using namespace corevx;
+using namespace coreflow;
 
 vx_enum static_objects[] = {
         VX_TYPE_TARGET,

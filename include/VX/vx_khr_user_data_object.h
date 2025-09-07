@@ -35,8 +35,8 @@ extern "C" {
  * \ingroup group_user_data_object
  */
 #ifdef  __cplusplus
-namespace corevx {class UserDataObject;}
-using vx_user_data_object = corevx::UserDataObject*;
+namespace coreflow {class UserDataObject;}
+using vx_user_data_object = coreflow::UserDataObject*;
 #else
 struct UserDataObject;
 typedef struct UserDataObject* vx_user_data_object;

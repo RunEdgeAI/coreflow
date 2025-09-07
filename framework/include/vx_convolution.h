@@ -32,7 +32,7 @@
 /*! \brief A convolution is a special type of matrix (MxM)
  * \ingroup group_int_convolution
  */
-namespace corevx {
+namespace coreflow {
 
 class Convolution : public Matrix
 {
@@ -127,6 +127,6 @@ public:
     vx_uint32 scale;
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_CONVOLUTION_H */

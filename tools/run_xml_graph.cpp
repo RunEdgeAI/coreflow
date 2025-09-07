@@ -1,6 +1,6 @@
 /**
  * @file run_xml_graph.cpp
- * @brief CoreVX Graph Runner
+ * @brief CoreFlow Graph Runner
  * @version 0.1
  * @date 2025-08-11
  *

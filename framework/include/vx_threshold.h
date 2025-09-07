@@ -35,7 +35,7 @@ void ownReleaseThresholdInt(vx_threshold* threshold);
 /*! \brief The internal threshold structure.
  * \ingroup group_int_threshold
  */
-namespace corevx {
+namespace coreflow {
 
 class Threshold : public Reference
 {
@@ -340,6 +340,6 @@ public:
     vx_df_image output_format;
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_THRESHOLD_H */

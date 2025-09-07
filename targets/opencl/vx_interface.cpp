@@ -29,7 +29,7 @@
 #include "vx_internal.h"
 #include "vx_support.h"
 
-using namespace corevx;
+using namespace coreflow;
 
 static const vx_char name[VX_MAX_TARGET_NAME] = "pc.opencl";
 

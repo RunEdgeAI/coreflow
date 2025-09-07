@@ -30,7 +30,7 @@
 /*! \brief The internal representation of the error object.
  * \ingroup group_int_error
  */
-namespace corevx {
+namespace coreflow {
 
 class Error : public Reference
 {
@@ -87,7 +87,7 @@ public:
     vx_status status;
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 /*! \brief Matches the status code against all known error objects in the
  * context.

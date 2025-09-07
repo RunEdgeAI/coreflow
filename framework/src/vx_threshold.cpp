@@ -17,7 +17,7 @@
 #include "vx_internal.h"
 #include "vx_threshold.h"
 
-using namespace corevx;
+using namespace coreflow;
 
 /*****************************************************************************/
 /* INTERNAL INTERFACE                                                        */

@@ -30,7 +30,7 @@
 /*! \brief The internal representation of a parameter.
  * \ingroup group_int_parameter
  */
-namespace corevx {
+namespace coreflow {
 
 class Parameter : public Reference
 {
@@ -172,6 +172,6 @@ public:
     vx_kernel      kernel;
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_PARAMETER_H */

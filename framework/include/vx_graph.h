@@ -16,7 +16,7 @@
 #ifndef VX_GRAPH_H
 #define VX_GRAPH_H
 
-#include <COREVX/execution_queue.hpp>
+#include <COREFLOW/execution_queue.hpp>
 #include <atomic>
 
 #include "vx_internal.h"
@@ -34,7 +34,7 @@
 /*! \brief The internal representation of a graph.
  * \ingroup group_int_graph
  */
-namespace corevx {
+namespace coreflow {
 
 class Graph : public Reference
 {
@@ -413,6 +413,6 @@ public:
     vx_graph_schedule_mode_type_e scheduleMode;
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_GRAPH_H */

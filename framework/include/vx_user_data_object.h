@@ -25,7 +25,7 @@
 /*! \brief user data object descriptor as placed in shared memory
  * \ingroup group_int_user_data_object
  */
-namespace corevx {
+namespace coreflow {
 
 class UserDataObject : public Reference
 {
@@ -128,6 +128,6 @@ public:
     vx_char type_name[VX_MAX_REFERENCE_NAME];
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_USER_DATA_OBJECT_H */

@@ -12,7 +12,7 @@
 
 #include "vx_internal.h"
 
-using namespace corevx;
+using namespace coreflow;
 
 #if defined(OPENVX_USE_XML) || defined(OPENVX_USE_IX)
 

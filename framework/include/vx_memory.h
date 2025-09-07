@@ -29,7 +29,7 @@
 /*! \brief The internal representation of a \ref vx_memory_t
  * \ingroup group_int_memory
  */
-namespace corevx {
+namespace coreflow {
 
 class Memory
 {
@@ -80,6 +80,6 @@ public:
                                             vx_uint32 p);
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_MEMORY_H */

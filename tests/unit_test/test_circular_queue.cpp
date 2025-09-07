@@ -8,7 +8,7 @@
  *
  */
 #include <gtest/gtest.h>
-#include <COREVX/circular_queue.hpp>
+#include <COREFLOW/circular_queue.hpp>
 
 class CircularQueueTest : public ::testing::Test
 {

@@ -20,7 +20,7 @@
 #include "vx_internal.h"
 #include "vx_image.h"
 
-using namespace corevx;
+using namespace coreflow;
 
 /*==============================================================================
  PRIVATE INTERFACE

@@ -1,6 +1,6 @@
 /**
  * @file vx_corevx_ext.h
- * @brief Extensions enabled for corevx
+ * @brief Extensions enabled for coreflow
  * @version 0.1
  * @date 2024-12-15
  *
@@ -308,10 +308,10 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetObjectArrayItem(vx_object_array arr, vx_
  */
 VX_API_ENTRY vx_status VX_API_CALL vxImportGraphFromDot(vx_graph graph, vx_char dotfile[], vx_bool acceptData);
 
-/* COREVX Internal Macros */
+/* COREFLOW Internal Macros */
 #define VX_INT_MAX_PARAM_QUEUE_DEPTH 10
 
-/* ENABLED FEATURES IN COREVX ONLY */
+/* ENABLED FEATURES IN COREFLOW ONLY */
 #define DISABLE_ICD_COMPATIBILITY 1
 #define OPENVX_USE_USER_DATA_OBJECT 1
 #define OPENVX_USE_IX 1

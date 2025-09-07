@@ -28,7 +28,7 @@
  * \ingroup group_internal
  * \brief The Internal Type Pairs Helper API.
  */
-namespace corevx {
+namespace coreflow {
 
 /*! \brief The enum string structure
  * \ingroup group_int_type_pairs
@@ -118,6 +118,6 @@ public:
     static vx_size metaSizeOfType(vx_enum type);
 #endif /* defined (OPENVX_USE_XML) */
 };
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_TYPE_PAIRS_H */

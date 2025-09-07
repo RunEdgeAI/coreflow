@@ -18,7 +18,7 @@
 #include "vx_internal.h"
 #include "vx_node.h"
 
-using namespace corevx;
+using namespace coreflow;
 
 /******************************************************************************/
 /* INTERNAL INTERFACE                                                         */

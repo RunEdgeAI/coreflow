@@ -23,7 +23,7 @@
 
 #include "vx_internal.h"
 
-using namespace corevx;
+using namespace coreflow;
 
 #if defined(OPENVX_USE_USER_DATA_OBJECT)
 

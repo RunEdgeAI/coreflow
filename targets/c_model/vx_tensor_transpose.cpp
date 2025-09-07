@@ -52,7 +52,7 @@ static vx_status VX_CALLBACK tensorTansposeKernel(vx_node node, const vx_referen
         vx_scalar dim1 = (vx_scalar)parameters[TRANSPOSE_PARAM_DIM1];
         vx_scalar dim2 = (vx_scalar)parameters[TRANSPOSE_PARAM_DIM2];
         vx_tensor output = (vx_tensor)parameters[TRANSPOSE_PARAM_TENSOR_OUT];
-        status = TransposeTensorKernelImpl(in, dim1, dim2, output, corevx::Reference::sizeOfType(output->data_type));
+        status = TransposeTensorKernelImpl(in, dim1, dim2, output, coreflow::Reference::sizeOfType(output->data_type));
     }
 
     return status;

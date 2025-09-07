@@ -35,7 +35,7 @@
 /*! \brief The internal representation of an abstract kernel.
  * \ingroup group_int_kernel
  */
-namespace corevx {
+namespace coreflow {
 
 class Kernel : public Reference
 {
@@ -494,6 +494,6 @@ public:
     vx_uint32 pipeUpCounter;
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_KERNEL_H */

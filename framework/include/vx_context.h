@@ -35,7 +35,7 @@
 /*! \brief The top level context data for the entire OpenVX instance
  * \ingroup group_int_context
  */
-namespace corevx {
+namespace coreflow {
 
 class Context final : public Reference
 {
@@ -520,6 +520,6 @@ public:
     const vx_char* extension;
 };
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_CONTEXT_H */

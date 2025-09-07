@@ -18,7 +18,7 @@
 #include "vx_internal.h"
 #include "vx_type_pairs.h"
 
-using namespace corevx;
+using namespace coreflow;
 
 #if defined(OPENVX_USE_XML)
 

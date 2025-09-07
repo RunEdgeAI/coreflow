@@ -20,7 +20,7 @@
 #include "vx_internal.h"
 #include "vx_context.h"
 
-using namespace corevx;
+using namespace coreflow;
 
 vx_char targetModules[][VX_MAX_TARGET_NAME] = {
 #if defined(EXPERIMENTAL_USE_OPENCL)

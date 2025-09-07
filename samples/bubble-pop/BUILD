@@ -13,8 +13,8 @@ cc_shared_library(
 cc_library(
     name = "vx_pop_a",
     srcs = [
-        "source/AMD_VX_Pop_Bubble.cpp",
-        "source/AMD_VX_Pop_Donut.cpp",
+        "source/vx_pop_bubble.cpp",
+        "source/vx_pop_donut.cpp",
         "source/internal_dataTranslator.cpp",
         "source/internal_publishKernels.cpp",
 	    "source/internal_vxNodes.cpp"
@@ -41,7 +41,7 @@ cc_library(
 cc_binary(
     name = "bubble-pop",
     srcs = [
-        "source/AMD_app.cpp",
+        "source/bubble_pop.cpp",
         "include/vx_ext_pop.h",
         "include/vx_pop.h",
     ],

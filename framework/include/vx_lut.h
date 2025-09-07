@@ -27,8 +27,8 @@
  * \ingroup group_internal
  * \brief The Internal LUT API.
  */
-namespace corevx {
+namespace coreflow {
 
-} // namespace corevx
+} // namespace coreflow
 
 #endif /* VX_LUT_H */
