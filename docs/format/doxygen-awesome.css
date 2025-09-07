@@ -198,18 +198,23 @@ html {
 
         --menu-selected-background: rgba(0,0,0,.4);
 
-        --page-background-color: #1C1D1F;
-        --page-foreground-color: #d2dbde;
-        --page-secondary-foreground-color: #859399;
-        --separator-color: #38393b;
-        --side-nav-background: #252628;
+        --page-background-color: #0f172a; /* slate-900 */
+        --page-foreground-color: #f1f5f9; /* slate-100 */
+        --page-secondary-foreground-color: #cbd5e1; /* slate-300 */
+        --separator-color: #475569; /* slate-600 */
+        --side-nav-background: #1e293b; /* slate-800 */
 
-        --code-background: #2a2c2f;
+        /* Header colors to match your website: */
+        --header-background: #0f172a; /* slate-900 */
+        --header-foreground: #f1f5f9; /* slate-100 */
 
-        --tablehead-background: #2a2c2f;
+        --code-background: #1e293b; /* slate-800 */
 
-        --blockquote-background: #222325;
-        --blockquote-foreground: #7e8c92;
+        --tablehead-background: #1e293b; /* slate-800 */
+        --tablehead-foreground: #f1f5f9; /* slate-100 */
+
+        --blockquote-background: #1e293b; /* slate-800 */
+        --blockquote-foreground: #cbd5e1; /* slate-300 */
 
         --warning-color: #3b2e04;
         --warning-color-dark: #f1b602;
@@ -230,8 +235,9 @@ html {
         --invariant-color-dark: #76ce96;
         --invariant-color-darker: #cceed5;
 
-        --fragment-background: #282c34;
-        --fragment-foreground: #dbe4eb;
+        --fragment-background: #1e293b; /* slate-800 */
+        --fragment-foreground: #e2e8f0; /* slate-200 */
+
         --fragment-keyword: #cc99cd;
         --fragment-keywordtype: #ab99cd;
         --fragment-keywordflow: #e08000;
@@ -260,17 +266,22 @@ html.dark-mode {
     --menu-selected-background: rgba(0,0,0,.4);
 
     --page-background-color: #1C1D1F;
-    --page-foreground-color: #d2dbde;
-    --page-secondary-foreground-color: #859399;
-    --separator-color: #38393b;
-    --side-nav-background: #252628;
+    --page-background-color: #0f172a; /* slate-900 */
+    --page-foreground-color: #f1f5f9; /* slate-100 */
+    --page-secondary-foreground-color: #cbd5e1; /* slate-300 */
+    --separator-color: #475569; /* slate-600 */
+    --side-nav-background: #1e293b; /* slate-800 */
 
-    --code-background: #2a2c2f;
+    --header-background: #0f172a; /* slate-900 */
+    --header-foreground: #f1f5f9; /* slate-100 */
 
-    --tablehead-background: #2a2c2f;
+    --code-background: #1e293b; /* slate-800 */
 
-    --blockquote-background: #222325;
-    --blockquote-foreground: #7e8c92;
+    --tablehead-background: #1e293b; /* slate-800 */
+    --tablehead-foreground: #f1f5f9; /* slate-100 */
+
+    --blockquote-background: #1e293b; /* slate-800 */
+    --blockquote-foreground: #cbd5e1; /* slate-300 */
 
     --warning-color: #3b2e04;
     --warning-color-dark: #f1b602;
@@ -291,8 +302,8 @@ html.dark-mode {
     --invariant-color-dark: #76ce96;
     --invariant-color-darker: #cceed5;
 
-    --fragment-background: #282c34;
-    --fragment-foreground: #dbe4eb;
+    --fragment-background: #1e293b; /* slate-800 */
+    --fragment-foreground: #e2e8f0; /* slate-200 */
     --fragment-keyword: #cc99cd;
     --fragment-keywordtype: #ab99cd;
     --fragment-keywordflow: #e08000;
