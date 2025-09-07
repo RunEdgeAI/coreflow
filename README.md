@@ -20,7 +20,7 @@
 - **🛠️ Developer Friendly**: Simple C++ API with comprehensive error handling
 - **🔧 Extensible**: Easy to add custom kernels and processing behaviors
 
-## 🔧 Architecture
+## Architecture
 
 ### Graph-Based Execution
 CoreFlow uses a graph-based execution model where:

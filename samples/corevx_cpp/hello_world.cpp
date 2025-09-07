@@ -53,6 +53,21 @@ int main(int argc, char* argv[])
         }
     }
 
+    // Print performance metrics
+    for (auto graph : graphs)
+    {
+        auto perf = graph->performance();
+        std::cout << "Graph " << (size_t)graph << " performance metrics:" << std::endl
+                  << "  begin time (ns): " << perf.beg << std::endl
+                  << "  end time (ns): " << perf.end << std::endl
+                  << "  sum time (ns): " << perf.sum << std::endl
+                  << "  num runs: " << perf.num << std::endl
+                  << "  avg time (ns): " << perf.avg << std::endl
+                  << "  min time (ns): " << perf.min << std::endl
+                  << "  max time (ns): " << perf.max << std::endl
+                  << std::endl;
+    }
+
     // Automatically cleanup when program exits
     std::cout << "completed successfully" << std::endl;
     return EXIT_SUCCESS;
