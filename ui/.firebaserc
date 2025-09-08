@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "ui-proj-a684b"
-  }
+  },
+  "targets": {
+    "ui-proj-a684b": {
+      "hosting": {
+        "ui": [
+          "ui-proj-a684b"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

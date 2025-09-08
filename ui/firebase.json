@@ -1,35 +1,19 @@
 {
-  "flutter": {
-    "platforms": {
-      "macos": {
-        "default": {
-          "projectId": "ui-proj-a684b",
-          "appId": "1:548317788995:ios:91bde8a7b93af4c7e00df6",
-          "uploadDebugSymbols": false,
-          "fileOutput": "macos/Runner/GoogleService-Info.plist"
+  "hosting": [
+    {
+      "target": "ui",
+      "public": "build/web",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
         }
-      },
-      "dart": {
-        "lib/firebase_options.dart": {
-          "projectId": "ui-proj-a684b",
-          "configurations": {
-            "macos": "1:548317788995:ios:91bde8a7b93af4c7e00df6",
-            "web": "1:548317788995:web:5c7568a1a8cccb7fe00df6",
-            "windows": "1:548317788995:web:b248d7f6143fbfe1e00df6"
-          }
-        }
-      }
+      ]
     }
-  },
-  "hosting": {
-    "source": ".",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "frameworksBackend": {
-      "region": "us-west1"
-    }
-  }
+  ]
 }

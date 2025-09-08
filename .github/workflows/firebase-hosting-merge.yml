@@ -11,12 +11,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npm ci
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.3'
+          channel: 'stable'
+      - name: Install dependencies
+        run: |
+          cd ui
+          flutter pub get
+      - name: Build Flutter web app
+        run: |
+          cd ui
+          flutter build web --release
+      - name: Configure Firebase target
+        run: |
+          cd ui
+          npx firebase-tools@latest target:apply hosting ui ui-proj-a684b
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_UI_PROJ_A684B }}
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_UI_PROJ_A684B }}
           channelId: live
           projectId: ui-proj-a684b
+          target: ui
+          entryPoint: ui
         env:
           FIREBASE_CLI_EXPERIMENTS: webframeworks
