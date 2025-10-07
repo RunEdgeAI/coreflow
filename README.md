@@ -47,8 +47,7 @@ This project is of confidental and contains proprietary material. See the [LICEN
 
 ## 🆘 Support
 
-- **Documentation**: [runedge.ai/docs/orchestration](https://www.runedge.ai/docs/orchestration)
-- **Email**: support@corevx.com
+- **Email**: support@runedge.ai
 
 ---
 
