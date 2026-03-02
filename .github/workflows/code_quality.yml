@@ -32,7 +32,7 @@ jobs:
           cat cppcheck-report/cppcheck.txt
 
       - name: Upload cppcheck report artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: cppcheck-report
           path: cppcheck-report/cppcheck.txt
@@ -68,7 +68,7 @@ jobs:
           cat clang-tidy-report/clang-tidy.txt
 
       - name: Upload clang-tidy report artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: clang-tidy-report
           path: |
