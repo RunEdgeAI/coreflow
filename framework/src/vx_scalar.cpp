@@ -268,7 +268,7 @@ vx_status Scalar::copy(vx_size size, void *user_ptr, vx_enum usage, vx_enum user
                     }
                     else
                     {
-                        free(tmp_addr);
+                        delete[] static_cast<vx_uint8*>(tmp_addr);
                         data_len = size;
                         memcpy(data_addr, user_ptr, size);
                     }
