@@ -2746,7 +2746,7 @@ vx_bool Graph::postprocessOutputDataType(vx_uint32 n, vx_uint32 p, vx_reference*
             *status = VX_ERROR_INVALID_DIMENSION;
             vxAddLogEntry(reinterpret_cast<vx_reference>(this), VX_ERROR_INVALID_DIMENSION,
                 "Node: %s: parameter[%u] has an invalid destination dimention %ux%u",
-                nodes[n]->kernel->name, p);
+                nodes[n]->kernel->name, p, remap->dst_width, remap->dst_height);
             (*num_errors)++;
             return vx_false_e; //break;
         }
